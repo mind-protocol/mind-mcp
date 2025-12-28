@@ -1,0 +1,39 @@
+{
+  "name": "@mind-protocol/connectome",
+  "version": "0.1.0",
+  "description": "Graph visualization components for Mind Protocol",
+  "main": "core/index.ts",
+  "types": "core/types/index.ts",
+  "exports": {
+    ".": "./core/index.ts",
+    "./core": "./core/index.ts",
+    "./adapters": "./adapters/index.ts",
+    "./adapters/local": "./adapters/local.ts",
+    "./adapters/remote": "./adapters/remote.ts",
+    "./lib": "./lib/index.ts",
+    "./styles": "./core/styles/index.css"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "@xyflow/react": "^12.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mind-protocol/mind-mcp.git",
+    "directory": "connectome"
+  },
+  "keywords": [
+    "mind-protocol",
+    "graph",
+    "visualization",
+    "react",
+    "connectome"
+  ],
+  "license": "MIT"
+}

@@ -22,7 +22,7 @@ from typing import Dict, Any, Optional
 
 import yaml
 
-from .adapter import DatabaseAdapter, ConnectionError
+from .base import DatabaseAdapter
 
 logger = logging.getLogger(__name__)
 

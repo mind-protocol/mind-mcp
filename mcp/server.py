@@ -44,9 +44,7 @@ from typing import Any, Dict, List, Optional
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-# TODO: ConnectomeRunner needs to be migrated from engine package
-# from mind.connectome import ConnectomeRunner
-ConnectomeRunner = None  # Placeholder until migrated
+from mind.connectome import ConnectomeRunner
 from mind.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
 from mind.agent_spawn import spawn_work_agent, spawn_agent_for_issue
 from mind.doctor import run_doctor
@@ -91,16 +89,11 @@ class MindServer:
             logger.warning(f"No agent graph: {e}")
             self.agent_graph = AgentGraph(graph_name="mind")  # Fallback mode
 
-        # ConnectomeRunner not yet migrated - membrane tools will be limited
-        if ConnectomeRunner is not None:
-            self.runner = ConnectomeRunner(
-                graph_ops=self.graph_ops,
-                graph_queries=self.graph_queries,
-                connectomes_dir=self.connectomes_dir
-            )
-        else:
-            self.runner = None
-            logger.warning("ConnectomeRunner not available - membrane dialogue tools disabled")
+        self.runner = ConnectomeRunner(
+            graph_ops=self.graph_ops,
+            graph_queries=self.graph_queries,
+            connectomes_dir=self.connectomes_dir
+        )
 
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle a JSON-RPC request."""

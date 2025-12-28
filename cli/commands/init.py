@@ -27,83 +27,49 @@ logger = logging.getLogger(__name__)
 
 
 def _get_mind_root() -> Path:
-    """Get the root directory of the mind installation.
+    """Get the root directory of the mind-mcp installation.
 
-    Returns the directory containing tools/mcp/membrane_server.py.
+    Returns the directory containing mcp/server.py.
     """
-    # In development: mind/mind/init_cmd.py -> mind/
-    mind_root = Path(__file__).parent.parent
-    if (mind_root / "tools" / "mcp" / "membrane_server.py").exists():
+    # cli/commands/init.py -> cli/commands -> cli -> mind-mcp root
+    mind_root = Path(__file__).parent.parent.parent
+    if (mind_root / "mcp" / "server.py").exists():
         return mind_root
 
     # Fallback: try to find via templates path
     try:
         templates = get_templates_path()
-        # templates is mind/templates/, so parent is mind/
-        if (templates.parent / "tools" / "mcp" / "membrane_server.py").exists():
+        # templates is mind-mcp/templates/, so parent is mind-mcp/
+        if (templates.parent / "mcp" / "server.py").exists():
             return templates.parent
     except FileNotFoundError:
         pass
 
-    raise FileNotFoundError("Could not find mind installation with membrane_server.py")
+    raise FileNotFoundError("Could not find mind-mcp installation with mcp/server.py")
 
 
-def _configure_mcp_membrane(target_dir: Path) -> None:
-    """Configure membrane MCP server using claude mcp commands."""
+def _configure_mcp_mind(target_dir: Path) -> None:
+    """Configure mind MCP server by creating .mcp.json."""
     try:
         mind_root = _get_mind_root()
     except FileNotFoundError as e:
         print(f"  ○ MCP config skipped: {e}")
         return
 
-    membrane_script = mind_root / "tools" / "mcp" / "membrane_server.py"
-
-    import subprocess
-
-    # Remove existing membrane server (ignore errors if not found)
-    try:
-        subprocess.run(
-            ["claude", "mcp", "remove", "membrane"],
-            capture_output=True,
-            cwd=target_dir,
-            timeout=10
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        pass  # claude CLI not available or timed out
-
-    # Add membrane server with correct path
-    try:
-        result = subprocess.run(
-            ["claude", "mcp", "add", "membrane", "--", "python3", str(membrane_script)],
-            capture_output=True,
-            text=True,
-            cwd=target_dir,
-            timeout=10
-        )
-        if result.returncode == 0:
-            print(f"✓ Configured MCP: membrane -> {membrane_script}")
-        else:
-            # Fallback to .mcp.json if claude CLI fails
-            print(f"  ○ claude mcp add failed, using .mcp.json fallback")
-            _generate_mcp_config_file(target_dir, mind_root)
-    except FileNotFoundError:
-        # claude CLI not installed, use .mcp.json fallback
-        print(f"  ○ claude CLI not found, using .mcp.json fallback")
-        _generate_mcp_config_file(target_dir, mind_root)
-    except subprocess.TimeoutExpired:
-        print(f"  ○ claude mcp timed out, using .mcp.json fallback")
-        _generate_mcp_config_file(target_dir, mind_root)
+    # Generate .mcp.json directly (most reliable approach)
+    _generate_mcp_config_file(target_dir, mind_root)
 
 
 def _generate_mcp_config_file(target_dir: Path, mind_root: Path) -> None:
-    """Fallback: generate .mcp.json file directly."""
+    """Generate .mcp.json file for the mind MCP server."""
     mcp_json = target_dir / ".mcp.json"
 
     config = {
         "mcpServers": {
-            "membrane": {
+            "mind": {
                 "command": "python3",
-                "args": [str(mind_root / "tools" / "mcp" / "membrane_server.py")],
+                "args": ["-m", "mcp.server"],
+                "cwd": str(mind_root),
             }
         }
     }
@@ -114,7 +80,7 @@ def _generate_mcp_config_file(target_dir: Path, mind_root: Path) -> None:
             existing = json.loads(mcp_json.read_text())
             if "mcpServers" not in existing:
                 existing["mcpServers"] = {}
-            existing["mcpServers"]["membrane"] = config["mcpServers"]["membrane"]
+            existing["mcpServers"]["mind"] = config["mcpServers"]["mind"]
             config = existing
         except json.JSONDecodeError:
             pass  # Overwrite invalid JSON
@@ -699,17 +665,24 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         except PermissionError:
             print(f"  ○ Skipped (permission): {doctor_ignore}")
 
-    # Copy schema.yaml from docs/schema/ to .mind-mcp/ (authoritative schema)
-    schema_source = target_dir / "docs" / "schema" / "schema.yaml"
+    # Fetch schema.yaml from L4 (mind-protocol) GitHub repo
     schema_dest = protocol_dest / "schema.yaml"
-    if schema_source.exists():
-        try:
-            shutil.copy2(schema_source, schema_dest)
-            print(f"✓ Copied: {schema_dest}")
-        except PermissionError:
-            print(f"  ○ Skipped (permission): {schema_dest}")
-    else:
-        print(f"○ Schema not found: {schema_source}")
+    schema_url = "https://raw.githubusercontent.com/mind-protocol/mind-protocol/main/l4/schema/schema.yaml"
+    try:
+        import urllib.request
+        urllib.request.urlretrieve(schema_url, schema_dest)
+        print(f"✓ Fetched schema from L4: {schema_dest}")
+    except Exception as e:
+        # Fallback: try local docs/schema/schema.yaml
+        schema_source = target_dir / "docs" / "schema" / "schema.yaml"
+        if schema_source.exists():
+            try:
+                shutil.copy2(schema_source, schema_dest)
+                print(f"✓ Copied local schema: {schema_dest}")
+            except PermissionError:
+                print(f"  ○ Skipped (permission): {schema_dest}")
+        else:
+            print(f"  ○ Schema fetch failed ({e}), no local fallback")
 
     # Copy modules.yaml to project root (if not exists or force)
     if not modules_yaml_dest.exists() or force:
@@ -861,8 +834,8 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     # Initialize graph and inject seeds
     _init_graph_and_inject_seeds(target_dir, clear=clear_graph)
 
-    # Configure MCP membrane server
-    _configure_mcp_membrane(target_dir)
+    # Configure MCP mind server
+    _configure_mcp_mind(target_dir)
 
     print()
     print("mind initialized!")

@@ -3,6 +3,7 @@
 ```
 LAST_UPDATED: 2025-12-28
 UPDATED_BY: claude (opus-4.5)
+STATUS: DESIGNING
 ```
 
 ---
@@ -15,7 +16,91 @@ Package installable via `pip install -e .` - the `mind` command works globally.
 
 ---
 
+## ARCHITECTURAL DECISION: CONNECTOME
+
+**Decision (2025-12-28):** Connectome core lives here in mind-mcp. Platform imports from here.
+
+### Rationale
+
+Connectome visualizes engine internals (traversal, energy, physics). The engine lives here, so the visualization should too. Platform uses the same components with a different data adapter.
+
+### Structure (To Be Implemented)
+
+```
+mind-mcp/
+└── connectome/
+    ├── core/                    # SHARED - React components
+    │   ├── components/
+    │   │   ├── node-kit/        # Node rendering
+    │   │   ├── edge-kit/        # Edge rendering
+    │   │   ├── canvas/          # Flow canvas
+    │   │   └── panels/          # Log, health panels
+    │   ├── types/               # FlowEvent, NodeData, etc.
+    │   └── styles/              # CSS/tokens
+    │
+    ├── adapters/
+    │   ├── local.ts             # Connects to local Neo4j (dev tool)
+    │   └── remote.ts            # Connects to L4 API (for platform)
+    │
+    ├── lib/                     # Runtime (state store, engine)
+    │   ├── state-store.ts
+    │   ├── runtime-engine.ts
+    │   └── event-model.ts
+    │
+    └── server/                  # Local dev server
+        └── index.ts             # `mind connectome` CLI command
+```
+
+### Adapter Interface
+
+```typescript
+interface ConnectomeAdapter {
+  // Graph data
+  getNodes(): Promise<Node[]>
+  getLinks(): Promise<Link[]>
+  search(query: string, opts: SearchOpts): Promise<SearchResult>
+
+  // Realtime
+  subscribe(handler: (event: FlowEvent) => void): Unsubscribe
+
+  // Dev-only (optional)
+  nextStep?(): Promise<StepResult>
+  restart?(): void
+}
+```
+
+### Migration Path
+
+1. Create `connectome/` directory structure
+2. Move components from `mind-platform/app/connectome/components/`
+3. Create adapter interface
+4. Implement LocalAdapter (talks to local Neo4j)
+5. Add `mind connectome` CLI command
+6. Platform updates imports to use `mind-mcp/connectome/core`
+
+---
+
 ## ACTIVE WORK
+
+### Connectome Migration (IN PROGRESS)
+
+- **Area:** `connectome/`
+- **Status:** structure created, adapters defined
+- **Owner:** agent
+- **Context:** Moving shared Connectome components from mind-platform to here
+
+**Created:**
+- `connectome/package.json` — npm package config
+- `connectome/core/types/adapter.ts` — ConnectomeAdapter interface
+- `connectome/adapters/local.ts` — LocalAdapter skeleton
+- `connectome/adapters/remote.ts` — RemoteAdapter skeleton
+- `connectome/lib/index.ts` — lib placeholder
+- `connectome/README.md` — documentation
+
+**Next:**
+- Move React components from mind-platform
+- Implement LocalAdapter Neo4j connection
+- Add TypeScript build config
 
 ### Core Engine Migration
 
@@ -27,6 +112,20 @@ Package installable via `pip install -e .` - the `mind` command works globally.
 ---
 
 ## RECENT CHANGES
+
+### 2025-12-28: Connectome Architecture Decision
+
+- **What:** Decided Connectome core lives in mind-mcp, platform imports from here
+- **Why:** Connectome visualizes engine internals; engine lives here
+- **Impact:** Need to migrate components from mind-platform, create adapter pattern
+- **Cross-repo:** Coordinated with mind-platform SYNC
+
+### 2025-12-28: Import Path Migration
+
+- **What:** Fixed all `engine.*` and `ngram.*` imports to use `mind.*`
+- **Why:** Repo split left stale import references
+- **Where:** `cli/commands/init.py`, `cli/commands/explore.py`, `cli/commands/doctor.py`, `mcp/server.py`, plus docstring refs in `mind/physics/`
+- **Impact:** Basic imports now work. ConnectomeRunner marked as TODO (missing module).
 
 ### 2024-12-28: Repo Creation
 
@@ -40,13 +139,6 @@ Package installable via `pip install -e .` - the `mind` command works globally.
 - **Why:** Enable global `mind` command
 - **Impact:** Can now run `mind init` from any directory
 
-### 2025-12-28: Import Path Migration
-
-- **What:** Fixed all `engine.*` and `ngram.*` imports to use `mind.*`
-- **Why:** Repo split left stale import references
-- **Where:** `cli/commands/init.py`, `cli/commands/explore.py`, `cli/commands/doctor.py`, `mcp/server.py`, plus docstring refs in `mind/physics/`
-- **Impact:** Basic imports now work. ConnectomeRunner marked as TODO (missing module).
-
 ---
 
 ## KNOWN ISSUES
@@ -57,47 +149,22 @@ Package installable via `pip install -e .` - the `mind` command works globally.
 | ConnectomeRunner missing | medium | `mcp/` | Module not migrated, membrane dialogues disabled |
 | MCP server untested | medium | `mcp/` | Needs integration test |
 | Duplicate GraphOps/GraphQueries | low | `mind/` | Exists in both `mind/graph/ops/` and `mind/physics/graph/` |
-
----
-
-## HANDOFF: FOR AGENTS
-
-**Likely VIEW for continuing:** VIEW_Implement_Write_Or_Modify_Code.md
-
-**Current focus:** Get graph connection working with Neo4j Aura
-
-**Key context:**
-- This is L1 (Citizen layer) - local client that connects to L4
-- No ticks - pure stimulus/event driven
-- Membrane = graph traversal, not direct links
-
-**Watch out for:**
-- ConnectomeRunner not yet migrated (membrane tools won't work)
-- Duplicate code: GraphOps exists in both `mind/graph/ops/` and `mind/physics/graph/`
-
----
-
-## HANDOFF: FOR HUMAN
-
-**Executive summary:**
-mind-mcp repo created with core engine code. CLI works. Need to verify graph database connection before this is production-ready.
-
-**Decisions made recently:**
-- Python 3.10+ (not 3.11) for compatibility
-- Hatch build system with explicit packages
-
-**Needs your input:**
-- Neo4j Aura credentials for testing
-- Confirm MCP server tool list is complete
-
-**Concerns:**
-- ConnectomeRunner needs to be migrated for MCP membrane tools to work
+| Connectome not yet migrated | medium | `connectome/` | Components still in mind-platform |
 
 ---
 
 ## TODO
 
-### High Priority
+### High Priority — Connectome Migration
+
+- [ ] Create `connectome/` directory structure
+- [ ] Define adapter interface (`ConnectomeAdapter`)
+- [ ] Move components from mind-platform
+- [ ] Implement LocalAdapter (local Neo4j)
+- [ ] Add `mind connectome` CLI command
+- [ ] Create RemoteAdapter (L4 API) for platform use
+
+### High Priority — Engine
 
 - [ ] Test Neo4j Aura connection
 - [x] Verify all imports work (engine.* → mind.* migration complete)
@@ -122,6 +189,7 @@ mind-mcp repo created with core engine code. CLI works. Need to verify graph dat
 | `cli/` | working | CLI entry point |
 | `mcp/` | untested | MCP server for AI agents |
 | `templates/` | ready | .mind/ initialization templates |
+| `connectome/` | **in progress** | Graph visualization — structure + adapters done, components pending |
 
 ---
 
@@ -137,6 +205,46 @@ mind-mcp repo created with core engine code. CLI works. Need to verify graph dat
 | infrastructure | `mind/infrastructure/` | DB, embeddings, API | migrated |
 | cli | `cli/` | Command line interface | working |
 | mcp | `mcp/` | MCP server | untested |
+| connectome | `connectome/` | Graph visualization | **planned** |
+
+---
+
+## HANDOFF: FOR AGENTS
+
+**Current focus:** Connectome migration + Neo4j testing
+
+**Key files to create:**
+- `connectome/core/types/adapter.ts` — Adapter interface
+- `connectome/adapters/local.ts` — Local graph adapter
+- `connectome/server/index.ts` — CLI dev server
+
+**Source files (in mind-platform):**
+- `app/connectome/components/` — 22 React component files
+- `docs/connectome/` — Extensive documentation
+
+**Watch out for:**
+- ConnectomeRunner not yet migrated (membrane tools won't work)
+- Duplicate code: GraphOps exists in both `mind/graph/ops/` and `mind/physics/graph/`
+- Components have TypeScript imports that need updating
+
+---
+
+## HANDOFF: FOR HUMAN
+
+**Executive summary:**
+Connectome architecture decided: core lives here, platform imports. Next step is migration.
+
+**Decisions made:**
+- Connectome core → mind-mcp
+- Adapter pattern for local (dev) vs remote (platform) data sources
+- Platform will import shared components
+
+**Needs your input:**
+- Neo4j Aura credentials for testing
+- Confirm MCP server tool list is complete
+
+**Concerns:**
+- ConnectomeRunner needs to be migrated for MCP membrane tools to work
 
 ---
 
@@ -153,6 +261,19 @@ mind-mcp repo created with core engine code. CLI works. Need to verify graph dat
 | `mind-platform` | L3 + UI | `/home/mind-protocol/mind-platform` | open source |
 | `mind-ops` | Ops | `/home/mind-protocol/mind-ops` | private |
 
+### This Repo's Role
+
+**mind-mcp is the ENGINE + CONNECTOME CORE:**
+- Graph physics, traversal, methodology
+- Local membrane client
+- MCP server for Claude
+- CLI tools (`mind` command)
+- **Connectome visualization core** (shared with platform)
+
+**Exports to other repos:**
+- `connectome/core/` → mind-platform imports for web UI
+- `connectome/adapters/remote.ts` → platform uses for L4 connection
+
 ### Coordination Hub: mind-ops
 
 **`mind-ops` is the main cross-repo organization point.**
@@ -161,15 +282,6 @@ mind-mcp repo created with core engine code. CLI works. Need to verify graph dat
 - Deployment orchestration in `mind-ops/ci/`
 - Shared secrets configuration in `mind-ops/secrets/`
 - Integration tests that span repos in `mind-ops/tests/integration/`
-
-### When to Cross Repos
-
-| Situation | Action |
-|-----------|--------|
-| Schema change needed | Update `mind-protocol/l4/schema/` first, then propagate |
-| UI needs new API | Implement in `mind-protocol/api/`, consume in `mind-platform/` |
-| Client needs protocol change | Propose in `mind-protocol`, implement in `mind-mcp` |
-| Deployment issue | Check `mind-ops/runbooks/` |
 
 ### Sync Protocol
 

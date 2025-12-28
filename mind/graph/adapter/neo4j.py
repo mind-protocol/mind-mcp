@@ -12,7 +12,7 @@ import logging
 from typing import List, Dict, Any, Optional
 from contextlib import contextmanager
 
-from .adapter import (
+from .base import (
     DatabaseAdapter,
     TransactionAdapter,
     DatabaseError,

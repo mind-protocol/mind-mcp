@@ -35,3 +35,15 @@ htmlcov/
 *.swo
 
 .DS_Store
+
+# Mind protocol local overrides (not tracked)
+*.local.*
+.mind/cache/
+.mind/logs/
+
+# Windows artifacts
+*:Zone.Identifier
+
+# Logs
+*.log
+logs/

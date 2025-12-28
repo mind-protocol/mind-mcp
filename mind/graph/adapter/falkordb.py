@@ -12,7 +12,7 @@ from contextlib import contextmanager
 
 from falkordb import FalkorDB
 
-from .adapter import (
+from .base import (
     DatabaseAdapter,
     TransactionAdapter,
     DatabaseError,
