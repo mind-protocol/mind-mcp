@@ -12,6 +12,7 @@ from ..helpers.setup_database_and_apply_schema import setup_database
 from ..helpers.create_env_example_file import create_env_example
 from ..helpers.create_mcp_config_json import create_mcp_config
 from ..helpers.update_gitignore_with_runtime_entry import update_gitignore
+from ..helpers.ingest_repo_files_to_graph import ingest_repo_files
 from ..helpers.get_mcp_version_from_config import get_mcp_version
 
 
@@ -56,17 +57,22 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     setup_database(target_dir, database, graph_name)
     steps.append("database_setup")
 
-    # 7. Env example
+    # 7. File ingestion
+    print("\n## File Ingestion")
+    ingest_repo_files(target_dir, graph_name)
+    steps.append("file_ingest")
+
+    # 8. Env example
     print("\n## Environment")
     create_env_example(target_dir, database)
     steps.append("env_example")
 
-    # 8. MCP config
+    # 9. MCP config
     print("\n## MCP Server")
     create_mcp_config(target_dir)
     steps.append("mcp_config")
 
-    # 9. Gitignore
+    # 10. Gitignore
     print("\n## Gitignore")
     update_gitignore(target_dir)
     steps.append("gitignore")
