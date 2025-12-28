@@ -78,7 +78,65 @@ def get_templates_path() -> Path:
     raise FileNotFoundError(f"Templates not found at {templates}")
 
 
-def init_command(target_dir: Path) -> bool:
+def get_runtime_path() -> Path:
+    """Get path to mind/ runtime package."""
+    repo_root = Path(__file__).parent.parent
+    runtime = repo_root / "mind"
+    if runtime.exists() and (runtime / "__init__.py").exists():
+        return runtime
+    raise FileNotFoundError(f"Runtime not found at {runtime}")
+
+
+def _copy_runtime(target_mind: Path) -> None:
+    """Copy mind/ runtime package to .mind/mind/ (keeps 'mind' package name for imports)."""
+    runtime_src = get_runtime_path()
+    runtime_dst = target_mind / "mind"
+
+    # Patterns to skip
+    skip_patterns = {"__pycache__", ".pyc", ".pyo", ".git"}
+
+    def should_skip(path: Path) -> bool:
+        return any(part in skip_patterns or part.endswith((".pyc", ".pyo"))
+                   for part in path.parts)
+
+    if runtime_dst.exists():
+        # Update existing runtime
+        print(f"Updating runtime...")
+        created = 0
+        updated = 0
+
+        for src_file in runtime_src.rglob("*"):
+            if src_file.is_dir() or should_skip(src_file):
+                continue
+
+            rel_path = src_file.relative_to(runtime_src)
+            dst_file = runtime_dst / rel_path
+
+            dst_file.parent.mkdir(parents=True, exist_ok=True)
+
+            if not dst_file.exists():
+                shutil.copy2(src_file, dst_file)
+                created += 1
+            else:
+                # Only update if content changed
+                if src_file.read_bytes() != dst_file.read_bytes():
+                    shutil.copy2(src_file, dst_file)
+                    updated += 1
+
+        print(f"✓ Runtime: {created} new, {updated} updated")
+    else:
+        # Fresh copy
+        print(f"Copying runtime to {runtime_dst}")
+
+        def ignore_patterns(dir: str, files: list) -> list:
+            return [f for f in files if f in skip_patterns or f.endswith((".pyc", ".pyo"))]
+
+        shutil.copytree(runtime_src, runtime_dst, ignore=ignore_patterns)
+        file_count = sum(1 for _ in runtime_dst.rglob("*.py"))
+        print(f"✓ Runtime: {file_count} Python files")
+
+
+def init_command(target_dir: Path, database: str = "falkordb") -> bool:
     """
     Initialize/update .mind/ in target directory.
 
@@ -120,11 +178,183 @@ def init_command(target_dir: Path) -> bool:
 
         print(f"✓ Created: {created}, updated: {updated}")
 
+    # Copy runtime (physics, graph, traversal, etc.)
+    _copy_runtime(target_mind)
+
     # Create/update CLAUDE.md
     _update_claude_md(target_dir)
 
-    print(f"\n✓ mind initialized (v{get_mcp_version()})")
+    # Sync skills to all AI agent locations
+    _sync_skills_to_agents(target_dir, target_mind / "skills")
+
+    # Create database config
+    _create_database_config(target_mind, database)
+
+    # Create .env.mind.example
+    _create_env_example(target_dir, database)
+
+    # Update .gitignore to exclude runtime
+    _update_gitignore(target_dir)
+
+    print(f"\n✓ mind initialized (v{get_mcp_version()}, database: {database})")
     return True
+
+
+def _create_database_config(mind_dir: Path, database: str) -> None:
+    """Create .mind/database_config.yaml."""
+    config_path = mind_dir / "database_config.yaml"
+
+    if database == "neo4j":
+        config = {
+            "database": {
+                "backend": "neo4j",
+                "neo4j": {
+                    "uri": "${NEO4J_URI}",
+                    "user": "${NEO4J_USER}",
+                    "password": "${NEO4J_PASSWORD}",
+                    "database": "${NEO4J_DATABASE}",
+                }
+            }
+        }
+    else:
+        config = {
+            "database": {
+                "backend": "falkordb",
+                "falkordb": {
+                    "host": "localhost",
+                    "port": 6379,
+                    "graph_name": "mind",
+                }
+            }
+        }
+
+    config_path.write_text(yaml.dump(config, default_flow_style=False, sort_keys=False))
+    print(f"✓ Created database config: {config_path} (backend: {database})")
+
+
+def _create_env_example(target_dir: Path, database: str) -> None:
+    """Create .env.mind.example with database-specific template."""
+    env_path = target_dir / ".env.mind.example"
+
+    if database == "neo4j":
+        content = """# Mind Protocol - Neo4j Configuration
+# Copy to .env and fill in your values
+
+DATABASE_BACKEND=neo4j
+
+# Neo4j Aura connection
+NEO4J_URI=neo4j+s://xxxxx.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password_here
+NEO4J_DATABASE=neo4j
+"""
+    else:
+        content = """# Mind Protocol - FalkorDB Configuration
+# Copy to .env and fill in your values
+
+DATABASE_BACKEND=falkordb
+
+# FalkorDB (local Redis-based graph)
+FALKORDB_HOST=localhost
+FALKORDB_PORT=6379
+FALKORDB_GRAPH=mind
+
+# To start FalkorDB:
+#   docker run -p 6379:6379 falkordb/falkordb
+"""
+
+    env_path.write_text(content)
+    print(f"✓ Created: {env_path}")
+
+
+def _update_gitignore(target_dir: Path) -> None:
+    """Add .mind/mind/ (runtime) to .gitignore."""
+    gitignore = target_dir / ".gitignore"
+
+    entries_to_add = [
+        "# Mind runtime (copied on init, not committed)",
+        ".mind/mind/",
+        "",
+        "# Environment files",
+        ".env",
+        ".env.local",
+    ]
+
+    if gitignore.exists():
+        content = gitignore.read_text()
+        # Check if already has mind runtime entry
+        if ".mind/mind/" in content:
+            return
+        # Append to existing
+        if not content.endswith("\n"):
+            content += "\n"
+        content += "\n" + "\n".join(entries_to_add) + "\n"
+        gitignore.write_text(content)
+        print(f"✓ Updated .gitignore (added .mind/mind/)")
+    else:
+        # Create new
+        gitignore.write_text("\n".join(entries_to_add) + "\n")
+        print(f"✓ Created .gitignore")
+
+
+def _sync_skills_to_agents(target_dir: Path, mind_skills: Path) -> None:
+    """
+    Sync skills to all AI agent locations:
+    - .claude/skills/*/SKILL.md (Claude Code)
+    - AGENTS.md (Codex/OpenAI)
+    - .gemini/styleguide.md (Gemini)
+    """
+    if not mind_skills.exists():
+        return
+
+    # 1. Claude Code: .claude/skills/*/SKILL.md
+    claude_skills = target_dir / ".claude" / "skills"
+    claude_skills.mkdir(parents=True, exist_ok=True)
+
+    skill_count = 0
+    for skill_file in mind_skills.glob("SKILL_*.md"):
+        # Convert SKILL_Name_Here.md -> name-here/SKILL.md
+        name = skill_file.stem.replace("SKILL_", "").replace("_", "-").lower()
+        skill_dir = claude_skills / name
+        skill_dir.mkdir(exist_ok=True)
+
+        # Read content and add YAML frontmatter if missing
+        content = skill_file.read_text()
+        if not content.startswith("---"):
+            # Add frontmatter
+            title = skill_file.stem.replace("SKILL_", "").replace("_", " ")
+            frontmatter = f"---\nname: {title}\ndescription: Mind Protocol skill\n---\n\n"
+            content = frontmatter + content
+
+        (skill_dir / "SKILL.md").write_text(content)
+        skill_count += 1
+
+    print(f"✓ Claude skills: {skill_count} -> .claude/skills/")
+
+    # 2. Codex/OpenAI: AGENTS.md (already handled by _update_agents_md)
+    # Skills are embedded in AGENTS.md content
+
+    # 3. Gemini: .gemini/styleguide.md
+    gemini_dir = target_dir / ".gemini"
+    gemini_dir.mkdir(exist_ok=True)
+
+    # Build styleguide from PRINCIPLES + key skills
+    principles_path = target_dir / ".mind" / "PRINCIPLES.md"
+    styleguide_content = "# Code Style Guide\n\n"
+
+    if principles_path.exists():
+        styleguide_content += "## Principles\n\n"
+        styleguide_content += principles_path.read_text()
+        styleguide_content += "\n\n"
+
+    styleguide_content += "## Key Guidelines\n\n"
+    styleguide_content += "- Follow existing code patterns\n"
+    styleguide_content += "- Update SYNC files after changes\n"
+    styleguide_content += "- Test before claiming complete\n"
+    styleguide_content += "- One solution per problem - don't duplicate\n"
+
+    (gemini_dir / "styleguide.md").write_text(styleguide_content)
+    print(f"✓ Gemini styleguide: .gemini/styleguide.md")
 
 
 def _update_claude_md(target_dir: Path) -> None:
@@ -226,6 +456,19 @@ def status_command(target_dir: Path) -> int:
         skill_files = list(skills_dir.glob("SKILL_*.md"))
         print(f"  skills/: {len(skill_files)} files")
 
+    runtime_dir = mind_dir / "mind"
+    if runtime_dir.exists():
+        py_files = sum(1 for _ in runtime_dir.rglob("*.py"))
+        print(f"  mind/ (runtime): {py_files} Python files")
+
+        # Show key modules
+        modules = ["physics", "graph", "connectome", "infrastructure", "traversal"]
+        present = [m for m in modules if (runtime_dir / m).exists()]
+        if present:
+            print(f"    modules: {', '.join(present)}")
+    else:
+        print(f"  mind/ (runtime): ✗ (run: mind init)")
+
     return 0
 
 
@@ -236,6 +479,8 @@ def main():
     # init
     init_parser = subparsers.add_parser("init", help="Initialize/update .mind/")
     init_parser.add_argument("--dir", "-d", type=Path, default=Path.cwd())
+    init_parser.add_argument("--database", "-db", choices=["falkordb", "neo4j"], default="falkordb",
+                            help="Database backend (default: falkordb)")
 
     # upgrade
     upgrade_parser = subparsers.add_parser("upgrade", help="Check for protocol updates")
@@ -248,7 +493,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "init":
-        success = init_command(args.dir)
+        success = init_command(args.dir, database=args.database)
         maybe_show_upgrade_notice()
         sys.exit(0 if success else 1)
     elif args.command == "upgrade":

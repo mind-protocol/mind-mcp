@@ -410,17 +410,56 @@ When blocked: Add `@mind:escalation`, then `@mind:proposition` with your best gu
 The `mind` command is available for project management:
 
 ```bash
-mind init [--force]    # Initialize/re-sync protocol files
-mind validate          # Check protocol invariants
-mind doctor            # Health checks (auto-archives large SYNCs)
-mind sync              # Show SYNC status (auto-archives large SYNCs)
-mind work [path] [objective]           # AI-assisted work on a path
-mind solve-markers     # Review escalations and propositions
-mind context <file>    # Get doc context for a file
-mind prompt            # Generate bootstrap prompt for LLM
-mind overview          # Generate repo map with file tree, links, definitions
-mind docs-fix          # Work doc chains and create minimal missing docs
+mind init [--database falkordb|neo4j]  # Initialize .mind/ with runtime
+mind status                             # Show mind status and modules
+mind upgrade                            # Check for protocol updates
+mind validate                           # Check protocol invariants
+mind doctor                             # Health checks
+mind sync                               # Show SYNC status
+mind work [path] [objective]            # AI-assisted work on a path
+mind solve-markers                      # Review escalations and propositions
+mind context <file>                     # Get doc context for a file
+mind prompt                             # Generate bootstrap prompt for LLM
+mind overview                           # Generate repo map
+mind docs-fix                           # Create minimal missing docs
 ```
+
+### Local Runtime
+
+`mind init` copies the full Python runtime to `.mind/mind/`. This allows projects to run mind locally without installing the package.
+
+**Structure after init:**
+```
+.mind/
+├── PRINCIPLES.md, FRAMEWORK.md    # Protocol docs
+├── agents/, skills/, procedures/   # Agent definitions
+├── state/                          # SYNC files
+├── database_config.yaml            # Database configuration
+└── mind/                           # Python runtime (186 files)
+    ├── physics/                    # Physics simulation
+    ├── graph/                      # Graph operations
+    ├── connectome/                 # Dialogue runner
+    ├── infrastructure/             # DB adapters, embeddings
+    └── traversal/                  # Traversal logic
+```
+
+**Usage:**
+```bash
+# Run scripts with local runtime
+PYTHONPATH=".mind:$PYTHONPATH" python3 my_script.py
+```
+
+```python
+# my_script.py - imports work normally
+from mind.physics.constants import DECAY_RATE
+from mind.connectome import ConnectomeRunner
+from mind.infrastructure.database.factory import get_database_adapter
+```
+
+**Database configuration:**
+- Config file: `.mind/database_config.yaml`
+- Environment template: `.env.mind.example`
+- Environment vars override config values
 
 ### Overview Command
 
