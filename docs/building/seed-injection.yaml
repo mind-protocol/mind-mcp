@@ -1,0 +1,971 @@
+# =============================================================================
+# MIND BOOTSTRAP GRAPH v1.0
+# =============================================================================
+#
+# Initial graph state for mind system.
+# Run once to initialize. Doctor and membrane grow it from here.
+#
+# Schema: v1.2
+# Created: 2025-12-24
+#
+# =============================================================================
+
+version: "1.0"
+schema_version: "1.2"
+created_at: "2025-12-24"
+created_by: "nicolas"
+
+# =============================================================================
+# NODES
+# =============================================================================
+
+nodes:
+
+  # ---------------------------------------------------------------------------
+  # SPACES — Structure / Containment
+  # ---------------------------------------------------------------------------
+  #
+  # Hierarchy:
+  #   ROOT
+  #   ├── AREA: engine, building, schema, membrane, doctor, agents
+  #   └── (modules created by doctor as needed)
+  #
+
+  - id: "space_ROOT_mind"
+    node_type: space
+    type: root
+    name: "mind"
+    description: "Root space for mind system. Everything lives here."
+    weight: 10.0          # High weight = high inertia, stable anchor
+    energy: 0.0           # Energy managed by physics, start at 0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "space_AREA_engine"
+    node_type: space
+    type: area
+    name: "engine"
+    description: "Core graph engine: physics, tick, traversal, queries."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "space_AREA_building"
+    node_type: space
+    type: area
+    name: "building"
+    description: "Runtime: runner, dispatcher, canon, events."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "space_AREA_schema"
+    node_type: space
+    type: area
+    name: "schema"
+    description: "Graph schema: node types, link types, constraints."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "space_AREA_membrane"
+    node_type: space
+    type: area
+    name: "membrane"
+    description: "Protocol system: skills, protocols, execution."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "space_AREA_doctor"
+    node_type: space
+    type: area
+    name: "doctor"
+    description: "Health system: detection, issues, diagnostics."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "space_AREA_agents"
+    node_type: space
+    type: area
+    name: "agents"
+    description: "Agent definitions: cognitive postures, CLAUDE.md files."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # ACTORS — Who can act
+  # ---------------------------------------------------------------------------
+  #
+  # Types:
+  #   - human: Real people
+  #   - system: Automated processes (doctor, membrane)
+  #   - agent: AI agents with cognitive postures
+  #
+
+  # Human
+  - id: "actor_HUMAN_nicolas"
+    node_type: actor
+    type: human
+    name: "nicolas"
+    description: "Human partner. Founder of Mind Protocol."
+    weight: 10.0          # Protagonist weight
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # Systems
+  - id: "actor_SYSTEM_doctor"
+    node_type: actor
+    type: system
+    name: "doctor"
+    description: "Runs tests, health checks, scans. Creates issue nodes."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_SYSTEM_membrane"
+    node_type: actor
+    type: system
+    name: "membrane"
+    description: "Executes protocols. Guides agents through procedures."
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # Agents — Cognitive Postures
+  - id: "actor_AGENT_witness"
+    node_type: actor
+    type: agent
+    name: "witness"
+    description: "Pull: What's actually happening? Move: observe → trace → name"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_groundwork"
+    node_type: actor
+    type: agent
+    name: "groundwork"
+    description: "Pull: Simplest thing that works? Move: build → break → fix"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_keeper"
+    node_type: actor
+    type: agent
+    name: "keeper"
+    description: "Pull: What must not break? Move: validate → gate → document"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_weaver"
+    node_type: actor
+    type: agent
+    name: "weaver"
+    description: "Pull: What connects to what? Move: link → bridge → unify"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_voice"
+    node_type: actor
+    type: agent
+    name: "voice"
+    description: "Pull: What needs to be named? Move: distill → name → publish"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_scout"
+    node_type: actor
+    type: agent
+    name: "scout"
+    description: "Pull: What's out there? Move: survey → map → report"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_architect"
+    node_type: actor
+    type: agent
+    name: "architect"
+    description: "Pull: What's the right shape? Move: constrain → shape → decide"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_fixer"
+    node_type: actor
+    type: agent
+    name: "fixer"
+    description: "Pull: What's broken and why? Move: reproduce → isolate → patch"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_herald"
+    node_type: actor
+    type: agent
+    name: "herald"
+    description: "Pull: What needs communicating? Move: escalate → summarize → handoff"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "actor_AGENT_steward"
+    node_type: actor
+    type: agent
+    name: "steward"
+    description: "Pull: What's the state of the whole? Move: prioritize → assign → track"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # THINGS — References / Artifacts
+  # ---------------------------------------------------------------------------
+  #
+  # Types:
+  #   - schema: Schema definition files
+  #   - spec: Specification files
+  #   - index: Directory/collection references
+  #
+
+  - id: "thing_SCHEMA_v1-2"
+    node_type: thing
+    type: schema
+    name: "schema-v1.2"
+    description: "Current graph schema definition."
+    uri: "docs/schema/schema.yaml"
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "thing_SPEC_coverage-v1"
+    node_type: thing
+    type: spec
+    name: "coverage-v1"
+    description: "Coverage validation spec. Detection → skill → protocol mapping."
+    uri: "specs/coverage.yaml"
+    weight: 3.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "thing_INDEX_skills"
+    node_type: thing
+    type: index
+    name: "skills-index"
+    description: "Skills directory. Contextual knowledge documents."
+    uri: "skills/"
+    weight: 2.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "thing_INDEX_protocols"
+    node_type: thing
+    type: index
+    name: "protocols-index"
+    description: "Protocols directory. Executable procedures."
+    uri: "protocols/"
+    weight: 2.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "thing_INDEX_agents"
+    node_type: thing
+    type: index
+    name: "agents-index"
+    description: "Agents directory. CLAUDE.md files for each posture."
+    uri: "agents/"
+    weight: 2.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # NARRATIVES — Knowledge / Goals / Patterns
+  # ---------------------------------------------------------------------------
+  #
+  # Types at bootstrap:
+  #   - objective: Root goals for the system
+  #   - pattern: Core design decisions
+  #
+
+  # Root Objectives
+  - id: "narrative_OBJECTIVE_system-operational"
+    node_type: narrative
+    type: objective
+    name: "System Operational"
+    description: "Primary objective for mind."
+    content: |
+      The mind system runs end-to-end:
+      - Doctor detects issues (runs tests, health, scan)
+      - Issues link to objectives
+      - Tasks group issues by skill
+      - Membrane executes protocols
+      - Protocols create clusters
+      - Graph grows from work
+    weight: 10.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "narrative_OBJECTIVE_self-documenting"
+    node_type: narrative
+    type: objective
+    name: "Self-Documenting"
+    description: "Documentation objective."
+    content: |
+      Every module has complete documentation:
+      - Doc chain: OBJ → PAT → BEH → ALG → VAL → IMPL → SYNC
+      - Bidirectional pointers: code ↔ docs
+      - SYNC updated after changes
+      - No orphan docs, no undocumented code
+    weight: 8.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "narrative_OBJECTIVE_health-verified"
+    node_type: narrative
+    type: objective
+    name: "Health Verified"
+    description: "Verification objective."
+    content: |
+      Critical invariants have runtime verification:
+      - Validations define what must hold
+      - Health indicators verify at runtime
+      - Docks point to observation points
+      - Failures caught before production
+    weight: 8.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "narrative_OBJECTIVE_coverage-complete"
+    node_type: narrative
+    type: objective
+    name: "Coverage Complete"
+    description: "Traceability objective."
+    content: |
+      Complete path from detection to resolution:
+      - Every doctor detection has a skill
+      - Every skill has protocols
+      - Every protocol creates clusters
+      - No orphan detections, skills, or protocols
+    weight: 8.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # Core Patterns
+  - id: "narrative_PATTERN_posture-not-role"
+    node_type: narrative
+    type: pattern
+    name: "Posture Not Role"
+    description: "Agent design pattern."
+    content: |
+      Agents have cognitive postures, not role restrictions.
+      All agents can do all tasks.
+      Posture shapes HOW, not WHAT.
+      Six signals: pull, tension, blind_spot, constraint, move, anchor.
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "narrative_PATTERN_dense-clusters"
+    node_type: narrative
+    type: pattern
+    name: "Dense Clusters"
+    description: "Graph output pattern."
+    content: |
+      Work creates dense clusters, not sparse nodes.
+      Minimum: content node + moment + links.
+      Links to existing nodes (not orphan).
+      Energy flows through connections.
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  - id: "narrative_PATTERN_issue-task-objective"
+    node_type: narrative
+    type: pattern
+    name: "Issue Task Objective"
+    description: "Work organization pattern."
+    content: |
+      Issue: atomic symptom (from doctor)
+      Task: groups issues by skill needed
+      Objective: the goal issues block
+
+      Doctor creates issues → links to evidence → links to objective
+      Surface by objective → get all blocking issues → group into tasks
+    weight: 5.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # MOMENTS — Bootstrap Event
+  # ---------------------------------------------------------------------------
+
+  - id: "moment_BOOTSTRAP_init-001"
+    node_type: moment
+    type: bootstrap
+    name: "Graph Initialized"
+    description: "Bootstrap moment."
+    text: |
+      Graph initialized with root structure:
+      - 7 spaces (root + 6 areas)
+      - 13 actors (1 human + 2 systems + 10 agents)
+      - 5 things (schema, spec, indices)
+      - 7 narratives (4 objectives + 3 patterns)
+      - This moment
+    status: spoken
+    tick_created: 0
+    tick_resolved: 0
+    weight: 1.0
+    energy: 0.0
+    created_at_s: 1735084800
+    updated_at_s: 1735084800
+
+
+# =============================================================================
+# LINKS
+# =============================================================================
+
+links:
+
+  # ---------------------------------------------------------------------------
+  # CONTAINS — Space hierarchy
+  # ---------------------------------------------------------------------------
+  #
+  # contains: Space → Space/Actor/Thing
+  # Structural (no energy flow)
+  #
+
+  # Root contains areas
+  - id: "contains_root-to-engine"
+    node_a: "space_ROOT_mind"
+    node_b: "space_AREA_engine"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains engine area"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-building"
+    node_a: "space_ROOT_mind"
+    node_b: "space_AREA_building"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains building area"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-schema"
+    node_a: "space_ROOT_mind"
+    node_b: "space_AREA_schema"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains schema area"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-membrane"
+    node_a: "space_ROOT_mind"
+    node_b: "space_AREA_membrane"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains membrane area"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-doctor"
+    node_a: "space_ROOT_mind"
+    node_b: "space_AREA_doctor"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains doctor area"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-agents"
+    node_a: "space_ROOT_mind"
+    node_b: "space_AREA_agents"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains agents area"
+    created_at_s: 1735084800
+
+  # Objectives in root
+  - id: "contains_root-to-obj-operational"
+    node_a: "space_ROOT_mind"
+    node_b: "narrative_OBJECTIVE_system-operational"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains system-operational objective"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-obj-selfdoc"
+    node_a: "space_ROOT_mind"
+    node_b: "narrative_OBJECTIVE_self-documenting"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains self-documenting objective"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-obj-health"
+    node_a: "space_ROOT_mind"
+    node_b: "narrative_OBJECTIVE_health-verified"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains health-verified objective"
+    created_at_s: 1735084800
+
+  - id: "contains_root-to-obj-coverage"
+    node_a: "space_ROOT_mind"
+    node_b: "narrative_OBJECTIVE_coverage-complete"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Root contains coverage-complete objective"
+    created_at_s: 1735084800
+
+  # Patterns in membrane area
+  - id: "contains_membrane-to-pat-posture"
+    node_a: "space_AREA_membrane"
+    node_b: "narrative_PATTERN_posture-not-role"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Membrane area contains posture-not-role pattern"
+    created_at_s: 1735084800
+
+  - id: "contains_membrane-to-pat-clusters"
+    node_a: "space_AREA_membrane"
+    node_b: "narrative_PATTERN_dense-clusters"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Membrane area contains dense-clusters pattern"
+    created_at_s: 1735084800
+
+  - id: "contains_doctor-to-pat-issue"
+    node_a: "space_AREA_doctor"
+    node_b: "narrative_PATTERN_issue-task-objective"
+    nature: "contains"
+    weight: 1.0
+    energy: 0.0
+    emotions: []
+    name: "contains"
+    role: null
+    direction: null
+    description: "Doctor area contains issue-task-objective pattern"
+    created_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # ATTACHED_TO — Things attached to spaces
+  # ---------------------------------------------------------------------------
+  #
+  # attached_to: Thing → Actor/Space
+  # Energy carrier (flow phase)
+  #
+
+  - id: "attached_schema-to-schema-area"
+    node_a: "thing_SCHEMA_v1-2"
+    node_b: "space_AREA_schema"
+    nature: "belongs to"
+    weight: 1.0
+    energy: 0.0
+    name: "schema definition"
+    description: "Schema file attached to schema area"
+    created_at_s: 1735084800
+
+  - id: "attached_coverage-to-doctor"
+    node_a: "thing_SPEC_coverage-v1"
+    node_b: "space_AREA_doctor"
+    nature: "belongs to"
+    weight: 1.0
+    energy: 0.0
+    name: "coverage spec"
+    description: "Coverage spec attached to doctor area"
+    created_at_s: 1735084800
+
+  - id: "attached_skills-to-membrane"
+    node_a: "thing_INDEX_skills"
+    node_b: "space_AREA_membrane"
+    nature: "belongs to"
+    weight: 1.0
+    energy: 0.0
+    name: "skills index"
+    description: "Skills index attached to membrane area"
+    created_at_s: 1735084800
+
+  - id: "attached_protocols-to-membrane"
+    node_a: "thing_INDEX_protocols"
+    node_b: "space_AREA_membrane"
+    nature: "belongs to"
+    weight: 1.0
+    energy: 0.0
+    name: "protocols index"
+    description: "Protocols index attached to membrane area"
+    created_at_s: 1735084800
+
+  - id: "attached_agents-to-agents-area"
+    node_a: "thing_INDEX_agents"
+    node_b: "space_AREA_agents"
+    nature: "belongs to"
+    weight: 1.0
+    energy: 0.0
+    name: "agents index"
+    description: "Agents index attached to agents area"
+    created_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # RELATES — Objective relationships
+  # ---------------------------------------------------------------------------
+  #
+  # relates: Any → Any
+  # Energy carrier (flow + backflow)
+  # Use direction property for semantics
+  #
+
+  # Secondary objectives support primary
+  - id: "relates_selfdoc-supports-operational"
+    node_a: "narrative_OBJECTIVE_self-documenting"
+    node_b: "narrative_OBJECTIVE_system-operational"
+    nature: "supports"
+    weight: 0.8
+    energy: 0.0
+    name: "supports"
+    description: "Self-documenting supports system-operational"
+    created_at_s: 1735084800
+
+  - id: "relates_health-supports-operational"
+    node_a: "narrative_OBJECTIVE_health-verified"
+    node_b: "narrative_OBJECTIVE_system-operational"
+    nature: "supports"
+    weight: 0.8
+    energy: 0.0
+    name: "supports"
+    description: "Health-verified supports system-operational"
+    created_at_s: 1735084800
+
+  - id: "relates_coverage-supports-operational"
+    node_a: "narrative_OBJECTIVE_coverage-complete"
+    node_b: "narrative_OBJECTIVE_system-operational"
+    nature: "supports"
+    weight: 0.8
+    energy: 0.0
+    name: "supports"
+    description: "Coverage-complete supports system-operational"
+    created_at_s: 1735084800
+
+  # Patterns elaborate objectives
+  - id: "relates_pat-clusters-elaborates-coverage"
+    node_a: "narrative_PATTERN_dense-clusters"
+    node_b: "narrative_OBJECTIVE_coverage-complete"
+    nature: "elaborates"
+    weight: 0.5
+    energy: 0.0
+    name: "elaborates"
+    description: "Dense-clusters pattern elaborates coverage objective"
+    created_at_s: 1735084800
+
+  - id: "relates_pat-issue-elaborates-coverage"
+    node_a: "narrative_PATTERN_issue-task-objective"
+    node_b: "narrative_OBJECTIVE_coverage-complete"
+    nature: "elaborates"
+    weight: 0.5
+    energy: 0.0
+    name: "elaborates"
+    description: "Issue-task-objective pattern elaborates coverage objective"
+    created_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # EXPRESSES — Actor creates moment
+  # ---------------------------------------------------------------------------
+  #
+  # expresses: Actor → Moment
+  # Energy carrier (draw phase)
+  #
+
+  - id: "expresses_nicolas-to-bootstrap"
+    node_a: "actor_HUMAN_nicolas"
+    node_b: "moment_BOOTSTRAP_init-001"
+    nature: "expresses"
+    weight: 1.0
+    energy: 0.0
+    name: "expressed"
+    description: "Nicolas created bootstrap moment"
+    created_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # ABOUT — Moment references nodes
+  # ---------------------------------------------------------------------------
+  #
+  # about: Moment → Any
+  # Energy carrier (flow phase)
+  #
+
+  - id: "about_bootstrap-to-root"
+    node_a: "moment_BOOTSTRAP_init-001"
+    node_b: "space_ROOT_mind"
+    nature: "is about"
+    weight: 1.0
+    energy: 0.0
+    name: "about"
+    description: "Bootstrap moment is about root space"
+    created_at_s: 1735084800
+
+  # ---------------------------------------------------------------------------
+  # AT — Actors placed in spaces
+  # ---------------------------------------------------------------------------
+  #
+  # at: Actor → Space
+  # Energy carrier (enables traversal from actor to content)
+  #
+
+  # Human in root
+  - id: "at_nicolas-in-root"
+    node_a: "actor_HUMAN_nicolas"
+    node_b: "space_ROOT_mind"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "present"
+    description: "Nicolas present in root space"
+    created_at_s: 1735084800
+
+  # Systems in their domains
+  - id: "at_doctor-in-doctor"
+    node_a: "actor_SYSTEM_doctor"
+    node_b: "space_AREA_doctor"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "operates"
+    description: "Doctor system operates in doctor area"
+    created_at_s: 1735084800
+
+  - id: "at_membrane-in-membrane"
+    node_a: "actor_SYSTEM_membrane"
+    node_b: "space_AREA_membrane"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "operates"
+    description: "Membrane system operates in membrane area"
+    created_at_s: 1735084800
+
+  # Agents in agents area (can traverse to other areas via space links)
+  - id: "at_witness-in-agents"
+    node_a: "actor_AGENT_witness"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Witness agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_groundwork-in-agents"
+    node_a: "actor_AGENT_groundwork"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Groundwork agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_keeper-in-agents"
+    node_a: "actor_AGENT_keeper"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Keeper agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_weaver-in-agents"
+    node_a: "actor_AGENT_weaver"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Weaver agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_voice-in-agents"
+    node_a: "actor_AGENT_voice"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Voice agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_scout-in-agents"
+    node_a: "actor_AGENT_scout"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Scout agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_architect-in-agents"
+    node_a: "actor_AGENT_architect"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Architect agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_fixer-in-agents"
+    node_a: "actor_AGENT_fixer"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Fixer agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_herald-in-agents"
+    node_a: "actor_AGENT_herald"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Herald agent based in agents area"
+    created_at_s: 1735084800
+
+  - id: "at_steward-in-agents"
+    node_a: "actor_AGENT_steward"
+    node_b: "space_AREA_agents"
+    nature: "inhabits"
+    weight: 1.0
+    energy: 0.0
+    name: "based"
+    description: "Steward agent based in agents area"
+    created_at_s: 1735084800
+
+
+# =============================================================================
+# SUMMARY
+# =============================================================================
+#
+# Nodes: 33
+#   - Spaces: 7 (1 root + 6 areas)
+#   - Actors: 13 (1 human + 2 systems + 10 agents)
+#   - Things: 5 (1 schema + 1 spec + 3 indices)
+#   - Narratives: 7 (4 objectives + 3 patterns)
+#   - Moments: 1 (bootstrap)
+#
+# Links: 38 (all LINKED, semantics via nature → floats)
+#   - contains: 13 (space hierarchy)
+#   - belongs to: 5 (things to spaces)
+#   - supports/elaborates: 5 (objective relationships)
+#   - expresses: 1 (actor to moment)
+#   - is about: 1 (moment to subject)
+#   - inhabits: 13 (actors in spaces)
+#
+# Not created (doctor/membrane will create):
+#   - Issues (from detection)
+#   - Tasks (grouped issues)
+#   - Validations (when specifying)
+#   - Health indicators (when covering)
+#   - Implementations (when building)
+#   - Work moments (when working)
+#
+# =============================================================================
