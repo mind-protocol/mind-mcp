@@ -157,7 +157,7 @@ class AgentGraph:
 
     def __init__(
         self,
-        graph_name: str = "mind",
+        graph_name: str = None,  # Use config default
         host: str = "localhost",
         port: int = 6379,
     ):
@@ -177,17 +177,11 @@ class AgentGraph:
             from mind.physics.graph.graph_ops import GraphOps
             from mind.physics.graph.graph_queries import GraphQueries
 
-            self._graph_ops = GraphOps(
-                graph_name=self.graph_name,
-                host=self.host,
-                port=self.port,
-            )
-            self._graph_queries = GraphQueries(
-                graph_name=self.graph_name,
-                host=self.host,
-                port=self.port,
-            )
+            # Let factory use config defaults
+            self._graph_ops = GraphOps(graph_name=self.graph_name)
+            self._graph_queries = GraphQueries(graph_name=self.graph_name)
             self._connected = True
+            self.graph_name = self._graph_ops.graph_name  # Update with actual name
             logger.info(f"[AgentGraph] Connected to {self.graph_name}")
             return True
         except Exception as e:

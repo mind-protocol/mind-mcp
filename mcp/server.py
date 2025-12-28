@@ -41,8 +41,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # Add project root to path
-project_root = Path(__file__).parent.parent.parent
+project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
+
+# Load environment variables
+from dotenv import load_dotenv
+load_dotenv(project_root / ".env")
 
 from mind.connectome import ConnectomeRunner
 from mind.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
@@ -72,8 +76,9 @@ class MindServer:
         # Try to get graph connections if available
         try:
             from mind.physics.graph import GraphOps, GraphQueries
-            self.graph_ops = GraphOps(graph_name="mind")
-            self.graph_queries = GraphQueries(graph_name="mind")
+            # Don't pass graph_name - let the adapter use config
+            self.graph_ops = GraphOps()
+            self.graph_queries = GraphQueries()
             logger.info("Connected to graph database")
         except Exception as e:
             logger.warning(f"No graph connection: {e}")
@@ -82,12 +87,12 @@ class MindServer:
 
         # Initialize agent graph for work agent management
         try:
-            self.agent_graph = AgentGraph(graph_name="mind")
+            self.agent_graph = AgentGraph()
             self.agent_graph.ensure_agents_exist()
             logger.info("Agent graph initialized")
         except Exception as e:
             logger.warning(f"No agent graph: {e}")
-            self.agent_graph = AgentGraph(graph_name="mind")  # Fallback mode
+            self.agent_graph = AgentGraph()  # Fallback mode
 
         self.runner = ConnectomeRunner(
             graph_ops=self.graph_ops,
@@ -943,7 +948,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
             result, log_path = await run_exploration(
                 query=query,
                 actor_id=actor_id,
-                graph_name="mind",
+                graph_name=None,  # Use config default
                 origin_moment=moment_id,
                 timeout=timeout,
                 debug=debug,

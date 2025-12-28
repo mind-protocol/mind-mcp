@@ -67,7 +67,7 @@ class GraphQueries(MomentQueryMixin, SearchQueryMixin):
 
     def __init__(
         self,
-        graph_name: str = "blood_ledger",
+        graph_name: str = None,
         host: str = "localhost",
         port: int = 6379
     ):
@@ -75,7 +75,7 @@ class GraphQueries(MomentQueryMixin, SearchQueryMixin):
         Initialize GraphQueries with database adapter.
 
         Args:
-            graph_name: Name of the graph (default: blood_ledger)
+            graph_name: Name of the graph (default: from config)
             host: Database host (used if no config file, default: localhost)
             port: Database port (used if no config file, default: 6379)
         """

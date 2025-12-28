@@ -74,7 +74,7 @@ class GraphOps(MomentOperationsMixin, ApplyOperationsMixin, LinkCreationMixin):
 
     def __init__(
         self,
-        graph_name: str = "blood_ledger",
+        graph_name: str = None,  # Use config default
         host: str = "localhost",
         port: int = 6379
     ):
@@ -82,7 +82,7 @@ class GraphOps(MomentOperationsMixin, ApplyOperationsMixin, LinkCreationMixin):
         Initialize GraphOps with database adapter.
 
         Args:
-            graph_name: Name of the graph (default: blood_ledger)
+            graph_name: Name of the graph (default: from config)
             host: Database host (used if no config file, default: localhost)
             port: Database port (used if no config file, default: 6379)
         """
