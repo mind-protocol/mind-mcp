@@ -1,10 +1,10 @@
 # DatabaseAdapter — Sync
 
 ```
-STATUS: DESIGNING
-VERSION: v0.1
+STATUS: CANONICAL
+VERSION: v1.0
 CREATED: 2025-12-26
-LAST_UPDATED: 2025-12-27
+LAST_UPDATED: 2025-12-29
 ```
 
 ---
@@ -26,29 +26,29 @@ THIS:           SYNC_DatabaseAdapter.md (you are here)
 
 ## CURRENT STATE
 
-**Module Status:** IMPLEMENTING
+**Module Status:** CANONICAL (v1.0)
 
-The DatabaseAdapter is implemented and core classes migrated.
+The DatabaseAdapter is fully implemented with both FalkorDB and Neo4j backends working.
 
 ### What Exists
 
 - Full documentation chain (OBJECTIVES → SYNC)
-- Adapter infrastructure created and working
-- `GraphOps` and `GraphQueries` migrated to use adapter
-- MCP server renamed from "membrane" to "mind"
-- Configuration file created
+- Both backends working (FalkorDB local, Neo4j Aura cloud)
+- `GraphOps`, `GraphQueries`, `AgentGraph` using adapter
+- MCP server using config defaults
+- Graph name defaults to repository name
 
-### Core Files Created
+### Core Files
 
 ```
 mind/infrastructure/database/
 ├── __init__.py           # Public exports
 ├── adapter.py            # Abstract base class
 ├── falkordb_adapter.py   # FalkorDB implementation
-├── neo4j_adapter.py      # Neo4j implementation (placeholder)
-└── factory.py            # get_database_adapter()
+├── neo4j_adapter.py      # Neo4j implementation (working)
+└── factory.py            # get_database_adapter() + _get_repo_name()
 
-mind/data/database_config.yaml  # Configuration
+.env.mind.example         # Environment template
 ```
 
 ### What's Migrated
@@ -112,11 +112,12 @@ mind/data/database_config.yaml  # Configuration
 
 | Date | Change | By |
 |------|--------|----|
-| 2025-12-27 | Full doc chain created | Claude |
-| 2025-12-27 | 31 files identified for migration | Claude |
+| 2025-12-29 | Graph name defaults to repo name | Claude |
+| 2025-12-29 | Neo4j v6 compatibility fixes | Claude |
+| 2025-12-29 | MCP server uses config defaults | Claude |
+| 2025-12-28 | Neo4j Aura cloud tested | Claude |
 | 2025-12-27 | Adapter infrastructure implemented | Claude |
 | 2025-12-27 | GraphOps + GraphQueries migrated | Claude |
-| 2025-12-27 | MCP renamed membrane → mind | Claude |
 
 ---
 

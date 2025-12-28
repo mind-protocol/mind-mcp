@@ -74,31 +74,44 @@ class DatabaseAdapter(ABC):
 
 ---
 
-### D2: Configuration via YAML
+### D2: Configuration via YAML + Environment
 
-**Decision:** Backend selection in `mind/data/database_config.yaml`.
+**Decision:** Backend selection in `.mind/database_config.yaml`, overridable by env vars.
 
 **Why:**
 - Easy to change per environment
-- Can be overridden by environment variables
-- Human-readable
+- Environment variables for secrets
+- Human-readable defaults
+
+**Defaults:**
+- Backend: FalkorDB
+- Graph name: Repository name (e.g., `my-project` → `my_project`)
 
 ```yaml
-# mind/data/database_config.yaml
+# .mind/database_config.yaml
 database:
   backend: "falkordb"  # or "neo4j"
 
   falkordb:
     host: "localhost"
     port: 6379
-    graph_name: "blood_ledger"
+    graph_name: null  # Defaults to repo name
 
   neo4j:
     uri: "bolt://localhost:7687"
     user: "neo4j"
-    password: "${NEO4J_PASSWORD}"  # Env var interpolation
-    database: "neo4j"
+    password: ""
+    database: null  # Defaults to repo name
 ```
+
+**Environment overrides:**
+```bash
+DATABASE_BACKEND=neo4j
+FALKORDB_GRAPH=custom_name
+NEO4J_DATABASE=custom_db
+```
+
+See `.env.mind.example` for all options.
 
 ---
 

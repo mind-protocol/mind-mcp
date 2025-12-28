@@ -1,32 +1,96 @@
 # mind-mcp
 
-MIND Engine — Graph physics, traversal, membrane client for AI agents.
+Mind Protocol MCP server and runtime for AI agents. Graph physics, traversal, structured dialogues.
 
-## Installation
-
-```bash
-pip install mind-mcp
-```
-
-Or from source:
+## Quick Start
 
 ```bash
+# Clone and install
 git clone https://github.com/mind-protocol/mind-mcp.git
 cd mind-mcp
 pip install -e .
+
+# Initialize a project (defaults to FalkorDB)
+mind init
 ```
 
-## MCP Server Setup
+This creates `.mind/` with:
+- Protocol docs (PRINCIPLES.md, FRAMEWORK.md)
+- Agent definitions, skills, procedures
+- Python runtime for physics, graph, traversal
+- Database config (graph name defaults to repo name)
+
+## Local Runtime
+
+After `mind init`, projects can run mind locally without pip install:
+
+```bash
+PYTHONPATH=".mind:$PYTHONPATH" python3 my_script.py
+```
+
+```python
+# my_script.py
+from mind.physics.constants import DECAY_RATE
+from mind.connectome import ConnectomeRunner
+from mind.infrastructure.database.factory import get_database_adapter
+
+adapter = get_database_adapter()
+```
+
+## CLI Commands
+
+```bash
+mind init [--database falkordb|neo4j]  # Initialize .mind/ with runtime
+mind status                             # Show status and modules
+mind upgrade                            # Check for updates
+```
+
+## Database Backends
+
+Graph name defaults to repo name (e.g., `my-project` → `my_project`).
+
+### FalkorDB (default, local)
+
+```bash
+mind init
+
+# Start FalkorDB
+docker run -p 6379:6379 falkordb/falkordb
+```
+
+Override graph name in `.env`:
+```bash
+FALKORDB_GRAPH=custom_name
+```
+
+### Neo4j (cloud or local)
+
+```bash
+mind init --database neo4j
+```
+
+Configure in `.env`:
+```bash
+DATABASE_BACKEND=neo4j
+NEO4J_URI=neo4j+s://xxx.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
+NEO4J_DATABASE=neo4j
+```
+
+See `.env.mind.example` for all options.
+
+## MCP Server
 
 ### Claude Code
 
-Add to `~/.claude/settings.json`:
+Add to `.mcp.json` in your project:
 
 ```json
 {
   "mcpServers": {
     "mind": {
-      "command": "python",
+      "command": "python3",
       "args": ["-m", "mcp.server"],
       "cwd": "/path/to/mind-mcp"
     }
@@ -34,104 +98,44 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-Or per-project in `.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "mind": {
-      "command": "python",
-      "args": ["mcp/server.py"],
-      "cwd": "."
-    }
-  }
-}
-```
-
-### Cursor / VS Code
-
-Add to settings:
-
-```json
-{
-  "mcp.servers": {
-    "mind": {
-      "command": "python",
-      "args": ["-m", "mcp.server"],
-      "cwd": "/path/to/mind-mcp"
-    }
-  }
-}
-```
-
-## Available MCP Tools
+### Available Tools
 
 | Tool | Description |
 |------|-------------|
-| `graph_query` | Query the graph in natural language |
-| `membrane_start` | Start a structured dialogue session |
-| `membrane_continue` | Continue with an answer |
-| `membrane_list` | List available membranes |
+| `graph_query` | Semantic search across the graph |
+| `membrane_start` | Start a structured dialogue |
+| `membrane_continue` | Continue dialogue with answer |
+| `membrane_list` | List available dialogues |
 | `doctor_check` | Run health checks |
 | `agent_list` | List work agents |
 | `agent_spawn` | Spawn a work agent |
-| `task_list` | List available tasks |
+| `task_list` | List pending tasks |
 
-### Example: Query the Graph
-
-```
-graph_query(queries: ["What characters exist?"], top_k: 5)
-```
-
-### Example: Start a Membrane
+## Project Structure
 
 ```
-membrane_start(membrane: "create_doc_chain")
-membrane_continue(session_id: "...", answer: "physics")
-```
-
-## CLI
-
-```bash
-python -m cli init          # Initialize .mind/ in current directory
-python -m cli status        # Show status
-```
-
-## Python API
-
-```python
-from mind import get_graph_ops, get_graph_queries
-
-# Connect to graph
-ops = get_graph_ops("my_graph")
-queries = get_graph_queries("my_graph")
-
-# Query nodes
-results = queries.search_by_embedding("consciousness", top_k=5)
+.mind/
+├── PRINCIPLES.md          # How to work
+├── FRAMEWORK.md           # Navigation guide
+├── config.yaml            # Mind config
+├── database_config.yaml   # Database settings
+├── agents/                # Agent postures
+├── skills/                # Executable capabilities
+├── procedures/            # Structured dialogues
+├── state/                 # SYNC files
+└── mind/                  # Python runtime
+    ├── physics/           # Graph physics
+    ├── graph/             # Graph operations
+    ├── connectome/        # Dialogue runner
+    ├── infrastructure/    # DB adapters
+    └── traversal/         # Traversal logic
 ```
 
 ## Requirements
 
 - Python 3.10+
-- Neo4j (local or Aura)
-- OpenAI API key (for embeddings)
-
-## Environment Variables
-
-```bash
-# Neo4j connection
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=password
-
-# Or Neo4j Aura
-NEO4J_AURA_URI=neo4j+s://xxx.databases.neo4j.io
-NEO4J_AURA_USER=neo4j
-NEO4J_AURA_PASSWORD=xxx
-
-# Embeddings
-OPENAI_API_KEY=sk-xxx
-```
+- Neo4j or FalkorDB
+- Optional: OpenAI API key (for embeddings)
 
 ## License
 
