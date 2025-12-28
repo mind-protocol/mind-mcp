@@ -12,12 +12,9 @@ import argparse
 import json
 import shutil
 import sys
-import time
 import yaml
 from pathlib import Path
 
-CACHE_DIR = Path.home() / ".mind"
-UPGRADE_CHECK_INTERVAL = 86400  # 24 hours
 
 
 def get_mcp_version() -> str:
@@ -43,28 +40,7 @@ def get_protocol_version() -> str:
 
 
 def _check_upgrade_needed() -> str | None:
-    """
-    Check if upgrade available. Returns latest version if newer, else None.
-    Caches result to avoid spamming GitHub API.
-    """
-    CACHE_DIR.mkdir(exist_ok=True)
-    cache_file = CACHE_DIR / "upgrade_cache.json"
-
-    # Check cache
-    try:
-        if cache_file.exists():
-            cache = json.loads(cache_file.read_text())
-            last_check = cache.get("last_check", 0)
-            if time.time() - last_check < UPGRADE_CHECK_INTERVAL:
-                # Use cached result
-                latest = cache.get("latest_version")
-                if latest and latest != get_mcp_version():
-                    return latest
-                return None
-    except Exception:
-        pass
-
-    # Fetch from GitHub (quick timeout)
+    """Check if upgrade available. Returns latest version if newer, else None."""
     try:
         import urllib.request
         url = "https://api.github.com/repos/mind-protocol/mind-mcp/releases/latest"
@@ -73,12 +49,6 @@ def _check_upgrade_needed() -> str | None:
         with urllib.request.urlopen(req, timeout=2) as resp:
             data = json.loads(resp.read().decode())
             latest = data.get("tag_name", "").lstrip("v")
-
-            # Cache result
-            cache_file.write_text(json.dumps({
-                "last_check": time.time(),
-                "latest_version": latest
-            }))
 
             if latest and latest != get_mcp_version():
                 return latest
