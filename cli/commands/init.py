@@ -1,5 +1,6 @@
 """mind init - Initialize .mind/ in a project directory."""
 
+from datetime import datetime
 from pathlib import Path
 
 from ..helpers.copy_ecosystem_templates_to_target import copy_ecosystem_templates
@@ -17,16 +18,91 @@ from ..helpers.get_mcp_version_from_config import get_mcp_version
 def run(target_dir: Path, database: str = "falkordb") -> bool:
     """Initialize .mind/ in target directory."""
     graph_name = target_dir.name.lower().replace("-", "_").replace(" ", "_")
+    version = get_mcp_version()
+    steps = []
 
+    print(f"\n# mind init v{version}")
+    print(f"Target: {target_dir}")
+    print(f"Database: {database} (graph: {graph_name})")
+    print()
+
+    # 1. Ecosystem templates
+    print("## Ecosystem")
     copy_ecosystem_templates(target_dir)
-    copy_runtime_package(target_dir)
-    create_ai_config_files(target_dir)
-    sync_skills_to_ai_tools(target_dir)
-    create_database_config(target_dir, database, graph_name)
-    setup_database(target_dir, database, graph_name)
-    create_env_example(target_dir, database)
-    create_mcp_config(target_dir)
-    update_gitignore(target_dir)
+    steps.append("ecosystem")
 
-    print(f"\n✓ mind initialized (v{get_mcp_version()}, {database})")
+    # 2. Runtime package
+    print("\n## Runtime")
+    copy_runtime_package(target_dir)
+    steps.append("runtime")
+
+    # 3. AI config files
+    print("\n## AI Configs")
+    create_ai_config_files(target_dir)
+    steps.append("ai_configs")
+
+    # 4. Skills sync
+    print("\n## Skills")
+    sync_skills_to_ai_tools(target_dir)
+    steps.append("skills")
+
+    # 5. Database config
+    print("\n## Database Config")
+    create_database_config(target_dir, database, graph_name)
+    steps.append("database_config")
+
+    # 6. Database setup
+    print("\n## Database Setup")
+    setup_database(target_dir, database, graph_name)
+    steps.append("database_setup")
+
+    # 7. Env example
+    print("\n## Environment")
+    create_env_example(target_dir, database)
+    steps.append("env_example")
+
+    # 8. MCP config
+    print("\n## MCP Server")
+    create_mcp_config(target_dir)
+    steps.append("mcp_config")
+
+    # 9. Gitignore
+    print("\n## Gitignore")
+    update_gitignore(target_dir)
+    steps.append("gitignore")
+
+    # Write to SYNC file
+    _update_sync_file(target_dir, version, database, graph_name, steps)
+
+    print(f"\n---")
+    print(f"✓ mind initialized (v{version}, {database}, graph: {graph_name})")
+    print(f"✓ SYNC updated: .mind/state/SYNC_Project_State.md")
     return True
+
+
+def _update_sync_file(target_dir: Path, version: str, database: str, graph_name: str, steps: list) -> None:
+    """Append init record to SYNC file."""
+    sync_file = target_dir / ".mind" / "state" / "SYNC_Project_State.md"
+
+    if not sync_file.exists():
+        return
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    entry = f"""
+## Init: {timestamp}
+
+| Setting | Value |
+|---------|-------|
+| Version | v{version} |
+| Database | {database} |
+| Graph | {graph_name} |
+
+**Steps completed:** {", ".join(steps)}
+
+---
+"""
+
+    # Append to SYNC file
+    with open(sync_file, "a") as f:
+        f.write(entry)
