@@ -17,6 +17,7 @@ DOCS: docs/infrastructure/database-adapter/PATTERNS_DatabaseAdapter.md
 
 import os
 import logging
+import subprocess
 from pathlib import Path
 from typing import Dict, Any, Optional
 
@@ -29,14 +30,32 @@ logger = logging.getLogger(__name__)
 # Singleton instances per graph name
 _instances: Dict[str, DatabaseAdapter] = {}
 
-# Default configuration
+
+def _get_repo_name() -> str:
+    """Get repository name from git or directory name, normalized for database use."""
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, timeout=5
+        )
+        if result.returncode == 0:
+            name = Path(result.stdout.strip()).name
+        else:
+            name = Path.cwd().name
+    except Exception:
+        name = Path.cwd().name
+    # Normalize: lowercase, replace hyphens/spaces with underscores
+    return name.lower().replace("-", "_").replace(" ", "_")
+
+
+# Default configuration (graph_name derived at runtime)
 DEFAULT_CONFIG = {
     "database": {
         "backend": "falkordb",
         "falkordb": {
             "host": "localhost",
             "port": 6379,
-            "graph_name": "blood_ledger",
+            "graph_name": None,  # Will be set to repo name
         },
         "neo4j": {
             "uri": "bolt://localhost:7687",
@@ -63,8 +82,10 @@ def load_database_config() -> Dict[str, Any]:
     """
     config = DEFAULT_CONFIG.copy()
 
-    # Try to load from file
-    config_path = Path(__file__).parent.parent.parent / "data" / "database_config.yaml"
+    # Try to load from file (check .mind/ first, then data/)
+    mind_config = Path.cwd() / ".mind" / "database_config.yaml"
+    legacy_config = Path(__file__).parent.parent.parent / "data" / "database_config.yaml"
+    config_path = mind_config if mind_config.exists() else legacy_config
     if config_path.exists():
         try:
             with open(config_path, "r") as f:
@@ -126,12 +147,12 @@ def get_database_adapter(
     config = load_database_config()
     backend = config["database"]["backend"]
 
-    # Determine graph name
+    # Determine graph name (default to repo name)
     if graph_name is None:
         if backend == "falkordb":
-            graph_name = config["database"]["falkordb"].get("graph_name", "blood_ledger")
+            graph_name = config["database"]["falkordb"].get("graph_name") or _get_repo_name()
         else:
-            graph_name = config["database"]["neo4j"].get("database", "neo4j")
+            graph_name = config["database"]["neo4j"].get("database") or _get_repo_name()
 
     # Check for existing instance
     cache_key = f"{backend}:{graph_name}"
