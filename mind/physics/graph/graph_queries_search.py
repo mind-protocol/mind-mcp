@@ -332,6 +332,9 @@ class SearchQueryMixin:
                     props = dict(node.properties)
                 elif isinstance(node, dict):
                     props = node
+                # Handle Neo4j v6 nodes (have get() and items() but not properties)
+                elif hasattr(node, 'get') and hasattr(node, 'items'):
+                    props = dict(node.items())
                 else:
                     continue
 

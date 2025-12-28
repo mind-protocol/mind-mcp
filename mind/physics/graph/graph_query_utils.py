@@ -70,6 +70,10 @@ def extract_node_props(node, system_fields: set = None) -> Optional[Dict[str, An
         elif isinstance(node, dict):
             labels = []
             props = node
+        # Handle Neo4j v6 nodes (have get() and items() but not properties)
+        elif hasattr(node, 'get') and hasattr(node, 'items'):
+            labels = list(node.labels) if hasattr(node, 'labels') else []
+            props = dict(node.items())
         else:
             return None
 
