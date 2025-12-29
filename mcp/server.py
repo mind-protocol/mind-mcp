@@ -914,31 +914,69 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 # No running loop, use asyncio.run directly
                 spawn_result = asyncio.run(coro)
 
-            # Build response
-            if task_id:
-                lines = [
-                    f"Agent Execution Complete (Task):",
-                    f"  Agent: {agent_id}",
-                    f"  Posture: {posture}",
-                    f"  Task ID: {task_id}",
-                    f"  Provider: {provider}",
-                    f"  Success: {spawn_result.success}",
-                    f"  Duration: {spawn_result.duration_seconds:.1f}s",
-                ]
-            else:
-                lines = [
-                    f"Agent Execution Complete (Issue):",
-                    f"  Agent: {agent_id}",
-                    f"  Posture: {posture}",
-                    f"  Issue: {issue_type}",
-                    f"  Path: {path}",
-                    f"  Provider: {provider}",
-                    f"  Success: {spawn_result.success}",
-                    f"  Duration: {spawn_result.duration_seconds:.1f}s",
-                ]
+            # Build response with node details
+            lines = [
+                "# Agent Execution Complete",
+                "",
+                "## Agent",
+                f"- **ID:** {agent_id}",
+                f"- **Posture:** {posture} ({get_learnings_content.__doc__ or 'work agent'})",
+                f"- **Provider:** {provider}",
+                f"- **Success:** {spawn_result.success}",
+                f"- **Duration:** {spawn_result.duration_seconds:.1f}s",
+            ]
 
+            # Show task details
+            if task_id or assignment_task_id:
+                lines.extend([
+                    "",
+                    "## Task",
+                    f"- **ID:** {task_id or assignment_task_id}",
+                ])
+                if not task_id and issue_type:
+                    lines.extend([
+                        f"- **Type:** FIX_{issue_type}",
+                        f"- **Name:** Fix {issue_type}",
+                        f"- **Content:** Fix {issue_type} at {path}",
+                    ])
+
+            # Show issue details
+            if issue_ids:
+                lines.extend([
+                    "",
+                    "## Issue",
+                    f"- **ID:** {issue_ids[0] if issue_ids else 'none'}",
+                    f"- **Type:** {issue_type}",
+                    f"- **Path:** {path}",
+                ])
+
+            # Show assignment moment
             if spawn_result.assignment_moment_id:
-                lines.append(f"  Moment: {spawn_result.assignment_moment_id}")
+                lines.extend([
+                    "",
+                    "## Assignment",
+                    f"- **Moment:** {spawn_result.assignment_moment_id}",
+                    f"- **Agent:** {agent_id} assigned to task",
+                ])
+
+            # Show exact command that was run
+            from runtime.agents import build_agent_command
+            cmd_info = build_agent_command(
+                agent=provider,
+                prompt="<prompt>",
+                system_prompt="<system_prompt>",
+                stream_json=True,
+                continue_session=True,
+                add_dir=self.target_dir,
+                allowed_tools="Bash Read Edit Write Glob Grep WebFetch NotebookEdit TodoWrite",
+            )
+            lines.extend([
+                "",
+                "## Command",
+                f"```",
+                f"{' '.join(cmd_info.cmd[:8])}...",
+                f"```",
+            ])
 
             if spawn_result.retried_without_continue:
                 lines.append(f"  Note: Retried without --continue")
