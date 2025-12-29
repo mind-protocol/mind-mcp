@@ -1,11 +1,64 @@
 # Project — Sync: Current State
 
 ```
-LAST_UPDATED: 2025-12-29
+LAST_UPDATED: 2025-12-30
 UPDATED_BY: agent_claude
 ```
 
 ## Recent Changes
+
+### 2025-12-30: Canonical Unified Injection Function
+
+**What:** Created `runtime/inject.py` as the single entry point for all graph injection operations.
+
+**Why:** Consolidate duplicate injection code scattered across modules. Previously, `procedure_runner.py`, `symbol_extractor.py`, and ingest modules each had their own `_upsert_node`/`_upsert_link` functions with inconsistent embedding and synthesis handling.
+
+**Key features of inject():**
+- Single function handles both nodes and links (detects by `from`/`to` vs `id`)
+- Automatic synthesis generation from physics state (via `runtime/physics/synthesis.py`)
+- Embedding generation from synthesis
+- Nature string → physics floats conversion
+- Context linking (actor, space, moment) with `with_context` flag
+- Moment chaining per actor (temporal chain)
+- Fail loud (no silent failures)
+
+**with_context flag:**
+- `with_context=True` (default): Query-driven injection — creates moment, chains to previous, links to actor/space
+- `with_context=False`: Init-time bulk load — no moments, no context linking (used during `mind init`)
+
+**Files created/modified:**
+- `runtime/inject.py` — NEW: Canonical injection module
+- `runtime/physics/synthesis.py` — Added `synthesize_node()`, `synthesize_link_full()`
+- `runtime/procedure_runner.py` — `_upsert_node`, `_upsert_link` now delegate to `inject()`
+- `runtime/symbol_extractor.py` — `_upsert_symbol`, `_upsert_link` now delegate to `inject()`
+- `runtime/ingest/actors.py` — NEW: Actor ingestion using `inject()`
+- `runtime/ingest/capabilities.py` — Now uses `inject()`
+
+**Usage pattern:**
+```python
+from runtime.inject import inject, set_context
+
+# Set injection context (typically done by query handler)
+set_context(actor_id="actor:agent_witness", task_id="task:fix_bug_123")
+
+# Inject node - automatically creates moment and links
+inject(adapter, {
+    "id": "narrative:finding_123",
+    "content": "Found the bug in line 42",
+})
+
+# Inject link
+inject(adapter, {
+    "from": "space:root",
+    "to": "space:actors",
+    "nature": "contains",
+})
+
+# Bulk init (no context)
+inject(adapter, {...}, with_context=False)
+```
+
+---
 
 ### 2025-12-29: MCP Task Lifecycle Tools Implemented
 
