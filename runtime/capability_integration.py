@@ -129,6 +129,8 @@ class CapabilityManager:
     - Registers checks in TriggerRegistry
     - Dispatches triggers
     - Manages cron scheduler for periodic triggers
+    - Manages file watcher for filesystem events
+    - Manages git hooks for commit events
     """
 
     def __init__(self, target_dir: Path, graph: Any = None):
@@ -142,6 +144,8 @@ class CapabilityManager:
         self.registry = TriggerRegistry()
         self.capabilities: list[tuple[str, Path, list[Callable]]] = []
         self.cron_scheduler: Optional[CronScheduler] = None
+        self.file_watcher = None  # FileWatcher instance
+        self.git_hooks = None  # GitHooks instance
         self._initialized = False
 
     def initialize(self) -> dict:

@@ -41,8 +41,6 @@ from .doctor_files import add_doctor_ignore, load_doctor_ignore
 from .project_map import print_project_map
 from .sync import sync_command
 from .solve_escalations import solve_special_markers_command
-from .work import work_command
-from .work import work_command
 from .refactor import refactor_command
 from .status_cmd import status_command
 from .repo_overview import generate_and_save as generate_overview
@@ -360,78 +358,6 @@ def main():
         "--verbose", "-v",
         action="store_true",
         help="Show detailed information including doc chain files"
-    )
-
-    # work command
-    work_parser = subparsers.add_parser(
-        "work",
-        help="Run AI-assisted work on a path or task (auto-runs doctor first)"
-    )
-    work_parser.add_argument(
-        "path",
-        type=Path,
-        nargs="?",
-        default=Path.cwd(),
-        help="Target path (file or directory) to work on (default: current directory)"
-    )
-    work_parser.add_argument(
-        "objective",
-        nargs="?",
-        default=None,
-        help="Optional objective describing what to accomplish"
-    )
-    work_parser.add_argument(
-        "--list", "-l",
-        action="store_true",
-        dest="list_tasks",
-        help="List available tasks from the graph"
-    )
-    work_parser.add_argument(
-        "--task",
-        type=str,
-        help="Work on a specific task ID from the graph"
-    )
-    work_parser.add_argument(
-        "--max", "-m",
-        type=int,
-        default=None,
-        help="Maximum issues to fix (default: all)"
-    )
-    work_parser.add_argument(
-        "--type", "-t",
-        action="append",
-        dest="types",
-        choices=[
-            "MONOLITH", "UNDOCUMENTED", "STALE_SYNC", "PLACEHOLDER",
-            "INCOMPLETE_CHAIN", "NO_DOCS_REF", "BROKEN_IMPL_LINK",
-            "STUB_IMPL", "INCOMPLETE_IMPL", "UNDOC_IMPL", "LARGE_DOC_MODULE",
-            "YAML_DRIFT"
-        ],
-        help="Only fix specific issue types (can be repeated)"
-    )
-    work_parser.add_argument(
-        "--depth",
-        choices=["links", "docs", "full"],
-        default="docs",
-        help="Work depth: links (refs only), docs (+ content), full (+ code). Default: docs"
-    )
-    work_parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Show what would be done without spawning agents"
-    )
-    work_parser.add_argument(
-        "--parallel", "-p",
-        type=int,
-        default=5,
-        help="Number of parallel agents (default: 5)"
-    )
-    work_parser.add_argument(
-        "--model",
-        choices=AGENT_CHOICES,
-        dest="work_model",
-        default=None,
-        help="Agent model for work (overrides global --model)"
     )
 
     # refactor command
@@ -1048,18 +974,6 @@ def main():
         sys.exit(exit_code)
     elif args.command == "status":
         exit_code = status_command(args.dir, args.module, args.verbose)
-        sys.exit(exit_code)
-    elif args.command == "work":
-        agent_provider = args.work_model or args.model
-        exit_code = work_command(
-            target_dir=args.path,
-            max_issues=args.max,
-            issue_types=args.types,
-            depth=args.depth,
-            dry_run=args.dry_run,
-            parallel=args.parallel,
-            agent_provider=agent_provider,
-        )
         sys.exit(exit_code)
     elif args.command == "refactor":
         if not args.action:
