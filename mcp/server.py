@@ -861,6 +861,9 @@ class MindServer:
 
         posture = agent_id.replace("agent_", "")
 
+        # Track created moments for output
+        moments_created = []
+
         # Upsert issue/task narratives before linking
         issue_ids = None
         if issue_type and path:
@@ -868,16 +871,26 @@ class MindServer:
             issue_narrative_id = self.agent_graph.upsert_issue_narrative(
                 issue_type=issue_type,
                 path=path,
-                message=f"Doctor issue: {issue_type} at {path}",
+                message=f"Problem detected: {issue_type} at {path}",
                 severity="warning",
             )
             if issue_narrative_id:
                 issue_ids = [issue_narrative_id]
+                # Create moment for issue detection
+                issue_moment = self.agent_graph.create_moment(
+                    agent_id=agent_id,
+                    moment_type="issue_detected",
+                    prose=f"Detected {issue_type} at {path}",
+                    about_ids=[issue_narrative_id],
+                    extra_props={"issue_type": issue_type, "path": path},
+                )
+                if issue_moment:
+                    moments_created.append(("issue_detected", issue_moment, f"Detected {issue_type} at {path}"))
 
             # Build prompt for issue-based spawn
             if not prompt:
-                prompt = f"""Fix the doctor issue:
-Issue Type: {issue_type}
+                prompt = f"""Fix the problem:
+Problem Type: {issue_type}
 Path: {path}
 
 Please investigate and fix this issue. Follow the project's coding standards and documentation patterns."""
@@ -891,6 +904,17 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 content=f"Fix {issue_type} at {path}",
                 name=f"Fix {issue_type}",
             )
+            if assignment_task_id:
+                # Create moment for task creation
+                task_moment = self.agent_graph.create_moment(
+                    agent_id=agent_id,
+                    moment_type="task_created",
+                    prose=f"Created task to fix {issue_type}",
+                    about_ids=[assignment_task_id] + (issue_ids or []),
+                    extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{issue_type}"},
+                )
+                if task_moment:
+                    moments_created.append(("task_created", task_moment, f"Created task: Fix {issue_type}"))
 
         # Actually spawn and run the agent
         try:
@@ -940,24 +964,23 @@ Please investigate and fix this issue. Follow the project's coding standards and
                         f"- **Content:** Fix {issue_type} at {path}",
                     ])
 
-            # Show issue details
-            if issue_ids:
-                lines.extend([
-                    "",
-                    "## Issue",
-                    f"- **ID:** {issue_ids[0] if issue_ids else 'none'}",
-                    f"- **Type:** {issue_type}",
-                    f"- **Path:** {path}",
-                ])
-
-            # Show assignment moment
+            # Show moment chain (chronological)
             if spawn_result.assignment_moment_id:
+                moments_created.append(("agent_assignment", spawn_result.assignment_moment_id, f"Agent {agent_id} assigned to task"))
+
+            if moments_created:
                 lines.extend([
                     "",
-                    "## Assignment",
-                    f"- **Moment:** {spawn_result.assignment_moment_id}",
-                    f"- **Agent:** {agent_id} assigned to task",
+                    "## Moment Chain",
+                    f"*Actor: {agent_id}*",
+                    "",
                 ])
+                for i, (moment_type, moment_id, prose) in enumerate(moments_created):
+                    prefix = "→ " if i > 0 else "● "
+                    lines.append(f"{prefix}**{moment_type}**: {prose}")
+                    lines.append(f"  `{moment_id}`")
+                    if i < len(moments_created) - 1:
+                        lines.append(f"  ↓ follows")
 
             # Show exact command that was run
             from runtime.agents import build_agent_command

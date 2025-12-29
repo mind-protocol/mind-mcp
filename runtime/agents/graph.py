@@ -445,6 +445,114 @@ class AgentGraph:
             logger.error(f"[AgentGraph] Failed to create assignment moment: {e}")
             return None
 
+    def get_actor_last_moment(self, agent_id: str) -> Optional[str]:
+        """Get the most recent moment expressed by an actor."""
+        if not self._connect():
+            return None
+
+        try:
+            cypher = """
+            MATCH (a:Actor {id: $agent_id})-[:expresses]->(m:Moment)
+            RETURN m.id
+            ORDER BY m.created_at_s DESC
+            LIMIT 1
+            """
+            result = self._graph_ops._query(cypher, {"agent_id": agent_id})
+            if result and result[0]:
+                return result[0][0]
+            return None
+        except Exception as e:
+            logger.warning(f"[AgentGraph] Failed to get last moment: {e}")
+            return None
+
+    def create_moment(
+        self,
+        agent_id: str,
+        moment_type: str,
+        prose: str,
+        about_ids: Optional[List[str]] = None,
+        extra_props: Optional[Dict] = None,
+    ) -> Optional[str]:
+        """
+        Create a moment node linked to actor and chained to previous moment.
+
+        Args:
+            agent_id: Actor creating this moment
+            moment_type: Type of moment (e.g., 'task_created', 'issue_detected')
+            prose: Human-readable description
+            about_ids: Node IDs this moment is about
+            extra_props: Additional properties for the moment
+
+        Returns:
+            Moment ID if created, None on failure
+        """
+        if not self._connect():
+            return None
+
+        try:
+            timestamp = int(time.time())
+            ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
+            agent_name = agent_id.replace("agent_", "") if agent_id.startswith("agent_") else agent_id
+            moment_id = f"moment_{moment_type.upper()}_{agent_name}_{ts_hash}"
+
+            # Get previous moment for chaining
+            prev_moment_id = self.get_actor_last_moment(agent_id)
+
+            # Create moment node
+            props = {
+                "id": moment_id,
+                "node_type": "moment",
+                "type": moment_type,
+                "prose": prose,
+                "agent_id": agent_id,
+                "created_at_s": timestamp,
+                "updated_at_s": timestamp,
+            }
+            if extra_props:
+                props.update(extra_props)
+
+            prop_sets = ", ".join([f"m.{k} = ${k}" for k in props.keys()])
+            create_cypher = f"""
+            MERGE (m:Moment {{id: $id}})
+            SET {prop_sets}
+            RETURN m.id
+            """
+            self._graph_ops._query(create_cypher, props)
+
+            # Link: actor expresses moment
+            self._graph_ops._query("""
+            MATCH (a:Actor {id: $agent_id})
+            MATCH (m:Moment {id: $moment_id})
+            MERGE (a)-[r:expresses]->(m)
+            SET r.created_at_s = $timestamp
+            """, {"agent_id": agent_id, "moment_id": moment_id, "timestamp": timestamp})
+
+            # Link: previous moment → this moment (chain)
+            if prev_moment_id:
+                self._graph_ops._query("""
+                MATCH (prev:Moment {id: $prev_id})
+                MATCH (curr:Moment {id: $curr_id})
+                MERGE (prev)-[r:follows]->(curr)
+                SET r.created_at_s = $timestamp
+                """, {"prev_id": prev_moment_id, "curr_id": moment_id, "timestamp": timestamp})
+
+            # Link: moment about target nodes
+            if about_ids:
+                for about_id in about_ids:
+                    self._graph_ops._query("""
+                    MATCH (m:Moment {id: $moment_id})
+                    MATCH (n {id: $about_id})
+                    MERGE (m)-[r:about]->(n)
+                    SET r.created_at_s = $timestamp
+                    """, {"moment_id": moment_id, "about_id": about_id, "timestamp": timestamp})
+
+            logger.info(f"[AgentGraph] Created moment: {moment_id} (follows: {prev_moment_id or 'none'})")
+            return moment_id
+
+        except Exception as e:
+            logger.error(f"[AgentGraph] Failed to create moment: {e}")
+            return None
+
     def assign_agent_to_work(
         self,
         agent_id: str,
@@ -461,7 +569,18 @@ class AgentGraph:
             for issue_id in issue_ids:
                 self.link_agent_to_issue(agent_id, issue_id)
 
-        moment_id = self.create_assignment_moment(agent_id, task_id, issue_ids)
+        # Use new create_moment with chaining
+        about_ids = [task_id] if task_id else []
+        if issue_ids:
+            about_ids.extend(issue_ids)
+
+        moment_id = self.create_moment(
+            agent_id=agent_id,
+            moment_type="agent_assignment",
+            prose=f"Agent {agent_id} assigned to task {task_id}",
+            about_ids=about_ids,
+            extra_props={"task_id": task_id, "status": "completed"},
+        )
         return moment_id
 
     def upsert_issue_narrative(

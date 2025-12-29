@@ -46,6 +46,59 @@ class CapabilityGraphAdapter:
         # Follow the pattern from doctor_graph.generate_task_synthesis
         return f"task_run: fix {problem} ({signal_level})"
 
+    def _auto_assign_task(self, task_id: str, problem: str) -> Optional[str]:
+        """
+        Auto-assign a task to an appropriate idle agent.
+
+        Returns agent_id if assigned, None if no agent available.
+        """
+        try:
+            # Map problem types to agent postures
+            from runtime.agent_graph import ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
+
+            # Find matching posture for this problem
+            posture = ISSUE_TO_POSTURE.get(problem)
+            if not posture:
+                # Default to fixer for unknown problems
+                posture = "fixer"
+
+            # Get agent ID for this posture
+            agent_id = POSTURE_TO_AGENT_ID.get(posture)
+            if not agent_id:
+                agent_id = f"agent_{posture}"
+
+            # Check if agent is idle/ready (not already working on max tasks)
+            result = self._graph._query(
+                """
+                MATCH (a {id: $agent_id})
+                WHERE a.status IN ['idle', 'ready', null]
+                OPTIONAL MATCH (a)<-[:LINK {verb: 'claimed_by'}]-(t)
+                WHERE t.status = 'claimed'
+                WITH a, count(t) as active_tasks
+                WHERE active_tasks < 3
+                RETURN a.id
+                """,
+                {"agent_id": agent_id}
+            )
+
+            if result and result[0] and result[0][0]:
+                # Create claimed_by link
+                self._graph._query(
+                    """
+                    MATCH (t {id: $task_id})
+                    MATCH (a {id: $agent_id})
+                    MERGE (t)-[:LINK {verb: 'claimed_by'}]->(a)
+                    """,
+                    {"task_id": task_id, "agent_id": agent_id}
+                )
+                return agent_id
+
+            return None
+
+        except Exception as e:
+            logger.warning(f"Auto-assign failed: {e}")
+            return None
+
     def create_node(
         self,
         id: str,
@@ -89,10 +142,20 @@ class CapabilityGraphAdapter:
             )
             # Set status field for task_run nodes (required for claim workflow)
             if type == "task_run":
-                self._graph._query(
-                    "MATCH (n {id: $id}) SET n.status = 'pending'",
-                    {"id": id}
-                )
+                problem = props.get('on_problem', 'unknown')
+                # Auto-assign to matching agent
+                agent_id = self._auto_assign_task(id, problem)
+                if agent_id:
+                    self._graph._query(
+                        "MATCH (n {id: $id}) SET n.status = 'claimed', n.claimed_by = $agent",
+                        {"id": id, "agent": agent_id}
+                    )
+                    logger.info(f"Auto-assigned {id} to {agent_id}")
+                else:
+                    self._graph._query(
+                        "MATCH (n {id: $id}) SET n.status = 'pending'",
+                        {"id": id}
+                    )
             return True
 
         elif node_type == "actor":
