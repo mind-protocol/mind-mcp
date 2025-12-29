@@ -214,3 +214,144 @@ Original file: SYNC_Project_State.md
 - [ ] Create narratives from docs content
 - [ ] Add health checks for SubEntity exploration
 
+
+
+---
+
+# Archived: SYNC_Project_State.md
+
+Archived on: 2025-12-29
+Original file: SYNC_Project_State.md
+
+---
+
+## ACTIVE WORK
+
+### Agent 1: CLI Commands
+
+Build operational CLI for monitoring and control.
+
+**Files:** `cli/commands/status.py`, `cli/commands/agents.py`, `cli/commands/tasks.py`, `cli/commands/events.py`
+
+| Command | Purpose |
+|---------|---------|
+| `mind status` | Dashboard: agents, tasks, throttle, recent events, alerts |
+| `mind agents list` | Who's running, what task, how long |
+| `mind agents pause/stop/kill/enable` | Control agent lifecycle |
+| `mind tasks list [--module X] [--capability Y]` | Pending, running, stuck, failed |
+| `mind events [--last 30m] [filter]` | Timeline from all sources |
+| `mind errors [--unresolved] [--type X]` | Error moments |
+
+**Data sources:**
+- Graph: task_run nodes, actor nodes
+- Throttler: `get_throttler().active`
+- Controller: `get_controller().mode`
+
+---
+
+### Agent 2: MCP Task Lifecycle ✅ COMPLETED
+
+Built atomic task operations for agent workflow.
+
+**Files:** `mcp/server.py` (tools added), `runtime/capability/graph_ops.py` (existing functions)
+
+| Tool | Status |
+|------|--------|
+| `task_claim` | ✅ Implemented |
+| `task_complete` | ✅ Implemented |
+| `task_fail` | ✅ Implemented |
+| `agent_heartbeat` | ✅ Implemented |
+
+**Flow:**
+```
+agent_spawn → task_list → task_claim → procedure_start
+→ [work + heartbeat] → procedure_continue → ...
+→ task_complete/fail
+```
+
+**Wiring:**
+- MCP tools in server.py (lines 402-469, 504-511, 1336-1473)
+- Graph ops from mind-platform/runtime/capability/graph_ops.py
+- Throttler integration via runtime/capability/throttler.py
+- Agent registry integration via runtime/capability/agents.py
+
+---
+
+
+## RECENT CHANGES
+
+### 2025-12-29: MCP Task Lifecycle Tools (Agent 2)
+
+Added 4 MCP tools for atomic task lifecycle operations:
+
+| Tool | Purpose |
+|------|---------|
+| `task_claim` | Claim task atomically with throttler check |
+| `task_complete` | Mark done, release throttler slot |
+| `task_fail` | Mark failed with reason, release slot |
+| `agent_heartbeat` | Update heartbeat timestamp (60s interval) |
+
+**Implementation:**
+- Tool definitions: server.py lines 402-469
+- Handler routing: server.py lines 504-511
+- Implementation methods: server.py lines 1336-1473
+
+**Wires to:**
+- `runtime.capability.graph_ops`: claim_task, complete_task, fail_task, update_actor_heartbeat
+- `runtime.capability.throttler`: can_claim, register_claim, on_complete, on_abandon
+- `runtime.capability.agents`: get_registry().heartbeat()
+
+### 2025-12-29: MCP Capability Integration
+
+Wired capability runtime to MCP server with full operational loop.
+
+**Files created in mind-mcp/:**
+- `runtime/capability_integration.py` — CapabilityManager, CronScheduler wrapper
+
+**MCP Server Updates (`mcp/server.py`):**
+- Capability manager initialization on startup
+- `init.startup` trigger fired on server start
+- Cron scheduler runs in background thread
+- New tools: `capability_status`, `capability_trigger`, `capability_list`
+
+**Two-Level Loop Protection (`dispatch.py`):**
+
+| Level | Problems | Mechanism |
+|-------|----------|-----------|
+| L1 | AGENT_DEAD, TASK_ORPHAN, TASK_STUCK, AGENT_STUCK | Atomic graph ops, no task_run |
+| L2 | All others | Task_run with circuit breaker (3 fails = disable) |
+
+**Circuit Breaker:**
+- 3 failures in 24h → capability disabled
+- Manual re-enable via `enable_capability()`
+- Prevents infinite loops from failing checks
+
+### 2025-12-29: Capability Runtime V2
+
+Full operational system for capabilities with health checks, agents, throttling.
+
+**Files created in mind-platform/runtime/capability/:**
+- `decorators.py` — @check decorator, Signal, triggers.*
+- `context.py` — CheckContext (read-only for checks)
+- `loader.py` — discover_capabilities from .mind/capabilities/
+- `registry.py` — TriggerRegistry (maps triggers to checks)
+- `dispatch.py` — dispatch_trigger, create_task_runs
+- `throttler.py` — Dedup, rate limit, queue limit
+- `agents.py` — AgentRegistry, AgentController (kill switch)
+- `graph_ops.py` — Task/agent state in graph
+
+**Files created in mind-mcp/:**
+- `cli/helpers/copy_capabilities_to_target.py`
+- `runtime/core_utils.py` — get_capabilities_path()
+
+**System capabilities:**
+- `system-health` — Self-monitoring (stuck agents, orphan tasks)
+
+### Earlier: Capabilities system
+
+- Structure: `capabilities/{name}/` in mind-platform
+- Copied to `.mind/capabilities/` on `mind init`
+- Graph ingestion creates capability space
+
+---
+

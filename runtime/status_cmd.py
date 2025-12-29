@@ -604,10 +604,161 @@ def format_module_status(status: ModuleStatus, verbose: bool = False) -> str:
 
 
 # =============================================================================
+# DASHBOARD DATA (agents, tasks, throttle, alerts)
+# =============================================================================
+
+def _get_dashboard_data(project_dir: Path) -> Dict[str, Any]:
+    """Get dashboard data: agents, tasks, throttler, controller status."""
+    dashboard = {
+        "agents": {"running": 0, "ready": 0, "paused": 0, "total": 0},
+        "tasks": {"pending": 0, "running": 0, "stuck": 0, "failed": 0},
+        "throttler": {"active": 0, "pending": 0},
+        "controller": {"mode": "unknown", "can_claim": False},
+        "alerts": [],
+    }
+
+    # Try to get capability runtime status
+    try:
+        from .capability_integration import (
+            get_capability_manager,
+            get_throttler,
+            get_controller,
+            CAPABILITY_RUNTIME_AVAILABLE,
+        )
+        if CAPABILITY_RUNTIME_AVAILABLE:
+            # Throttler status
+            throttler = get_throttler()
+            if throttler:
+                dashboard["throttler"]["active"] = len(getattr(throttler, 'active_tasks', {}))
+                dashboard["throttler"]["pending"] = len(getattr(throttler, 'pending_tasks', {}))
+
+            # Controller status
+            controller = get_controller()
+            if controller:
+                dashboard["controller"]["mode"] = getattr(controller.mode, 'value', str(controller.mode))
+                dashboard["controller"]["can_claim"] = controller.can_claim()
+    except ImportError:
+        pass
+
+    # Try to get agent info from graph
+    try:
+        from .physics.graph.graph_ops import GraphOps
+        graph_name = project_dir.name
+        graph = GraphOps(graph_name=graph_name)
+
+        # Count agents by status
+        agent_result = graph.query("""
+            MATCH (a:Actor)
+            WHERE a.type = 'agent' OR a.id STARTS WITH 'agent_'
+            RETURN a.status, count(a)
+        """)
+        for status, count in agent_result:
+            status = (status or "ready").lower()
+            if status in dashboard["agents"]:
+                dashboard["agents"][status] = count
+            dashboard["agents"]["total"] += count
+
+        # Count tasks by status
+        task_result = graph.query("""
+            MATCH (t:Narrative)
+            WHERE t.type = 'task_run' OR t.type = 'task'
+            RETURN t.status, count(t)
+        """)
+        for status, count in task_result:
+            status = (status or "pending").lower()
+            if status in dashboard["tasks"]:
+                dashboard["tasks"][status] = count
+
+        # Get recent alerts (critical health issues in last 24h)
+        from datetime import datetime, timedelta
+        cutoff = (datetime.now() - timedelta(hours=24)).isoformat()
+
+        alert_result = graph.query(f"""
+            MATCH (m:Moment)
+            WHERE m.type = 'error' AND m.created >= '{cutoff}'
+            AND (m.resolved IS NULL OR m.resolved = false)
+            RETURN m.synthesis, m.severity
+            ORDER BY m.created DESC
+            LIMIT 5
+        """)
+        for synthesis, severity in alert_result:
+            if synthesis:
+                dashboard["alerts"].append({
+                    "message": synthesis[:80],
+                    "severity": severity or "error",
+                })
+
+    except Exception:
+        pass
+
+    return dashboard
+
+
+def format_dashboard(dashboard: Dict[str, Any]) -> str:
+    """Format dashboard section for status output."""
+    lines = []
+
+    agents = dashboard["agents"]
+    tasks = dashboard["tasks"]
+    throttler = dashboard["throttler"]
+    controller = dashboard["controller"]
+    alerts = dashboard["alerts"]
+
+    # Quick status line
+    lines.append(f"  {C.BOLD}{C.UNDERLINE}System Status{C.RESET}")
+    lines.append("")
+
+    # Agents row
+    agent_parts = []
+    if agents["running"]:
+        agent_parts.append(f"{C.BRIGHT_CYAN}{agents['running']} running{C.RESET}")
+    if agents["ready"]:
+        agent_parts.append(f"{C.GREEN}{agents['ready']} ready{C.RESET}")
+    if agents["paused"]:
+        agent_parts.append(f"{C.YELLOW}{agents['paused']} paused{C.RESET}")
+    agent_str = ", ".join(agent_parts) if agent_parts else f"{C.DIM}none{C.RESET}"
+    lines.append(f"  {C.BOLD}Agents:{C.RESET}      {agent_str}")
+
+    # Tasks row
+    task_parts = []
+    if tasks["stuck"]:
+        task_parts.append(f"{C.BRIGHT_RED}{tasks['stuck']} stuck{C.RESET}")
+    if tasks["failed"]:
+        task_parts.append(f"{C.RED}{tasks['failed']} failed{C.RESET}")
+    if tasks["running"]:
+        task_parts.append(f"{C.CYAN}{tasks['running']} running{C.RESET}")
+    if tasks["pending"]:
+        task_parts.append(f"{C.YELLOW}{tasks['pending']} pending{C.RESET}")
+    task_str = ", ".join(task_parts) if task_parts else f"{C.DIM}none{C.RESET}"
+    lines.append(f"  {C.BOLD}Tasks:{C.RESET}       {task_str}")
+
+    # Throttler/Controller
+    if throttler["active"] or throttler["pending"]:
+        lines.append(f"  {C.BOLD}Throttler:{C.RESET}   {throttler['active']} active, {throttler['pending']} queued")
+
+    mode_color = C.BRIGHT_GREEN if controller["can_claim"] else C.YELLOW
+    if controller["mode"] != "unknown":
+        lines.append(f"  {C.BOLD}Controller:{C.RESET}  {mode_color}{controller['mode']}{C.RESET}")
+
+    # Alerts
+    if alerts:
+        lines.append("")
+        lines.append(f"  {C.BOLD}{C.BRIGHT_RED}Alerts ({len(alerts)}){C.RESET}")
+        for alert in alerts[:3]:
+            sev = alert["severity"]
+            icon = "!!" if sev == "critical" else "! " if sev == "error" else "* "
+            color = C.BRIGHT_RED if sev == "critical" else C.RED if sev == "error" else C.YELLOW
+            lines.append(f"    {color}{icon}{C.RESET} {alert['message']}")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+# =============================================================================
 # FORMATTING - GLOBAL VIEW
 # =============================================================================
 
-def format_global_status(statuses: List[ModuleStatus], all_issues: List[HealthIssue]) -> str:
+def format_global_status(statuses: List[ModuleStatus], all_issues: List[HealthIssue], project_dir: Path = None) -> str:
     """Format global status overview with full details."""
     lines = []
 
@@ -616,6 +767,13 @@ def format_global_status(statuses: List[ModuleStatus], all_issues: List[HealthIs
     lines.append(f"{C.BOLD}{C.BRIGHT_WHITE}{'═' * 78}{C.RESET}")
     lines.append(f"{C.BOLD}{C.BRIGHT_WHITE}  MIND PROJECT STATUS{C.RESET}")
     lines.append(f"{C.BOLD}{C.BRIGHT_WHITE}{'═' * 78}{C.RESET}")
+
+    # Dashboard section (agents, tasks, throttle, alerts)
+    if project_dir:
+        dashboard = _get_dashboard_data(project_dir)
+        if dashboard["agents"]["total"] or dashboard["tasks"]["pending"] or dashboard["alerts"]:
+            lines.append("")
+            lines.append(format_dashboard(dashboard))
 
     # ==========================================================================
     # SUMMARY SECTION
@@ -830,7 +988,7 @@ def status_command(project_dir: Path, module_name: Optional[str] = None, verbose
             print(f"{C.YELLOW}No modules defined in modules.yaml{C.RESET}")
             return 1
 
-        print(format_global_status(statuses, all_issues))
+        print(format_global_status(statuses, all_issues, project_dir))
 
         if verbose:
             for status in statuses:

@@ -57,6 +57,15 @@ from .explore_cmd import explore_command
 
 from .agent_cli import build_agent_command
 
+# Import new CLI commands
+try:
+    from cli.commands.agents import agents_command
+    from cli.commands.tasks import tasks_command
+    from cli.commands.events import events_command, errors_command
+    HAS_NEW_COMMANDS = True
+except ImportError:
+    HAS_NEW_COMMANDS = False
+
 
 def _add_module_translation_args(parser):
     parser.add_argument("--module-old", type=str, help="Existing module key in modules.yaml")
@@ -781,6 +790,167 @@ def main():
         help="Output format (default: text)"
     )
 
+    # agents command
+    agents_parser = subparsers.add_parser(
+        "agents",
+        help="Agent lifecycle management (list, pause, stop, kill, enable)"
+    )
+    agents_parser.add_argument(
+        "--dir", "-d",
+        type=Path,
+        default=Path.cwd(),
+        help="Project directory (default: current directory)"
+    )
+    agents_subparsers = agents_parser.add_subparsers(dest="agents_action")
+
+    agents_list_parser = agents_subparsers.add_parser(
+        "list",
+        help="List all agents and their status"
+    )
+    agents_list_parser.add_argument(
+        "--format", "-f",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)"
+    )
+
+    agents_pause_parser = agents_subparsers.add_parser(
+        "pause",
+        help="Pause an agent (keeps state)"
+    )
+    agents_pause_parser.add_argument("agent_id", type=str, help="Agent ID to pause")
+
+    agents_stop_parser = agents_subparsers.add_parser(
+        "stop",
+        help="Stop an agent gracefully"
+    )
+    agents_stop_parser.add_argument("agent_id", type=str, help="Agent ID to stop")
+
+    agents_kill_parser = agents_subparsers.add_parser(
+        "kill",
+        help="Force kill an agent"
+    )
+    agents_kill_parser.add_argument("agent_id", type=str, help="Agent ID to kill")
+
+    agents_enable_parser = agents_subparsers.add_parser(
+        "enable",
+        help="Enable a paused agent"
+    )
+    agents_enable_parser.add_argument("agent_id", type=str, help="Agent ID to enable")
+
+    # tasks command
+    tasks_parser = subparsers.add_parser(
+        "tasks",
+        help="List and filter tasks (pending, running, stuck, failed)"
+    )
+    tasks_parser.add_argument(
+        "--dir", "-d",
+        type=Path,
+        default=Path.cwd(),
+        help="Project directory (default: current directory)"
+    )
+    tasks_parser.add_argument(
+        "--module", "-m",
+        type=str,
+        default=None,
+        help="Filter by module name"
+    )
+    tasks_parser.add_argument(
+        "--capability", "-c",
+        type=str,
+        default=None,
+        help="Filter by capability name"
+    )
+    tasks_parser.add_argument(
+        "--status", "-s",
+        choices=["pending", "running", "stuck", "failed"],
+        default=None,
+        help="Filter by status"
+    )
+    tasks_parser.add_argument(
+        "--format", "-f",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)"
+    )
+    tasks_parser.add_argument(
+        "--limit", "-l",
+        type=int,
+        default=50,
+        help="Maximum tasks to show (default: 50)"
+    )
+
+    # events command
+    events_parser = subparsers.add_parser(
+        "events",
+        help="Show event timeline from all sources"
+    )
+    events_parser.add_argument(
+        "--dir", "-d",
+        type=Path,
+        default=Path.cwd(),
+        help="Project directory (default: current directory)"
+    )
+    events_parser.add_argument(
+        "--last",
+        type=str,
+        default="1h",
+        help="Time window (e.g., '30m', '2h', '1d', default: 1h)"
+    )
+    events_parser.add_argument(
+        "--type", "-t",
+        choices=["error", "trigger", "task", "agent", "health", "file"],
+        default=None,
+        help="Filter by event type"
+    )
+    events_parser.add_argument(
+        "--format", "-f",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)"
+    )
+    events_parser.add_argument(
+        "--limit", "-l",
+        type=int,
+        default=50,
+        help="Maximum events to show (default: 50)"
+    )
+
+    # errors command (shortcut for error events)
+    errors_parser = subparsers.add_parser(
+        "errors",
+        help="Show error moments (shortcut for 'events --type error')"
+    )
+    errors_parser.add_argument(
+        "--dir", "-d",
+        type=Path,
+        default=Path.cwd(),
+        help="Project directory (default: current directory)"
+    )
+    errors_parser.add_argument(
+        "--unresolved",
+        action="store_true",
+        help="Only show unresolved errors"
+    )
+    errors_parser.add_argument(
+        "--type", "-t",
+        type=str,
+        default=None,
+        help="Filter by error type substring"
+    )
+    errors_parser.add_argument(
+        "--last",
+        type=str,
+        default="24h",
+        help="Time window (default: 24h)"
+    )
+    errors_parser.add_argument(
+        "--format", "-f",
+        choices=["text", "json"],
+        default="text",
+        help="Output format (default: text)"
+    )
+
     # cluster command
     cluster_parser = subparsers.add_parser(
         "cluster",
@@ -883,15 +1053,12 @@ def main():
         agent_provider = args.work_model or args.model
         exit_code = work_command(
             target_dir=args.path,
-            objective=args.objective,
             max_issues=args.max,
             issue_types=args.types,
             depth=args.depth,
             dry_run=args.dry_run,
             parallel=args.parallel,
             agent_provider=agent_provider,
-            task_id=args.task,
-            list_tasks_flag=args.list_tasks,
         )
         sys.exit(exit_code)
     elif args.command == "refactor":
@@ -1152,6 +1319,66 @@ def main():
                 print(result['report'])
 
             sys.exit(0 if result.get('valid', False) else 1)
+
+    elif args.command == "agents":
+        if not HAS_NEW_COMMANDS:
+            print("Error: CLI commands module not found")
+            sys.exit(1)
+
+        action = args.agents_action or "list"
+        agent_id = getattr(args, 'agent_id', None)
+        format_output = getattr(args, 'format', 'text')
+
+        exit_code = agents_command(
+            target_dir=args.dir,
+            action=action,
+            agent_id=agent_id,
+            format_output=format_output,
+        )
+        sys.exit(exit_code)
+
+    elif args.command == "tasks":
+        if not HAS_NEW_COMMANDS:
+            print("Error: CLI commands module not found")
+            sys.exit(1)
+
+        exit_code = tasks_command(
+            target_dir=args.dir,
+            module=args.module,
+            capability=args.capability,
+            status_filter=args.status,
+            format_output=args.format,
+            limit=args.limit,
+        )
+        sys.exit(exit_code)
+
+    elif args.command == "events":
+        if not HAS_NEW_COMMANDS:
+            print("Error: CLI commands module not found")
+            sys.exit(1)
+
+        exit_code = events_command(
+            target_dir=args.dir,
+            time_window=args.last,
+            event_type_filter=args.type,
+            format_output=args.format,
+            limit=args.limit,
+        )
+        sys.exit(exit_code)
+
+    elif args.command == "errors":
+        if not HAS_NEW_COMMANDS:
+            print("Error: CLI commands module not found")
+            sys.exit(1)
+
+        exit_code = errors_command(
+            target_dir=args.dir,
+            unresolved_only=args.unresolved,
+            error_type=args.type,
+            time_window=args.last,
+            format_output=args.format,
+        )
+        sys.exit(exit_code)
 
     elif args.command is None:
         # Launch TUI when no subcommand is given (similar to agent CLIs)
