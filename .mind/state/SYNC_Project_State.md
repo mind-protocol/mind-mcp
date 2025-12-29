@@ -5,6 +5,71 @@ LAST_UPDATED: 2025-12-29
 UPDATED_BY: agent_claude
 ```
 
+## Recent Changes
+
+### 2025-12-29: MCP Task Lifecycle Tools Implemented
+
+**What:** Implemented and tested MCP tools for task lifecycle management.
+
+**Tools added:**
+- `task_claim` — Atomically claim a pending task for an agent
+- `task_complete` — Mark a claimed task as completed
+- `task_fail` — Mark a task as failed with reason
+- `agent_heartbeat` — Update actor heartbeat timestamp
+
+**Key fixes:**
+- FalkorDB doesn't have `datetime()` function — use ISO timestamp strings instead
+- Throttler only knows tasks from current session — skip throttler check for older tasks
+- Use direct graph queries instead of mind-platform's graph_ops (interface mismatch)
+
+**Files modified:**
+- `mcp/server.py` — Task lifecycle tool implementations
+- `runtime/capability_graph_adapter.py` — Sets `status='pending'` on task_run creation
+- `runtime/capability_integration.py` — Exports graph_ops functions
+
+**Tested flows:**
+```
+task_claim(task_id, actor_id) → "Task claimed"
+task_complete(task_id) → "Task completed"
+task_fail(task_id, reason) → "Task failed: reason"
+agent_heartbeat(actor_id, step) → "Heartbeat: actor_id (step N)"
+```
+
+---
+
+### 2025-12-29: Agent Prompts Module Extraction
+
+**What:** Created `runtime/agents/prompts.py` by extracting prompt-related code from `runtime/work_core.py`
+
+**Why:** Consolidating agent-related code into the `runtime/agents/` package for better module organization. The `__init__.py` already expects this module.
+
+**Changes:**
+- Created `/home/mind-protocol/mind-mcp/runtime/agents/prompts.py` with:
+  - `AGENT_SYSTEM_PROMPT` constant (2842 chars)
+  - `get_learnings_content(target_dir: Path) -> str` function
+  - `build_agent_prompt(issue, instructions, target_dir, github_issue_number)` function
+  - `split_docs_to_read(docs_to_read, target_dir)` helper function
+  - `_detect_recent_issue_number(target_dir, max_commits)` helper function
+- Added docstring referencing `docs/agents/PATTERNS_Agent_System.md`
+- Proper imports: `Path`, `Any`, `Dict`, `List`, `Optional` from typing, `re`, `subprocess`
+
+**Note:** The `runtime/agents/__init__.py` has a pre-existing import error related to `spawn.py` (missing `spawn_for_task`), unrelated to this change.
+
+---
+
+### 2025-12-29: Agent CLI Module Reorganization
+
+**What:** Copied `runtime/agent_cli.py` to `runtime/agents/cli.py`
+
+**Why:** Reorganizing agent-related code into the `runtime/agents/` package for better module organization.
+
+**Changes:**
+- Created `/home/mind-protocol/mind-mcp/runtime/agents/cli.py`
+- Updated docs reference from `docs/mind_cli_core/OBJECTIVES_mind_cli_core.md` to `docs/agents/PATTERNS_Agent_System.md`
+- Code logic unchanged
+
+---
+
 ---
 
 ## CURRENT STATE
@@ -25,6 +90,10 @@ The mind-mcp project provides an MCP server for AI agents to interact with a kno
 | `doctor_check` | Health checks with assigned agents |
 | `agent_list/spawn/status` | Work agent management |
 | `task_list` | Pending tasks by module/objective |
+| `task_claim` | Atomic: claim task, update graph, register throttler |
+| `task_complete` | Mark done, update graph, release throttler slot |
+| `task_fail` | Mark failed, record reason, release slot |
+| `agent_heartbeat` | Update last_heartbeat on actor node (60s interval) |
 | `capability_status` | System health: capabilities, throttler, controller |
 | `capability_trigger` | Fire triggers manually for testing |
 | `capability_list` | List loaded capabilities and checks |
@@ -49,68 +118,6 @@ Fire init.startup trigger
     ▼
 Ready for tool calls
 ```
-
----
-
-## ACTIVE WORK
-
-None — system stable.
-
----
-
-## RECENT CHANGES
-
-### 2025-12-29: MCP Capability Integration
-
-Wired capability runtime to MCP server with full operational loop.
-
-**Files created in mind-mcp/:**
-- `runtime/capability_integration.py` — CapabilityManager, CronScheduler wrapper
-
-**MCP Server Updates (`mcp/server.py`):**
-- Capability manager initialization on startup
-- `init.startup` trigger fired on server start
-- Cron scheduler runs in background thread
-- New tools: `capability_status`, `capability_trigger`, `capability_list`
-
-**Two-Level Loop Protection (`dispatch.py`):**
-
-| Level | Problems | Mechanism |
-|-------|----------|-----------|
-| L1 | AGENT_DEAD, TASK_ORPHAN, TASK_STUCK, AGENT_STUCK | Atomic graph ops, no task_run |
-| L2 | All others | Task_run with circuit breaker (3 fails = disable) |
-
-**Circuit Breaker:**
-- 3 failures in 24h → capability disabled
-- Manual re-enable via `enable_capability()`
-- Prevents infinite loops from failing checks
-
-### 2025-12-29: Capability Runtime V2
-
-Full operational system for capabilities with health checks, agents, throttling.
-
-**Files created in mind-platform/runtime/capability/:**
-- `decorators.py` — @check decorator, Signal, triggers.*
-- `context.py` — CheckContext (read-only for checks)
-- `loader.py` — discover_capabilities from .mind/capabilities/
-- `registry.py` — TriggerRegistry (maps triggers to checks)
-- `dispatch.py` — dispatch_trigger, create_task_runs
-- `throttler.py` — Dedup, rate limit, queue limit
-- `agents.py` — AgentRegistry, AgentController (kill switch)
-- `graph_ops.py` — Task/agent state in graph
-
-**Files created in mind-mcp/:**
-- `cli/helpers/copy_capabilities_to_target.py`
-- `runtime/core_utils.py` — get_capabilities_path()
-
-**System capabilities:**
-- `system-health` — Self-monitoring (stuck agents, orphan tasks)
-
-### Earlier: Capabilities system
-
-- Structure: `capabilities/{name}/` in mind-platform
-- Copied to `.mind/capabilities/` on `mind init`
-- Graph ingestion creates capability space
 
 ---
 
@@ -315,3 +322,10 @@ Older init logs and content archived to: `SYNC_Project_State_archive_2025-12.md`
 **Steps completed:** ecosystem, capabilities, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, capabilities_graph, env_example, mcp_config, gitignore, overview, embeddings
 
 ---
+
+
+---
+
+## ARCHIVE
+
+Older content archived to: `SYNC_Project_State_archive_2025-12.md`

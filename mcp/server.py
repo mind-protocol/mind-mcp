@@ -51,13 +51,28 @@ load_dotenv(project_root / ".env")
 from runtime.connectome import ConnectomeRunner
 from runtime.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
 from runtime.agent_spawn import spawn_work_agent, spawn_agent_for_issue
-from runtime.doctor import run_doctor
+from runtime.doctor import run_doctor, DoctorIssue
 from runtime.doctor_types import DoctorConfig
+from runtime.work_core import (
+    spawn_work_agent_with_verification_async,
+    AGENT_SYSTEM_PROMPT,
+    build_agent_prompt,
+    get_learnings_content,
+)
+from runtime.work_instructions import get_issue_instructions
 from runtime.capability_integration import (
     init_capability_manager,
     get_capability_manager,
     CapabilityManager,
     CAPABILITY_RUNTIME_AVAILABLE,
+    get_throttler,
+    get_agent_registry,
+    claim_task,
+    complete_task,
+    fail_task,
+    update_actor_heartbeat,
+    set_actor_working,
+    set_actor_idle,
 )
 
 logging.basicConfig(
@@ -398,6 +413,74 @@ class MindServer:
                         "type": "object",
                         "properties": {}
                     }
+                },
+                {
+                    "name": "task_claim",
+                    "description": "Atomically claim a pending task for an agent. Returns success/failure.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "task_id": {
+                                "type": "string",
+                                "description": "The task_run node ID to claim"
+                            },
+                            "actor_id": {
+                                "type": "string",
+                                "description": "The actor ID claiming the task"
+                            }
+                        },
+                        "required": ["task_id", "actor_id"]
+                    }
+                },
+                {
+                    "name": "task_complete",
+                    "description": "Mark a task as completed. Updates graph and releases throttler slot.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "task_id": {
+                                "type": "string",
+                                "description": "The task_run node ID to complete"
+                            }
+                        },
+                        "required": ["task_id"]
+                    }
+                },
+                {
+                    "name": "task_fail",
+                    "description": "Mark a task as failed with a reason. Updates graph and releases throttler slot.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "task_id": {
+                                "type": "string",
+                                "description": "The task_run node ID that failed"
+                            },
+                            "reason": {
+                                "type": "string",
+                                "description": "Why the task failed"
+                            }
+                        },
+                        "required": ["task_id", "reason"]
+                    }
+                },
+                {
+                    "name": "agent_heartbeat",
+                    "description": "Update agent heartbeat. Call every 60s while working on a task.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "actor_id": {
+                                "type": "string",
+                                "description": "The actor ID sending heartbeat"
+                            },
+                            "step": {
+                                "type": "integer",
+                                "description": "Optional: current step number in task"
+                            }
+                        },
+                        "required": ["actor_id"]
+                    }
                 }
             ]
         }
@@ -433,6 +516,14 @@ class MindServer:
             return self._tool_capability_trigger(arguments)
         elif tool_name == "capability_list":
             return self._tool_capability_list(arguments)
+        elif tool_name == "task_claim":
+            return self._tool_task_claim(arguments)
+        elif tool_name == "task_complete":
+            return self._tool_task_complete(arguments)
+        elif tool_name == "task_fail":
+            return self._tool_task_fail(arguments)
+        elif tool_name == "agent_heartbeat":
+            return self._tool_agent_heartbeat(arguments)
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
 
@@ -1256,6 +1347,175 @@ Please investigate and fix this issue. Follow the project's coding standards and
             lines.append("")
 
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+    def _tool_task_claim(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Atomically claim a task."""
+        task_id = args.get("task_id")
+        actor_id = args.get("actor_id")
+
+        if not task_id or not actor_id:
+            return {"content": [{"type": "text", "text": "Error: task_id and actor_id are required"}]}
+
+        if not self.graph_ops:
+            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
+
+        try:
+            # Check throttler allows claiming (if it knows about this task)
+            throttler = get_throttler()
+            if throttler:
+                # Only check throttler if task is registered (from current session)
+                # Tasks from previous sessions won't be in throttler
+                if task_id in throttler.active and not throttler.can_claim(task_id, actor_id):
+                    return {"content": [{"type": "text", "text": f"Throttler blocked claim: max agents reached or paused"}]}
+
+            # Claim in graph - use node-level status field
+            # Check task exists and is pending
+            from datetime import datetime
+            timestamp = datetime.now().isoformat()
+            result = self.graph_ops._query(
+                "MATCH (n {id: $id}) WHERE n.status = 'pending' "
+                "SET n.status = 'claimed', n.claimed_by = $actor, n.claimed_at = $ts "
+                "RETURN n.id",
+                {"id": task_id, "actor": actor_id, "ts": timestamp}
+            )
+            if not result or not result[0]:
+                return {"content": [{"type": "text", "text": f"Failed to claim: task not found or already claimed"}]}
+
+            # Create claimed_by link
+            self.graph_ops._query(
+                "MATCH (t {id: $task_id}) MATCH (a {id: $actor_id}) "
+                "MERGE (t)-[:LINK {verb: 'claimed_by'}]->(a)",
+                {"task_id": task_id, "actor_id": actor_id}
+            )
+
+            # Register with throttler
+            if throttler:
+                throttler.register_claim(task_id, actor_id)
+
+            return {"content": [{"type": "text", "text": f"Task {task_id} claimed by {actor_id}"}]}
+
+        except Exception as e:
+            logger.exception("Task claim failed")
+            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
+
+    def _tool_task_complete(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Mark task as completed."""
+        task_id = args.get("task_id")
+
+        if not task_id:
+            return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
+
+        if not self.graph_ops:
+            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
+
+        try:
+            # Complete in graph using direct query
+            from datetime import datetime
+            timestamp = datetime.now().isoformat()
+            result = self.graph_ops._query(
+                "MATCH (n {id: $id}) WHERE n.status = 'claimed' "
+                "SET n.status = 'completed', n.completed_at = $ts "
+                "RETURN n.id",
+                {"id": task_id, "ts": timestamp}
+            )
+            if not result or not result[0]:
+                return {"content": [{"type": "text", "text": f"Failed to complete: task not found or not claimed"}]}
+
+            # Release throttler slot
+            throttler = get_throttler()
+            if throttler:
+                throttler.on_complete(task_id)
+
+            return {"content": [{"type": "text", "text": f"Task {task_id} completed"}]}
+
+        except Exception as e:
+            logger.exception("Task complete failed")
+            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
+
+    def _tool_task_fail(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Mark task as failed."""
+        task_id = args.get("task_id")
+        reason = args.get("reason", "Unknown reason")
+
+        if not task_id:
+            return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
+
+        if not self.graph_ops:
+            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
+
+        try:
+            # Fail in graph using direct query
+            from datetime import datetime
+            timestamp = datetime.now().isoformat()
+            result = self.graph_ops._query(
+                "MATCH (n {id: $id}) WHERE n.status IN ['pending', 'claimed'] "
+                "SET n.status = 'failed', n.failed_at = $ts, n.failure_reason = $reason "
+                "RETURN n.id",
+                {"id": task_id, "ts": timestamp, "reason": reason}
+            )
+            if not result or not result[0]:
+                return {"content": [{"type": "text", "text": f"Failed to mark failed: task not found or already completed"}]}
+
+            # Release throttler slot
+            throttler = get_throttler()
+            if throttler:
+                throttler.on_abandon(task_id)
+
+            return {"content": [{"type": "text", "text": f"Task {task_id} failed: {reason}"}]}
+
+        except Exception as e:
+            logger.exception("Task fail failed")
+            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
+
+    def _tool_agent_heartbeat(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Update agent heartbeat."""
+        actor_id = args.get("actor_id")
+        step = args.get("step")
+
+        if not actor_id:
+            return {"content": [{"type": "text", "text": "Error: actor_id is required"}]}
+
+        if not self.graph_ops:
+            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
+
+        try:
+            # Update in graph using direct query
+            from datetime import datetime
+            timestamp = datetime.now().isoformat()
+
+            if step is not None:
+                result = self.graph_ops._query(
+                    "MATCH (n {id: $id}) "
+                    "SET n.last_heartbeat = $ts, n.current_step = $step "
+                    "RETURN n.id",
+                    {"id": actor_id, "ts": timestamp, "step": step}
+                )
+            else:
+                result = self.graph_ops._query(
+                    "MATCH (n {id: $id}) "
+                    "SET n.last_heartbeat = $ts "
+                    "RETURN n.id",
+                    {"id": actor_id, "ts": timestamp}
+                )
+
+            success = bool(result and result[0])
+
+            # Also update in-memory registry
+            registry = get_agent_registry()
+            if registry:
+                registry.heartbeat(actor_id, step)
+
+            if success:
+                msg = f"Heartbeat: {actor_id}"
+                if step is not None:
+                    msg += f" (step {step})"
+                return {"content": [{"type": "text", "text": msg}]}
+            else:
+                return {"content": [{"type": "text", "text": f"Heartbeat failed: actor not found"}]}
+
+        except Exception as e:
+            logger.exception("Heartbeat failed")
+            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
 
     def _format_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
         """Format runner response as MCP tool result."""

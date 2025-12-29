@@ -92,6 +92,14 @@ if _capability_module:
     get_agent_registry = _capability_module.get_registry
     reset_agents = _capability_module.reset_agents
     AgentMode = _capability_module.AgentMode
+    # Graph ops for task lifecycle
+    claim_task = _capability_module.claim_task
+    complete_task = _capability_module.complete_task
+    fail_task = _capability_module.fail_task
+    release_task = _capability_module.release_task
+    update_actor_heartbeat = _capability_module.update_actor_heartbeat
+    set_actor_working = _capability_module.set_actor_working
+    set_actor_idle = _capability_module.set_actor_idle
 else:
     CAPABILITY_RUNTIME_AVAILABLE = False
 
@@ -125,7 +133,12 @@ class CapabilityManager:
 
     def __init__(self, target_dir: Path, graph: Any = None):
         self.target_dir = target_dir
-        self.graph = graph
+        # Wrap graph in capability adapter for proper embeddings/physics
+        if graph is not None:
+            from runtime.capability_graph_adapter import CapabilityGraphAdapter
+            self.graph = CapabilityGraphAdapter(graph)
+        else:
+            self.graph = None
         self.registry = TriggerRegistry()
         self.capabilities: list[tuple[str, Path, list[Callable]]] = []
         self.cron_scheduler: Optional[CronScheduler] = None
