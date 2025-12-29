@@ -75,7 +75,7 @@ This document consolidates the protocol implementation details that were previou
 The protocol is surfaced through:
 - ../../../.mind/CLAUDE.md (includes templates/CLAUDE_ADDITION.md, PRINCIPLES.md, PROTOCOL.md)
 - Root `AGENTS.md` mirroring ../../../.mind/CLAUDE.md plus `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
-- ../../../.mind/agents/manager/AGENTS.md for manager role
+- Actor definitions in `.mind/actors/ACTOR_{Name}.md`
 
 ---
 

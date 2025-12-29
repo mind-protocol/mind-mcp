@@ -2,18 +2,14 @@
 
 from pathlib import Path
 
+# Import from core_utils for shared template/capability fetching logic
+from runtime.core_utils import get_templates_path  # noqa: F401
+from runtime.core_utils import get_capabilities_path  # noqa: F401
+
 
 def get_repo_root() -> Path:
     """Get mind-mcp repo root."""
     return Path(__file__).parent.parent.parent
-
-
-def get_templates_path() -> Path:
-    """Get templates/ directory path."""
-    path = get_repo_root() / "templates"
-    if path.exists() and (path / "mind").exists():
-        return path
-    raise FileNotFoundError(f"Templates not found: {path}")
 
 
 def get_runtime_path() -> Path:

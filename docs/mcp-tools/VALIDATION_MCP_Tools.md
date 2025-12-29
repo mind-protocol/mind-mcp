@@ -1,68 +1,9 @@
 # VALIDATION: MCP Tools
 
 ```
-STATUS: V1 SPEC
-PURPOSE: Invariants that must hold for structured graph dialogues
+STATUS: V2
+PURPOSE: Invariants that must hold for MCP tools
 ```
-
----
-
-## Protocol Invariants
-
-| ID | Invariant | Failure Mode | Severity |
-|----|-----------|--------------|----------|
-| V-PROT-1 | Protocol steps execute in defined order | Workflow corrupted | HIGH |
-| V-PROT-2 | Conditional steps only run when condition true | Wrong work done | MED |
-| V-PROT-3 | Protocol completes all non-conditional steps | Incomplete work | HIGH |
-| V-PROT-4 | Success criteria evaluated at end | Quality unknown | MED |
-
----
-
-## Membrane Invariants
-
-| ID | Invariant | Failure Mode | Severity |
-|----|-----------|--------------|----------|
-| V-MEM-1 | Every `ask` step gets valid answer before proceeding | Invalid data in graph | HIGH |
-| V-MEM-2 | Dependencies resolved before membrane body | Missing prerequisites | HIGH |
-| V-MEM-3 | Spawn depth never exceeds max_spawn_depth | Infinite recursion | HIGH |
-| V-MEM-4 | All step transitions lead to valid next step or $complete | Membrane hangs | HIGH |
-| V-MEM-5 | Create step produces ≥1 node | Empty output | MED |
-| V-MEM-6 | Create step produces ≥1 link per node (avg) | Sparse graph | MED |
-
----
-
-## Session Invariants
-
-| ID | Invariant | Failure Mode | Severity |
-|----|-----------|--------------|----------|
-| V-SESS-1 | Session ID is unique | Session collision | HIGH |
-| V-SESS-2 | Session maintains answer history | Context lost | HIGH |
-| V-SESS-3 | Aborted session creates no nodes | Partial commits | HIGH |
-| V-SESS-4 | Completed session returns summary | Status unknown | MED |
-| V-SESS-5 | Session has single active step at any time | State confusion | HIGH |
-
----
-
-## Cluster Invariants
-
-| ID | Invariant | Failure Mode | Severity |
-|----|-----------|--------------|----------|
-| V-CLUST-1 | All nodes in cluster have valid node_type | Schema violation | HIGH |
-| V-CLUST-2 | All links reference existing nodes | Dangling links | HIGH |
-| V-CLUST-3 | Moment node created for traceable membranes | Audit trail broken | MED |
-| V-CLUST-4 | Links have correct direction (from/to) | Semantics wrong | MED |
-| V-CLUST-5 | for_each creates correct count | Missing nodes/links | MED |
-
----
-
-## Moment Invariants
-
-| ID | Invariant | Failure Mode | Severity |
-|----|-----------|--------------|----------|
-| V-MOM-1 | Every moment has `expresses` link from actor | Unattributed | HIGH |
-| V-MOM-2 | Every moment has prose (non-empty) | Meaningless moment | MED |
-| V-MOM-3 | Moment type matches step type | Wrong categorization | LOW |
-| V-MOM-4 | Moment timestamp is accurate | Audit incorrect | LOW |
 
 ---
 
@@ -70,9 +11,111 @@ PURPOSE: Invariants that must hold for structured graph dialogues
 
 | ID | Invariant | Failure Mode | Severity |
 |----|-----------|--------------|----------|
-| V-QUERY-1 | Query returns valid nodes or empty list | Crash on null | HIGH |
-| V-QUERY-2 | Query respects depth limits | Performance issue | MED |
-| V-QUERY-3 | Query filters applied correctly | Wrong results | MED |
+| V-Q-1 | `queries` array required and non-empty | Tool fails to execute | HIGH |
+| V-Q-2 | Each query produces embedding search | No semantic matching | HIGH |
+| V-Q-3 | Results include similarity scores | Quality unknown | MED |
+| V-Q-4 | Intent affects traversal weights | Wrong exploration path | MED |
+| V-Q-5 | Exploration terminates (satisfaction or max steps) | Infinite loop | HIGH |
+
+### Validation Tests
+
+```
+GIVEN graph_query(queries=[])
+WHEN executed
+THEN error: "queries array required"
+
+GIVEN graph_query(queries=["Find X"], intent="verify")
+WHEN SubEntity explores
+THEN VERIFY intention weights applied
+AND exploration terminates
+
+GIVEN graph_query returns
+THEN each result has alignment score 0.0-1.0
+```
+
+---
+
+## Procedure Invariants
+
+| ID | Invariant | Failure Mode | Severity |
+|----|-----------|--------------|----------|
+| V-PROC-1 | Session ID unique per start | Session collision | HIGH |
+| V-PROC-2 | Steps execute in defined order | Workflow corrupted | HIGH |
+| V-PROC-3 | Answers validated before advancing | Invalid data | HIGH |
+| V-PROC-4 | Abort commits nothing | Partial changes | HIGH |
+| V-PROC-5 | Complete commits atomically | Incomplete changes | HIGH |
+
+### Validation Tests
+
+```
+GIVEN procedure_start(procedure="X")
+WHEN procedure exists
+THEN session_id is unique UUID
+AND first step returned
+
+GIVEN procedure_continue with invalid answer
+WHEN validation fails
+THEN error returned
+AND step NOT advanced
+
+GIVEN procedure_abort(session_id)
+WHEN session active
+THEN no nodes created
+AND no links created
+```
+
+---
+
+## Graph Invariants
+
+| ID | Invariant | Failure Mode | Severity |
+|----|-----------|--------------|----------|
+| V-G-1 | All nodes have valid `node_type` | Schema violation | HIGH |
+| V-G-2 | All links reference existing nodes | Dangling links | HIGH |
+| V-G-3 | All links are type `:link` | Schema violation | HIGH |
+| V-G-4 | Moments have actor link | Unattributed | HIGH |
+| V-G-5 | Narratives have synthesis | Not searchable | MED |
+
+### Validation Tests
+
+```
+GIVEN node creation
+THEN node_type IN ['actor', 'moment', 'narrative', 'space', 'thing']
+
+GIVEN link creation
+THEN link type = ':link'
+AND from_id exists in graph
+AND to_id exists in graph
+
+GIVEN narrative creation
+THEN synthesis field populated
+AND synthesis is embeddable text
+```
+
+---
+
+## Agent Invariants
+
+| ID | Invariant | Failure Mode | Severity |
+|----|-----------|--------------|----------|
+| V-A-1 | Only one agent running at a time | Resource conflict | MED |
+| V-A-2 | Agent status transitions: ready → running → ready | State corruption | HIGH |
+| V-A-3 | Spawn requires task_id OR (issue_type + path) | Incomplete context | HIGH |
+| V-A-4 | Running agent returns result | Orphaned process | MED |
+
+### Validation Tests
+
+```
+GIVEN agent_spawn when agent running
+THEN error: "Agent X is already running"
+
+GIVEN agent_spawn(task_id=None, issue_type=None)
+THEN error: "Either task_id or (issue_type + path) required"
+
+GIVEN agent completes
+THEN status = "ready"
+AND result returned
+```
 
 ---
 
@@ -80,45 +123,55 @@ PURPOSE: Invariants that must hold for structured graph dialogues
 
 | ID | Invariant | Failure Mode | Severity |
 |----|-----------|--------------|----------|
-| V-DOC-1 | Doctor calls graph before selecting protocol | Blind decisions | MED |
-| V-DOC-2 | Doctor selects appropriate protocol for gap | Wrong workflow | MED |
-| V-DOC-3 | Doctor completes protocol before moving to next gap | Incomplete resolution | HIGH |
+| V-D-1 | Check returns issues with assigned agents | No actionability | MED |
+| V-D-2 | Depth respected: links < docs < full | Wrong scope | LOW |
+| V-D-3 | Path filter applied correctly | Wrong scope | LOW |
+| V-D-4 | Auto-fix only for ≤10 schema issues | Uncontrolled changes | MED |
+
+### Validation Tests
+
+```
+GIVEN doctor_check(depth="links")
+THEN only link checks run
+AND doc checks NOT run
+
+GIVEN doctor_check finds 5 schema issues
+THEN issues auto-fixed
+AND no issues in result
+
+GIVEN doctor_check finds 15 schema issues
+THEN issues NOT auto-fixed
+AND issues returned with agents
+```
 
 ---
 
-## v1 Test Cases
+## SubEntity Invariants
 
-### Protocol Integration
+| ID | Invariant | Failure Mode | Severity |
+|----|-----------|--------------|----------|
+| V-SE-1 | Exploration starts from actor moment | No origin | HIGH |
+| V-SE-2 | Movement follows highest-scored link | Wrong path | MED |
+| V-SE-3 | Visited nodes tracked (no infinite loops) | Stuck | HIGH |
+| V-SE-4 | Satisfaction increases on narrative finds | No progress signal | MED |
+| V-SE-5 | Crystallization when satisfaction < 0.5 AND novelty > 0.85 | Lost discoveries | MED |
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| T-1 | Doctor loads protocol → correct protocol selected | V-DOC-2 |
-| T-2 | Protocol workflow → steps execute in order | V-PROT-1 |
-| T-3 | Protocol calls membrane → membrane completes | V-MEM-4 |
+### Validation Tests
 
-### Cluster Creation
+```
+GIVEN exploration starts
+THEN origin = moment linked to actor
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| T-4 | Membrane output → multiple nodes + rich links | V-MEM-5, V-MEM-6 |
-| T-5 | Cross-linking → nodes linked to each other | V-CLUST-2 |
-| T-6 | Strength values → derived from answers | V-CLUST-4 |
+GIVEN multiple link candidates
+THEN selected = max(alignment × polarity × (1-permanence) × novelty × divergence)
 
-### Context & Moments
+GIVEN node visited twice
+THEN backtrack logged
+AND depth still increases
 
-| Test | Description | Validates |
-|------|-------------|-----------|
-| T-7 | Context enrichment → agent queries, uses results | V-QUERY-1 |
-| T-8 | All ask steps → moments with descriptions | V-MOM-1, V-MOM-2 |
-| T-9 | Link structure → expresses, about correct | V-MOM-1 |
-
-### Dependencies
-
-| Test | Description | Validates |
-|------|-------------|-----------|
-| T-10 | Spawn → sub-membrane runs and completes | V-MEM-2 |
-| T-11 | Dependency chain → health → validation → behavior | V-MEM-2 |
-| T-12 | Cycle detection → detected and blocked | V-MEM-3 |
+GIVEN exploration finds narrative
+THEN satisfaction += alignment score
+```
 
 ---
 
@@ -126,11 +179,12 @@ PURPOSE: Invariants that must hold for structured graph dialogues
 
 | Condition | Detection | Response |
 |-----------|-----------|----------|
-| Invalid answer | validate_answer returns false | Return error, repeat step |
-| Missing node reference | graph_exists returns false | Return error with node ID |
-| Spawn depth exceeded | depth > max_spawn_depth | Fail membrane with error |
-| Query timeout | graph query exceeds timeout | Return partial or error |
-| Session not found | load_session returns null | Return session expired error |
+| Empty queries | len(queries) == 0 | Error: "queries array required" |
+| No graph connection | adapter.ping() fails | Error: "No graph connection" |
+| Procedure not found | file not exists | Error: "Procedure X not found" |
+| Session expired | session not in cache | Error: "Session expired or invalid" |
+| Agent busy | status == "running" | Error: "Agent X is already running" |
+| Exploration stuck | satisfaction plateau 5+ steps | Warning logged, continue |
 
 ---
 

@@ -345,9 +345,28 @@ def print_sync_status(target_dir: Path, archived_files: List[Tuple[Path, Path]] 
 
 
 def sync_command(target_dir: Path, max_lines: int = 200) -> int:
-    """Run the sync command - auto-archives then shows status."""
+    """Run the sync command - auto-archives, re-ingests docs, then shows status."""
     # Auto-archive large files first
     archived = archive_all_syncs(target_dir, max_lines)
+
+    # Re-ingest docs and mind files to graph (if graph available)
+    try:
+        from .physics.graph.graph_ops import GraphOps
+        from .ingest.docs import ingest_docs_to_graph, ingest_mind_to_graph
+
+        repo_name = target_dir.name
+        graph_ops = GraphOps(graph_name=repo_name)
+
+        print("Syncing to graph...")
+        doc_stats = ingest_docs_to_graph(target_dir, graph_ops)
+        print(f"  ✓ docs: {doc_stats['docs_ingested']} ingested, {doc_stats['stubs_created']} stubs, {doc_stats['tasks_created']} tasks")
+
+        mind_stats = ingest_mind_to_graph(target_dir, graph_ops)
+        print(f"  ✓ mind: {mind_stats['files_ingested']} files, {mind_stats['spaces_created']} spaces")
+    except ImportError:
+        pass  # Graph engine not available
+    except Exception as e:
+        print(f"  ○ Sync skipped: {e}")
 
     # Show status (including what was archived)
     print_sync_status(target_dir, archived)

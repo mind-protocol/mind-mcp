@@ -25,8 +25,28 @@ from typing import List, Dict, Optional, Set, Tuple, Any, Literal
 from enum import Enum
 from collections import defaultdict
 
-from .subentity import IntentionType
 from .link_scoring import cosine_similarity
+
+
+# =============================================================================
+# INTENTION TYPE (for presentation filtering)
+# =============================================================================
+# This enum is used only for presentation logic - which sections to show.
+# It is NOT used for link scoring (that uses fixed INTENTION_WEIGHT in subentity.py).
+
+class IntentionType(str, Enum):
+    """
+    Intention types for presentation filtering.
+
+    Different intentions show different sections in the cluster presentation.
+    """
+    SUMMARIZE = "summarize"    # Show: response, path, temporal, tensions
+    VERIFY = "verify"          # Show: response, path, tensions, gaps
+    FIND_NEXT = "find_next"    # Show: response, path, temporal, gaps
+    EXPLORE = "explore"        # Show: all sections
+    RETRIEVE = "retrieve"      # Show: response, path, gaps
+
+
 from .synthesis_unfold import (
     parse_node_synthesis,
     parse_link_synthesis,

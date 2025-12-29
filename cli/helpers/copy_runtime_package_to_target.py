@@ -9,9 +9,9 @@ SKIP_PATTERNS = {"__pycache__", ".pyc", ".pyo", ".git"}
 
 
 def copy_runtime_package(target_dir: Path) -> None:
-    """Copy mind/ runtime to .mind/mind/."""
+    """Copy runtime/ to .mind/runtime/."""
     src = get_runtime_path()
-    dst = target_dir / ".mind" / "mind"
+    dst = target_dir / ".mind" / "runtime"
 
     def should_skip(p: Path) -> bool:
         return any(x in SKIP_PATTERNS or x.endswith((".pyc", ".pyo")) for x in p.parts)

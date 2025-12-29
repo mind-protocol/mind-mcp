@@ -105,7 +105,7 @@ def spawn_manager_agent(
     """Spawn the mind manager with user input and recent logs."""
     agent_provider = normalize_agent(agent_provider)
 
-    manager_dir = target_dir / ".mind" / "agents" / "manager"
+    manager_dir = target_dir / ".mind" / "work" / "manager"
     if not manager_dir.exists():
         print(f"  {Colors.DIM}(mind manager not found at {manager_dir}){Colors.RESET}")
         return None

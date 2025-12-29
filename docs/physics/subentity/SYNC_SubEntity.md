@@ -2,8 +2,8 @@
 
 ```
 STATUS: CANONICAL
-VERSION: v2.0
-UPDATED: 2025-12-26
+VERSION: v2.1
+UPDATED: 2025-12-29
 ```
 
 ---
@@ -20,26 +20,6 @@ IMPLEMENTATION: ./IMPLEMENTATION_SubEntity.md
 HEALTH:         ./HEALTH_SubEntity.md
 THIS:           ./SYNC_SubEntity.md
 ```
-
----
-
-## INVARIANT STATUS
-
-| ID | Name | Status | Last Checked |
-|----|------|--------|--------------|
-| V1 | State Machine Integrity | PASSING | 2025-12-26 |
-| V2 | Tree Structure Consistency | PASSING | 2025-12-26 |
-| V3 | Path Monotonicity | PASSING | 2025-12-26 |
-| V4 | Satisfaction Monotonicity | PASSING | 2025-12-26 |
-| V5 | Energy Conservation | PASSING | 2025-12-26 |
-| V6 | Crystallization Novelty Gate | PASSING | 2025-12-26 |
-| V7 | Child Crystallization (v2.0) | PASSING | 2025-12-26 |
-| V8 | Timeout Behavior | PASSING | 2025-12-26 |
-| V9 | Link Score Bounds | PASSING | 2025-12-26 |
-| V10 | Embedding Dimension Consistency | PASSING | 2025-12-26 |
-| V11 | Depth Accumulation (v2.0) | PASSING | 2025-12-26 |
-| V12 | Progress History (v2.0) | PASSING | 2025-12-26 |
-| V13 | Fatigue Stopping (v2.0) | PASSING | 2025-12-26 |
 
 ---
 
@@ -76,6 +56,8 @@ Last health check: 2025-12-26
 | Circular sibling refs | Lazy ID refs | v1.7.2 |
 | Partial merge on timeout | Fail loud | v1.7.2 |
 | Query/intention conflation | Separate embeddings | v1.8 |
+| Infinite loop at max depth | Depth check skips terminal states | v2.0.1 |
+| CRYSTALLIZING → SEEKING loop | Always MERGING after crystallize | v2.0.1 |
 
 ---
 
@@ -163,29 +145,9 @@ All 70 tests passing.
 
 ---
 
-## NEXT ACTIONS
+## ARCHIVE
 
-### v2.0 Implementation (Awareness Depth + Breadth) — COMPLETE ✓
-
-All v2.0 features implemented in `runtime/physics/subentity.py`:
-- `awareness_depth: List[float]` = [up, down] accumulator
-- `progress_history: List[float]` = delta sequence toward intention
-- `update_depth()`: Accumulates hierarchy on UP/DOWN links
-- `update_progress()`: Tracks delta toward intention
-- `is_fatigued()`: Stagnation detection for stopping
-- `should_child_crystallize()`: Systematic crystallization (unless 90%+ match)
-- `merge_child_results()`: Returns children to crystallize, NO propagation
-
-All 70 tests passing in `runtime/tests/test_subentity.py`.
-
-### Remaining Backlog
-
-1. **Update traversal logger**: Include awareness_depth and progress in logs
-2. **Implement health checker CLI**: `runtime/physics/health/check_subentity.py`
-3. **Add CI integration**: Run health checks on exploration log commits
-4. **Build aggregate reports**: Cross-exploration trend analysis
-
-See: `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
+Older content archived to: `SYNC_SubEntity_archive_2025-12.md`
 
 
 ---

@@ -19,7 +19,11 @@ v1.6.1 Additions:
 
 v1.8 Additions:
     - Query vs Intention separation (query=WHAT, intention=WHY)
-    - IntentionType enum (SUMMARIZE, VERIFY, FIND_NEXT, EXPLORE, RETRIEVE)
+
+v2.1 Additions:
+    - Removed IntentionType enum from subentity - intention is now semantic via embedding
+    - IntentionType moved to cluster_presentation (for presentation filtering only)
+    - Fixed INTENTION_WEIGHT constant (0.25) replaces INTENTION_WEIGHTS dict
 
 v1.9 Additions:
     - cluster_presentation: Transform raw clusters to readable presentations
@@ -85,8 +89,7 @@ from .subentity import (
     SubEntity,
     SubEntityState,
     ExplorationContext,
-    IntentionType,
-    INTENTION_WEIGHTS,
+    INTENTION_WEIGHT,  # v2.1: Fixed constant (was INTENTION_WEIGHTS dict)
     create_subentity,
 )
 from .cluster_presentation import (
@@ -98,6 +101,7 @@ from .cluster_presentation import (
     PresentedCluster,
     Marker,
     RenderMode,
+    IntentionType,  # v2.1: Moved here (for presentation filtering only)
     present_cluster,
     cluster_from_dicts,
     find_direct_response,
@@ -122,25 +126,31 @@ from .synthesis_unfold import (
     to_adverb,
     to_participle,
 )
-from .link_vocab import (
+from .nature import (
     nature_to_floats,
     parse_nature,
     parse_with_conflicts,
     get_verb_for_nature,
-    get_vocab_reference,
-    get_vocab_compact,
+    get_nature_reference,
+    get_nature_compact,
     get_intensified_verb,
     select_verb_form,
     translate,
-    default_floats,
-    ALL_VERBS,
-    PRE_MODIFIERS,
-    POST_MODIFIERS,
-    TEMPORAL_VERBS,
-    DOCTOR_VERBS,
-    INTENSIFIERS,
-    TRANSLATIONS,
+    get_defaults,
+    get_pre_modifiers,
+    get_post_modifiers,
+    get_intensifiers,
+    get_translations,
+    reload_nature,
+    _get_all_verbs,
+    # Backwards compatibility
+    get_vocab_reference,
+    get_vocab_compact,
+    reload_vocab,
 )
+
+# Backwards compatibility alias
+default_floats = get_defaults
 
 # Backwards compatibility alias
 GraphTick = GraphTickV1_2
@@ -186,12 +196,12 @@ __all__ = [
     'parse_and_merge',
     'ParsedPhysics',
     'synthesize_from_crystallization',
-    # Exploration (v1.6.1)
+    # Exploration (v1.6.1, v2.1)
     'SubEntity',
     'SubEntityState',
     'create_subentity',
-    'IntentionType',
-    'INTENTION_WEIGHTS',
+    'IntentionType',  # v2.1: For presentation filtering (from cluster_presentation)
+    'INTENTION_WEIGHT',  # v2.1: Fixed constant (was INTENTION_WEIGHTS dict)
     'ExplorationContext',
     'ExplorationTimeoutError',
     'ExplorationResult',
@@ -232,13 +242,25 @@ __all__ = [
     'compact_link',
     'to_adverb',
     'to_participle',
-    # Link Vocabulary (v2.0)
+    # Nature (v2.0 - YAML-based semantic to physics)
     'nature_to_floats',
     'parse_nature',
+    'parse_with_conflicts',
     'get_verb_for_nature',
+    'get_nature_reference',
+    'get_nature_compact',
+    'get_defaults',
+    'default_floats',  # Alias for get_defaults
+    'get_pre_modifiers',
+    'get_post_modifiers',
+    'get_intensifiers',
+    'get_intensified_verb',
+    'select_verb_form',
+    'translate',
+    'get_translations',
+    'reload_nature',
+    # Backwards compatibility
     'get_vocab_reference',
     'get_vocab_compact',
-    'ALL_VERBS',
-    'PRE_MODIFIERS',
-    'POST_MODIFIERS',
+    'reload_vocab',
 ]

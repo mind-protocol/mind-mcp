@@ -53,6 +53,12 @@ from runtime.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_I
 from runtime.agent_spawn import spawn_work_agent, spawn_agent_for_issue
 from runtime.doctor import run_doctor
 from runtime.doctor_types import DoctorConfig
+from runtime.capability_integration import (
+    init_capability_manager,
+    get_capability_manager,
+    CapabilityManager,
+    CAPABILITY_RUNTIME_AVAILABLE,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -85,6 +91,16 @@ class MindServer:
             self.graph_ops = None
             self.graph_queries = None
 
+        # Try to connect to membrane graph
+        try:
+            from runtime.membrane import get_membrane_queries
+            self.membrane_queries = get_membrane_queries()
+            if self.membrane_queries:
+                logger.info("Connected to membrane graph")
+        except Exception as e:
+            logger.warning(f"No membrane connection: {e}")
+            self.membrane_queries = None
+
         # Initialize agent graph for work agent management
         try:
             self.agent_graph = AgentGraph()
@@ -93,6 +109,29 @@ class MindServer:
         except Exception as e:
             logger.warning(f"No agent graph: {e}")
             self.agent_graph = AgentGraph()  # Fallback mode
+
+        # Initialize capability manager
+        self.capability_manager: Optional[CapabilityManager] = None
+        if CAPABILITY_RUNTIME_AVAILABLE:
+            try:
+                self.capability_manager = init_capability_manager(
+                    target_dir=self.target_dir,
+                    graph=self.graph_ops,
+                )
+                cap_summary = self.capability_manager.initialize()
+                logger.info(f"Capabilities: {cap_summary}")
+
+                # Start cron scheduler
+                self.capability_manager.start_cron_scheduler()
+
+                # Fire startup trigger
+                startup_result = self.capability_manager.fire_trigger(
+                    "init.startup", {}, create_tasks=True
+                )
+                logger.info(f"Startup trigger: {startup_result}")
+            except Exception as e:
+                logger.warning(f"Capability system failed: {e}")
+                self.capability_manager = None
 
         self.runner = ConnectomeRunner(
             graph_ops=self.graph_ops,
@@ -302,18 +341,9 @@ class MindServer:
                                 "items": {"type": "string"},
                                 "description": "One or more natural language queries (e.g., ['Who is Edmund?', 'What oaths exist?'])"
                             },
-                            "top_k": {
-                                "type": "integer",
-                                "description": "Number of top matches per query (default: 5)"
-                            },
-                            "expand": {
-                                "type": "boolean",
-                                "description": "Expand results to include connected nodes (default: true)"
-                            },
-                            "format": {
+                            "intent": {
                                 "type": "string",
-                                "enum": ["md", "json"],
-                                "description": "Output format: 'md' for markdown (default), 'json' for structured data"
+                                "description": "WHY you're searching - affects traversal strategy (e.g., 'find contradictions', 'summarize events', 'verify claims')"
                             },
                             "actor_id": {
                                 "type": "string",
@@ -329,6 +359,44 @@ class MindServer:
                             }
                         },
                         "required": ["queries"]
+                    }
+                },
+                {
+                    "name": "capability_status",
+                    "description": "Get status of the capability system: loaded capabilities, registered triggers, throttler state.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {}
+                    }
+                },
+                {
+                    "name": "capability_trigger",
+                    "description": "Fire a trigger manually. Used for testing or manual health checks.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "trigger_type": {
+                                "type": "string",
+                                "description": "Type of trigger (e.g., 'init.startup', 'file.on_modify', 'cron.hourly')"
+                            },
+                            "file_path": {
+                                "type": "string",
+                                "description": "Optional file path for file triggers"
+                            },
+                            "create_tasks": {
+                                "type": "boolean",
+                                "description": "Whether to create task_run nodes for non-healthy signals (default: true)"
+                            }
+                        },
+                        "required": ["trigger_type"]
+                    }
+                },
+                {
+                    "name": "capability_list",
+                    "description": "List all loaded capabilities with their health checks.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {}
                     }
                 }
             ]
@@ -359,6 +427,12 @@ class MindServer:
             return self._tool_agent_status(arguments)
         elif tool_name == "graph_query":
             return self._tool_graph_query(arguments)
+        elif tool_name == "capability_status":
+            return self._tool_capability_status(arguments)
+        elif tool_name == "capability_trigger":
+            return self._tool_capability_trigger(arguments)
+        elif tool_name == "capability_list":
+            return self._tool_capability_list(arguments)
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
 
@@ -413,6 +487,27 @@ class MindServer:
         path_filter = args.get("path")
 
         try:
+            # Graph schema health check
+            schema_lines = []
+            try:
+                from runtime.physics.graph.graph_schema_cleanup import get_schema_health, cleanup_invalid_nodes
+                health = get_schema_health()
+
+                if health.get("error"):
+                    schema_lines.append(f"Graph: Error - {health['error']}")
+                else:
+                    invalid = health["null_node_type"] + health["invalid_node_type"] + health["null_id"]
+                    if invalid > 0:
+                        schema_lines.append(f"Graph: {invalid} invalid nodes (run cleanup)")
+                        # Auto-fix if small number
+                        if invalid <= 10:
+                            report = cleanup_invalid_nodes(dry_run=False)
+                            schema_lines.append(f"  Auto-fixed: {report.nodes_deleted} deleted")
+                    else:
+                        schema_lines.append(f"Graph: OK ({health['total_nodes']} nodes)")
+            except Exception as e:
+                schema_lines.append(f"Graph: Check failed - {e}")
+
             config = DoctorConfig()
             result = run_doctor(self.target_dir, config)
             # Extract issues from all categories
@@ -430,12 +525,13 @@ class MindServer:
             issues = [i for i in issues if i.issue_type in allowed_types]
 
             if not issues:
-                return {"content": [{"type": "text", "text": "No issues found."}]}
+                output = "\n".join(schema_lines) + "\n\nNo doc issues found."
+                return {"content": [{"type": "text", "text": output}]}
 
             # Get available agents
             available_agents = {a.id: a for a in self.agent_graph.get_available_agents()}
 
-            lines = [f"Found {len(issues)} issues:\n"]
+            lines = schema_lines + ["", f"Found {len(issues)} doc issues:\n"]
             for idx, issue in enumerate(issues):
                 # Determine assigned agent
                 posture = ISSUE_TO_POSTURE.get(issue.issue_type, "fixer")
@@ -761,8 +857,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
     def _tool_graph_query(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Query the graph using natural language via SubEntity exploration."""
         queries = args.get("queries", [])
-        top_k = args.get("top_k", 5)
-        output_format = args.get("format", "md")
+        intent = args.get("intent")  # WHY searching - affects traversal
         actor_id = args.get("actor_id", "actor_claude")
         debug = args.get("debug", False)
         timeout = args.get("timeout", 30.0)
@@ -780,14 +875,14 @@ Please investigate and fix this issue. Follow the project's coding standards and
         if debug:
             debug_lines.append("=== DEBUG MODE ===")
             debug_lines.append(f"Actor: {actor_id}")
+            debug_lines.append(f"Intent: {intent or '(none)'}")
             debug_lines.append(f"Timeout: {timeout}s")
-            debug_lines.append(f"Top K: {top_k}")
             debug_lines.append("")
 
         try:
             # Run queries
             results = asyncio.run(
-                self._ask_async(queries, actor_id, top_k, timeout, debug, debug_lines)
+                self._ask_async(queries, actor_id, intent, timeout, debug, debug_lines)
             )
 
             # Format output
@@ -796,9 +891,6 @@ Please investigate and fix this issue. Follow the project's coding standards and
             if debug:
                 output_lines.extend(debug_lines)
                 output_lines.append("")
-
-            if output_format == "json":
-                return {"content": [{"type": "text", "text": json.dumps(results, indent=2)}]}
 
             # Markdown output
             for i, item in enumerate(results, 1):
@@ -847,7 +939,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
         self,
         queries: List[str],
         actor_id: str,
-        top_k: int,
+        intent: Optional[str],
         timeout: float,
         debug: bool,
         debug_lines: List[str]
@@ -863,7 +955,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
 
         # Create tasks for all queries
         tasks = [
-            self._ask_single(query, actor_id, top_k, timeout, debug, debug_lines)
+            self._ask_single(query, actor_id, intent, timeout, debug, debug_lines)
             for query in valid_queries
         ]
 
@@ -880,7 +972,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
 
         return results
 
-    async def _ask_single(self, query: str, actor_id: str, top_k: int, timeout: float, debug: bool, debug_lines: List[str]) -> str:
+    async def _ask_single(self, query: str, actor_id: str, intent: Optional[str], timeout: float, debug: bool, debug_lines: List[str]) -> str:
         """Async SubEntity exploration to answer a single query."""
         import time
         from runtime.infrastructure.embeddings.service import get_embedding_service
@@ -901,11 +993,16 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 initial_energy=1.0
             )
             # Link actor to moment
-            self.graph_queries._link_actor_to_moment(actor_id, moment_id)
+            self.graph_queries._query("""
+                MATCH (a {id: $actor_id})
+                MATCH (m {id: $moment_id})
+                MERGE (a)-[r:link]->(m)
+                SET r.weight = 1.0, r.energy = 1.0
+            """, {'actor_id': actor_id, 'moment_id': moment_id})
 
-            # Link to previous actor moment (THEN)
+            # Link to previous actor moment
             prev_moment = self.graph_queries._query("""
-                MATCH (a {id: $actor_id})-[:EXPRESSES]->(m:Moment)
+                MATCH (a {id: $actor_id})-[:link]->(m:Moment)
                 WHERE m.id <> $moment_id
                 RETURN m.id
                 ORDER BY m.created_at_s DESC
@@ -917,29 +1014,11 @@ Please investigate and fix this issue. Follow the project's coding standards and
                     self.graph_queries._query("""
                         MATCH (prev {id: $prev_id})
                         MATCH (curr {id: $curr_id})
-                        MERGE (prev)-[r:THEN]->(curr)
+                        MERGE (prev)-[r:link]->(curr)
                         SET r.weight = 1.0, r.energy = 0.0
                     """, {'prev_id': prev_id, 'curr_id': moment_id})
                     if debug:
                         debug_lines.append(f"Linked to previous: {prev_id}")
-
-            # Link to all actors in the same space (WITNESSED_BY)
-            actors_in_space = self.graph_queries._query("""
-                MATCH (a {id: $actor_id})-[:AT]->(s:Space)<-[:AT]-(other:Actor)
-                WHERE other.id <> $actor_id
-                RETURN other.id
-            """, {'actor_id': actor_id})
-            for row in actors_in_space:
-                other_id = row[0] if row else None
-                if other_id:
-                    self.graph_queries._query("""
-                        MATCH (m {id: $moment_id})
-                        MATCH (o {id: $other_id})
-                        MERGE (o)-[r:WITNESSED]->(m)
-                        SET r.weight = 0.5, r.energy = 0.0
-                    """, {'moment_id': moment_id, 'other_id': other_id})
-            if debug and actors_in_space:
-                debug_lines.append(f"Witnessed by: {len(actors_in_space)} actors")
 
             if debug:
                 debug_lines.append(f"Created moment: {moment_id}")
@@ -948,6 +1027,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
             result, log_path = await run_exploration(
                 query=query,
                 actor_id=actor_id,
+                intention=intent,  # WHY searching - affects traversal strategy
                 graph_name=None,  # Use config default
                 origin_moment=moment_id,
                 timeout=timeout,
@@ -964,28 +1044,218 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 if log_path:
                     debug_lines.append(f"Log: {log_path}.txt")
 
-            # Format result
-            lines = [f"# {query}\n"]
-            lines.append(f"**Actor:** {actor_id}")
-            lines.append(f"**State:** {result.state.value}")
-            lines.append(f"**Satisfaction:** {result.satisfaction:.2f}")
-            lines.append("")
+            # Format result using cluster presentation
+            from runtime.physics.cluster_presentation import (
+                ClusterNode,
+                ClusterLink,
+                RawCluster,
+                present_cluster,
+                IntentionType,  # For presentation filtering (not link scoring)
+            )
 
-            if result.found_narratives:
-                lines.append("## Found Narratives")
-                sorted_narr = sorted(result.found_narratives.items(), key=lambda x: x[1], reverse=True)
-                for narr_id, alignment in sorted_narr[:top_k]:
-                    marker = "**" if narr_id == result.crystallized else ""
-                    lines.append(f"- {marker}{narr_id}{marker}: {alignment:.3f}")
-            else:
-                lines.append("*No narratives found.*")
+            if not result.found_narratives:
+                return "No relevant narratives found."
 
-            return "\n".join(lines)
+            # Parse intention type
+            intent_type = IntentionType.EXPLORE
+            if intent:
+                intent_lower = intent.lower()
+                if "summar" in intent_lower:
+                    intent_type = IntentionType.SUMMARIZE
+                elif "verif" in intent_lower or "check" in intent_lower:
+                    intent_type = IntentionType.VERIFY
+                elif "find" in intent_lower or "next" in intent_lower:
+                    intent_type = IntentionType.FIND_NEXT
+                elif "retriev" in intent_lower or "get" in intent_lower:
+                    intent_type = IntentionType.RETRIEVE
+
+            # Fetch actual content for each found narrative
+            nodes = []
+            query_embedding = embed_service.embed(query)
+
+            for narr_id, alignment in result.found_narratives.items():
+                narr_data = self.graph_queries._query("""
+                    MATCH (n {id: $narr_id})
+                    RETURN n.name, n.content, n.synthesis, n.node_type, n.energy, n.weight
+                """, {'narr_id': narr_id})
+
+                if narr_data and narr_data[0]:
+                    name = narr_data[0][0] or narr_id
+                    content = narr_data[0][1] or ""
+                    synthesis = narr_data[0][2] or name
+                    node_type = narr_data[0][3] or "narrative"
+                    energy = narr_data[0][4] or 1.0
+                    weight = narr_data[0][5] or alignment
+
+                    # Use content or synthesis for display
+                    display_text = synthesis if synthesis else (content[:200] if content else name)
+
+                    nodes.append(ClusterNode(
+                        id=narr_id,
+                        node_type=node_type,
+                        name=name,
+                        synthesis=display_text,
+                        embedding=query_embedding,
+                        weight=weight,
+                        energy=energy,
+                    ))
+
+            # Add actor node
+            nodes.append(ClusterNode(
+                id=actor_id,
+                node_type='actor',
+                name=actor_id,
+                synthesis=f"Explorer: {actor_id}",
+                embedding=query_embedding,
+                weight=1.0,
+                energy=1.0,
+            ))
+
+            # Create links from actor to narratives
+            links = []
+            for narr_id, alignment in result.found_narratives.items():
+                links.append(ClusterLink(
+                    id=f"link_{actor_id}_{narr_id}",
+                    source_id=actor_id,
+                    target_id=narr_id,
+                    synthesis=f"found (alignment: {alignment:.2f})",
+                    embedding=query_embedding,
+                    weight=alignment,
+                    energy=alignment,
+                    permanence=0.5,
+                    trust_disgust=0.0,
+                ))
+
+            # Build and present cluster
+            raw_cluster = RawCluster(
+                nodes=nodes,
+                links=links,
+                traversed_link_ids={l.id for l in links},
+            )
+
+            presented = present_cluster(
+                raw_cluster=raw_cluster,
+                query=query,
+                intention=intent or query,
+                intention_type=intent_type,
+                query_embedding=query_embedding,
+                intention_embedding=query_embedding,
+                start_id=actor_id,
+            )
+
+            # Add crystallization info if present
+            output = presented.markdown
+            if result.crystallized:
+                output += f"\n\n*Crystallized: {result.crystallized}*"
+
+            return output
 
         except Exception as e:
             if debug:
                 debug_lines.append(f"Ask failed: {e}")
             return f"Ask failed: {e}"
+
+    def _tool_capability_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Get capability system status."""
+        if not self.capability_manager:
+            return {"content": [{"type": "text", "text": "Capability system not available"}]}
+
+        status = self.capability_manager.get_status()
+
+        lines = ["Capability System Status\n"]
+        lines.append(f"Initialized: {status['initialized']}")
+        lines.append(f"Capabilities: {status['capabilities']}")
+        lines.append(f"Cron Scheduler: {'running' if status['cron_running'] else 'stopped'}")
+
+        if status.get("registry"):
+            reg = status["registry"]
+            lines.append(f"\nTrigger Registry:")
+            lines.append(f"  Trigger types: {reg.get('trigger_types', 0)}")
+            lines.append(f"  Total checks: {reg.get('total_checks', 0)}")
+            if reg.get("by_type"):
+                lines.append("  By type:")
+                for trigger_type, count in sorted(reg["by_type"].items())[:10]:
+                    lines.append(f"    {trigger_type}: {count}")
+
+        if status.get("throttler"):
+            th = status["throttler"]
+            lines.append(f"\nThrottler:")
+            lines.append(f"  Pending: {th.get('pending_count', 0)}")
+            lines.append(f"  Active: {th.get('active_count', 0)}")
+
+        if status.get("controller"):
+            ctrl = status["controller"]
+            lines.append(f"\nController:")
+            lines.append(f"  Mode: {ctrl.get('mode', 'unknown')}")
+            lines.append(f"  Can claim: {ctrl.get('can_claim', False)}")
+
+        return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+    def _tool_capability_trigger(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Fire a trigger manually."""
+        if not self.capability_manager:
+            return {"content": [{"type": "text", "text": "Capability system not available"}]}
+
+        trigger_type = args.get("trigger_type")
+        if not trigger_type:
+            return {"content": [{"type": "text", "text": "Error: trigger_type is required"}]}
+
+        payload = {}
+        if args.get("file_path"):
+            payload["file_path"] = args["file_path"]
+
+        create_tasks = args.get("create_tasks", True)
+
+        try:
+            result = self.capability_manager.fire_trigger(
+                trigger_type=trigger_type,
+                payload=payload,
+                create_tasks=create_tasks,
+            )
+
+            lines = [f"Trigger: {trigger_type}\n"]
+            lines.append(f"Checks run: {result.get('checks_run', 0)}")
+            lines.append(f"  Healthy: {result.get('healthy', 0)}")
+            lines.append(f"  Degraded: {result.get('degraded', 0)}")
+            lines.append(f"  Critical: {result.get('critical', 0)}")
+
+            task_runs = result.get("task_runs", [])
+            if task_runs:
+                lines.append(f"\nTask runs created: {len(task_runs)}")
+                for task_id in task_runs[:5]:
+                    lines.append(f"  - {task_id}")
+
+            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+        except Exception as e:
+            logger.exception("Trigger failed")
+            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
+
+    def _tool_capability_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """List all loaded capabilities."""
+        if not self.capability_manager:
+            return {"content": [{"type": "text", "text": "Capability system not available"}]}
+
+        capabilities = self.capability_manager.list_capabilities()
+
+        if not capabilities:
+            return {"content": [{"type": "text", "text": "No capabilities loaded"}]}
+
+        lines = [f"Loaded Capabilities: {len(capabilities)}\n"]
+
+        for cap in capabilities:
+            lines.append(f"📦 {cap['name']}")
+            for check in cap["checks"]:
+                triggers_str = ", ".join(check["triggers"][:2])
+                if len(check["triggers"]) > 2:
+                    triggers_str += "..."
+                lines.append(f"   ├─ {check['id']}")
+                lines.append(f"   │  Triggers: {triggers_str}")
+                lines.append(f"   │  Problem: {check['on_problem']}")
+                lines.append(f"   └─ Task: {check['task']}")
+            lines.append("")
+
+        return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
     def _format_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
         """Format runner response as MCP tool result."""

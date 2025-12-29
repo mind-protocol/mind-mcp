@@ -38,20 +38,23 @@ def check_mind_status(target_dir: Path) -> int:
         print(f"  skills/: {count} skills")
 
     # Runtime
-    runtime = mind_dir / "mind"
+    runtime = mind_dir / "runtime"
     if runtime.exists():
         py_count = sum(1 for _ in runtime.rglob("*.py"))
-        print(f"  mind/ (runtime): {py_count} Python files")
+        print(f"  runtime/: {py_count} Python files")
 
         modules = ["physics", "graph", "connectome", "infrastructure", "traversal"]
         present = [m for m in modules if (runtime / m).exists()]
         if present:
             print(f"    modules: {', '.join(present)}")
     else:
-        print("  mind/ (runtime): ✗")
+        print("  runtime/: ✗")
 
     # Embedding config check
     _check_embedding_config(mind_dir)
+
+    # Graph schema health check
+    _check_graph_health(mind_dir)
 
     return 0
 
@@ -95,3 +98,48 @@ def _check_embedding_config(mind_dir: Path) -> None:
 
     except Exception:
         pass  # Silently ignore config read errors
+
+
+def _check_graph_health(mind_dir: Path) -> None:
+    """Check graph schema health."""
+    try:
+        # Import from runtime
+        import sys
+        runtime_path = str(mind_dir.parent)
+        if runtime_path not in sys.path:
+            sys.path.insert(0, runtime_path)
+
+        from runtime.physics.graph.graph_schema_cleanup import get_schema_health
+
+        health = get_schema_health()
+
+        print()
+        if health.get("error"):
+            print(f"  graph: Error - {health['error']}")
+            return
+
+        total = health["total_nodes"]
+        invalid = health["null_node_type"] + health["invalid_node_type"] + health["null_id"]
+
+        if invalid == 0:
+            print(f"  graph: ✓ {total} nodes (schema compliant)")
+        else:
+            print(f"  graph: ⚠️  {invalid} invalid nodes of {total} total")
+            if health["null_node_type"] > 0:
+                print(f"    - {health['null_node_type']} with null node_type")
+            if health["invalid_node_type"] > 0:
+                print(f"    - {health['invalid_node_type']} with invalid node_type")
+            if health["null_id"] > 0:
+                print(f"    - {health['null_id']} with null id")
+            print("    Run: mind doctor --fix to clean up")
+
+        # Show node type breakdown
+        by_type = health.get("by_type", {})
+        if by_type:
+            parts = [f"{k}: {v}" for k, v in sorted(by_type.items())]
+            print(f"    types: {', '.join(parts)}")
+
+    except ImportError:
+        pass  # Runtime not available
+    except Exception as e:
+        print(f"  graph: Check failed - {e}")

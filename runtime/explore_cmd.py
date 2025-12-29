@@ -27,7 +27,7 @@ from runtime.physics.exploration import (
     GraphInterface,
     ExplorationTimeoutError,
 )
-from runtime.physics.subentity import IntentionType
+# v2.1: Removed IntentionType import - intention is semantic via embedding
 from runtime.physics.traversal_logger import (
     TraversalLogger,
     LogLevel,
@@ -234,7 +234,8 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                 graph.query("""
                     CREATE (n:Narrative {
                         id: $id, name: $name, node_type: 'narrative',
-                        weight: $weight, energy: $energy, content: $content
+                        weight: $weight, energy: $energy,
+                        content: $content, synthesis: $synthesis
                     })
                 """, {
                     'id': narr_id,
@@ -242,6 +243,7 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                     'weight': data.get('weight', 1.0),
                     'energy': data.get('energy', 1.0),
                     'content': data.get('content', ''),
+                    'synthesis': data.get('synthesis', ''),
                 })
             except Exception as e:
                 print(f"create_narrative failed: {e}")

@@ -51,3 +51,7 @@ logs/
 # Mind runtime
 .mind/mind/
 .env
+
+# Mind runtime
+.mind/runtime/
+.env

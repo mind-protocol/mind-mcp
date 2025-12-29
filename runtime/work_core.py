@@ -708,9 +708,9 @@ async def spawn_work_agent_async(
             elif session_dir and agent_id:
                 agent_dir = session_dir / agent_id
             elif agent_id:
-                agent_dir = target_dir / ".mind" / "agents" / "work" / agent_id
+                agent_dir = target_dir / ".mind" / "work" / agent_id
             else:
-                agent_dir = target_dir / ".mind" / "agents" / "work" / f"agent-{uuid.uuid4().hex[:8]}"
+                agent_dir = target_dir / ".mind" / "work" / f"agent-{uuid.uuid4().hex[:8]}"
 
             agent_dir.mkdir(parents=True, exist_ok=True)
 

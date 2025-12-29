@@ -663,6 +663,7 @@ class CanonHolder:
         create_query = """
         CREATE (m:Moment {
             id: $recall_id,
+            node_type: 'moment',
             text: $text,
             status: 'possible',
             tone: $tone,

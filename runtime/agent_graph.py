@@ -817,39 +817,21 @@ def get_agent_template_path(posture: str, target_dir: Path, provider: str = "cla
     Get the path to an agent's template file.
 
     Checks:
-    1. .mind/agents/{posture}/{PROVIDER}.md (project-specific)
-    2. templates/mind/agents/{posture}/{PROVIDER}.md (templates)
+    1. .mind/actors/ACTOR_{Posture}.md (flat structure)
 
     Args:
         posture: Agent posture (e.g., "witness")
         target_dir: Project root directory
-        provider: Provider name (claude, gemini, or agents for SDK)
+        provider: Provider name (ignored - all providers use same template now)
 
     Returns:
         Path to template file, or None if not found
     """
-    provider_file = {
-        "claude": "CLAUDE.md",
-        "gemini": "GEMINI.md",
-        "agents": "AGENTS.md",
-        "codex": "CLAUDE.md",  # Codex uses Claude format
-    }.get(provider, "CLAUDE.md")
-
-    # Check project-specific first
-    project_path = target_dir / ".mind" / "agents" / posture / provider_file
-    if project_path.exists():
-        return project_path
-
-    # Check templates
-    # templates might be in various locations
-    template_paths = [
-        target_dir / "templates" / "mind" / "agents" / posture / provider_file,
-        Path(__file__).parent.parent / "templates" / "mind" / "agents" / posture / provider_file,
-    ]
-
-    for template_path in template_paths:
-        if template_path.exists():
-            return template_path
+    # New flat structure: .mind/actors/ACTOR_{Posture}.md
+    posture_capitalized = posture.capitalize()
+    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{posture_capitalized}.md"
+    if actor_path.exists():
+        return actor_path
 
     return None
 

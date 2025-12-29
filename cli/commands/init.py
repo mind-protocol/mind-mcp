@@ -4,6 +4,7 @@ from datetime import datetime
 from pathlib import Path
 
 from ..helpers.copy_ecosystem_templates_to_target import copy_ecosystem_templates
+from ..helpers.copy_capabilities_to_target import copy_capabilities
 from ..helpers.copy_runtime_package_to_target import copy_runtime_package
 from ..helpers.create_ai_config_files_for_claude_agents_gemini import create_ai_config_files
 from ..helpers.sync_skills_to_ai_tool_directories import sync_skills_to_ai_tools
@@ -14,6 +15,7 @@ from ..helpers.create_mcp_config_json import create_mcp_config
 from ..helpers.update_gitignore_with_runtime_entry import update_gitignore
 from ..helpers.ingest_repo_files_to_graph import ingest_repo_files
 from ..helpers.inject_seed_yaml_to_graph import inject_seed_yaml
+from ..helpers.ingest_capabilities_to_graph import ingest_capabilities
 from ..helpers.generate_repo_overview_maps import generate_overview
 from ..helpers.generate_embeddings_for_graph_nodes import generate_embeddings
 from ..helpers.get_mcp_version_from_config import get_mcp_version
@@ -35,62 +37,72 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     copy_ecosystem_templates(target_dir)
     steps.append("ecosystem")
 
-    # 2. Runtime package
+    # 2. Capabilities
+    print("\n## Capabilities")
+    copy_capabilities(target_dir)
+    steps.append("capabilities")
+
+    # 3. Runtime package
     print("\n## Runtime")
     copy_runtime_package(target_dir)
     steps.append("runtime")
 
-    # 3. AI config files
+    # 4. AI config files
     print("\n## AI Configs")
     create_ai_config_files(target_dir)
     steps.append("ai_configs")
 
-    # 4. Skills sync
+    # 5. Skills sync
     print("\n## Skills")
     sync_skills_to_ai_tools(target_dir)
     steps.append("skills")
 
-    # 5. Database config
+    # 6. Database config
     print("\n## Database Config")
     create_database_config(target_dir, database, graph_name)
     steps.append("database_config")
 
-    # 6. Database setup
+    # 7. Database setup
     print("\n## Database Setup")
     setup_database(target_dir, database, graph_name)
     steps.append("database_setup")
 
-    # 7. File ingestion (creates Spaces and Things from repo files)
+    # 8. File ingestion (creates Spaces and Things from repo files)
     print("\n## File Ingestion")
     ingest_repo_files(target_dir, graph_name)
     steps.append("file_ingest")
 
-    # 8. Seed injection (creates Actors, Narratives, links to existing Spaces)
+    # 9. Seed injection (creates Actors, Narratives, links to existing Spaces)
     print("\n## Seed Injection")
     inject_seed_yaml(target_dir, graph_name)
     steps.append("seed_inject")
 
-    # 9. Env example
+    # 10. Capability graph injection (creates capability spaces, tasks, skills, procedures)
+    print("\n## Capability Graph")
+    ingest_capabilities(target_dir, graph_name)
+    steps.append("capabilities_graph")
+
+    # 11. Env example
     print("\n## Environment")
     create_env_example(target_dir, database)
     steps.append("env_example")
 
-    # 10. MCP config
+    # 12. MCP config
     print("\n## MCP Server")
     create_mcp_config(target_dir)
     steps.append("mcp_config")
 
-    # 11. Gitignore
+    # 13. Gitignore
     print("\n## Gitignore")
     update_gitignore(target_dir)
     steps.append("gitignore")
 
-    # 12. Overview (generates map.md files)
+    # 14. Overview (generates map.md files)
     print("\n## Overview")
     generate_overview(target_dir)
     steps.append("overview")
 
-    # 13. Embeddings (with progress bar)
+    # 15. Embeddings (with progress bar)
     print("\n## Embeddings")
     generate_embeddings(graph_name)
     steps.append("embeddings")

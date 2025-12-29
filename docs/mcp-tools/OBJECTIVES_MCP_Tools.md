@@ -1,41 +1,42 @@
 # OBJECTIVES: MCP Tools
 
 ```
-STATUS: V1 SPEC
-PURPOSE: Use-case oriented graph interaction with workflow guidance
+STATUS: V2
+PURPOSE: Graph query interface for agents
 ```
 
 ---
 
 ## Goals (Ranked)
 
-| Rank | ID | Goal | Rationale |
-|------|----|----|-----------|
-| 1 | G1 | **Dense clusters, not sparse nodes** | Work creates richly linked subgraphs. Single isolated nodes are useless — meaning emerges from relationships. |
-| 2 | G2 | **Use-case oriented** | Agent thinks in work ("add health coverage"), not node types ("create narrative node"). The system maps intent to structure. |
-| 3 | G3 | **Workflow guided** | Protocols tell *when* to do things, membranes tell *how*. Agent follows choreographed sequences, not ad-hoc decisions. |
-| 4 | G4 | **Context-rich** | Agent queries graph before deciding, describes after. Every step can enrich understanding. |
-| 5 | G5 | **Traceable** | Every action creates moments with agent prose. The graph records *why*, not just *what*. |
-| 6 | G6 | **Dependency aware** | Missing prerequisites trigger sub-work. Can't add health coverage without validations → spawn add_invariant first. |
+| Rank | Goal | Rationale |
+|------|------|-----------|
+| 1 | **Semantic search only** | No Cypher queries at runtime. Embedding-based search. Graph physics does the work. |
+| 2 | **Two graphs, same interface** | Local graph OR membrane graph. Same query format. |
+| 3 | **Context is automatic** | Agent doesn't provide context. System derives from conversation, actor, history. |
+| 4 | **Queries as array** | Multiple questions in one call. Batch for efficiency. |
+| 5 | **Read-only for agents** | Agents query. Mutations via procedures/skills only. |
+| 6 | **Cross-org via membrane** | Public nodes visible across orgs through membrane graph. |
 
 ---
 
 ## Tradeoffs
 
-| If... | Then sacrifice... | Because... |
-|-------|------------------|------------|
-| Steps are slow (too many questions) | Some context richness | Agent productivity matters |
-| Clusters are too large | Some linking density | Graph remains navigable |
-| Dependency chains get deep | Spawn depth limits | Avoid infinite recursion |
+| If... | Then... | Because... |
+|-------|---------|------------|
+| Query is ambiguous | Return broad results | Agent refines with follow-up |
+| No matches found | Return empty, not error | Absence is valid information |
+| Membrane slow | Local still fast | Graphs are independent |
 
 ---
 
 ## Non-Goals
 
-- **Dynamic protocol generation** — v1 uses static protocol definitions
-- **Parallel membranes** — v1 is sequential
-- **Approval workflows** — v1 creates directly, no human-in-loop gating
-- **Undo/rollback** — v1 commits immediately
+- **Cypher access** — No raw queries, embedding search only
+- **GraphOps for agents** — No create/update/delete directly
+- **Merged results** — Local OR membrane, not both combined
+- **Intent types** — System infers, agent doesn't specify
+- **Context parameter** — Automatic, not provided
 
 ---
 
@@ -43,15 +44,14 @@ PURPOSE: Use-case oriented graph interaction with workflow guidance
 
 | Metric | Target |
 |--------|--------|
-| Nodes per membrane | 2-10 (cluster, not singleton) |
-| Links per cluster | ≥1.5× node count (dense) |
-| Agent description rate | 100% of ask steps have prose |
-| Dependency resolution | Spawned membranes complete before parent |
+| Query latency | < 2s for local, < 5s for membrane |
+| Result relevance | Top-3 contains answer 80% of time |
+| Zero Cypher leaks | No raw queries in agent code |
 
 ---
 
 ## CHAIN
 
-- **Next:** PATTERNS_MCP_Tools.md (design philosophy)
+- **Next:** PATTERNS_MCP_Tools.md
 - **Validates:** VALIDATION_MCP_Tools.md
 - **Implements:** IMPLEMENTATION_MCP_Tools.md

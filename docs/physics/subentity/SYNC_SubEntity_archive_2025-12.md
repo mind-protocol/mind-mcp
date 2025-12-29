@@ -140,3 +140,162 @@ python -m engine.physics.health.check_subentity --all --since 1h
 
 ---
 
+
+
+---
+
+# Archived: SYNC_SubEntity.md
+
+Archived on: 2025-12-29
+Original file: SYNC_SubEntity.md
+
+---
+
+## INVARIANT STATUS
+
+| ID | Name | Status | Last Checked |
+|----|------|--------|--------------|
+| V1 | State Machine Integrity | PASSING | 2025-12-26 |
+| V2 | Tree Structure Consistency | PASSING | 2025-12-26 |
+| V3 | Path Monotonicity | PASSING | 2025-12-26 |
+| V4 | Satisfaction Monotonicity | PASSING | 2025-12-26 |
+| V5 | Energy Conservation | PASSING | 2025-12-26 |
+| V6 | Crystallization Novelty Gate | PASSING | 2025-12-26 |
+| V7 | Child Crystallization (v2.0) | PASSING | 2025-12-26 |
+| V8 | Timeout Behavior | PASSING | 2025-12-26 |
+| V9 | Link Score Bounds | PASSING | 2025-12-26 |
+| V10 | Embedding Dimension Consistency | PASSING | 2025-12-26 |
+| V11 | Depth Accumulation (v2.0) | PASSING | 2025-12-26 |
+| V12 | Progress History (v2.0) | PASSING | 2025-12-26 |
+| V13 | Fatigue Stopping (v2.0) | PASSING | 2025-12-26 |
+
+---
+
+
+## NEXT ACTIONS
+
+### v2.0 Implementation (Awareness Depth + Breadth) — COMPLETE ✓
+
+All v2.0 features implemented in `runtime/physics/subentity.py`:
+- `awareness_depth: List[float]` = [up, down] accumulator
+- `progress_history: List[float]` = delta sequence toward intention
+- `update_depth()`: Accumulates hierarchy on UP/DOWN links
+- `update_progress()`: Tracks delta toward intention
+- `is_fatigued()`: Stagnation detection for stopping
+- `should_child_crystallize()`: Systematic crystallization (unless 90%+ match)
+- `merge_child_results()`: Returns children to crystallize, NO propagation
+
+All 70 tests passing in `runtime/tests/test_subentity.py`.
+
+### Remaining Backlog
+
+1. **Update traversal logger**: Include awareness_depth and progress in logs
+2. **Implement health checker CLI**: `runtime/physics/health/check_subentity.py`
+3. **Add CI integration**: Run health checks on exploration log commits
+4. **Build aggregate reports**: Cross-exploration trend analysis
+
+See: `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
+
+---
+
+
+## v2.1 — Semantic Intention + Backprop Coloring (2025-12-29)
+
+### 1. Removed IntentionType Enum
+
+**Before:** Fixed enum with 5 types and hardcoded weights:
+```python
+class IntentionType(Enum):
+    SUMMARIZE = "summarize"   # weight 0.3
+    VERIFY = "verify"         # weight 0.5
+    FIND_NEXT = "find_next"   # weight 0.2
+    EXPLORE = "explore"       # weight 0.25
+    RETRIEVE = "retrieve"     # weight 0.1
+```
+
+**After:** Fixed constant, intention is semantic via embedding:
+```python
+INTENTION_WEIGHT = 0.25  # Fixed, intention meaning is in embedding
+```
+
+**Rationale:** The enum was rigid (only 5 types) and keyword-based (parsing "summar" → SUMMARIZE). Now any intention string works, embedded semantically.
+
+**Files:**
+- `runtime/physics/subentity.py` — Removed enum, added constant
+- `runtime/physics/cluster_presentation.py` — Moved IntentionType here (for presentation only)
+
+### 2. Backprop Link Coloring
+
+**Before:** Forward coloring during SEEKING (colored links before knowing if useful):
+```python
+# _step_seeking
+forward_color_link(link, se.intention_embedding, energy_flow=0.1)
+```
+
+**After:** Backward coloring in REFLECTING/CRYSTALLIZING (when we know path was valuable):
+```python
+# _step_reflecting (if satisfaction > 0.5)
+backward_color_path(path_links, se.intention_embedding, ...)
+
+# _step_crystallizing (after creating narrative)
+backward_color_path(path_links, se.crystallization_embedding, ...)
+```
+
+**Rationale:** Only color links that led to useful discoveries. This creates meaningful "memory traces" in the graph.
+
+**Files:**
+- `runtime/physics/exploration.py` — Removed forward_color_link, added backprop in reflecting/crystallizing
+
+---
+
+
+## Bug Fixes: v2.0.1 — Crystallization Loop (2025-12-29)
+
+### Fix 1: Depth Check Overwrote Terminal States
+
+**Problem:** When exploration reached max_depth with satisfaction=0, the state machine entered an infinite loop:
+
+```
+REFLECTING → CRYSTALLIZING → (depth check overwrites) → REFLECTING → ...
+```
+
+**Root Cause:** The depth check (line 382-383) unconditionally forced state to REFLECTING after every step, including after CRYSTALLIZING.
+
+**Fix:** Depth check now only applies during active exploration states (SEEKING, BRANCHING, ABSORBING).
+
+**File:** `runtime/physics/exploration.py:384-389`
+
+### Fix 2: CRYSTALLIZING → SEEKING Loop
+
+**Problem:** After fix 1, a secondary loop appeared:
+
+```
+CRYSTALLIZING → SEEKING → (no links) → REFLECTING → (sat=0) → CRYSTALLIZING → ...
+```
+
+**Root Cause:** After crystallizing, the code returned to SEEKING if depth > 0. But satisfaction wasn't updated, so REFLECTING sent it right back to CRYSTALLIZING.
+
+**Fix:**
+1. Update satisfaction after crystallization (`se.update_satisfaction(1.0, 1.0)`)
+2. Always transition to MERGING after crystallizing (not SEEKING)
+
+**File:** `runtime/physics/exploration.py:816-832`
+
+### Result
+
+Exploration now properly:
+1. Traverses the graph
+2. Crystallizes a narrative when satisfaction is low
+3. Terminates in MERGING state
+4. Returns the crystallized narrative
+
+```
+State: merging
+Satisfaction: 0.50
+Crystallized: narrative_cryst_xxx
+Found narratives: 1
+Duration: 0.26s
+```
+
+---
+

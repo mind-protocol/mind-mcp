@@ -1,5 +1,5 @@
 """
-SubEntity — Temporary Consciousness Traversal (v2.0)
+SubEntity — Temporary Consciousness Traversal (v2.1)
 
 A SubEntity is a temporary consciousness fragment that traverses the graph
 with query (what to find) and intention (why finding it).
@@ -7,6 +7,12 @@ with query (what to find) and intention (why finding it).
 Schema: docs/schema/schema.yaml v2.0
 Patterns: docs/physics/subentity/PATTERNS_SubEntity.md (P1-P11)
 Algorithm: docs/physics/subentity/ALGORITHM_SubEntity.md
+
+v2.1 CHANGES (Semantic Intention):
+- Removed IntentionType enum (SUMMARIZE, VERIFY, etc.) - was rigid and keyword-based
+- Removed INTENTION_WEIGHTS dict - intention weight is now fixed constant (0.25)
+- Intention meaning is now fully semantic via intention_embedding
+- Simpler, more flexible: any intention string, embedded semantically
 
 v2.0 CHANGES (Awareness Depth + Breadth):
 - awareness_depth: [up, down] - unbounded accumulator tracking hierarchy traversals
@@ -25,9 +31,8 @@ v1.9 CHANGES (Energy Injection):
 
 v1.8 CHANGES (Query vs Intention):
 - query + query_embedding: WHAT we're searching for (semantic matching)
-- intention + intention_embedding + intention_type: WHY we're searching (traversal coloring)
-- Link score combines query and intention alignment with type-specific weights
-- Stopping conditions and return filtering based on intention_type
+- intention + intention_embedding: WHY we're searching (traversal coloring)
+- Link score combines query and intention alignment
 
 v1.7.2 DESIGN DECISIONS:
 - D1: sibling_ids are strings, resolved via ExplorationContext (lazy refs)
@@ -43,12 +48,12 @@ STATE MACHINE:
     CRYSTALLIZING -> creating new narrative from traversal
     MERGING      -> integrating child results, returning to parent
 
-KEY FORMULAS (v1.9):
+KEY FORMULAS (v2.1):
     injection = criticality × STATE_MULTIPLIER[state]
     weight_gain = injection × permanence (energy → weight conversion)
-    alignment = (1 - intent_weight) × query_alignment + intent_weight × intention_alignment
+    alignment = 0.75 × query_alignment + 0.25 × intention_alignment  (INTENTION_WEIGHT=0.25)
     link_score = base × alignment × self_novelty × sibling_divergence × emotional_factor
-    crystallization_embedding = 0.4×query + intent_weight×intention + 0.3×position + 0.2×found + 0.1×path
+    crystallization_embedding = 0.4×query + 0.25×intention + 0.3×position + 0.2×found + 0.1×path
     criticality = (1 - satisfaction) × (depth / (depth + 1))
 
 STATE MULTIPLIERS:
@@ -103,31 +108,19 @@ class ExplorationContext:
         return [se for se in self._registry.values() if se.is_active]
 
 
-class IntentionType(str, Enum):
-    """
-    Predefined intention types with behavior profiles (v1.8).
-
-    Different intentions affect:
-    - Traversal priority (intention_weight in link score)
-    - Stopping conditions (when to stop traversal)
-    - Return filtering (what to return and how)
-    """
-    SUMMARIZE = "summarize"    # Privilege rich content, wide exploration
-    VERIFY = "verify"          # Look for tensions/contradictions
-    FIND_NEXT = "find_next"    # Stop at first valid match
-    EXPLORE = "explore"        # Balanced exploration
-    RETRIEVE = "retrieve"      # Exact match, minimal traversal
-
-
-# Weights for intention in link score formula (v1.8)
-# Higher weight = intention matters more relative to query
-INTENTION_WEIGHTS = {
-    IntentionType.SUMMARIZE: 0.3,   # Query matters for finding, intent for filtering
-    IntentionType.VERIFY: 0.5,      # Intent matters most - looking for tensions
-    IntentionType.FIND_NEXT: 0.2,   # Query matters most - find then stop
-    IntentionType.EXPLORE: 0.25,    # Balanced
-    IntentionType.RETRIEVE: 0.1,    # Query matters most - exact match
-}
+# =============================================================================
+# INTENTION WEIGHT (v2.1)
+# =============================================================================
+# Fixed weight for intention vs query in link scoring.
+# The intention is expressed semantically via intention_embedding, not via enum.
+# v2.0 had IntentionType enum with 5 types and fixed weights - removed.
+# Now: single constant, embedding carries the semantic meaning.
+#
+# Formula in compute_link_score:
+#   alignment = (1 - INTENTION_WEIGHT) × query_alignment + INTENTION_WEIGHT × intention_alignment
+#
+# Value 0.25 = balanced (query matters 75%, intention matters 25%)
+INTENTION_WEIGHT = 0.25
 
 
 class SubEntityState(str, Enum):
@@ -305,14 +298,13 @@ class SubEntity:
     # Used for fatigue detection (stagnation = stop)
     progress_history: List[float] = field(default_factory=list)
 
-    # === Query + Intention (fixed at creation, v1.8) ===
+    # === Query + Intention (v2.1) ===
     # Query: WHAT we're searching for (semantic matching)
     query: str = ""
     query_embedding: Optional[List[float]] = None
-    # Intention: WHY we're searching (traversal coloring)
+    # Intention: WHY we're searching (semantic via embedding, not enum)
     intention: str = ""
     intention_embedding: Optional[List[float]] = None
-    intention_type: IntentionType = IntentionType.EXPLORE
 
     # === Findings (evolve during traversal) ===
     found_narratives: Dict[str, float] = field(default_factory=dict)  # {id: max_alignment}
@@ -334,8 +326,8 @@ class SubEntity:
 
     @property
     def intention_weight(self) -> float:
-        """Get intention weight based on intention_type (v1.8)."""
-        return INTENTION_WEIGHTS.get(self.intention_type, 0.25)
+        """Get intention weight for link scoring (v2.1 - fixed constant)."""
+        return INTENTION_WEIGHT
 
     # === Lazy ref properties ===
 
@@ -717,12 +709,11 @@ class SubEntity:
             position=target_position,
             path=self.path + [(via_link, target_position)],
             depth=self.depth + 1,
-            # v1.8: Query + Intention (both inherited from parent)
+            # v2.1: Query + Intention (both inherited, semantic via embedding)
             query=self.query,
             query_embedding=list(self.query_embedding) if self.query_embedding else None,
             intention=self.intention,
             intention_embedding=list(self.intention_embedding) if self.intention_embedding else None,
-            intention_type=self.intention_type,
             crystallization_embedding=list(self.crystallization_embedding) if self.crystallization_embedding else None,
             # Inherit emotional state
             joy_sadness=self.joy_sadness,
@@ -868,10 +859,9 @@ class SubEntity:
             "awareness_depth": self.awareness_depth,  # [up, down]
             "progress_history": self.progress_history,
             "is_fatigued": self.is_fatigued(),
-            # v1.8: Query + Intention
+            # v2.1: Query + Intention (semantic via embedding)
             "query": self.query,
             "intention": self.intention,
-            "intention_type": self.intention_type.value,
             "found_narratives": self.found_narratives,  # v1.7.2: dict[str, float]
             "satisfaction": self.satisfaction,
             "criticality": self.criticality,
@@ -1061,13 +1051,13 @@ def create_subentity(
     query_embedding: Optional[List[float]] = None,
     intention: str = "",
     intention_embedding: Optional[List[float]] = None,
-    intention_type: IntentionType = IntentionType.EXPLORE,
     start_position: Optional[str] = None,
     context: Optional[ExplorationContext] = None,
 ) -> SubEntity:
     """
-    Create a new root SubEntity for exploration (v1.8).
+    Create a new root SubEntity for exploration (v2.1).
 
+    v2.1: Removed IntentionType enum - intention is semantic via embedding.
     v1.8: Separate query (what to find) from intention (why finding).
     v1.7.2: Optionally registers with ExplorationContext for lazy ref resolution.
 
@@ -1078,7 +1068,6 @@ def create_subentity(
         query_embedding: Vector embedding of query
         intention: Text of why searching (optional, defaults to query if empty)
         intention_embedding: Vector embedding of intention (optional, defaults to query_embedding)
-        intention_type: Type of intention (affects traversal behavior)
         start_position: Starting node ID (defaults to actor_id)
         context: ExplorationContext for registration (optional)
 
@@ -1097,7 +1086,6 @@ def create_subentity(
         query_embedding=query_embedding,
         intention=actual_intention,
         intention_embedding=actual_intention_embedding,
-        intention_type=intention_type,
         crystallization_embedding=list(query_embedding) if query_embedding else None,
     )
 

@@ -10,7 +10,7 @@ Protocols define step-by-step processes that:
 
 Usage:
     runner = ProtocolRunner(graph_ops)
-    result = runner.run("procedures/add_health_coverage.yaml", actor_id="actor_AGENT_keeper")
+    result = runner.run(".mind/procedures/add_health_coverage.yaml", actor_id="actor_agent_keeper")
 """
 
 import re
@@ -641,7 +641,7 @@ class ProtocolRunner:
         expanded_inputs = expand_dict(inputs, self.context)
 
         # Find protocol file
-        procedure_path = Path(f"procedures/{procedure_name}.yaml")
+        procedure_path = Path(f".mind/procedures/{procedure_name}.yaml")
 
         if procedure_path.exists():
             logger.info(f"Calling procedure: {procedure_name}")
@@ -1194,10 +1194,10 @@ def run_protocol_command(
         answers: Pre-provided answers for automation
     """
     # Find protocol file
-    procedure_path = Path(f"procedures/{procedure_name}.yaml")
+    procedure_path = Path(f".mind/procedures/{procedure_name}.yaml")
     if not procedure_path.exists():
         # Try with extension
-        procedure_path = Path(f"procedures/{procedure_name}")
+        procedure_path = Path(f".mind/procedures/{procedure_name}")
         if not procedure_path.exists():
             raise FileNotFoundError(f"Procedure not found: {procedure_name}")
 

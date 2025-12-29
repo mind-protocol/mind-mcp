@@ -229,6 +229,7 @@ class GraphPersistence:
             CREATE (n:Actor {
                 id: $id,
                 name: $name,
+                node_type: 'actor',
                 type: $type
             })
             """

@@ -2,15 +2,37 @@
 File ingestion for the mind graph.
 
 Scans repository files and creates Thing nodes in the graph.
+Computes physics properties during ingestion (line_count, size_class, has_stub, has_secret).
 
 DOCS: docs/ingest/PATTERNS_File_Ingestion.md
+SYSTEM: templates/SYSTEM.md (Physics layer)
 """
 
 import logging
+import re
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Set
 
 logger = logging.getLogger(__name__)
+
+# Secret detection patterns (common sensitive patterns)
+SECRET_PATTERNS = [
+    re.compile(r'(?i)(api[_-]?key|apikey)\s*[=:]\s*["\']?[a-zA-Z0-9_-]{20,}'),
+    re.compile(r'(?i)(secret|password|passwd|pwd)\s*[=:]\s*["\'][^"\']{8,}'),
+    re.compile(r'(?i)(aws_access_key_id|aws_secret_access_key)\s*[=:]\s*["\']?[A-Z0-9]{16,}'),
+    re.compile(r'(?i)bearer\s+[a-zA-Z0-9_-]{20,}'),
+    re.compile(r'-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----'),
+    re.compile(r'ghp_[a-zA-Z0-9]{36}'),  # GitHub personal access token
+    re.compile(r'sk-[a-zA-Z0-9]{48}'),   # OpenAI API key
+]
+
+# Stub detection patterns
+STUB_PATTERNS = [
+    re.compile(r'^\s*pass\s*$', re.MULTILINE),
+    re.compile(r'raise\s+NotImplementedError'),
+    re.compile(r'\.\.\.\s*$', re.MULTILINE),  # Python ellipsis
+]
 
 # Skip directories that should never be scanned
 SKIP_DIRS = {
@@ -34,6 +56,48 @@ INCLUDE_EXTENSIONS = {
     # Data
     '.sql', '.graphql',
 }
+
+
+def _parse_code_imports(content: str, file_ext: str) -> List[str]:
+    """
+    Parse import statements from code content.
+
+    Supports:
+    - Python: import x, from x import y
+    - JS/TS: import ... from 'x', require('x')
+
+    Returns:
+        List of relative module/file paths imported
+    """
+    imports = []
+
+    if file_ext == '.py':
+        # Python imports
+        # from foo.bar import baz
+        from_pattern = re.compile(r'^from\s+([\w.]+)\s+import', re.MULTILINE)
+        # import foo.bar
+        import_pattern = re.compile(r'^import\s+([\w.]+)', re.MULTILINE)
+
+        for match in from_pattern.finditer(content):
+            imports.append(match.group(1))
+        for match in import_pattern.finditer(content):
+            imports.append(match.group(1))
+
+    elif file_ext in ('.js', '.ts', '.jsx', '.tsx'):
+        # JS/TS imports
+        # import ... from 'module'
+        from_pattern = re.compile(r"from\s+['\"]([^'\"]+)['\"]")
+        # require('module')
+        require_pattern = re.compile(r"require\s*\(\s*['\"]([^'\"]+)['\"]\s*\)")
+
+        for match in from_pattern.finditer(content):
+            imports.append(match.group(1))
+        for match in require_pattern.finditer(content):
+            imports.append(match.group(1))
+
+    # Filter: keep only relative imports (start with . or contain /)
+    local_imports = [i for i in imports if i.startswith('.') or '/' in i]
+    return local_imports
 
 
 def scan_and_ingest_files(
@@ -75,6 +139,10 @@ def scan_and_ingest_files(
         "areas": set(),
         "modules": set(),
         "errors": [],
+        # Physics stats
+        "monoliths": 0,
+        "stubs": 0,
+        "secrets": 0,
     }
 
     # Track created spaces to avoid duplicates
@@ -100,6 +168,7 @@ def scan_and_ingest_files(
             CREATE (s:Space {
                 id: $id,
                 name: $name,
+                node_type: 'space',
                 type: $type,
                 synthesis: $synthesis
             })
@@ -119,8 +188,14 @@ def scan_and_ingest_files(
             stats["modules"].add(name)
 
     def _create_thing(rel_path: str, parent_space_id: str) -> None:
-        """Create Thing node and link to parent Space."""
+        """
+        Create Thing node and link to parent Space.
+
+        Computes and stores physics properties:
+        - line_count, size_class, has_stub, has_secret, updated_at
+        """
         thing_id = f"thing:{rel_path}"
+        file_path = target_dir / rel_path
         filename = Path(rel_path).name
         file_ext = Path(rel_path).suffix.lower()
 
@@ -134,8 +209,25 @@ def scan_and_ingest_files(
         else:
             file_type = "file"
 
+        # Read full content for physics computation
+        try:
+            content = file_path.read_text(encoding='utf-8', errors='ignore')
+        except Exception:
+            content = ""
+
+        # Compute physics properties
+        physics = _compute_physics_properties(file_path, content)
+
+        # Track physics stats
+        if physics["size_class"] == "monolith":
+            stats["monoliths"] += 1
+        if physics["has_stub"]:
+            stats["stubs"] += 1
+        if physics["has_secret"]:
+            stats["secrets"] += 1
+
         # Generate synthesis from file content
-        synthesis = _generate_synthesis(target_dir / rel_path, filename)
+        synthesis = _generate_synthesis(file_path, filename)
 
         # Upsert Thing node
         result = adapter.query(
@@ -144,25 +236,44 @@ def scan_and_ingest_files(
         )
 
         if result:
-            # Update existing
+            # Update existing with physics properties (refresh energy on update)
             adapter.execute(
                 """
                 MATCH (t:Thing {id: $id})
-                SET t.synthesis = $synthesis, t.file_type = $file_type
+                SET t.synthesis = $synthesis,
+                    t.file_type = $file_type,
+                    t.line_count = $line_count,
+                    t.size_class = $size_class,
+                    t.has_stub = $has_stub,
+                    t.has_secret = $has_secret,
+                    t.updated_at = $updated_at,
+                    t.energy = $energy
                 """,
-                {"id": thing_id, "synthesis": synthesis, "file_type": file_type}
+                {
+                    "id": thing_id,
+                    "synthesis": synthesis,
+                    "file_type": file_type,
+                    **physics,
+                }
             )
             stats["things_updated"] += 1
         else:
-            # Create new
+            # Create new with physics properties
             adapter.execute(
                 """
                 CREATE (t:Thing {
                     id: $id,
                     name: $name,
+                    node_type: 'thing',
                     path: $path,
                     file_type: $file_type,
-                    synthesis: $synthesis
+                    synthesis: $synthesis,
+                    line_count: $line_count,
+                    size_class: $size_class,
+                    has_stub: $has_stub,
+                    has_secret: $has_secret,
+                    updated_at: $updated_at,
+                    energy: $energy
                 })
                 """,
                 {
@@ -171,6 +282,7 @@ def scan_and_ingest_files(
                     "path": rel_path,
                     "file_type": file_type,
                     "synthesis": synthesis,
+                    **physics,
                 }
             )
             stats["things_created"] += 1
@@ -186,6 +298,99 @@ def scan_and_ingest_files(
             {"space_id": parent_space_id, "thing_id": thing_id}
         )
         stats["links_created"] += 1
+
+        # Create import links for code files
+        if file_type == "code" and content:
+            imports = _parse_code_imports(content, file_ext)
+            file_dir = file_path.parent
+
+            for imp in imports:
+                # Resolve relative import to file path
+                if imp.startswith('.'):
+                    # Python relative import: .foo -> ./foo.py, ..bar -> ../bar.py
+                    imp_path = imp.replace('.', '/', 1) + '.py' if file_ext == '.py' else imp
+                    resolved = (file_dir / imp_path).resolve()
+                else:
+                    # Already a path
+                    resolved = (file_dir / imp).resolve()
+
+                try:
+                    target_path = str(resolved.relative_to(target_dir))
+                    target_id = f"thing:{target_path}"
+
+                    # Create imports link (target may not exist yet)
+                    adapter.execute(
+                        """
+                        MATCH (src:Thing {id: $src_id})
+                        MERGE (tgt:Thing {id: $tgt_id})
+                        ON CREATE SET tgt.node_type = 'thing', tgt.name = $tgt_name
+                        MERGE (src)-[r:LINK]->(tgt)
+                        ON CREATE SET r.verb = 'imports', r.hierarchy = 0.3, r.polarity = [0.8, 0.2], r.permanence = 0.9
+                        """,
+                        {
+                            "src_id": thing_id,
+                            "tgt_id": target_id,
+                            "tgt_name": resolved.name,
+                        }
+                    )
+                    stats["links_created"] += 1
+                except ValueError:
+                    pass  # Outside project directory
+
+    def _compute_physics_properties(file_path: Path, content: str) -> Dict[str, Any]:
+        """
+        Compute physics properties for a file.
+
+        Properties computed:
+        - line_count: Number of lines in file
+        - size_class: "monolith" if >500 lines, "large" if >200, else "normal"
+        - has_stub: True if file contains stub patterns (pass, NotImplementedError)
+        - has_secret: True if file contains potential secrets
+        - updated_at: File modification time (ISO format)
+
+        SYSTEM: templates/SYSTEM.md (Physics layer - Property-Based rules)
+        """
+        props = {
+            "line_count": 0,
+            "size_class": "normal",
+            "has_stub": False,
+            "has_secret": False,
+            "updated_at": None,
+            "energy": 1.0,  # Initial energy, decays over time via physics tick
+        }
+
+        # Line count and size class
+        lines = content.split('\n')
+        props["line_count"] = len(lines)
+
+        if props["line_count"] > 500:
+            props["size_class"] = "monolith"
+        elif props["line_count"] > 200:
+            props["size_class"] = "large"
+        else:
+            props["size_class"] = "normal"
+
+        # Stub detection (only for code files)
+        if file_path.suffix in {'.py', '.js', '.ts', '.go', '.rs', '.java'}:
+            for pattern in STUB_PATTERNS:
+                if pattern.search(content):
+                    props["has_stub"] = True
+                    break
+
+        # Secret detection
+        for pattern in SECRET_PATTERNS:
+            if pattern.search(content):
+                props["has_secret"] = True
+                break
+
+        # Updated timestamp
+        try:
+            mtime = file_path.stat().st_mtime
+            props["updated_at"] = datetime.fromtimestamp(mtime, tz=timezone.utc).isoformat()
+        except Exception:
+            props["updated_at"] = datetime.now(timezone.utc).isoformat()
+
+        return props
 
     def _generate_synthesis(file_path: Path, filename: str) -> str:
         """Generate synthesis text from file content."""

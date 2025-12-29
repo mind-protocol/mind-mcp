@@ -48,7 +48,7 @@ from .status_cmd import status_command
 from .repo_overview import generate_and_save as generate_overview
 from .docs_fix import docs_fix_command
 from .symbol_extractor import extract_symbols_command
-from .procedure_runner import run_protocol_command, ProtocolResult
+from .procedure_runner import run_protocol_command
 from .graph_query import query_command as graph_query_command
 from .procedure_validator import validate_cluster_command
 from .cluster_metrics import ClusterMetrics, ClusterValidator

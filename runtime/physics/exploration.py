@@ -280,15 +280,9 @@ class ExplorationRunner:
         Raises:
             ExplorationTimeoutError: v1.7.2 D4 - timeout errors loudly
         """
-        from runtime.physics.subentity import IntentionType
+        # v2.1: Removed IntentionType enum - intention is semantic via embedding
 
-        # Parse intention_type string to enum
-        try:
-            intent_type = IntentionType(intention_type)
-        except ValueError:
-            intent_type = IntentionType.EXPLORE
-
-        # Spawn root SubEntity using canonical factory (v1.8)
+        # Spawn root SubEntity using canonical factory (v2.1)
         # Start at origin_moment if provided, otherwise at actor
         start_pos = origin_moment if origin_moment else actor_id
         root = create_subentity(
@@ -298,7 +292,6 @@ class ExplorationRunner:
             query_embedding=query_embedding,
             intention=intention,
             intention_embedding=intention_embedding,
-            intention_type=intent_type,
             start_position=start_pos,
             context=self._context,  # v1.7.2: register with context
         )
@@ -378,26 +371,24 @@ class ExplorationRunner:
             elif se.state == SubEntityState.MERGING:
                 await self._step_merging(se)
 
-            # Depth check
-            if se.depth >= self.config.max_depth:
+            # Depth check - only applies during exploration, not after crystallization/merging
+            # Bug fix: Previously this would overwrite CRYSTALLIZING→MERGING transitions,
+            # causing an infinite loop (REFLECTING→CRYSTALLIZING→depth check→REFLECTING→...)
+            if se.depth >= self.config.max_depth and se.state in (
+                SubEntityState.SEEKING,
+                SubEntityState.BRANCHING,
+                SubEntityState.ABSORBING,
+            ):
                 se.state = SubEntityState.REFLECTING
 
     async def _step_seeking(self, se: SubEntity) -> None:
-        """SEEKING: Traverse aligned links (v1.9)."""
+        """SEEKING: Traverse aligned links (v2.1)."""
         from runtime.physics.link_scoring import (
             score_outgoing_links,
             get_target_node_id,
             should_branch,
         )
-        from runtime.physics.flow import (
-            forward_color_link,
-            compute_link_flow,
-            apply_link_traversal,
-            inject_node_energy,
-            add_node_weight_on_resonating,
-            regenerate_link_synthesis_if_drifted,
-            regenerate_node_synthesis_if_drifted,
-        )
+        # v2.1: Removed forward_color_link - coloring now happens in backprop
 
         state_before = se.state.value
 
@@ -460,28 +451,8 @@ class ExplorationRunner:
             se.transition_to(SubEntityState.REFLECTING)
             return
 
-        # Forward color the link (links use permanence, not injection)
-        _, _ = forward_color_link(link, se.intention_embedding, energy_flow=0.1)
-
-        # v1.9: Compute injection for nodes (links don't get injected)
-        state_mult = STATE_MULTIPLIER.get(se.state, 0.5)
-
-        # v1.9: Regenerate synthesis if embedding drifted (ticks deprecated)
-        # Get node names for synthesis generation
-        source_node = await self.graph.get_node(se.position) if self.graph.get_node else None
-        target_node = await self.graph.get_node(target_id) if self.graph.get_node else None
-        source_name = source_node.get('name', '') if source_node else ''
-        target_name = target_node.get('name', '') if target_node else ''
-
-        regenerate_link_synthesis_if_drifted(
-            link,
-            link.get('embedding'),  # new embedding after coloring
-            source_name=source_name,
-            target_name=target_name,
-        )
-
-        if self.graph.update_link:
-            await self.graph.update_link(link.get('id', ''), link)
+        # v2.1: No forward coloring here - we don't know if path is useful yet
+        # Links are colored during backprop (REFLECTING) when we know the path was valuable
 
         # Save position before updating
         old_position = se.position
@@ -700,18 +671,38 @@ class ExplorationRunner:
             se.transition_to(SubEntityState.SEEKING)
 
     async def _step_reflecting(self, se: SubEntity) -> None:
-        """REFLECTING: Backpropagate colors along path."""
+        """REFLECTING: Backpropagate colors along path (v2.1).
+
+        Color links that led to useful discoveries:
+        - If satisfaction > 0.5: path led to good findings → color with intention
+        - If crystallizing: path led to new knowledge → will color after crystallization
+        """
         from runtime.physics.flow import backward_color_path
 
-        # Get path links
-        path_links = []
-        for link_id, _ in se.path:
-            # We'd need to fetch link data here
-            # For now, just transition
-            pass
+        # Only backprop color if the path was useful (satisfaction > 0.5)
+        if se.satisfaction > 0.5 and se.path:
+            # Fetch all path links
+            path_links = []
+            for link_id, _ in se.path:
+                if self.graph.get_link:
+                    link = await self.graph.get_link(link_id)
+                    if link:
+                        path_links.append(link)
 
-        # Backward color (would need link data)
-        # backward_color_path(path_links, se.crystallization_embedding)
+            if path_links:
+                # Backprop color with intention embedding
+                # Links that led to success get colored by what we were looking for
+                colored_links, weight_gained = backward_color_path(
+                    path_links=path_links,
+                    final_embedding=se.intention_embedding,  # Color with intention
+                    attenuation_rate=0.8,  # 20% decay per hop
+                    permanence_boost=0.05 * se.satisfaction,  # Boost based on how useful
+                )
+
+                # Save colored links back to graph
+                if self.graph.update_link:
+                    for link in colored_links:
+                        await self.graph.update_link(link.get('id', ''), link)
 
         if se.satisfaction > 0.5:
             se.transition_to(SubEntityState.MERGING)
@@ -729,6 +720,7 @@ class ExplorationRunner:
         """
         from runtime.physics.subentity import STATE_MULTIPLIER, SubEntityState
         from runtime.physics.cluster_presentation import render_cluster
+        from runtime.physics.synthesis import synthesize_from_crystallization
 
         # Get spawn and focus node data
         spawn_node = await self.graph.get_node(se.spawn_node) if self.graph.get_node else None
@@ -765,19 +757,71 @@ class ExplorationRunner:
         # 1. Create narrative
         narrative_weight = se.criticality * state_mult
         narrative_energy = se.criticality * state_mult
+        focus_name = focus_node.get('name', se.focus_node)
 
-        # Render cluster content
-        try:
-            content = await render_cluster(se.path, focus_node, self.graph) if render_cluster else ""
-        except Exception:
-            content = f"Exploration from {spawn_name} to {focus_node.get('name', se.focus_node)}"
+        # Build narrative content from path (simple prose, no grammar parsing)
+        # Deduplicate path (backtracking creates duplicates)
+        seen_nodes = set()
+        unique_path = []
+        for link_id, node_id in reversed(se.path):
+            if node_id not in seen_nodes:
+                seen_nodes.add(node_id)
+                unique_path.append((link_id, node_id))
+        unique_path = list(reversed(unique_path))
+
+        # Generate content directly (don't rely on unfold for non-grammar nodes)
+        content_parts = []
+        if se.intention:
+            content_parts.append(f"Exploration: {se.intention}")
+
+        # Add path nodes
+        path_nodes = []
+        for link_id, node_id in unique_path:
+            node = await self.graph.get_node(node_id) if self.graph.get_node else None
+            if node:
+                node_name = node.get('name', node_id)
+                path_nodes.append(node_name)
+
+        if path_nodes:
+            content_parts.append(f"Path: {' → '.join(path_nodes)} → {focus_name}")
+
+        # Add focus node info
+        focus_content = focus_node.get('content', '') or focus_node.get('synthesis', '')
+        if focus_content and len(focus_content) > 10:
+            content_parts.append(f"Found: {focus_content[:300]}")
+
+        narrative_content = "\n".join(content_parts) if content_parts else f"Discovered: {focus_name}"
+
+        # Generate name via synthesis
+        found_narr_info = []
+        for narr_id, alignment in se.found_narratives.items():
+            narr_node = await self.graph.get_node(narr_id) if self.graph.get_node else None
+            if narr_node:
+                found_narr_info.append((
+                    narr_id,
+                    narr_node.get('name', narr_id),
+                    narr_node.get('content', '')[:200],
+                    alignment
+                ))
+
+        path_summary = f"{spawn_name} → {focus_name}" if spawn_name != focus_name else focus_name
+        synth_name, _ = synthesize_from_crystallization(
+            intention_text=se.intention or "exploration",
+            found_narratives=found_narr_info,
+            path_summary=path_summary,
+        )
+        narrative_name = synth_name if synth_name else f"{se.intention}: {spawn_name}"
+
+        # Create synthesis (shorter version for embedding search)
+        synthesis = f"{narrative_name}. {narrative_content[:200]}" if len(narrative_content) > 200 else narrative_content
 
         if self.graph.create_narrative:
             narr_id = await self.graph.create_narrative({
-                'name': f"{se.intention}: {spawn_name}",
+                'name': narrative_name,
                 'weight': narrative_weight,
                 'energy': narrative_energy,
-                'content': content,
+                'content': narrative_content,
+                'synthesis': synthesis,
                 'embedding': se.crystallization_embedding,
             })
 
@@ -807,6 +851,9 @@ class ExplorationRunner:
             se.crystallized = narr_id
             se.found_narratives[narr_id] = 1.0
 
+            # Update satisfaction - crystallization counts as finding something
+            se.update_satisfaction(1.0, 1.0)
+
         # 4. Store crystallization_embedding (blend intention, focus, narrative)
         if se.crystallization_embedding and focus_node.get('embedding'):
             from runtime.physics.flow import blend_embeddings
@@ -816,12 +863,35 @@ class ExplorationRunner:
                 0.5,
             )
 
-        # 5. Return to SEEKING if we've moved, otherwise MERGING
-        if se.depth > 0:
-            se.transition_to(SubEntityState.SEEKING)
-        else:
-            # Haven't moved - avoid infinite loop
-            se.transition_to(SubEntityState.MERGING)
+        # v2.1: Backprop color after crystallization - path led to new knowledge
+        if se.path:
+            from runtime.physics.flow import backward_color_path
+
+            path_links = []
+            for link_id, _ in se.path:
+                if self.graph.get_link:
+                    link = await self.graph.get_link(link_id)
+                    if link:
+                        path_links.append(link)
+
+            if path_links:
+                # Color with crystallization embedding (what we created)
+                colored_links, _ = backward_color_path(
+                    path_links=path_links,
+                    final_embedding=se.crystallization_embedding,
+                    attenuation_rate=0.8,
+                    permanence_boost=0.1,  # Crystallization = strong signal
+                )
+
+                if self.graph.update_link:
+                    for link in colored_links:
+                        await self.graph.update_link(link.get('id', ''), link)
+
+        # 5. After crystallizing, go to MERGING
+        # v2.0.1: Changed from conditional SEEKING to always MERGING
+        # Rationale: Crystallization creates a narrative - that's the result.
+        # Continuing to SEEKING caused infinite loop (low sat → crystallize → seek → reflect → crystallize)
+        se.transition_to(SubEntityState.MERGING)
 
     async def _step_merging(self, se: SubEntity) -> None:
         """MERGING: Return findings to parent or actor (v1.7.2)."""
@@ -970,10 +1040,10 @@ def present_exploration_result(
         PresentedCluster,
         ClusterStats,
         present_cluster,
+        IntentionType,  # v2.1: For presentation filtering (not link scoring)
     )
-    from runtime.physics.subentity import IntentionType
 
-    # Parse intention_type
+    # Parse intention_type for presentation filtering
     try:
         intent_type = IntentionType(intention_type)
     except ValueError:

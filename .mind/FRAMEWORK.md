@@ -20,6 +20,44 @@ This protocol solves these problems through:
 
 ---
 
+## ARCHITECTURE: 4 LAYERS
+
+Mind Protocol operates across four layers:
+
+| Layer | Rôle | Contenu |
+|-------|------|---------|
+| **L1** | Citizen | Graph personnel, mémoire individuelle |
+| **L2** | Organization | Coordination équipe, instances partagées |
+| **L3** | Ecosystem | Templates partagés (procedures, vocabularies, mappings) |
+| **L4** | Protocol | Loi, registry, schema canonique |
+
+### MCP et les Layers
+
+**MCP** = interface pour interagir avec ton graph (L1/L2). Le serveur MCP expose des outils pour:
+- Requêter le graph (`graph_query`)
+- Exécuter des procédures (`procedure_start`, `procedure_continue`)
+- Gérer les tâches et agents
+
+**L3 templates** = tirés depuis `mind-platform/templates/` lors de `mind init` ou `mind sync`.
+
+### Template Distribution
+
+`mind-platform/templates/` est la **source de vérité** pour tous les templates du protocole.
+
+```
+mind-platform/templates/     ──(mind init)──▶    .mind/
+├── agents/                                      ├── agents/
+├── skills/                                      ├── skills/
+├── procedures/                                  ├── procedures/
+├── docs/                                        ├── templates/
+└── mcp/                                         └── (configs)
+```
+
+**L3 (Ecosystem)** = templates MÉTIER (procédures domain-specific, vocabulaires partagés)
+**templates/** = templates PROTOCOLE (infrastructure Mind, copiés à chaque projet)
+
+---
+
 ## COMPANION: PRINCIPLES.md
 
 This file (FRAMEWORK.md) tells you **what to load and where to update**.
@@ -57,7 +95,15 @@ SYNC files track current state. They're how you understand what's happening and 
 
 ## HOW TO USE THIS
 
-### 1. Check State First
+### 1. Read the Doc Chain First
+
+Before working on a module, read its doc chain: `docs/{area}/{module}/`
+
+**Why this matters:** Code is the result of design decisions. The docs explain *why* the code is shaped the way it is — tradeoffs, constraints, intentions. Without this context, you'll make changes that conflict with existing design or repeat mistakes already considered and rejected.
+
+The chain: OBJECTIVES → PATTERNS → BEHAVIORS → ALGORITHM → VALIDATION → IMPLEMENTATION
+
+### 2. Check State
 
 ```
 .mind/state/SYNC_Project_State.md
@@ -65,7 +111,7 @@ SYNC files track current state. They're how you understand what's happening and 
 
 Understand what's happening, what changed recently, any handoffs for you.
 
-### 2. Choose Your Agent Posture
+### 3. Choose Your Agent Posture
 
 Agents are cognitive stances that shape how you approach work. Pick the one matching your task:
 

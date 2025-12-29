@@ -149,36 +149,46 @@ def _copy_skills(skills_src: Path, target_dir: Path) -> None:
         print(f"  ○ Skipped (permission): {target_dir}")
 
 
-def _update_root_claude_md(target_dir: Path) -> None:
-    """Update or create root CLAUDE.md with mind section using @ references.
+def _update_or_add_section(file_path: Path, section_content: str, section_marker: str = "# mind") -> None:
+    """Update or add a section to a file.
 
-    If CLAUDE.md exists, replaces the '# mind' section (or appends if not found).
-    If CLAUDE.md doesn't exist, creates it with just the mind section.
+    If file exists and has the section marker, replaces that section.
+    If file exists but doesn't have the section, appends it.
+    If file doesn't exist, creates it with the section.
+
+    Args:
+        file_path: Path to the file to update
+        section_content: The content to add/replace
+        section_marker: The heading that marks the start of our section (e.g., "# mind")
     """
-    root_claude = target_dir / "CLAUDE.md"
-    mind_section = _build_root_claude_section()
+    if file_path.exists():
+        content = file_path.read_text()
 
-    if root_claude.exists():
-        content = root_claude.read_text()
-
-        # Find and replace the mind section
-        # Look for "# mind" heading and replace until next "# " heading or end
-        pattern = r'(^# mind\n).*?(?=^# |\Z)'
+        # Find and replace the section
+        # Look for section marker and replace until next "# " heading or end
+        pattern = rf'(^{re.escape(section_marker)}\n).*?(?=^# |\Z)'
 
         if re.search(pattern, content, re.MULTILINE | re.DOTALL):
-            # Replace existing mind section
-            new_content = re.sub(pattern, mind_section + '\n', content, flags=re.MULTILINE | re.DOTALL)
-            root_claude.write_text(new_content)
-            print(f"✓ Updated mind section in: {root_claude}")
+            # Replace existing section
+            new_content = re.sub(pattern, section_content + '\n', content, flags=re.MULTILINE | re.DOTALL)
+            file_path.write_text(new_content)
+            print(f"✓ Updated {section_marker} section in: {file_path}")
         else:
-            # Append mind section
-            new_content = content.rstrip() + '\n\n' + mind_section
-            root_claude.write_text(new_content)
-            print(f"✓ Added mind section to: {root_claude}")
+            # Append section
+            new_content = content.rstrip() + '\n\n' + section_content
+            file_path.write_text(new_content)
+            print(f"✓ Added {section_marker} section to: {file_path}")
     else:
-        # Create new file with just mind section
-        root_claude.write_text(mind_section)
-        print(f"✓ Created: {root_claude}")
+        # Create new file with section
+        file_path.write_text(section_content)
+        print(f"✓ Created: {file_path}")
+
+
+def _update_root_claude_md(target_dir: Path) -> None:
+    """Update or create root CLAUDE.md with mind section using @ references."""
+    root_claude = target_dir / "CLAUDE.md"
+    mind_section = _build_root_claude_section()
+    _update_or_add_section(root_claude, mind_section, "# mind")
 
 
 def _build_root_claude_section() -> str:
@@ -193,7 +203,7 @@ def _build_root_claude_section() -> str:
 
 ---
 
-@.mind/PROTOCOL.md
+@.mind/FRAMEWORK.md
 
 ---
 
@@ -231,148 +241,59 @@ If you changed a module, update its `docs/{area}/{module}/SYNC_*.md` too.
 """
 
 
-def _build_claude_addition(templates_path: Path) -> str:
-    """Build CLAUDE.md content with inlined PRINCIPLES and PROTOCOL.
+def _build_system_prompt(templates_path: Path, model: str = "claude") -> str:
+    """Build system prompt from SYSTEM.md + model-specific additions.
 
-    Instead of using @ references (which Claude doesn't expand),
-    we inline the actual content of the files.
+    Args:
+        templates_path: Path to templates directory
+        model: "claude", "gemini", or "codex"
+
+    Returns:
+        Combined system prompt content
     """
-    principles_path = templates_path / "mind" / "PRINCIPLES.md"
-    protocol_path = templates_path / "mind" / "PROTOCOL.md"
+    # Base system prompt
+    system_path = templates_path / "mcp" / "SYSTEM.md"
+    system_content = system_path.read_text() if system_path.exists() else ""
 
-    principles_content = principles_path.read_text() if principles_path.exists() else ""
-    protocol_content = protocol_path.read_text() if protocol_path.exists() else ""
+    # Model-specific addition
+    addition_map = {
+        "claude": "CLAUDE_SYSTEM_ADDITION.md",
+        "gemini": "GEMINI_SYSTEM_ADDITION.md",
+        "codex": "CODEX_SYSTEM_ADDITION.md",
+    }
+    addition_file = addition_map.get(model, "")
+    addition_path = templates_path / "mcp" / addition_file
+    addition_content = addition_path.read_text() if addition_file and addition_path.exists() else ""
 
-    principles_content = _escape_marker_tokens(principles_content)
-    protocol_content = _escape_marker_tokens(protocol_content)
+    # Combine
+    if addition_content:
+        combined = f"{system_content}\n\n---\n\n{addition_content}"
+    else:
+        combined = system_content
 
-    return f"""# mind
+    return _escape_marker_tokens(combined)
 
-{principles_content}
 
----
+def _build_claude_addition(templates_path: Path) -> str:
+    """Build CLAUDE.md content from SYSTEM.md + Claude-specific additions."""
+    return _build_system_prompt(templates_path, "claude")
 
-{protocol_content}
 
----
-
-## Before Any Task
-
-Check project state:
-```
-.mind/state/SYNC_Project_State.md
-```
-
-What's happening? What changed recently? Any handoffs for you?
-
-## Choose Your VIEW
-
-Based on your task, load ONE view from `.mind/views/`:
-
-| Task | VIEW |
-|------|------|
-| Processing raw data (chats, PDFs) | VIEW_Ingest_Process_Raw_Data_Sources.md |
-| Getting oriented | VIEW_Onboard_Understand_Existing_Codebase.md |
-| Analyzing structure | VIEW_Analyze_Structural_Analysis.md |
-| Defining architecture | VIEW_Specify_Design_Vision_And_Architecture.md |
-| Writing/modifying code | VIEW_Implement_Write_Or_Modify_Code.md |
-| Adding features | VIEW_Extend_Add_Features_To_Existing.md |
-| Pair programming | VIEW_Collaborate_Pair_Program_With_Human.md |
-| Health checks | VIEW_Health_Define_Health_Checks_And_Verify.md |
-| Debugging | VIEW_Debug_Investigate_And_Fix_Issues.md |
-| Reviewing changes | VIEW_Review_Evaluate_Changes.md |
-| Refactoring | VIEW_Refactor_Improve_Code_Structure.md |
-
-## After Any Change
-
-Update `.mind/state/SYNC_Project_State.md` with what you did.
-If you changed a module, update its `docs/{{area}}/{{module}}/SYNC_*.md` too.
-
-## CLI Commands
-
-The `mind` command is available for project management:
-
-```bash
-mind init [--force]    # Initialize/re-sync protocol files
-mind validate          # Check protocol invariants
-mind doctor            # Health checks (auto-archives large SYNCs)
-mind sync              # Show SYNC status (auto-archives large SYNCs)
-mind work [path] [objective]           # AI-assisted work on a path
-mind solve-markers     # Review escalations and propositions
-mind context <file>    # Get doc context for a file
-mind prompt            # Generate bootstrap prompt for LLM
-mind overview          # Generate repo map with file tree, links, definitions
-mind docs-fix          # Work doc chains and create minimal missing docs
-```
-
-### Overview Command
-
-`mind overview` generates a comprehensive repository map:
-
-- File tree with character counts (respecting .gitignore/.mindignore)
-- Bidirectional links: code→docs (DOCS: markers), docs→code (references)
-- Section headers from markdown, function definitions from code
-- Local imports (stdlib/npm filtered out)
-- Module dependencies from modules.yaml
-- Output: `map.{{md|yaml|json}}` in root, plus folder-specific maps (e.g., `map_src.md`)
-
-Options: `--dir PATH`, `--format {{md,yaml,json}}`, `--folder NAME`
-
-## MCP Membrane Tools
-
-The membrane MCP server provides tools for querying and managing the project graph.
-
-### graph_query
-
-Semantic search across the project knowledge graph. Use this to find relevant code, docs, issues, and relationships.
-
-```
-graph_query(queries: ["What characters exist?", "How does physics work?"], top_k: 5)
-```
-
-**Parameters:**
-- `queries`: List of natural language queries
-- `top_k`: Number of results per query (default: 5)
-- `expand`: Include connected nodes (default: true)
-- `format`: Output format - "md" (default) or "json"
-
-**Returns:** Matches with similarity scores, plus connected node clusters.
-
-**Use for:**
-- Finding code related to a concept
-- Understanding module relationships
-- Locating issues or tasks
-- Exploring the codebase semantically
-
-### Other Membrane Tools
-
-| Tool | Purpose |
-|------|---------|
-| `doctor_check` | Run health checks, find issues |
-| `task_list` | List pending tasks by module/objective |
-| `agent_list` | Show available work agents |
-| `agent_spawn` | Spawn agent for task/issue |
-| `procedure_start` | Start structured dialogue (add_patterns, update_sync, etc.) |
-| `procedure_continue` | Continue dialogue with answer |
-| `procedure_list` | List available dialogue types |
-"""
+def _build_gemini_addition(templates_path: Path) -> str:
+    """Build GEMINI.md content from SYSTEM.md + Gemini-specific additions."""
+    return _build_system_prompt(templates_path, "gemini")
 
 
 def _build_agents_addition(templates_path: Path) -> str:
-    """Build AGENTS.md content by appending Codex-specific guidance."""
-    claude_content = _build_claude_addition(templates_path)
-    codex_addition_path = templates_path / "CODEX_SYSTEM_PROMPT_ADDITION.md"
-    codex_addition = codex_addition_path.read_text() if codex_addition_path.exists() else ""
-    if codex_addition:
-        return f"{claude_content}\n\n{codex_addition}"
-    return claude_content
+    """Build AGENTS.md content from SYSTEM.md + Codex-specific additions."""
+    return _build_system_prompt(templates_path, "codex")
 
 
 def _build_manager_agents_addition(templates_path: Path) -> str:
     """Build manager AGENTS.md content from manager CLAUDE.md plus Codex guidance."""
-    manager_claude_path = templates_path / "mind" / "agents" / "manager" / "CLAUDE.md"
+    manager_claude_path = templates_path / "agents" / "manager" / "CLAUDE.md"
     manager_content = manager_claude_path.read_text() if manager_claude_path.exists() else ""
-    codex_addition_path = templates_path / "CODEX_SYSTEM_PROMPT_ADDITION.md"
+    codex_addition_path = templates_path / "mcp" / "CODEX_SYSTEM_ADDITION.md"
     codex_addition = codex_addition_path.read_text() if codex_addition_path.exists() else ""
     if codex_addition:
         return f"{manager_content}\n\n{codex_addition}"
@@ -414,42 +335,23 @@ def _enforce_readonly_for_templates(templates_root: Path) -> None:
 # GRAPH INITIALIZATION
 # =============================================================================
 
-def _find_seed_injection_files(docs_dir: Path) -> List[Path]:
-    """Find all seed-injection.yaml files in docs directory."""
-    if not docs_dir.exists():
-        return []
-
-    seed_files = []
-    for yaml_file in docs_dir.rglob("seed-injection.yaml"):
-        seed_files.append(yaml_file)
-    for yml_file in docs_dir.rglob("seed-injection.yml"):
-        seed_files.append(yml_file)
-
-    return sorted(seed_files)
-
-
-def _init_graph_and_inject_seeds(target_dir: Path, clear: bool = False) -> bool:
+def _init_graph(target_dir: Path, clear: bool = False) -> bool:
     """
-    Initialize graph named after repo and inject seed data.
+    Initialize graph named after repo and ingest content.
 
     1. Get repo name from directory
     2. Connect to FalkorDB and create/select graph
     3. Optionally clear existing data (if --clear)
-    4. Find all seed-injection.yaml files in docs/
-    5. Upsert nodes and links from each file
+    4. Ingest docs/ and .mind/ files
 
     Args:
         target_dir: Project directory
-        clear: If True, delete all nodes/links before injection
+        clear: If True, delete all nodes/links before ingestion
 
     Returns:
         True if successful, False if graph connection failed
     """
     repo_name = target_dir.name
-    docs_dir = target_dir / "docs"
-
-    # Find seed files first (don't need DB connection if none exist)
-    seed_files = _find_seed_injection_files(docs_dir)
 
     print()
     print(f"Initializing graph: {repo_name}")
@@ -477,147 +379,25 @@ def _init_graph_and_inject_seeds(target_dir: Path, clear: bool = False) -> bool:
         except Exception as e:
             print(f"  ✗ Failed to clear graph: {e}")
 
-    if not seed_files:
-        print(f"  ○ No seed-injection.yaml files found in docs/")
-        return True
+    # Ingest docs/*.md files into graph
+    try:
+        from .ingest.docs import ingest_docs_to_graph
+        print("  Ingesting docs/*.md files...")
+        doc_stats = ingest_docs_to_graph(target_dir, graph_ops)
+        print(f"  ✓ Docs ingested: {doc_stats['docs_ingested']} docs, {doc_stats['spaces_created']} spaces")
+    except Exception as e:
+        print(f"  ○ Doc ingestion failed: {e}")
 
-    # Inject each seed file
-    total_nodes = 0
-    total_links = 0
+    # Ingest .mind/ files into graph (except runtime/)
+    try:
+        from .ingest.docs import ingest_mind_to_graph
+        print("  Ingesting .mind/ files...")
+        mind_stats = ingest_mind_to_graph(target_dir, graph_ops)
+        print(f"  ✓ Mind ingested: {mind_stats['files_ingested']} files, {mind_stats['spaces_created']} spaces")
+    except Exception as e:
+        print(f"  ○ Mind ingestion failed: {e}")
 
-    for seed_file in seed_files:
-        print(f"  Injecting: {seed_file.relative_to(target_dir)}")
-
-        try:
-            with open(seed_file) as f:
-                seed_data = yaml.safe_load(f)
-
-            if not seed_data:
-                print(f"    ○ Empty file, skipped")
-                continue
-
-            nodes = seed_data.get("nodes", [])
-            links = seed_data.get("links", [])
-
-            # Upsert nodes
-            nodes_created = 0
-            for node in nodes:
-                try:
-                    _upsert_node(graph_ops, node)
-                    nodes_created += 1
-                except Exception as e:
-                    print(f"    ✗ Node {node.get('id', '?')}: {e}")
-
-            # Upsert links
-            links_created = 0
-            for link in links:
-                try:
-                    _upsert_link(graph_ops, link)
-                    links_created += 1
-                except Exception as e:
-                    print(f"    ✗ Link {link.get('id', '?')}: {e}")
-
-            print(f"    ✓ {nodes_created} nodes, {links_created} links")
-            total_nodes += nodes_created
-            total_links += links_created
-
-        except yaml.YAMLError as e:
-            print(f"    ✗ Invalid YAML: {e}")
-        except Exception as e:
-            print(f"    ✗ Error: {e}")
-
-    print(f"  ✓ Total injected: {total_nodes} nodes, {total_links} links")
     return True
-
-
-def _upsert_node(graph_ops, node: Dict[str, Any]) -> None:
-    """Upsert a node into the graph."""
-    node_id = node.get("id")
-    node_type = node.get("node_type", "thing")
-
-    if not node_id:
-        raise ValueError("Node missing 'id' field")
-
-    # Map node_type to label
-    label_map = {
-        "actor": "Actor",
-        "space": "Space",
-        "thing": "Thing",
-        "narrative": "Narrative",
-        "moment": "Moment",
-    }
-    label = label_map.get(node_type, "Thing")
-
-    # Build properties
-    props = {k: v for k, v in node.items() if k not in ("node_type",) and v is not None}
-
-    # Handle special types
-    if "content" in props and isinstance(props["content"], str):
-        # Multiline content needs escaping
-        props["content"] = props["content"].replace("'", "\\'").replace("\n", "\\n")
-
-    # Build MERGE query
-    props_str = ", ".join(f"{k}: ${k}" for k in props.keys())
-    query = f"MERGE (n:{label} {{id: $id}}) SET n += {{{props_str}}} RETURN n.id"
-
-    graph_ops._query(query, props)
-
-
-def _upsert_link(graph_ops, link: Dict[str, Any]) -> None:
-    """Upsert a link into the graph."""
-    from runtime.physics.link_vocab import nature_to_floats
-
-    node_a = link.get("node_a")
-    node_b = link.get("node_b")
-
-    if not node_a or not node_b:
-        raise ValueError("Link missing 'node_a' or 'node_b' field")
-
-    # Single relationship type
-    rel_type = "link"
-
-    # Build properties (exclude structural fields)
-    exclude = {"node_a", "node_b", "nature"}
-    props = {k: v for k, v in link.items() if k not in exclude and v is not None}
-
-    # Parse nature to floats if present
-    nature = link.get("nature")
-    if nature:
-        floats = nature_to_floats(nature)
-        # Apply computed floats (don't override explicit values)
-        for key, value in floats.items():
-            if key not in props and value is not None:
-                if key == "polarity":
-                    props["polarity_ab"] = value[0]
-                    props["polarity_ba"] = value[1]
-                else:
-                    props[key] = value
-
-    # Handle null values
-    for k, v in list(props.items()):
-        if v is None:
-            del props[k]
-
-    # Build MERGE query
-    if props:
-        props_str = ", ".join(f"{k}: ${k}" for k in props.keys())
-        query = f"""
-        MATCH (a {{id: $node_a}})
-        MATCH (b {{id: $node_b}})
-        MERGE (a)-[r:{rel_type}]->(b)
-        SET r += {{{props_str}}}
-        RETURN type(r)
-        """
-    else:
-        query = f"""
-        MATCH (a {{id: $node_a}})
-        MATCH (b {{id: $node_b}})
-        MERGE (a)-[r:{rel_type}]->(b)
-        RETURN type(r)
-        """
-
-    params = {"node_a": node_a, "node_b": node_b, **props}
-    graph_ops._query(query, params)
 
 
 def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = False) -> bool:
@@ -640,15 +420,17 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         print(f"Error: {e}")
         return False
 
-    # Source paths
-    protocol_source = templates_path / "mind"
+    # Source paths (templates/ is the root, no nested /mind/)
+    protocol_source = templates_path
     modules_yaml_source = templates_path / "modules.yaml"
     ignore_source = templates_path / "mindignore"
+    capabilities_source = templates_path.parent / "capabilities"  # mind-platform/capabilities/
 
     # Destination paths
     protocol_dest = target_dir / ".mind"
     modules_yaml_dest = target_dir / "modules.yaml"
     ignore_dest = target_dir / ".mindignore"
+    capabilities_dest = protocol_dest / "capabilities"  # .mind/capabilities/
 
     claude_md = protocol_dest / "CLAUDE.md"
     agents_md = target_dir / "AGENTS.md"
@@ -699,6 +481,19 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         except PermissionError:
             print(f"  ○ Skipped (permission): {doctor_ignore}")
 
+    # Copy capabilities from mind-platform/capabilities/ to .mind/capabilities/
+    if capabilities_source.exists():
+        try:
+            if capabilities_dest.exists():
+                shutil.rmtree(capabilities_dest)
+            shutil.copytree(capabilities_source, capabilities_dest)
+            cap_count = len(list(capabilities_dest.iterdir()))
+            print(f"✓ Created: {capabilities_dest}/ ({cap_count} capabilities)")
+        except PermissionError:
+            print(f"  ○ Skipped (permission): {capabilities_dest}")
+    else:
+        print(f"○ Capabilities not found: {capabilities_source}")
+
     # Copy schema.yaml from docs/schema/ to .mind/ (authoritative schema)
     schema_source = target_dir / "docs" / "schema" / "schema.yaml"
     schema_dest = protocol_dest / "schema.yaml"
@@ -737,8 +532,8 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     docs_dir = target_dir / "docs"
     docs_dir.mkdir(parents=True, exist_ok=True)
 
-    taxonomy_template = templates_path / "mind" / "templates" / "TAXONOMY_TEMPLATE.md"
-    mapping_template = templates_path / "mind" / "templates" / "MAPPING_TEMPLATE.md"
+    taxonomy_template = templates_path / "docs" / "TAXONOMY_TEMPLATE.md"
+    mapping_template = templates_path / "docs" / "MAPPING_TEMPLATE.md"
     taxonomy_dest = docs_dir / "TAXONOMY.md"
     mapping_dest = docs_dir / "MAPPING.md"
 
@@ -774,7 +569,7 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     gitignore_path = target_dir / ".gitignore"
     mind_gitignore_entries = [
         "# mind agent working directories",
-        ".mind/agents/work/",
+        ".mind/work/",
         ".mind/traces/",
         ".mcp.json",  # Machine-specific MCP config
     ]
@@ -788,25 +583,15 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     except PermissionError:
         print(f"  ○ Skipped (permission): {gitignore_path}")
 
-    # Build CLAUDE.md content with inlined PRINCIPLES and PROTOCOL
-    # (Claude doesn't expand @ references, so we inline the actual content)
+    # Build system prompt content from SYSTEM.md + model-specific additions
     claude_content = _build_claude_addition(templates_path)
+    gemini_content = _build_gemini_addition(templates_path)
     agents_content = _build_agents_addition(templates_path)
     manager_agents_content = _build_manager_agents_addition(templates_path)
 
-    gemini_addition_path = templates_path / "GEMINI_SYSTEM_PROMPT_ADDITION.md"
-    gemini_addition = gemini_addition_path.read_text() if gemini_addition_path.exists() else ""
-    gemini_content = f"{claude_content}\n\n---\n\n{gemini_addition}" if gemini_addition else claude_content
-
-    # Always write/overwrite CLAUDE.md with fresh inlined content
-    # This ensures the latest PRINCIPLES and PROTOCOL are always included
+    # Update .mind/CLAUDE.md (replace # mind section if exists, otherwise append)
     try:
-        if claude_md.exists():
-            claude_md.write_text(claude_content)
-            print(f"✓ Updated: {claude_md}")
-        else:
-            claude_md.write_text(claude_content)
-            print(f"✓ Created: {claude_md}")
+        _update_or_add_section(claude_md, claude_content, "# mind")
     except PermissionError:
         print(f"  ○ Skipped (permission): {claude_md}")
 
@@ -816,24 +601,24 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     except PermissionError:
         print(f"  ○ Skipped (permission): {target_dir / 'CLAUDE.md'}")
 
+    # Update .mind/GEMINI.md
     gemini_md = protocol_dest / "GEMINI.md"
     try:
-        gemini_md.write_text(gemini_content)
-        print(f"✓ Created: {gemini_md}")
+        _update_or_add_section(gemini_md, gemini_content, "# mind")
     except PermissionError:
         print(f"  ○ Skipped (permission): {gemini_md}")
 
+    # Update root AGENTS.md (for Codex)
     try:
-        agents_md.write_text(agents_content)
-        print(f"✓ Updated: {agents_md}")
+        _update_or_add_section(agents_md, agents_content, "# mind")
     except PermissionError:
         print(f"  ○ Skipped (permission): {agents_md}")
 
+    # Update manager agent's AGENTS.md
     if manager_agents_content:
         try:
             manager_agents_md.parent.mkdir(parents=True, exist_ok=True)
-            manager_agents_md.write_text(manager_agents_content)
-            print(f"✓ Updated: {manager_agents_md}")
+            _update_or_add_section(manager_agents_md, manager_agents_content, "# mind")
         except PermissionError:
             print(f"  ○ Skipped (permission): {manager_agents_md}")
 
@@ -852,14 +637,15 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         protocol_dest / "PRINCIPLES.md",
         protocol_dest / "PROTOCOL.md",
         protocol_dest / "schema.yaml",
+        protocol_dest / "nature.yaml",
         claude_md,
     ]
     for ro_path in read_only_targets:
         _remove_write_permissions(ro_path)
     _enforce_readonly_for_templates(protocol_dest / "templates")
 
-    # Initialize graph and inject seeds
-    _init_graph_and_inject_seeds(target_dir, clear=clear_graph)
+    # Initialize graph and ingest content
+    _init_graph(target_dir, clear=clear_graph)
 
     # Configure MCP membrane server
     _configure_mcp_membrane(target_dir)

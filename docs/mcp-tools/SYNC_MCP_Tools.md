@@ -2,121 +2,105 @@
 
 ```
 LAST_UPDATED: 2025-12-29
-UPDATED_BY: Claude (documentation review and correction)
-STATUS: DESIGNING
+UPDATED_BY: Claude (V2 documentation update)
+STATUS: CANONICAL
 ```
-
-<!-- Updated 2025-12-29: procedures/ directory now exists with 24 protocol YAML files.
-     Skills in templates/mind/skills/ still need verification. -->
-
----
-
-## Terminology
-
-| Term | Format | Purpose |
-|------|--------|---------|
-| **Skill** | Markdown | Domain knowledge, which protocols when |
-| **Protocol** | YAML | Procedure: ask → query → branch → call_protocol → create |
-| **Membrane** | Tool | Executor that runs protocols |
 
 ---
 
 ## Current State
 
-### Coverage
+### V2 Interface (Canonical)
 
-```
-Protocols: 20/20 implemented (100%)
-├── Phase 0: add_cluster ✅
-├── Phase 1: explore_space, record_work, investigate ✅
-├── Phase 2: add_objectives, add_patterns, update_sync, add_behaviors, add_algorithm ✅
-├── Phase 3: add_invariant, add_health_coverage, add_implementation ✅
-├── Phase 4: raise_escalation, resolve_blocker, capture_decision ✅
-├── Phase 5: define_space, create_doc_chain, add_goals, add_todo ✅
-└── Meta: completion_handoff ✅ (called by all protocols)
-```
+**graph_query:**
+- Input: `queries` (array) + `intent` (optional string)
+- Behavior: SubEntity exploration per query
+- Output: Best narrative match with content
 
-### Implemented
+**procedure_start/continue/abort:**
+- Structured dialogues via YAML procedures
+- Session-based with atomic commit
+
+**agent_list/spawn/status:**
+- Work agent orchestration
+- One agent running at a time
+
+**doctor_check:**
+- Health checks with agent assignment
+- Auto-fix for small schema issues
+
+**task_list:**
+- Pending tasks grouped by objective
+
+---
+
+## Implemented Components
 
 | Component | Status | Location |
 |-----------|--------|----------|
-| MCP Server | Working | `mcp/server.py` |
+| MCP Server | V2 | `mcp/server.py` |
+| SubEntity exploration | Working | `runtime/physics/exploration.py` |
+| SubEntity class | Working | `runtime/physics/subentity.py` |
 | ConnectomeRunner | Working | `runtime/connectome/runner.py` |
-| Session + call stack | Working | `runtime/connectome/session.py` |
-| Step execution | Working | `runtime/connectome/steps.py` |
-| **Graph Schema** | Working | `runtime/connectome/schema.py` |
-| **Graph Persistence** | Working | `runtime/connectome/persistence.py` |
-| Coverage validator | @mind:escalation | `tools/coverage/validate.py` (may not exist) |
-| Health checker | Working | `runtime/doctor_checks_membrane.py` |
-| **Verification System** | @mind:escalation | `runtime/repair_verification.py` (needs verification) |
-| Protocols | Working | `procedures/*.yaml` (24 protocols) |
-| Skills | N/A | Located in mind-platform repo, not mind-mcp |
-| Health doc | Complete | `docs/mcp-tools/HEALTH_MCP_Tools.md` |
-| Verification doc | Complete | `docs/mcp-tools/VALIDATION_Completion_Verification.md` |
-| Issue→Verification map | Complete | `docs/mcp-tools/MAPPING_Issue_Type_Verification.md` |
+| Session management | Working | `runtime/connectome/session.py` |
+| Graph operations | Working | `runtime/physics/graph/` |
+| Procedures | Working | `.mind/procedures/*.yaml` |
 
-### Skills (15 total)
+---
 
-| Skill ID | File | Status |
-|----------|------|--------|
-| mind.add_cluster | SKILL_Add_Cluster_Dynamic_Creation.md | ✅ |
-| mind.author_skills | SKILL_Author_Skills_Structure_And_Quality.md | ✅ |
-| mind.author_protocols | SKILL_Author_Protocols_Structure_And_Quality.md | ✅ |
-| mind.create_module_docs | SKILL_Create_Module_Documentation_Chain... | ✅ |
-| mind.module_define_boundaries | SKILL_Define_Module_Boundaries... | ✅ |
-| mind.implement_with_docs | SKILL_Implement_Write_Or_Modify_Code... | ✅ |
-| mind.health_define_and_verify | SKILL_Define_And_Verify_Health_Signals... | ✅ |
-| mind.debug_investigate | SKILL_Debug_Investigate_And_Fix_Issues... | ✅ |
-| mind.update_sync | SKILL_Update_Module_Sync_State... | ✅ |
-| mind.onboard | SKILL_Onboard_Understand_Existing_Module... | ✅ |
-| mind.extend | SKILL_Extend_Add_Features_To_Existing... | ✅ |
-| mind.ingest | SKILL_Ingest_Raw_Data_Sources... | ✅ |
-| mind.orchestrate | SKILL_Orchestrate_Feature_Integration... | ✅ |
-| mind.review | SKILL_Review_Evaluate_Changes... | ✅ |
+## Documentation Chain
 
-### Protocols (20 total)
+| Doc | Status | Notes |
+|-----|--------|-------|
+| OBJECTIVES | V2 | Simplified query interface goals |
+| PATTERNS | V2 | Two tools: graph_query + procedures |
+| BEHAVIORS | V2 | Observable effects with GIVEN/WHEN/THEN |
+| ALGORITHM | V2 | SubEntity exploration + procedure flow |
+| VALIDATION | V2 | Invariants for all tool types |
+| IMPLEMENTATION | V2 | Code structure and data flow |
+| SYNC | V2 | This file |
 
-| Phase | Protocol | Status | Notes |
-|-------|----------|--------|-------|
-| 0 | add_cluster | ✅ | |
-| 1 | explore_space | ✅ | |
-| 1 | record_work | ✅ | |
-| 1 | investigate | ✅ | |
-| 2 | add_objectives | ✅ | |
-| 2 | add_patterns | ✅ | |
-| 2 | update_sync | ✅ | |
-| 2 | add_behaviors | ✅ | |
-| 2 | add_algorithm | ✅ | |
-| 3 | add_invariant | ✅ | |
-| 3 | add_health_coverage | ✅ | |
-| 3 | add_implementation | ✅ | |
-| 4 | raise_escalation | ✅ | For blocked work |
-| 4 | resolve_blocker | ✅ | |
-| 4 | capture_decision | ✅ | |
-| 5 | define_space | ✅ | v1.1 with explanations |
-| 5 | create_doc_chain | ✅ | |
-| 5 | add_goals | ✅ | |
-| 5 | add_todo | ✅ | For deferred work |
-| Meta | completion_handoff | ✅ | Called by all protocols |
+---
+
+## Key Changes (V2)
+
+1. **Removed from graph_query:**
+   - `top_k` - system determines
+   - `expand` - always explores
+   - `format` - always formatted response
+   - `include_membrane` - separate concern
+
+2. **Added to graph_query:**
+   - `intent` - affects SubEntity traversal weights
+
+3. **Link type:**
+   - All links are `:link` type
+   - No EXPRESSES, THEN, WITNESSED, etc.
+   - Semantics in link properties
+
+4. **Response format:**
+   - Returns best narrative content
+   - Cleaned of path artifacts
+   - Prefers existing over crystallized
 
 ---
 
 ## Handoff
 
 **For agents:**
-- MCP server: `mcp/server.py` - exposes membrane_* tools and agent tools
-- ConnectomeRunner: `runtime/connectome/` - session management and protocol execution
-- Membrane integration: `runtime/membrane/` - membrane-graph integration layer
-- Procedure runner: `runtime/procedure_runner.py` - alternative protocol runner
-- Doctor→Protocol mapping in `docs/mcp-tools/MAPPING_Doctor_Issues_To_Protocols.md`
-- Issue→Verification mapping in `docs/mcp-tools/MAPPING_Issue_Type_Verification.md`
-- Graph schema in `runtime/connectome/schema.py`
-- Graph persistence in `runtime/connectome/persistence.py`
+- MCP tools: `mcp/server.py`
+- SubEntity logic: `runtime/physics/subentity.py`
+- Exploration orchestration: `runtime/physics/exploration.py`
+- Procedures: `.mind/procedures/`
 
-**For human review:**
-- Test imports: `python3 -c "from mind.connectome import ConnectomeRunner; print('OK')"`
-- Test MCP server: `python3 mcp/server.py` (stdio mode)
+**For testing:**
+```bash
+# Test MCP server
+python3 -m mcp.server
 
+# Test graph_query via MCP
+# Use mcp__mind__graph_query tool
+```
 
 ---
 
@@ -124,10 +108,3 @@ Protocols: 20/20 implemented (100%)
 
 - **Prev:** IMPLEMENTATION_MCP_Tools.md
 - **Doc root:** OBJECTIVES_MCP_Tools.md
-
-
----
-
-## ARCHIVE
-
-Older content archived to: `SYNC_MCP_Tools_archive_2025-12.md`

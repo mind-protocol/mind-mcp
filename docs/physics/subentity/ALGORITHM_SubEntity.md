@@ -2,8 +2,8 @@
 
 ```
 STATUS: CANONICAL
-VERSION: v2.0
-UPDATED: 2025-12-26
+VERSION: v2.1
+UPDATED: 2025-12-29
 ```
 
 ---
@@ -64,6 +64,7 @@ absorbing narratives, and crystallizing new knowledge when gaps exist.
 ### Step 1: Create Root SubEntity
 
 ```python
+# v2.1: Removed intention_type param - intention is semantic via embedding
 root = create_subentity(
     actor_id=actor_id,
     origin_moment=origin_moment,
@@ -71,7 +72,6 @@ root = create_subentity(
     query_embedding=query_embedding,
     intention=intention,
     intention_embedding=intention_embedding,
-    intention_type=intention_type,
     start_position=actor_id,
     context=exploration_context,
 )
@@ -139,10 +139,10 @@ query_alignment = cosine(query_embedding, link.embedding)
 # Intention alignment (WHY we're searching)
 intention_alignment = cosine(intention_embedding, link.embedding)
 
-# Combined alignment (weighted by intention_type)
-intent_weight = INTENTION_WEIGHTS[intention_type]
-#   SUMMARIZE: 0.3, VERIFY: 0.5, FIND_NEXT: 0.2, EXPLORE: 0.25, RETRIEVE: 0.1
-alignment = (1 - intent_weight) * query_alignment + intent_weight * intention_alignment
+# Combined alignment (v2.1: fixed weight, intention is semantic via embedding)
+INTENTION_WEIGHT = 0.25  # Fixed constant (was enum-based dict)
+alignment = (1 - INTENTION_WEIGHT) * query_alignment + INTENTION_WEIGHT * intention_alignment
+# = 0.75 * query_alignment + 0.25 * intention_alignment
 
 # Self-novelty (avoid backtracking)
 self_novelty = 1 - max(cosine(link.embedding, p) for p in path_embeddings)
@@ -179,16 +179,12 @@ if await graph.is_moment(position) and len(scored) >= min_branch_links:
     return
 ```
 
-### Step 6: Forward Color Link
+### Step 6: Traverse (v2.1: No Forward Coloring)
 
-```python
-color_weight = 1 - best_link.permanence
-best_link.embedding = blend(best_link.embedding, intention_embedding, color_weight)
-best_link.energy += flow * 0.3
-best_link.polarity[direction] reinforced
-```
+v2.1: Forward coloring removed. We don't know if the path is useful yet.
+Links are colored during backprop (REFLECTING/CRYSTALLIZING) when we know the path was valuable.
 
-### Step 7: Traverse
+### Step 7: Update Position
 
 ```python
 path.append((best_link.id, target_id))
@@ -374,24 +370,47 @@ else:
 
 ---
 
-## ALGORITHM: REFLECTING
+## ALGORITHM: REFLECTING (v2.1)
 
-### Step 1: Backward Color Path
+### Step 1: Check if Path Was Useful
 
 ```python
-for link, node in reversed(path):
-    attenuation = link.polarity[reverse_direction]
-    if alignment > 0:
-        link.permanence += attenuation * alignment * permanence_rate
+# v2.1: Only backprop color if the path was useful
+if satisfaction > 0.5 and path:
+    # Path led to good findings - color it
+    proceed_with_coloring = True
+else:
+    # Path wasn't useful - don't color (will crystallize instead)
+    proceed_with_coloring = False
 ```
 
-### Step 2: Transition
+### Step 2: Backward Color Path (if useful)
+
+```python
+if proceed_with_coloring:
+    # Fetch all path links
+    path_links = [graph.get_link(link_id) for link_id, _ in path]
+
+    # Backprop with intention embedding
+    colored_links, weight_gained = backward_color_path(
+        path_links=path_links,
+        final_embedding=intention_embedding,  # Color with intention
+        attenuation_rate=0.8,  # 20% decay per hop
+        permanence_boost=0.05 * satisfaction,  # Boost based on how useful
+    )
+
+    # Save colored links back to graph
+    for link in colored_links:
+        graph.update_link(link.id, link)
+```
+
+### Step 3: Transition
 
 ```python
 if satisfaction > 0.5:
     transition to MERGING
 else:
-    transition to CRYSTALLIZING
+    transition to CRYSTALLIZING  # Will color after creating narrative
 ```
 
 ---
@@ -441,13 +460,30 @@ crystallized = narr_id
 found_narratives[narr_id] = 1.0
 ```
 
-### Step 4: Transition
+### Step 4: Backprop Color Path (v2.1)
 
 ```python
-if depth > 0:
-    transition to SEEKING  # Continue exploring
-else:
-    transition to MERGING  # Done
+# v2.1: Color path after crystallization - path led to new knowledge
+if path:
+    path_links = [graph.get_link(link_id) for link_id, _ in path]
+
+    # Color with crystallization embedding (what we created)
+    colored_links, _ = backward_color_path(
+        path_links=path_links,
+        final_embedding=crystallization_embedding,
+        attenuation_rate=0.8,
+        permanence_boost=0.1,  # Crystallization = strong signal
+    )
+
+    for link in colored_links:
+        graph.update_link(link.id, link)
+```
+
+### Step 5: Transition
+
+```python
+# v2.0.1: Always MERGING after crystallizing (avoids loop)
+transition to MERGING
 ```
 
 ---
@@ -530,13 +566,13 @@ def should_child_crystallize(child) -> bool:
 | Formula | Purpose |
 |---------|---------|
 | `link_score = alignment × polarity × (1-permanence) × self_novelty × sibling_divergence` | Link selection |
-| `alignment = (1-intent_weight) × query_align + intent_weight × intention_align` | Query + intention balance |
+| `alignment = 0.75 × query_align + 0.25 × intention_align` | Query + intention balance (v2.1: fixed weight) |
 | `self_novelty = 1 - max(cos(link, path))` | Avoid backtracking |
 | `sibling_divergence = 1 - max(cos(link, sibling.crystallization))` | Spread exploration |
 | `criticality = (1-satisfaction) × (depth/(depth+1))` | Urgency measure |
 | `injection = criticality × STATE_MULTIPLIER[state]` | Energy to inject |
 | `weight_gain = injection × permanence` | Energy → weight conversion |
-| `color_weight = 1 - permanence` | How much link absorbs intention |
+| `backward_color_path(links, final_embedding, attenuation=0.8)` | Backprop coloring (v2.1) |
 | `depth[0] += hierarchy` (if > 0.2) | Accumulate UP traversals (v2.0) |
 | `depth[1] += abs(hierarchy)` (if < -0.2) | Accumulate DOWN traversals (v2.0) |
 | `progress = cos(crystallization, intention)` | Measure goal alignment (v2.0) |

@@ -1,31 +1,31 @@
 # Repository Map: mind-mcp
 
-*Generated: 2025-12-29 01:47*
+*Generated: 2025-12-29 22:55*
 
-- **Files:** 473
-- **Directories:** 112
+- **Files:** 444
+- **Directories:** 98
 - **Total Size:** 4.8M
-- **Doc Files:** 352
-- **Code Files:** 119
-- **Areas:** 13 (docs/ subfolders)
-- **Modules:** 31 (subfolders in areas)
-- **DOCS Links:** 70 (0.59 avg per code file)
+- **Doc Files:** 318
+- **Code Files:** 125
+- **Areas:** 14 (docs/ subfolders)
+- **Modules:** 32 (subfolders in areas)
+- **DOCS Links:** 71 (0.57 avg per code file)
 
-- markdown: 352
-- python: 115
+- markdown: 318
+- python: 121
 - typescript: 4
 
 ```
-├── cli/ (56.4K)
-│   ├── commands/ (6.5K)
+├── cli/ (62.4K)
+│   ├── commands/ (6.9K)
 │   │   ├── fix_embeddings.py (1.1K)
-│   │   ├── init.py (4.2K)
+│   │   ├── init.py (4.7K)
 │   │   ├── upgrade.py (790)
 │   │   └── (..2 more files)
-│   ├── helpers/ (48.0K)
-│   │   ├── check_mind_status_in_directory.py (3.3K)
-│   │   ├── copy_ecosystem_templates_to_target.py (1.5K)
-│   │   ├── copy_runtime_package_to_target.py (1.4K)
+│   ├── helpers/ (53.6K)
+│   │   ├── check_mind_status_in_directory.py (5.0K)
+│   │   ├── copy_capabilities_to_target.py (1.7K)
+│   │   ├── copy_ecosystem_templates_to_target.py (2.5K)
 │   │   ├── create_ai_config_files_for_claude_agents_gemini.py (2.2K)
 │   │   ├── create_database_config_yaml.py (1.9K)
 │   │   ├── fix_embeddings_for_nodes_and_links.py (9.2K)
@@ -33,7 +33,7 @@
 │   │   ├── inject_seed_yaml_to_graph.py (11.6K)
 │   │   ├── setup_database_and_apply_schema.py (5.0K)
 │   │   ├── validate_embedding_config_matches_stored.py (2.3K)
-│   │   └── (..11 more files)
+│   │   └── (..13 more files)
 │   ├── __main__.py (1.9K)
 │   └── (..2 more files)
 ├── connectome/ (30.8K)
@@ -49,9 +49,9 @@
 │   │   └── (..1 more files)
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
-├── docs/ (2.5M)
-│   ├── agents/ (216.7K)
-│   │   ├── narrator/ (112.2K)
+├── docs/ (2.6M)
+│   ├── agents/ (216.8K)
+│   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
 │   │   │   │   └── SYNC_archive_2024-12.md (20.5K)
 │   │   │   ├── ALGORITHM_Scene_Generation.md (10.8K)
@@ -65,17 +65,17 @@
 │   │   │   ├── TOOL_REFERENCE.md (3.2K)
 │   │   │   ├── VALIDATION_Narrator.md (8.6K)
 │   │   │   └── (..4 more files)
-│   │   └── world-runner/ (104.4K)
+│   │   └── world-runner/ (104.5K)
 │   │       ├── archive/ (23.7K)
 │   │       │   └── SYNC_archive_2024-12.md (23.7K)
 │   │       ├── ALGORITHM_World_Runner.md (11.3K)
 │   │       ├── BEHAVIORS_World_Runner.md (8.0K)
 │   │       ├── HEALTH_World_Runner.md (13.3K)
-│   │       ├── IMPLEMENTATION_World_Runner_Service_Architecture.md (8.3K)
-│   │       ├── INPUT_REFERENCE.md (1.8K)
-│   │       ├── PATTERNS_World_Runner.md (7.4K)
+│   │       ├── IMPLEMENTATION_World_Runner_Service_Architecture.md (8.4K)
+│   │       ├── INPUT_REFERENCE.md (1.9K)
+│   │       ├── PATTERNS_World_Runner.md (7.5K)
 │   │       ├── SYNC_World_Runner.md (16.2K)
-│   │       ├── TEST_World_Runner_Coverage.md (3.5K)
+│   │       ├── TEST_World_Runner_Coverage.md (3.6K)
 │   │       ├── TOOL_REFERENCE.md (3.7K)
 │   │       ├── VALIDATION_World_Runner_Invariants.md (6.3K)
 │   │       └── (..1 more files)
@@ -86,7 +86,7 @@
 │   │       ├── HEALTH_Cybernetic_Studio_Health_Checks.md (7.6K)
 │   │       ├── IMPLEMENTATION_Cybernetic_Studio_Code_Structure.md (8.4K)
 │   │       ├── OBJECTIVES_Cybernetic_Studio_Architecture_Goals.md (799)
-│   │       ├── PATTERNS_Cybernetic_Studio_Architecture.md (16.0K)
+│   │       ├── PATTERNS_Cybernetic_Studio_Architecture.md (16.1K)
 │   │       ├── SYNC_Cybernetic_Studio_Architecture_State.md (7.0K)
 │   │       └── VALIDATION_Cybernetic_Studio_Architectural_Invariants.md (5.0K)
 │   ├── building/ (86.6K)
@@ -99,24 +99,24 @@
 │   │   ├── SYNC_Ngram_Graph_System.md (3.7K)
 │   │   ├── SYNC_Ngram_Graph_System_archive_2025-12.md (4.9K)
 │   │   └── VALIDATION_Ngram_Graph_System.md (15.1K)
-│   ├── cli/ (131.6K)
+│   ├── cli/ (133.9K)
 │   │   ├── archive/ (5.4K)
 │   │   │   ├── SYNC_CLI_Development_State_archive_2025-12.md (581)
 │   │   │   ├── SYNC_CLI_State_Archive_2025-12.md (4.3K)
 │   │   │   └── (..1 more files)
-│   │   ├── core/ (52.3K)
+│   │   ├── core/ (54.7K)
 │   │   │   ├── ALGORITHM_mind_cli_core.md (6.7K)
 │   │   │   ├── BEHAVIORS_mind_cli_core.md (9.7K)
 │   │   │   ├── HEALTH_mind_cli_core.md (6.6K)
 │   │   │   ├── IMPLEMENTATION_mind_cli_core.md (8.6K)
-│   │   │   ├── OBJECTIVES_mind_cli_core.md (4.0K)
-│   │   │   ├── PATTERNS_mind_cli_core.md (4.4K)
+│   │   │   ├── OBJECTIVES_mind_cli_core.md (4.8K)
+│   │   │   ├── PATTERNS_mind_cli_core.md (6.0K)
 │   │   │   ├── SYNC_mind_cli_core.md (6.6K)
 │   │   │   └── VALIDATION_mind_cli_core.md (5.7K)
-│   │   ├── prompt/ (39.8K)
+│   │   ├── prompt/ (39.7K)
 │   │   │   ├── ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md (4.4K)
 │   │   │   ├── BEHAVIORS_Prompt_Command_Output_and_Flow.md (3.5K)
-│   │   │   ├── HEALTH_Prompt_Runtime_Verification.md (6.9K)
+│   │   │   ├── HEALTH_Prompt_Runtime_Verification.md (6.8K)
 │   │   │   ├── IMPLEMENTATION_Prompt_Code_Architecture.md (7.8K)
 │   │   │   ├── PATTERNS_Prompt_Command_Workflow_Design.md (4.7K)
 │   │   │   ├── SYNC_Prompt_Command_State.md (7.7K)
@@ -129,13 +129,13 @@
 │   │   ├── ALGORITHM_CLI_Command_Execution_Logic.md (4.7K)
 │   │   ├── BEHAVIORS_CLI_Module_Command_Surface_Effects.md (769)
 │   │   ├── HEALTH_CLI_Module_Verification.md (599)
-│   │   ├── IMPLEMENTATION_CLI_Code_Architecture.md (13.3K)
+│   │   ├── IMPLEMENTATION_CLI_Code_Architecture.md (13.4K)
 │   │   ├── OBJECTIVES_Cli_Goals.md (691)
 │   │   ├── PATTERNS_CLI_Module_Overview_And_Scope.md (1.0K)
 │   │   ├── VALIDATION_CLI_Module_Invariants.md (731)
 │   │   ├── modules.md (1.8K)
 │   │   └── (..1 more files)
-│   ├── concepts/ (52.9K)
+│   ├── concepts/ (53.0K)
 │   │   ├── clustering/ (51.6K)
 │   │   │   ├── ALGORITHM_Dense_Clustering.md (9.5K)
 │   │   │   ├── BEHAVIORS_Dense_Clustering.md (3.7K)
@@ -144,7 +144,7 @@
 │   │   │   ├── IMPLEMENTATION_Dense_Clustering.md (9.1K)
 │   │   │   ├── OBJECTIVES_Dense_Clustering.md (2.6K)
 │   │   │   ├── PATTERNS_Dense_Clustering.md (4.1K)
-│   │   │   ├── SYNC_Dense_Clustering.md (3.3K)
+│   │   │   ├── SYNC_Dense_Clustering.md (3.4K)
 │   │   │   └── VALIDATION_Dense_Clustering.md (4.9K)
 │   │   └── tempo-controller/ (1.3K)
 │   │       └── CONCEPT_Tempo_Controller.md (1.3K)
@@ -152,31 +152,31 @@
 │   │   ├── ALGORITHM_Template_Path_Resolution_And_Doc_Discovery.md (3.9K)
 │   │   ├── BEHAVIORS_Core_Utils_Helper_Effects.md (3.6K)
 │   │   ├── HEALTH_Core_Utils_Verification.md (7.4K)
-│   │   ├── IMPLEMENTATION_Core_Utils_Code_Architecture.md (8.3K)
+│   │   ├── IMPLEMENTATION_Core_Utils_Code_Architecture.md (8.4K)
 │   │   ├── OBJECTIVES_Core_Utils_Goals.md (719)
 │   │   ├── PATTERNS_Core_Utils_Functions.md (2.2K)
 │   │   ├── SYNC_Core_Utils_State.md (4.3K)
 │   │   └── VALIDATION_Core_Utils_Invariants.md (3.6K)
-│   ├── engine/ (253.8K)
-│   │   ├── membrane/ (32.6K)
+│   ├── engine/ (254.3K)
+│   │   ├── membrane/ (32.7K)
 │   │   │   ├── ALGORITHM_Membrane_Modulation.md (4.3K)
 │   │   │   ├── BEHAVIORS_Membrane_Modulation.md (4.5K)
 │   │   │   ├── HEALTH_Membrane_Modulation.md (2.8K)
 │   │   │   ├── IMPLEMENTATION_Membrane_Modulation.md (2.5K)
 │   │   │   ├── PATTERNS_Membrane_Modulation.md (5.1K)
-│   │   │   ├── PATTERNS_Membrane_Scoping.md (6.9K)
+│   │   │   ├── PATTERNS_Membrane_Scoping.md (7.0K)
 │   │   │   ├── SYNC_Membrane_Modulation.md (3.2K)
 │   │   │   └── VALIDATION_Membrane_Modulation.md (3.3K)
-│   │   ├── models/ (48.0K)
+│   │   ├── models/ (48.1K)
 │   │   │   ├── ALGORITHM_Models.md (6.3K)
 │   │   │   ├── BEHAVIORS_Models.md (4.0K)
 │   │   │   ├── HEALTH_Models.md (4.4K)
-│   │   │   ├── IMPLEMENTATION_Models.md (10.9K)
+│   │   │   ├── IMPLEMENTATION_Models.md (11.0K)
 │   │   │   ├── OBJECTIVES_Models.md (4.4K)
-│   │   │   ├── PATTERNS_Models.md (7.0K)
+│   │   │   ├── PATTERNS_Models.md (7.1K)
 │   │   │   ├── SYNC_Models.md (5.6K)
 │   │   │   └── VALIDATION_Models.md (5.3K)
-│   │   ├── moment-graph-engine/ (35.6K)
+│   │   ├── moment-graph-engine/ (35.7K)
 │   │   │   ├── validation/ (6.4K)
 │   │   │   │   ├── player_dmz/ (2.4K)
 │   │   │   │   │   └── VALIDATION_Player_DMZ.md (2.4K)
@@ -190,13 +190,13 @@
 │   │   │   ├── OBJECTIVES_Moment_Graph_Engine.md (4.6K)
 │   │   │   ├── PATTERNS_Instant_Traversal_Moment_Graph.md (3.7K)
 │   │   │   ├── SYNC_Moment_Graph_Engine.md (2.9K)
-│   │   │   ├── SYNC_Moment_Graph_Engine_archive_2025-12.md (6.0K)
+│   │   │   ├── SYNC_Moment_Graph_Engine_archive_2025-12.md (6.1K)
 │   │   │   ├── TEST_Moment_Graph_Runtime_Coverage.md (1.8K)
 │   │   │   └── VALIDATION_Moment_Traversal_Invariants.md (2.2K)
 │   │   ├── moments/ (16.4K)
 │   │   │   ├── ALGORITHM_Moment_Graph_Operations.md (1.3K)
 │   │   │   ├── BEHAVIORS_Moment_Lifecycle.md (1.4K)
-│   │   │   ├── IMPLEMENTATION_Moment_Graph_Stub.md (864)
+│   │   │   ├── IMPLEMENTATION_Moment_Graph_Stub.md (870)
 │   │   │   ├── OBJECTIVES_Moments.md (4.5K)
 │   │   │   ├── PATTERNS_Moments.md (3.7K)
 │   │   │   ├── SYNC_Moments.md (2.1K)
@@ -214,88 +214,115 @@
 │   │   │   └── VALIDATION_SelfImprovement.md (13.3K)
 │   │   ├── ALGORITHM_Engine.md (687)
 │   │   ├── BEHAVIORS_Engine.md (865)
-│   │   ├── HEALTH_Engine.md (512)
-│   │   ├── IMPLEMENTATION_Engine.md (828)
+│   │   ├── HEALTH_Engine.md (515)
+│   │   ├── IMPLEMENTATION_Engine.md (852)
 │   │   ├── OBJECTIVES_Engine_Goals.md (703)
 │   │   ├── PATTERNS_Engine.md (1.1K)
 │   │   ├── SYNC_Engine.md (798)
 │   │   └── VALIDATION_Engine.md (666)
-│   ├── infrastructure/ (218.3K)
-│   │   ├── api/ (70.0K)
-│   │   │   ├── ALGORITHM_Api.md (19.8K)
+│   ├── infrastructure/ (219.2K)
+│   │   ├── api/ (70.2K)
+│   │   │   ├── ALGORITHM_Api.md (19.9K)
 │   │   │   ├── ALGORITHM_Player_Input_Flow.md (7.3K)
 │   │   │   ├── API_Graph_Management.md (4.3K)
 │   │   │   ├── BEHAVIORS_Api.md (2.2K)
 │   │   │   ├── HEALTH_Api.md (3.7K)
-│   │   │   ├── IMPLEMENTATION_Api.md (7.7K)
+│   │   │   ├── IMPLEMENTATION_Api.md (7.8K)
 │   │   │   ├── PATTERNS_Api.md (3.1K)
 │   │   │   ├── SYNC_Api.md (4.0K)
-│   │   │   ├── SYNC_Api_archive_2025-12.md (13.8K)
+│   │   │   ├── SYNC_Api_archive_2025-12.md (13.9K)
 │   │   │   ├── VALIDATION_Api.md (2.4K)
 │   │   │   └── (..2 more files)
-│   │   ├── database-adapter/ (58.7K)
+│   │   ├── database-adapter/ (59.1K)
 │   │   │   ├── ALGORITHM_DatabaseAdapter.md (6.3K)
 │   │   │   ├── BEHAVIORS_DatabaseAdapter.md (4.2K)
 │   │   │   ├── HEALTH_DatabaseAdapter.md (4.4K)
-│   │   │   ├── IMPLEMENTATION_DatabaseAdapter.md (8.6K)
+│   │   │   ├── IMPLEMENTATION_DatabaseAdapter.md (8.8K)
 │   │   │   ├── OBJECTIVES_DatabaseAdapter.md (4.5K)
 │   │   │   ├── PATTERNS_DatabaseAdapter.md (6.0K)
-│   │   │   ├── PATTERNS_Database_Adapter.md (9.8K)
+│   │   │   ├── PATTERNS_Database_Adapter.md (9.9K)
 │   │   │   ├── SYNC_DatabaseAdapter.md (4.4K)
-│   │   │   ├── SYNC_Database_Adapter.md (5.2K)
+│   │   │   ├── SYNC_Database_Adapter.md (5.3K)
 │   │   │   └── VALIDATION_DatabaseAdapter.md (5.5K)
-│   │   ├── scene-memory/ (57.0K)
+│   │   ├── scene-memory/ (57.2K)
 │   │   │   ├── archive/ (2.5K)
 │   │   │   │   └── SYNC_archive_2024-12.md (2.5K)
-│   │   │   ├── ALGORITHM_Scene_Memory.md (8.5K)
+│   │   │   ├── ALGORITHM_Scene_Memory.md (8.6K)
 │   │   │   ├── BEHAVIORS_Scene_Memory.md (5.0K)
 │   │   │   ├── HEALTH_Scene_Memory.md (518)
-│   │   │   ├── IMPLEMENTATION_Scene_Memory.md (5.4K)
+│   │   │   ├── IMPLEMENTATION_Scene_Memory.md (5.5K)
 │   │   │   ├── OBJECTIVES_Scene_Memory_Goals.md (727)
 │   │   │   ├── PATTERNS_Scene_Memory.md (4.7K)
 │   │   │   ├── SYNC_Scene_Memory.md (6.0K)
-│   │   │   ├── SYNC_Scene_Memory_archive_2025-12.md (15.2K)
+│   │   │   ├── SYNC_Scene_Memory_archive_2025-12.md (15.3K)
 │   │   │   ├── TEST_Scene_Memory.md (3.3K)
 │   │   │   └── VALIDATION_Scene_Memory.md (5.1K)
-│   │   ├── sse/ (435)
+│   │   ├── sse/ (438)
 │   │   │   └── (..1 more files)
-│   │   ├── tempo/ (28.9K)
+│   │   ├── tempo/ (29.0K)
 │   │   │   ├── ALGORITHM_Tempo_Controller.md (3.1K)
 │   │   │   ├── BEHAVIORS_Tempo.md (3.0K)
 │   │   │   ├── HEALTH_Tempo.md (4.9K)
-│   │   │   ├── IMPLEMENTATION_Tempo.md (7.2K)
+│   │   │   ├── IMPLEMENTATION_Tempo.md (7.3K)
 │   │   │   ├── OBJECTIVES_Tempo_Goals.md (699)
 │   │   │   ├── PATTERNS_Tempo.md (3.6K)
 │   │   │   ├── SYNC_Tempo.md (4.0K)
 │   │   │   └── VALIDATION_Tempo.md (2.6K)
 │   │   └── wsl-autostart.md (3.2K)
-│   ├── llm_agents/ (79.9K)
+│   ├── llm_agents/ (80.0K)
 │   │   ├── ALGORITHM_Gemini_Stream_Flow.md (5.7K)
 │   │   ├── BEHAVIORS_Gemini_Agent_Output.md (5.8K)
 │   │   ├── HEALTH_LLM_Agent_Coverage.md (13.8K)
-│   │   ├── IMPLEMENTATION_LLM_Agent_Code_Architecture.md (16.0K)
+│   │   ├── IMPLEMENTATION_LLM_Agent_Code_Architecture.md (16.1K)
 │   │   ├── OBJECTIVES_Llm_Agents_Goals.md (719)
 │   │   ├── PATTERNS_Provider_Specific_LLM_Subprocesses.md (5.3K)
 │   │   ├── SYNC_LLM_Agents_State.md (3.6K)
 │   │   ├── SYNC_LLM_Agents_State_archive_2025-12.md (20.8K)
 │   │   └── VALIDATION_Gemini_Agent_Invariants.md (8.1K)
-│   ├── mcp-tools/ (116.4K)
-│   │   ├── ALGORITHM_MCP_Tools.md (10.0K)
-│   │   ├── BEHAVIORS_MCP_Tools.md (5.7K)
+│   ├── mcp-design/ (114.2K)
+│   │   ├── ALGORITHM/ (2.4K)
+│   │   │   └── ALGORITHM_Protocol_Process_Flow.md (2.4K)
+│   │   ├── IMPLEMENTATION/ (5.5K)
+│   │   │   └── IMPLEMENTATION_Protocol_File_Structure.md (5.5K)
+│   │   ├── doctor/ (58.6K)
+│   │   │   ├── ALGORITHM_Project_Health_Doctor.md (20.2K)
+│   │   │   ├── BEHAVIORS_Project_Health_Doctor.md (9.3K)
+│   │   │   ├── HEALTH_Project_Health_Doctor.md (5.2K)
+│   │   │   ├── IMPLEMENTATION_Project_Health_Doctor.md (5.7K)
+│   │   │   ├── PATTERNS_Project_Health_Doctor.md (4.0K)
+│   │   │   ├── SYNC_Project_Health_Doctor.md (5.1K)
+│   │   │   ├── SYNC_Project_Health_Doctor_archive_2025-12.md (3.9K)
+│   │   │   └── VALIDATION_Project_Health_Doctor.md (5.2K)
+│   │   ├── features/ (10.5K)
+│   │   │   ├── BEHAVIORS_Agent_Trace_Logging.md (3.7K)
+│   │   │   ├── PATTERNS_Agent_Trace_Logging.md (3.6K)
+│   │   │   └── SYNC_Agent_Trace_Logging.md (3.2K)
+│   │   ├── ALGORITHM_Protocol_Core_Mechanics.md (570)
+│   │   ├── BEHAVIORS_Observable_Protocol_Effects.md (7.3K)
+│   │   ├── HEALTH_Protocol_Verification.md (5.6K)
+│   │   ├── IMPLEMENTATION_Protocol_System_Architecture.md (700)
+│   │   ├── OBJECTIVES_Protocol_Goals.md (711)
+│   │   ├── PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md (6.2K)
+│   │   ├── SYNC_Protocol_Current_State.md (8.0K)
+│   │   ├── SYNC_Protocol_Current_State_archive_2025-12.md (1.9K)
+│   │   └── VALIDATION_Protocol_Invariants.md (6.1K)
+│   ├── mcp-tools/ (94.6K)
+│   │   ├── ALGORITHM_MCP_Tools.md (5.5K)
+│   │   ├── BEHAVIORS_MCP_Tools.md (5.3K)
 │   │   ├── HEALTH_MCP_Tools.md (11.9K)
-│   │   ├── IMPLEMENTATION_MCP_Tools.md (14.6K)
+│   │   ├── IMPLEMENTATION_MCP_Tools.md (6.2K)
 │   │   ├── MAPPING_Doctor_Issues_To_Protocols.md (5.8K)
 │   │   ├── MAPPING_Issue_Type_Verification.md (16.1K)
-│   │   ├── PATTERNS_MCP_Tools.md (8.6K)
 │   │   ├── SKILLS_AND_PROTOCOLS_Mapping.md (10.1K)
 │   │   ├── SYNC_MCP_Tools_archive_2025-12.md (9.6K)
 │   │   ├── VALIDATION_Completion_Verification.md (11.6K)
+│   │   ├── VALIDATION_MCP_Tools.md (5.5K)
 │   │   └── (..3 more files)
-│   ├── physics/ (656.4K)
+│   ├── physics/ (697.8K)
 │   │   ├── VALIDATION_Physics/ (20.8K)
 │   │   │   ├── VALIDATION_Physics_Invariants.md (18.4K)
 │   │   │   └── VALIDATION_Physics_Procedures.md (2.4K)
-│   │   ├── algorithms/ (126.8K)
+│   │   ├── algorithms/ (126.9K)
 │   │   │   ├── ALGORITHM_Physics_Energy_Flow_Sources_Sinks_And_Moment_Dynamics.md (985)
 │   │   │   ├── ALGORITHM_Physics_Energy_Mechanics_And_Link_Semantics.md (102.5K)
 │   │   │   ├── ALGORITHM_Physics_Handler_And_Input_Processing_Flows.md (915)
@@ -306,9 +333,9 @@
 │   │   ├── archive/ (24.6K)
 │   │   │   ├── IMPLEMENTATION_Physics_archive_2025-12.md (1.9K)
 │   │   │   ├── SYNC_Physics_History_2025-12.md (4.5K)
-│   │   │   ├── SYNC_Physics_archive_2025-12.md (17.8K)
+│   │   │   ├── SYNC_Physics_archive_2025-12.md (17.9K)
 │   │   │   └── (..1 more files)
-│   │   ├── attention/ (26.6K)
+│   │   ├── attention/ (26.7K)
 │   │   │   ├── ALGORITHM_Attention_Energy_Split.md (1.3K)
 │   │   │   ├── BEHAVIORS_Attention_Split_And_Interrupts.md (3.9K)
 │   │   │   ├── IMPLEMENTATION_Attention_Energy_Split.md (1.1K)
@@ -321,72 +348,68 @@
 │   │   │   ├── ALGORITHM_Cluster_Presentation.md (15.5K)
 │   │   │   ├── IMPLEMENTATION_Cluster_Presentation.md (7.7K)
 │   │   │   └── PATTERNS_Cluster_Presentation.md (4.1K)
-│   │   ├── graph/ (123.4K)
+│   │   ├── graph/ (123.6K)
 │   │   │   ├── archive/ (17.7K)
 │   │   │   │   └── ALGORITHM_Energy_Flow_archived_2025-12-20.md (17.7K)
 │   │   │   ├── BEHAVIORS_Graph.md (9.6K)
 │   │   │   ├── OBJECTIVES_Graph.md (4.7K)
 │   │   │   ├── PATTERNS_Graph.md (4.9K)
 │   │   │   ├── SYNC_Graph.md (8.6K)
-│   │   │   ├── SYNC_Graph_archive_2025-12.md (33.7K)
+│   │   │   ├── SYNC_Graph_archive_2025-12.md (33.8K)
 │   │   │   └── VALIDATION_Living_Graph.md (44.2K)
 │   │   ├── mechanisms/ (16.9K)
 │   │   │   ├── MECHANISMS_Attention_Energy_Split.md (4.3K)
 │   │   │   ├── MECHANISMS_Awareness_Depth_Breadth.md (7.9K)
 │   │   │   ├── MECHANISMS_Contradiction_Pressure.md (2.5K)
 │   │   │   └── MECHANISMS_Primes_Lag_Decay.md (2.2K)
-│   │   ├── subentity/ (90.5K)
-│   │   │   ├── ALGORITHM_SubEntity.md (14.5K)
+│   │   ├── nature/ (35.6K)
+│   │   │   ├── ALGORITHM_Nature.md (4.9K)
+│   │   │   ├── BEHAVIORS_Nature.md (3.2K)
+│   │   │   ├── HEALTH_Nature.md (4.5K)
+│   │   │   ├── IMPLEMENTATION_Nature.md (5.8K)
+│   │   │   ├── OBJECTIVES_Nature.md (2.7K)
+│   │   │   ├── PATTERNS_Nature.md (4.2K)
+│   │   │   ├── SYNC_Nature.md (2.8K)
+│   │   │   ├── SYNC_Nature_archive_2025-12.md (3.1K)
+│   │   │   └── VALIDATION_Nature.md (4.4K)
+│   │   ├── subentity/ (95.5K)
+│   │   │   ├── ALGORITHM_SubEntity.md (15.9K)
 │   │   │   ├── BEHAVIORS_SubEntity.md (7.6K)
 │   │   │   ├── HEALTH_SubEntity.md (19.0K)
 │   │   │   ├── IMPLEMENTATION_SubEntity.md (11.6K)
 │   │   │   ├── OBJECTIVES_SubEntity.md (4.7K)
 │   │   │   ├── PATTERNS_SubEntity.md (7.4K)
-│   │   │   ├── SYNC_SubEntity.md (6.2K)
-│   │   │   ├── SYNC_SubEntity_archive_2025-12.md (4.2K)
+│   │   │   ├── SYNC_SubEntity.md (4.5K)
+│   │   │   ├── SYNC_SubEntity_archive_2025-12.md (9.4K)
 │   │   │   └── VALIDATION_SubEntity.md (15.4K)
 │   │   ├── tick-runner/ (5.6K)
 │   │   │   └── PATTERNS_Tick_Runner.md (5.6K)
 │   │   ├── traversal_logger/ (13.5K)
-│   │   │   ├── IMPLEMENTATION_Traversal_Logger.md (10.4K)
+│   │   │   ├── IMPLEMENTATION_Traversal_Logger.md (10.5K)
 │   │   │   └── SYNC_Traversal_Logger.md (3.0K)
 │   │   ├── ALGORITHM_Physics.md (18.6K)
 │   │   ├── API_Physics.md (6.9K)
 │   │   ├── DESIGN_Traversal_Logger.md (12.4K)
 │   │   ├── EXAMPLE_Traversal_Log.md (15.7K)
-│   │   ├── HEALTH_Energy_Physics.md (29.1K)
+│   │   ├── HEALTH_Energy_Physics.md (29.2K)
 │   │   ├── HEALTH_Physics.md (12.3K)
-│   │   ├── IMPLEMENTATION_Physics.md (37.9K)
+│   │   ├── IMPLEMENTATION_Physics.md (38.1K)
 │   │   ├── PATTERNS_Physics.md (15.2K)
 │   │   ├── SYNC_Physics_archive_2025-12.md (11.2K)
 │   │   ├── VALIDATION_Energy_Physics.md (15.4K)
 │   │   └── (..4 more files)
-│   ├── protocol/ (113.7K)
-│   │   ├── ALGORITHM/ (2.5K)
-│   │   │   └── ALGORITHM_Protocol_Process_Flow.md (2.5K)
-│   │   ├── IMPLEMENTATION/ (5.5K)
-│   │   │   └── IMPLEMENTATION_Protocol_File_Structure.md (5.5K)
-│   │   ├── doctor/ (58.3K)
-│   │   │   ├── ALGORITHM_Project_Health_Doctor.md (20.2K)
-│   │   │   ├── BEHAVIORS_Project_Health_Doctor.md (9.3K)
-│   │   │   ├── HEALTH_Project_Health_Doctor.md (5.2K)
-│   │   │   ├── IMPLEMENTATION_Project_Health_Doctor.md (5.6K)
-│   │   │   ├── PATTERNS_Project_Health_Doctor.md (4.0K)
-│   │   │   ├── SYNC_Project_Health_Doctor.md (8.8K)
-│   │   │   └── VALIDATION_Project_Health_Doctor.md (5.2K)
-│   │   ├── features/ (10.5K)
-│   │   │   ├── BEHAVIORS_Agent_Trace_Logging.md (3.7K)
-│   │   │   ├── PATTERNS_Agent_Trace_Logging.md (3.6K)
-│   │   │   └── SYNC_Agent_Trace_Logging.md (3.2K)
-│   │   ├── ALGORITHM_Protocol_Core_Mechanics.md (568)
-│   │   ├── BEHAVIORS_Observable_Protocol_Effects.md (7.3K)
-│   │   ├── HEALTH_Protocol_Verification.md (5.6K)
-│   │   ├── IMPLEMENTATION_Protocol_System_Architecture.md (696)
-│   │   ├── OBJECTIVES_Protocol_Goals.md (711)
-│   │   ├── PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md (6.2K)
-│   │   ├── SYNC_Protocol_Current_State.md (9.7K)
-│   │   └── VALIDATION_Protocol_Invariants.md (6.1K)
-│   ├── schema/ (148.3K)
+│   ├── procedure/ (75.0K)
+│   │   ├── ALGORITHM_Procedure.md (9.7K)
+│   │   ├── BEHAVIORS_Procedure.md (7.0K)
+│   │   ├── HEALTH_Procedure.md (12.7K)
+│   │   ├── IMPLEMENTATION_Procedure.md (14.9K)
+│   │   ├── OBJECTIVES_Procedure.md (3.3K)
+│   │   ├── PATTERNS_Procedure.md (7.2K)
+│   │   ├── SYNC_Procedure.md (3.6K)
+│   │   ├── SYNC_Procedure_archive_2025-12.md (3.9K)
+│   │   ├── VALIDATION_Procedure.md (6.0K)
+│   │   └── VOCABULARY_Procedure.md (6.7K)
+│   ├── schema/ (148.4K)
 │   │   ├── ALGORITHM_Schema.md (11.3K)
 │   │   ├── BEHAVIORS_Schema.md (7.7K)
 │   │   ├── GRAMMAR_Link_Synthesis.md (53.4K)
@@ -401,26 +424,26 @@
 │   ├── tools/ (57.6K)
 │   │   ├── ALGORITHM_Tools.md (6.7K)
 │   │   ├── BEHAVIORS_Tools.md (4.8K)
-│   │   ├── HEALTH_Tools.md (10.8K)
+│   │   ├── HEALTH_Tools.md (10.7K)
 │   │   ├── IMPLEMENTATION_Tools.md (7.4K)
 │   │   ├── OBJECTIVES_Tools_Goals.md (699)
 │   │   ├── PATTERNS_Tools.md (5.9K)
 │   │   ├── SYNC_Tools.md (16.3K)
 │   │   └── VALIDATION_Tools.md (5.1K)
 │   ├── ARCHITECTURE.md (4.4K)
-│   └── map.md (282.4K)
-├── mcp/ (46.1K)
+│   └── map.md (281.4K)
+├── mcp/ (57.5K)
 │   ├── tools/
 │   │   └── (..1 more files)
-│   ├── server.py (46.1K)
+│   ├── server.py (57.5K)
 │   └── (..2 more files)
-├── runtime/ (2.4M)
+├── runtime/ (2.5M)
 │   ├── actors/
 │   │   └── (..4 more files)
 │   ├── client/
 │   │   └── (..5 more files)
 │   ├── connectome/ (103.7K)
-│   │   ├── __init__.py (731) →
+│   │   ├── __init__.py (734) →
 │   │   ├── loader.py (4.8K) →
 │   │   ├── persistence.py (11.3K) →
 │   │   ├── runner.py (13.3K) →
@@ -439,12 +462,12 @@
 │   │   ├── ops/ (77.7K)
 │   │   │   ├── links.py (23.2K)
 │   │   │   ├── nodes.py (26.5K) →
-│   │   │   ├── queries.py (27.9K)
+│   │   │   ├── queries.py (28.0K)
 │   │   │   └── (..1 more files)
 │   │   └── (..1 more files)
-│   ├── infrastructure/ (242.6K)
+│   ├── infrastructure/ (242.7K)
 │   │   ├── api/ (94.5K)
-│   │   │   ├── app.py (28.0K) →
+│   │   │   ├── app.py (28.1K) →
 │   │   │   ├── graphs.py (14.9K) →
 │   │   │   ├── moments.py (17.7K)
 │   │   │   ├── playthroughs.py (24.2K) →
@@ -470,39 +493,45 @@
 │   │   │   ├── moment_processor.py (19.5K) →
 │   │   │   └── (..1 more files)
 │   │   ├── orchestration/ (50.1K)
-│   │   │   ├── __init__.py (503)
+│   │   │   ├── __init__.py (506)
 │   │   │   ├── agent_cli.py (7.0K)
 │   │   │   ├── narrator.py (6.9K) →
 │   │   │   ├── orchestrator.py (19.9K)
-│   │   │   └── world_runner.py (15.8K) →
+│   │   │   └── world_runner.py (15.9K) →
 │   │   └── tempo/ (4.2K)
 │   │       ├── tempo_controller.py (4.1K)
 │   │       └── (..1 more files)
-│   ├── ingest/ (11.5K)
-│   │   ├── files.py (11.3K) →
+│   ├── ingest/ (68.9K)
+│   │   ├── capabilities.py (12.8K) →
+│   │   ├── docs.py (36.7K) →
+│   │   ├── files.py (19.0K) →
 │   │   └── (..1 more files)
-│   ├── membrane/
-│   │   └── (..5 more files)
+│   ├── membrane/ (15.8K)
+│   │   ├── __init__.py (893)
+│   │   ├── broadcast.py (5.8K)
+│   │   ├── client.py (4.3K)
+│   │   ├── stimulus.py (4.4K)
+│   │   └── (..2 more files)
 │   ├── models/ (46.6K)
 │   │   ├── __init__.py (2.6K) →
 │   │   ├── base.py (12.6K)
 │   │   ├── links.py (12.9K)
 │   │   └── nodes.py (18.5K) →
-│   ├── physics/ (786.0K)
+│   ├── physics/ (790.8K)
 │   │   ├── archive/ (36.9K)
 │   │   │   └── tick_v1_0.py (36.9K) →
-│   │   ├── graph/ (224.1K)
-│   │   │   ├── graph_interface.py (5.1K) →
+│   │   ├── graph/ (233.7K)
 │   │   │   ├── graph_ops.py (26.5K) →
 │   │   │   ├── graph_ops_apply.py (34.5K)
 │   │   │   ├── graph_ops_links.py (23.2K)
 │   │   │   ├── graph_ops_moments.py (20.0K)
 │   │   │   ├── graph_ops_read_only_interface.py (8.8K) →
-│   │   │   ├── graph_queries.py (27.9K)
+│   │   │   ├── graph_queries.py (28.0K)
 │   │   │   ├── graph_queries_moments.py (19.5K) →
 │   │   │   ├── graph_queries_search.py (31.3K) →
 │   │   │   ├── graph_query_utils.py (14.8K) →
-│   │   │   └── (..5 more files)
+│   │   │   ├── graph_schema_cleanup.py (9.5K)
+│   │   │   └── (..6 more files)
 │   │   ├── health/ (100.1K)
 │   │   │   ├── checkers/ (43.6K)
 │   │   │   │   ├── __init__.py (1.2K) →
@@ -517,7 +546,7 @@
 │   │   │   ├── diagnostic_report_generator.py (20.6K)
 │   │   │   ├── exploration_log_checker.py (22.7K)
 │   │   │   └── (..1 more files)
-│   │   ├── phases/ (23.3K)
+│   │   ├── phases/ (23.4K)
 │   │   │   ├── completion.py (2.3K) →
 │   │   │   ├── generation.py (2.1K) →
 │   │   │   ├── link_cooling.py (2.0K) →
@@ -526,13 +555,13 @@
 │   │   │   ├── moment_interaction.py (3.1K) →
 │   │   │   ├── narrative_backflow.py (3.7K) →
 │   │   │   └── rejection.py (2.4K) →
-│   │   ├── cluster_presentation.py (36.0K)
+│   │   ├── cluster_presentation.py (36.8K)
 │   │   ├── crystallization.py (15.9K) →
 │   │   ├── energy.py (36.3K) →
-│   │   ├── exploration.py (39.0K) →
+│   │   ├── exploration.py (42.8K) →
 │   │   ├── flow.py (36.3K) →
-│   │   ├── link_vocab.py (24.2K)
-│   │   ├── subentity.py (40.1K)
+│   │   ├── nature.py (14.1K)
+│   │   ├── subentity.py (39.7K)
 │   │   ├── synthesis.py (19.6K) →
 │   │   ├── synthesis_unfold.py (16.1K)
 │   │   ├── traversal_logger.py (52.3K)
@@ -550,89 +579,13 @@
 │   ├── cluster_metrics.py (31.4K)
 │   ├── doctor_checks_content.py (31.2K) →
 │   ├── doctor_graph.py (93.8K) →
-│   ├── init_cmd.py (31.3K) →
 │   ├── procedure_runner.py (45.9K)
+│   ├── status_cmd.py (31.1K) →
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── work_core.py (39.4K) →
-│   ├── work_instructions.py (31.2K) →
+│   ├── work_instructions.py (31.1K) →
 │   ├── work_verification.py (37.8K) →
-│   └── (..43 more files)
-├── templates/ (258.2K)
-│   ├── runtime/ (251.3K)
-│   │   ├── agents/ (47.9K)
-│   │   │   ├── architect/ (4.9K)
-│   │   │   │   ├── AGENTS.md (1.1K)
-│   │   │   │   ├── CLAUDE.md (2.9K)
-│   │   │   │   └── GEMINI.md (944)
-│   │   │   ├── fixer/ (4.5K)
-│   │   │   │   ├── AGENTS.md (997)
-│   │   │   │   ├── CLAUDE.md (2.6K)
-│   │   │   │   └── GEMINI.md (858)
-│   │   │   ├── groundwork/ (4.6K)
-│   │   │   │   ├── AGENTS.md (1.0K)
-│   │   │   │   ├── CLAUDE.md (2.7K)
-│   │   │   │   └── GEMINI.md (890)
-│   │   │   ├── herald/ (4.8K)
-│   │   │   │   ├── AGENTS.md (1.1K)
-│   │   │   │   ├── CLAUDE.md (2.7K)
-│   │   │   │   └── GEMINI.md (910)
-│   │   │   ├── keeper/ (4.8K)
-│   │   │   │   ├── AGENTS.md (1.1K)
-│   │   │   │   ├── CLAUDE.md (2.8K)
-│   │   │   │   └── GEMINI.md (925)
-│   │   │   ├── scout/ (4.7K)
-│   │   │   │   ├── AGENTS.md (1.1K)
-│   │   │   │   ├── CLAUDE.md (2.7K)
-│   │   │   │   └── GEMINI.md (939)
-│   │   │   ├── steward/ (5.2K)
-│   │   │   │   ├── AGENTS.md (1.1K)
-│   │   │   │   ├── CLAUDE.md (3.0K)
-│   │   │   │   └── GEMINI.md (1.1K)
-│   │   │   ├── voice/ (4.6K)
-│   │   │   │   ├── AGENTS.md (1.0K)
-│   │   │   │   ├── CLAUDE.md (2.7K)
-│   │   │   │   └── GEMINI.md (868)
-│   │   │   ├── weaver/ (4.6K)
-│   │   │   │   ├── AGENTS.md (1.0K)
-│   │   │   │   ├── CLAUDE.md (2.7K)
-│   │   │   │   └── GEMINI.md (861)
-│   │   │   └── witness/ (5.2K)
-│   │   │       ├── AGENTS.md (1.2K)
-│   │   │       ├── CLAUDE.md (3.1K)
-│   │   │       └── GEMINI.md (980)
-│   │   ├── skills/ (123.3K)
-│   │   │   ├── SKILL_Add_Cluster_Dynamic_Creation.md (26.3K)
-│   │   │   ├── SKILL_Assess_SubEntity_Exploration_Quality_From_Logs.md (14.1K)
-│   │   │   ├── SKILL_Author_Procedures_Design_And_Structure.md (20.5K)
-│   │   │   ├── SKILL_Author_Skills_Structure_And_Quality.md (4.4K)
-│   │   │   ├── SKILL_Author_agents_cognitive_posture.md (9.1K)
-│   │   │   ├── SKILL_Create_Module_Documentation_Chain_From_Templates_And_Seed_Todos.md (3.4K)
-│   │   │   ├── SKILL_Define_And_Verify_Health_Signals_Mapped_To_Validation_Invariants.md (3.7K)
-│   │   │   ├── SKILL_Define_Module_Boundaries_Objectives_And_Scope.md (4.3K)
-│   │   │   ├── SKILL_Ingest_Docs_To_Graph_And_Archive.md (4.3K)
-│   │   │   ├── SKILL_Orchestrate_Feature_Integration_Pipeline_Orchestrator_And_Progress_Router.md (3.5K)
-│   │   │   └── (..11 more files)
-│   │   ├── state/ (2.3K)
-│   │   │   ├── SYNC_Project_State.md (2.1K)
-│   │   │   └── (..1 more files)
-│   │   ├── templates/ (48.1K)
-│   │   │   ├── ALGORITHM_TEMPLATE.md (2.7K)
-│   │   │   ├── BEHAVIORS_TEMPLATE.md (2.9K)
-│   │   │   ├── HEALTH_TEMPLATE.md (14.9K)
-│   │   │   ├── IMPLEMENTATION_TEMPLATE.md (8.8K)
-│   │   │   ├── MAPPING_TEMPLATE.md (2.7K)
-│   │   │   ├── PATTERNS_TEMPLATE.md (2.9K)
-│   │   │   ├── SYNC_TEMPLATE.md (3.1K)
-│   │   │   ├── TAXONOMY_TEMPLATE.md (1.7K)
-│   │   │   ├── VALIDATION_TEMPLATE.md (2.0K)
-│   │   │   ├── VOCABULARY_TEMPLATE.md (1.7K)
-│   │   │   └── (..4 more files)
-│   │   ├── FRAMEWORK.md (19.7K)
-│   │   └── PRINCIPLES.md (10.0K)
-│   ├── CODEX_SYSTEM_PROMPT_ADDITION.md (3.2K)
-│   ├── GEMINI_SYSTEM_PROMPT_ADDITION.md (2.4K)
-│   ├── mindignore (839)
-│   └── (..1 more files)
+│   └── (..44 more files)
 ├── tests/
 │   ├── graph/
 │   │   └── (..3 more files)
@@ -642,9 +595,9 @@
 │   │   └── (..2 more files)
 │   └── (..1 more files)
 ├── .mindignore (838)
-├── AGENTS.md (29.8K)
+├── AGENTS.md (29.9K)
 ├── README.md (3.2K)
-└── map.md (282.4K)
+└── map.md (281.4K)
 ```
 
 **Definitions:**
@@ -660,14 +613,16 @@
 **Definitions:**
 - `def check_mind_status()`
 - `def _check_embedding_config()`
+- `def _check_graph_health()`
+
+**Definitions:**
+- `def copy_capabilities()`
 
 **Definitions:**
 - `def _is_protected()`
+- `def _is_excluded()`
 - `def copy_ecosystem_templates()`
-
-**Definitions:**
-- `def copy_runtime_package()`
-- `def should_skip()`
+- `def ignore_excluded()`
 
 **Definitions:**
 - `def create_ai_config_files()`
@@ -861,9 +816,9 @@
 - ## MARKERS
 
 **Code refs:**
+- `narrator/prompt_builder.py`
 - `runtime/infrastructure/orchestration/agent_cli.py`
 - `runtime/infrastructure/orchestration/narrator.py`
-- `narrator/prompt_builder.py`
 - `tools/stream_dialogue.py`
 
 **Doc refs:**
@@ -1513,7 +1468,6 @@
 
 **Doc refs:**
 - `docs/cli/core/SYNC_CLI_Development_State.md`
-- `docs/mcp-design/archive/SYNC_Archive_2024-12.md`
 
 **Sections:**
 - # Archived: SYNC_CLI_State.md
@@ -1671,6 +1625,7 @@
 - ## FUTURE INVARIANTS (PROPOSED)
 
 **Code refs:**
+- `mind/prompt.py`
 - `runtime/cli.py`
 - `runtime/prompt.py`
 
@@ -1691,7 +1646,7 @@
 - ## MARKERS
 
 **Code refs:**
-- `runtime/prompt.py`
+- `mind/prompt.py`
 
 **Doc refs:**
 - `data/MIND Documentation Chain Pattern (Draft “Marco”).md`
@@ -1706,7 +1661,7 @@
 - ## MARKERS
 
 **Code refs:**
-- `runtime/prompt.py`
+- `mind/prompt.py`
 
 **Sections:**
 - # CLI Prompt — Health: Runtime verification of bootstrap guidance
@@ -1728,6 +1683,7 @@
 - ## MARKERS
 
 **Code refs:**
+- `mind/prompt.py`
 - `runtime/cli.py`
 - `runtime/prompt.py`
 
@@ -1753,6 +1709,7 @@
 
 **Code refs:**
 - `agent_cli.py`
+- `mind/prompt.py`
 - `runtime/prompt.py`
 
 **Doc refs:**
@@ -1776,7 +1733,6 @@
 **Doc refs:**
 - `docs/cli/core/SYNC_CLI_Development_State.md`
 - `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
-- `docs/mcp-design/HEALTH_Protocol_Verification.md`
 
 **Sections:**
 - # CLI Prompt Module — Sync: Current State
@@ -1792,12 +1748,11 @@
 - ## POINTERS
 
 **Code refs:**
-- `runtime/prompt.py`
+- `mind/prompt.py`
 
 **Doc refs:**
 - `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
 - `docs/cli/prompt/SYNC_Prompt_Command_State.md`
-- `docs/mcp-design/HEALTH_Protocol_Verification.md`
 
 **Sections:**
 - # CLI Prompt — Validation: Bootstrap prompt invariants
@@ -1819,7 +1774,7 @@
 - ## Phase 4: Test Inference
 - # TESTS: function_name, other_func
 - ## Phase 5: Docs Linking
-- # DOCS: docs/runtime/PATTERNS_Engine.md
+- # DOCS: docs/mind/PATTERNS_Engine.md
 - ## Graph Upsert
 - ## Complexity Calculation
 - ## ID Patterns
@@ -1863,6 +1818,7 @@
 **Code refs:**
 - `cli.py`
 - `doctor.py`
+- `mind/cli.py`
 - `runtime/cli.py`
 - `runtime/doctor.py`
 - `runtime/repair.py`
@@ -1891,6 +1847,9 @@
 - ## CHECKS
 
 **Code refs:**
+- `mind/cli.py`
+- `mind/prompt.py`
+- `mind/repair.py`
 - `runtime/cli.py`
 - `runtime/context.py`
 - `runtime/core_utils.py`
@@ -1953,8 +1912,6 @@
 - `docs/cli/core/VALIDATION_CLI_Instruction_Invariants.md`
 - `docs/cli/prompt/PATTERNS_Prompt_Command_Workflow_Design.md`
 - `docs/cli/prompt/SYNC_Prompt_Command_State.md`
-- `docs/mcp-design/doctor/PATTERNS_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/SYNC_Project_Health_Doctor.md`
 
 **Sections:**
 - # CLI Modules
@@ -2065,7 +2022,7 @@
 - # In runtime/doctor.py
 - # Extract structure from all docs
 - # Continue with health checks...
-- # In runtime/cli.py
+- # In mind/cli.py
 - ## Graph Queries
 - ## Entry Points
 - ## Related
@@ -2097,7 +2054,7 @@
 - `runtime/doc_extractor.py`
 - `runtime/physics/graph/graph_ops.py`
 - `runtime/symbol_extractor.py`
-- `tests/runtime/test_cluster_builder.py`
+- `tests/mind/test_cluster_builder.py`
 
 **Sections:**
 - # SYNC: Dense Clustering
@@ -2137,7 +2094,7 @@
 - ## SEE ALSO
 
 **Code refs:**
-- `runtime/core_utils.py`
+- `mind/core_utils.py`
 
 **Sections:**
 - # Core Utils — Algorithm: Template Path Resolution and Doc Discovery
@@ -2154,7 +2111,7 @@
 - ## MARKERS
 
 **Code refs:**
-- `runtime/core_utils.py`
+- `mind/core_utils.py`
 
 **Sections:**
 - # Core Utils — Behaviors: Template Path Resolution and Docs Discovery
@@ -2182,6 +2139,7 @@
 - ## MARKERS
 
 **Code refs:**
+- `mind/core_utils.py`
 - `runtime/core_utils.py`
 
 **Doc refs:**
@@ -2211,6 +2169,7 @@
 - ## SUCCESS SIGNALS (observable)
 
 **Code refs:**
+- `mind/core_utils.py`
 - `runtime/core_utils.py`
 
 **Sections:**
@@ -2227,6 +2186,7 @@
 
 **Code refs:**
 - `core_utils.py`
+- `mind/core_utils.py`
 - `runtime/core_utils.py`
 - `utils.py`
 
@@ -2251,6 +2211,7 @@
 - ## GAPS
 
 **Code refs:**
+- `mind/core_utils.py`
 - `runtime/core_utils.py`
 
 **Sections:**
@@ -2333,8 +2294,8 @@
 - `runtime/physics/tick.py`
 
 **Doc refs:**
-- `docs/runtime/moments/PATTERNS_Moments.md`
 - `docs/physics/PATTERNS_Physics.md`
+- `docs/runtime/moments/PATTERNS_Moments.md`
 
 **Sections:**
 - # Engine — Patterns: Membrane Modulation (Pre-Runtime Field Shaping)
@@ -2370,11 +2331,11 @@
 - ## MARKERS
 
 **Doc refs:**
+- `docs/physics/attention/PATTERNS_Attention_Energy_Split.md`
 - `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
 - `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
-- `docs/physics/attention/PATTERNS_Attention_Energy_Split.md`
 
 **Sections:**
 - # Membrane Modulation — Sync: Current State
@@ -2445,8 +2406,8 @@
 - `runtime/models/nodes.py`
 
 **Doc refs:**
-- `docs/runtime/models/PATTERNS_Models.md`
-- `docs/runtime/models/VALIDATION_Models.md`
+- `docs/mind/models/PATTERNS_Models.md`
+- `docs/mind/models/VALIDATION_Models.md`
 - `docs/schema/models/PATTERNS_Pydantic_Schema_Models.md`
 
 **Sections:**
@@ -2488,14 +2449,14 @@
 - ## MARKERS
 
 **Code refs:**
+- `nodes.py`
 - `runtime/models/base.py`
 - `runtime/models/links.py`
 - `runtime/models/nodes.py`
-- `nodes.py`
 
 **Doc refs:**
-- `docs/runtime/models/HEALTH_Models.md`
-- `docs/runtime/models/PATTERNS_Models.md`
+- `docs/mind/models/HEALTH_Models.md`
+- `docs/mind/models/PATTERNS_Models.md`
 
 **Sections:**
 - # Data Models — Sync: Current State
@@ -2920,7 +2881,7 @@
 - ## DATA FLOW
 - ## STATE MANAGEMENT
 - ## CONFIGURATION
-- # runtime/data/config/improvement_config.yaml
+- # mind/data/config/improvement_config.yaml
 - # Trigger thresholds
 - # Observation
 - # Validation
@@ -2930,7 +2891,7 @@
 - # Meta
 - ## DEPENDENCIES
 - ## BIDIRECTIONAL LINKS
-- # runtime/improvement/loop.py:1
+- # mind/improvement/loop.py:1
 - ## TESTS
 - ## IMPLEMENTATION ORDER
 
@@ -3332,7 +3293,7 @@
 - # Factory creates the right adapter based on config
 - # All consumers use the same interface
 - ## DESIGN DECISIONS
-- # .runtime/database_config.yaml
+- # .mind/database_config.yaml
 - # Neo4j can run as-is
 - # May need to rewrite some patterns
 - # Backend-specific implementation
@@ -3372,7 +3333,7 @@
 - ## PRINCIPLES
 - # Current (wrong)
 - # Target (right)
-- # runtime/data/physics_config.yaml
+- # mind/data/physics_config.yaml
 - ## DEPENDENCIES
 - ## SCOPE
 - ## REQUIRED CHANGES INVENTORY
@@ -3384,13 +3345,13 @@
 - `adapter.py`
 - `factory.py`
 - `falkordb_adapter.py`
+- `neo4j_adapter.py`
 - `runtime/connectome/persistence.py`
 - `runtime/connectome/session.py`
 - `runtime/infrastructure/api/graphs.py`
 - `runtime/init_db.py`
 - `runtime/physics/graph/graph_ops.py`
 - `runtime/physics/graph/graph_queries.py`
-- `neo4j_adapter.py`
 
 **Sections:**
 - # DatabaseAdapter — Sync
@@ -3410,6 +3371,8 @@
 - `graph_ops.py`
 - `graph_ops_read_only_interface.py`
 - `graph_queries.py`
+- `mock_adapter.py`
+- `neo4j_adapter.py`
 - `runtime/connectome/persistence.py`
 - `runtime/connectome/runner.py`
 - `runtime/connectome/steps.py`
@@ -3438,8 +3401,6 @@
 - `runtime/physics/graph/graph_queries_moments.py`
 - `runtime/physics/graph/graph_queries_search.py`
 - `runtime/physics/tick_v1_2.py`
-- `mock_adapter.py`
-- `neo4j_adapter.py`
 
 **Sections:**
 - # SYNC — Database Adapter
@@ -3575,11 +3536,11 @@
 - ## ARCHIVE
 
 **Code refs:**
+- `moment_processor.py`
 - `runtime/infrastructure/memory/__init__.py`
 - `runtime/infrastructure/memory/moment_processor.py`
 - `runtime/models/nodes.py`
 - `runtime/tests/test_moment.py`
-- `moment_processor.py`
 
 **Sections:**
 - # Archived: SYNC_Scene_Memory.md
@@ -3610,8 +3571,8 @@
 - ## Agent Observations
 
 **Code refs:**
+- `mind/tests/test_moment.py`
 - `runtime/tests/test_e2e_moment_graph.py`
-- `runtime/tests/test_moment.py`
 - `runtime/tests/test_moment_graph.py`
 - `runtime/tests/test_moment_lifecycle.py`
 - `runtime/tests/test_moments_api.py`
@@ -3819,7 +3780,7 @@
 
 **Code refs:**
 - `gemini_agent.py`
-- `runtime/llms/gemini_agent.py`
+- `mind/llms/gemini_agent.py`
 
 **Doc refs:**
 - `docs/cli/HEALTH_CLI_Coverage.md`
@@ -3847,6 +3808,7 @@
 **Code refs:**
 - `agent_cli.py`
 - `gemini_agent.py`
+- `mind/llms/gemini_agent.py`
 - `runtime/agent_cli.py`
 - `runtime/llms/gemini_agent.py`
 - `runtime/llms/tool_helpers.py`
@@ -3878,7 +3840,7 @@
 
 **Code refs:**
 - `agent_cli.py`
-- `runtime/llms/gemini_agent.py`
+- `mind/llms/gemini_agent.py`
 
 **Sections:**
 - # mind LLM Agents — Patterns: Provider-Specific LLM Subprocesses
@@ -3965,50 +3927,427 @@
 - ## SYNC STATUS
 - ## MARKERS
 
+**Doc refs:**
+- `templates/CLAUDE_ADDITION.md`
+- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
+
+**Sections:**
+- # mind Framework — Algorithm: Overview
+- ## CHAIN
+- ## OVERVIEW
+- ## CONTENTS
+- ## ALGORITHM: Install Protocol in Project
+- ## ALGORITHM: Agent Starts Task
+- ## ALGORITHM: Create New Module
+- ## ALGORITHM: Modify Existing Module
+- ## ALGORITHM: Document Cross-Cutting Concept
+- ## NOTES
+
+**Doc refs:**
+- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
+
+**Sections:**
+- # mind Framework — Implementation: Overview
+- ## CHAIN
+- ## OVERVIEW
+- ## FILE STRUCTURE
+- ## SCHEMAS AND CONFIG
+- ## FLOWS AND LINKS
+- # DOCS: docs/{area}/{module}/PATTERNS_*.md
+
+**Sections:**
+- # ALGORITHM: Project Health Doctor
+- ## OVERVIEW
+- ## ID CONVENTION
+- # Issues
+- # Objectives
+- # Tasks
+- # Spaces (modules)
+- # Things (files)
+- # Semantic links (with role name)
+- # Structural links
+- ## MAIN FLOW
+- ## 1. FETCH OBJECTIVES
+- # Example: narrative_OBJECTIVE_engine-physics-documented
+- # Objective-specific fields
+- ## 2. SURFACE ISSUES
+- # ... etc
+- # Each failure becomes an issue
+- # TEST_FAILED, TEST_ERROR, TEST_TIMEOUT
+- # Each failure becomes an issue
+- # HEALTH_FAILED, INVARIANT_VIOLATED
+- # Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
+- ## {ISSUE_TYPE}
+- # Issue-specific fields
+- # Space contains Issue
+- # Issue relates to Thing (file)
+- # Update: severity, message, detected_at, status=open
+- # Create new with links
+- ## 3. TRAVERSE UP
+- # Step 1: Find Space
+- # ID: space_MODULE_{module}
+- # Step 2: Check doc chain exists
+- # Step 3: Find objective
+- # ID: narrative_OBJECTIVE_{module}-{type}
+- # → narrative_OBJECTIVE_engine-physics-documented
+- # Determine outcome
+- ## 4. CREATE TASKS
+- # Example: narrative_TASK_serve-engine-physics-documented_01
+- ## Task: Serve documented for engine-physics
+- # Task-specific fields
+- # Task serves Objective (direction: support)
+- # Task includes Issue (direction: subsume)
+- # Issue blocks Objective (direction: oppose)
+- # Group by outcome
+- # SERVE tasks: group by objective, split if > MAX
+- # Create links
+- # RECONSTRUCT tasks: one per module with gaps
+- # TRIAGE tasks: one per orphan module
+- ## 5. OUTPUT
+- ## OBJECTIVE → SKILL MAPPING
+- ## ISSUE TYPE → OBJECTIVE MAPPING
+- ## CLI INTEGRATION
+- # Basic doctor (static only)
+- # With tests
+- # With health checks
+- # Full (static + tests + health)
+- # Output formats
+- # Show tasks only
+- ## AUTO-RESOLVE
+- ## CHAIN
+
+**Sections:**
+- # BEHAVIORS: Project Health Doctor
+- ## COMMAND INTERFACE
+- # Basic health check
+- # With specific directory
+- # Output formats
+- # Filter by severity
+- # Specific checks
+- ## HEALTH CHECKS
+- ## SPECIAL MARKERS
+- ## OUTPUT BEHAVIOR
+- ## Critical (2 issues)
+- ## Warnings (3 issues)
+- ## Info (3 issues)
+- ## Suggested Actions
+- ## GUIDED REMEDIATION
+- ## Current State
+- ## Recommended Steps
+- # DOCS: docs/api/PATTERNS_Api_Design.md
+- ## Template Commands
+- # Generate PATTERNS from template
+- ## Reference
+- ## EXIT CODES
+- ## CONFIGURATION
+- # Thresholds
+- # Ignore patterns
+- # Disable specific checks
+- # Custom severity overrides
+- ## FALSE POSITIVE SUPPRESSION
+- ## DOC TEMPLATE DRIFT DEFERMENTS
+- ## NON-STANDARD DOC TYPE DEFERMENTS
+- ## RESOLVED ESCALATION MARKERS
+- ## MARKER STANDARDIZATION
+- ## CHAIN
+
+**Code refs:**
+- `doctor_checks.py`
+- `doctor_report.py`
+- `runtime/doctor.py`
+
+**Doc refs:**
+- `docs/tui/HEALTH_TUI_Coverage.md`
+
+**Sections:**
+- # Project Health Doctor — Health: Verification Mechanics and Coverage
+- ## PURPOSE OF THIS FILE
+- ## WHY THIS PATTERN
+- ## CHAIN
+- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
+- ## HEALTH INDICATORS SELECTED
+- ## STATUS (RESULT INDICATOR)
+- ## DOCK TYPES (COMPLETE LIST)
+- ## CHECKER INDEX
+- ## INDICATOR: Score Sanity
+- ## HOW TO RUN
+- # Run all doctor checks on the current project
+- # Run with JSON output for machine parsing
+- ## KNOWN GAPS
+- ## MARKERS
+
+**Code refs:**
+- `runtime/doctor.py`
+- `runtime/doctor_checks.py`
+- `runtime/doctor_checks_content.py`
+- `runtime/doctor_checks_core.py`
+- `runtime/doctor_checks_docs.py`
+- `runtime/doctor_checks_metadata.py`
+- `runtime/doctor_checks_naming.py`
+- `runtime/doctor_checks_prompt_integrity.py`
+- `runtime/doctor_checks_quality.py`
+- `runtime/doctor_checks_reference.py`
+- `runtime/doctor_checks_stub.py`
+- `runtime/doctor_checks_sync.py`
+- `runtime/doctor_files.py`
+
+**Sections:**
+- # Project Health Doctor — Implementation: Code architecture and docking
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## DATA FLOW
+- ## DOC-LINK COMPLIANCE
+- ## LOCATIONS
+- ## GAPS / IDEAS
+
+**Sections:**
+- # PATTERNS: Project Health Doctor
+- ## THE PROBLEM
+- ## THE INSIGHT
+- ## DESIGN DECISIONS
+- ## WHAT WE CHECK
+- ## WHAT WE DON'T CHECK
+- ## ALTERNATIVES CONSIDERED
+- ## CHAIN
+
+**Code refs:**
+- `doctor.py`
+- `runtime/doctor_checks.py`
+
+**Sections:**
+- # SYNC: Project Health Doctor
+- ## CURRENT STATE
+- ## IMPLEMENTATION ORDER
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## GAPS
+- ## CHAIN
+- ## ARCHIVE
+
+**Code refs:**
+- `runtime/doctor.py`
+- `runtime/solve_escalations.py`
+
+**Doc refs:**
+- `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
+- `docs/cli/prompt/SYNC_Prompt_Command_State.md`
+
+**Sections:**
+- # Archived: SYNC_Project_Health_Doctor.md
+- ## MATURITY
+- ## TODO
+- ## NEW MARKERS (2025-12-29 Review)
+
+**Sections:**
+- # VALIDATION: Project Health Doctor
+- ## INVARIANTS
+- ## CHECK CORRECTNESS
+- ## OUTPUT FORMAT CORRECTNESS
+- ## EDGE CASES
+- ## PERFORMANCE BOUNDS
+- ## VERIFICATION COMMANDS
+- # Verify determinism
+- # Verify exit codes
+- # Verify JSON validity
+- # Verify ignore patterns
+- ## CHAIN
+
+**Sections:**
+- # Agent Trace Logging — Behaviors: Observable Effects
+- ## CHAIN
+- ## COMMANDS
+- ## AUTOMATIC TRACING
+- ## TRACE FILE FORMAT
+- ## INTEGRATION POINTS
+- ## Usage (auto-generated)
+- ## WHAT GETS TRACED
+- ## WHAT DOESN'T GET TRACED
+
+**Sections:**
+- # Agent Trace Logging — Patterns: Why This Design
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE INSIGHT
+- ## DESIGN DECISIONS
+- ## WHAT THIS ENABLES
+- ## TRADEOFFS
+- ## ALTERNATIVES CONSIDERED
+- ## OPEN QUESTIONS
+
+**Code refs:**
+- `runtime/cli.py`
+
+**Sections:**
+- # Agent Trace Logging — Sync: Current State
+- ## MATURITY
+- ## CURRENT STATE
+- ## IMPLEMENTATION PLAN
+- ## HANDOFF: FOR AGENTS
+- ## TODO
+- ## OPEN QUESTIONS
+- ## MARKERS
+
+**Sections:**
+- # mind Framework — Algorithm: Overview
+- ## CHAIN
+- ## ENTRY POINT
+
+**Sections:**
+- # mind Framework — Behaviors: Observable Protocol Effects
+- ## CHAIN
+- ## BEHAVIORS
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Code refs:**
+- `mind/validate.py`
+- `runtime/prompt.py`
+
+**Doc refs:**
+- `docs/cli/HEALTH_CLI_Coverage.md`
+
+**Sections:**
+- # mind Framework — Health: Protocol Verification and Mechanics
+- ## PURPOSE OF THIS FILE
+- ## WHY THIS PATTERN
+- ## CHAIN
+- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
+- ## HEALTH INDICATORS SELECTED
+- ## STATUS (RESULT INDICATOR)
+- ## DOCK TYPES (COMPLETE LIST)
+- ## CHECKER INDEX
+- ## INDICATOR: Chain Completeness
+- ## HOW TO RUN
+- # Verify protocol health for the current project
+- # Verify a specific module
+- ## KNOWN GAPS
+- ## MARKERS
+
+**Sections:**
+- # mind Framework — Implementation: Overview
+- ## CHAIN
+- ## ENTRY POINT
+
+**Sections:**
+- # OBJECTIVES — Protocol
+- ## PRIMARY OBJECTIVES (ranked)
+- ## NON-OBJECTIVES
+- ## TRADEOFFS (canonical decisions)
+- ## SUCCESS SIGNALS (observable)
+
+**Sections:**
+- # mind Framework — Patterns: Bidirectional Documentation Chain for AI Agent Workflows
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## PRINCIPLES
+- # Descriptive names
+- # Not
+- ## DEPENDENCIES
+- ## INSPIRATIONS
+- ## WHAT THIS DOES NOT SOLVE
+- ## MARKERS
+
+**Code refs:**
+- `runtime/cli.py`
+
+**Doc refs:**
+- `archive/SYNC_archive_2024-12.md`
+- `templates/CLAUDE_ADDITION.md`
+- `templates/mind/PRINCIPLES.md`
+- `templates/mind/PROTOCOL.md`
+
+**Sections:**
+- # mind Framework — Sync: Current State
+- ## MATURITY
+- ## CURRENT STATE
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## STRUCTURE
+- ## POINTERS
+- ## ARCHIVE
+- ## Agent Observations
+- ## GAPS
+- ## ARCHIVE
+
+**Sections:**
+- # Archived: SYNC_Protocol_Current_State.md
+- ## NEW MARKERS (2025-12-29 Review)
+
+**Code refs:**
+- `scripts/check_chain_links.py`
+- `scripts/check_doc_completeness.py`
+- `scripts/check_doc_refs.py`
+- `scripts/check_orphans.py`
+
+**Sections:**
+- # mind Framework — Validation: Protocol Invariants
+- ## CHAIN
+- ## INVARIANTS
+- ## PROPERTIES
+- ## ERROR CONDITIONS
+- ## HEALTH COVERAGE
+- ## VERIFICATION PROCEDURE
+- # Check all invariants
+- # Check specific invariant
+- # Check specific module
+- ## SYNC STATUS
+- ## MARKERS
+
 **Sections:**
 - # ALGORITHM: MCP Tools
-- ## Doctor Algorithm
-- # Membrane executes the protocol
-- # Agent answers with skill knowledge in context
-- ## Membrane Session Algorithm
-- # Check dependencies
+- ## graph_query Algorithm
+- # Derive context automatically
+- # Process queries in parallel
+- # Create embedding for query
+- # Search local graph by similarity
+- # Expand to connected nodes if requested
+- ## membrane_query Algorithm
+- # Connect to membrane graph (hardcoded endpoint)
+- # Search membrane graph (public nodes only)
+- # Each match includes org_id
+- ## vector_search Algorithm
+- # Get all nodes with embeddings
+- # Apply filter if specified
+- # Calculate cosine similarity
+- # Sort by score descending
+- # Return top k
+- ## procedure_start Algorithm
+- # Load procedure definition
+- # Create session
+- # Return first step
+- ## procedure_continue Algorithm
 - # Validate answer
 - # Store answer
-- # Create moment for this answer
-- # Move to next step
-- ## Step Execution Algorithm
-- # Multi-case branch
-- # Binary branch
-- # Push current session onto stack
-- # Start sub-protocol with merged context
-- ## Protocol Completion Algorithm
-- # Top-level protocol complete
-- # Pop caller from stack
-- # Context preserved (sub-protocol may have added to it)
-- ## Cluster Creation Algorithm
-- # Create nodes
-- # Create links
-- # Commit to graph
-- ## Query Execution Algorithm
-- ## Moment Creation Algorithm
-- # Agent provides description/reasoning based on moment_spec.agent_provides
-- # Create links
-- ## Validation Algorithm
-- ## Context Enrichment Algorithm
-- # Agent can query graph during any ask step
+- # Advance to next step
+- # Check if complete
+- # Return next step
+- ## doctor_check Algorithm
+- # Run health checks based on depth
+- # Auto-fix small schema issues
+- # Assign agents to remaining issues
+- ## agent_spawn Algorithm
+- # Determine agent
+- # Check availability
+- # Set running
+- # Execute
+- # Set ready
+- ## Embedding Algorithm
+- # Use configured embedding service
+- # Default: all-mpnet-base-v2, 768 dimensions
 - ## CHAIN
 
 **Sections:**
 - # BEHAVIORS: MCP Tools
-- ## Doctor Behaviors
-- ## Skill Behaviors
-- ## Protocol Behaviors
-- ## Membrane Behaviors
-- ## Graph Output Behaviors
-- ## Session Behaviors
+- ## Query Tool Behaviors
+- ## Procedure Tool Behaviors
+- ## Agent Tool Behaviors
+- ## Task Tool Behaviors
+- ## Doctor Tool Behaviors
+- ## What Agents Cannot Do
 - ## Error Behaviors
-- ## Behavior Matrix: Membrane × Output
-- ## MARKERS
 - ## CHAIN
 
 **Code refs:**
@@ -4037,30 +4376,22 @@
 **Code refs:**
 - `mcp/server.py`
 - `runtime/connectome/runner.py`
-- `runtime/connectome/session.py`
 - `runtime/connectome/steps.py`
-- `runtime/connectome/templates.py`
 - `runtime/connectome/validation.py`
-- `test_loader.py`
-- `test_runner.py`
-- `test_session.py`
-- `test_steps.py`
-- `test_validation.py`
+- `runtime/physics/exploration.py`
+- `runtime/physics/subentity.py`
 
 **Sections:**
 - # IMPLEMENTATION: MCP Tools
 - ## Code Structure
 - ## Key Components
-- # Doctor loads skill, provides to agent
-- # Agent has skill knowledge when answering protocol questions
 - ## Data Flow
 - ## Configuration
-- ## Membrane YAML Location
-- ## Protocol YAML
 - ## Extension Points
 - ## Tests
-- # Run connectome tests (if they exist)
+- # Run exploration tests
 - # Run MCP server tests
+- # Run procedure tests
 - ## CHAIN
 
 **Sections:**
@@ -4075,6 +4406,7 @@
 - ## Adding New Issue Types
 
 **Code refs:**
+- `mind/repair_verification.py`
 - `runtime/repair_verification.py`
 
 **Sections:**
@@ -4084,35 +4416,6 @@
 - ## DETAILED CHECKS
 - ## GLOBAL CHECKS (all issue types)
 - ## MARKERS
-
-**Sections:**
-- # PATTERNS: MCP Tools
-- ## Core Patterns
-- ## Architecture
-- ## Skill Format (Markdown)
-- # {Skill Name} Skill
-- ## Domain
-- ## When to Use Which Protocol
-- ## Process
-- ## Patterns
-- ## Anti-Patterns
-- ## Queries to Run
-- ## Examples
-- ## Protocol Format (YAML)
-- # ASK - get input from agent
-- # type-specific constraints
-- # QUERY - load data from graph
-- # BRANCH - conditional routing
-- # OR for multi-case:
-- # CALL_PROTOCOL - invoke sub-protocol
-- # CREATE - build cluster
-- # fields...
-- # fields...
-- ## Anti-Patterns
-- ## Skills (v1)
-- ## Protocols (v1)
-- ## Query Language
-- ## CHAIN
 
 **Sections:**
 - # Skills and Protocols Mapping
@@ -4129,11 +4432,11 @@
 - `doctor_checks.py`
 - `engine/connectome/persistence.py`
 - `engine/connectome/schema.py`
+- `repair_verification.py`
 - `runtime/doctor_checks_membrane.py`
 - `runtime/repair.py`
 - `runtime/repair_core.py`
 - `runtime/repair_verification.py`
-- `repair_verification.py`
 - `tools/coverage/validate.py`
 
 **Sections:**
@@ -4150,7 +4453,7 @@
 - ## Next Steps
 
 **Code refs:**
-- `runtime/repair_verification.py`
+- `mind/repair_verification.py`
 
 **Sections:**
 - # VALIDATION: Completion Verification System
@@ -4163,6 +4466,17 @@
 - ## VERIFICATION FAILED
 - ## IMPLEMENTATION NOTES
 - ## MARKERS
+
+**Sections:**
+- # VALIDATION: MCP Tools
+- ## Query Invariants
+- ## Procedure Invariants
+- ## Graph Invariants
+- ## Agent Invariants
+- ## Doctor Invariants
+- ## SubEntity Invariants
+- ## Error Conditions
+- ## CHAIN
 
 **Doc refs:**
 - `docs/physics/ALGORITHM_Physics.md`
@@ -4682,9 +4996,9 @@
 - `runtime/physics/tick.py`
 
 **Doc refs:**
+- `docs/physics/PATTERNS_Physics.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
 - `docs/runtime/moments/PATTERNS_Moments.md`
-- `docs/physics/PATTERNS_Physics.md`
 
 **Sections:**
 - # Physics — Patterns: Attention Energy Split (Focus Redistribution as Physics)
@@ -4934,6 +5248,7 @@
 - `graph_ops.py`
 - `graph_ops_events.py`
 - `graph_ops_types.py`
+- `orchestrator.py`
 - `runtime/infrastructure/api/app.py`
 - `runtime/infrastructure/canon/canon_holder.py`
 - `runtime/infrastructure/orchestration/narrator.py`
@@ -4945,7 +5260,6 @@
 - `runtime/physics/graph/graph_ops_types.py`
 - `runtime/physics/graph/graph_queries_moments.py`
 - `runtime/physics/tick.py`
-- `orchestrator.py`
 - `tick.py`
 
 **Doc refs:**
@@ -5226,16 +5540,131 @@
 - ## VALIDATION HOOKS
 
 **Sections:**
+- # Nature — Algorithm
+- ## CHAIN
+- ## CORE ALGORITHM
+- # Step 1: Normalize
+- # Step 2: Split on comma for post-modifiers
+- # Step 3: Find verb (longest match first)
+- # Step 4: Extract pre-modifiers
+- # Start with defaults
+- # Layer 1: Apply verb
+- # Layer 2: Apply pre-modifiers
+- # Layer 3: Apply post-modifiers
+- # Layer 4: Check weight annotations
+- # intensity: -1 (attenuated) to +1 (intensified)
+- # Combine permanence and energy into intensity
+- ## DATA STRUCTURES
+- # ↑ attenuated  ↑ intensified
+- ## COMPLEXITY
+
+**Sections:**
+- # Nature — Behaviors
+- ## CHAIN
+- ## OBSERVABLE BEHAVIORS
+- # Nature Reference
+- # nature.yaml re-read on next access
+- ## EDGE CASES
+
+**Sections:**
+- # Nature — Health
+- ## CHAIN
+- ## PURPOSE
+- ## INDICATORS
+- ## HEALTH CHECK IMPLEMENTATION
+- # H1: YAML Load
+- # H2: Verb Coverage
+- # H3: Translation Completeness
+- ## GAPS
+
+**Sections:**
+- # Nature — Implementation
+- ## CHAIN
+- ## FILE STRUCTURE
+- ## CODE ARCHITECTURE
+- # Defaults
+- # Verb categories
+- # Modifiers
+- # Variations
+- ## DATA FLOW
+- ## DEPENDENCIES
+- ## USAGE EXAMPLES
+- # Include in agent prompt
+- # After editing nature_physics.yaml
+- ## EXTENSION POINTS
+- # In grammar_verbs:
+- # In pre_modifiers:
+- # In post_modifiers:
+
+**Sections:**
+- # Nature — Objectives
+- ## CHAIN
+- ## PURPOSE
+- ## OBJECTIVES
+- ## NON-OBJECTIVES
+- ## SUCCESS METRICS
+
+**Code refs:**
+- `nature.py`
+
+**Sections:**
+- # Nature — Patterns
+- ## CHAIN
+- ## DESIGN PHILOSOPHY
+- ## SCOPE
+- ## KEY PATTERNS
+- # "acts on" should match "acts on", not "acts"
+- # conflicts = [{'key': 'permanence', 'previous': 0.9, 'new': 0.1, 'from': 'perhaps'}]
+- ## ANTI-PATTERNS
+
+**Code refs:**
+- `runtime/physics/nature.py`
+
+**Sections:**
+- # Nature — Sync
+- ## CHAIN
+- ## CURRENT STATE
+- ## RECENT CHANGES
+- ## VERB CATEGORIES
+- ## MODIFIER COUNTS
+- ## NEXT STEPS
+- ## BLOCKERS
+- ## HANDOFF
+- ## ARCHIVE
+
+**Sections:**
+- # Archived: SYNC_Nature.md
+- ## PROPOSITIONS
+- # Au lieu de:
+- # Utiliser:
+- # Link decay: affecte la force de la relation
+- # Node decay: affecte l'énergie du node
+- # États de workflow
+- # Importance
+
+**Sections:**
+- # Nature — Validation
+- ## CHAIN
+- ## INVARIANTS
+- # 'definitely' sets permanence=0.9, 'perhaps' overrides to 0.1
+- # "acts on" should not match just "acts"
+- # "is linked to" should not match just "is"
+- ## TEST COVERAGE
+- ## EDGE CASE TESTS
+- # No valid verb, modifiers ignored
+
+**Sections:**
 - # SubEntity — Algorithm
 - ## CHAIN
 - ## OVERVIEW
 - ## STATE MACHINE
 - ## ALGORITHM: Exploration Runner
+- # v2.1: Removed intention_type param - intention is semantic via embedding
 - ## ALGORITHM: SEEKING
 - # Query alignment (WHAT we're searching for)
 - # Intention alignment (WHY we're searching)
-- # Combined alignment (weighted by intention_type)
-- # SUMMARIZE: 0.3, VERIFY: 0.5, FIND_NEXT: 0.2, EXPLORE: 0.25, RETRIEVE: 0.1
+- # Combined alignment (v2.1: fixed weight, intention is semantic via embedding)
+- # = 0.75 * query_alignment + 0.25 * intention_alignment
 - # Self-novelty (avoid backtracking)
 - # Sibling divergence (spread exploration)
 - # Permanence factor (prefer explorable links)
@@ -5244,10 +5673,19 @@
 - # Each child now has sibling_ids pointing to its siblings
 - ## ALGORITHM: ABSORBING (v1.9)
 - ## ALGORITHM: RESONATING
-- ## ALGORITHM: REFLECTING
+- ## ALGORITHM: REFLECTING (v2.1)
+- # v2.1: Only backprop color if the path was useful
+- # Path led to good findings - color it
+- # Path wasn't useful - don't color (will crystallize instead)
+- # Fetch all path links
+- # Backprop with intention embedding
+- # Save colored links back to graph
 - ## ALGORITHM: CRYSTALLIZING
 - # spawn_node → new_narrative
 - # new_narrative → focus_node
+- # v2.1: Color path after crystallization - path led to new knowledge
+- # Color with crystallization embedding (what we created)
+- # v2.0.1: Always MERGING after crystallizing (avoids loop)
 - ## ALGORITHM: MERGING
 - # Child crystallizes if needed (v2.0)
 - # NO propagation to parent — graph is source of truth
@@ -5349,24 +5787,29 @@
 - ## DEPENDENCIES
 
 **Code refs:**
+- `runtime/physics/subentity.py`
+- `runtime/tests/test_subentity.py`
+
+**Sections:**
+- # SubEntity — Sync
+- ## CHAIN
+- ## HEALTH STATUS
+- ## KNOWN ISSUES
+- ## HANDOFFS
+- ## DOCUMENTATION STATUS
+- ## HANDOFF — v2.0 Implementation (COMPLETED)
+- ## ARCHIVE
+- ## ARCHIVE
+
+**Code refs:**
+- `runtime/physics/cluster_presentation.py`
+- `runtime/physics/exploration.py`
 - `runtime/physics/health/check_subentity.py`
 - `runtime/physics/subentity.py`
 - `runtime/tests/test_subentity.py`
 
 **Doc refs:**
 - `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
-
-**Sections:**
-- # SubEntity — Sync
-- ## CHAIN
-- ## INVARIANT STATUS
-- ## HEALTH STATUS
-- ## KNOWN ISSUES
-- ## HANDOFFS
-- ## DOCUMENTATION STATUS
-- ## HANDOFF — v2.0 Implementation (COMPLETED)
-- ## NEXT ACTIONS
-- ## ARCHIVE
 
 **Sections:**
 - # Archived: SYNC_SubEntity.md
@@ -5380,6 +5823,14 @@
 - # Run health validation tests
 - # Check specific exploration
 - # Check all recent explorations
+- # Archived: SYNC_SubEntity.md
+- ## INVARIANT STATUS
+- ## NEXT ACTIONS
+- ## v2.1 — Semantic Intention + Backprop Coloring (2025-12-29)
+- # _step_seeking
+- # _step_reflecting (if satisfaction > 0.5)
+- # _step_crystallizing (after creating narrative)
+- ## Bug Fixes: v2.0.1 — Crystallization Loop (2025-12-29)
 
 **Code refs:**
 - `runtime/tests/test_subentity.py`
@@ -5553,7 +6004,7 @@
 - ## MARKERS
 
 **Code refs:**
-- `runtime/api/app.py`
+- `mind/api/app.py`
 
 **Sections:**
 - # Physics — API Reference
@@ -5592,7 +6043,7 @@
 - ## INTEGRATION POINTS
 - # ... existing code
 - ## CONFIGURATION
-- # .runtime/config.yaml
+- # .mind/config.yaml
 - # What to include at each level
 - ## EXAMPLE OUTPUT
 - ## NEXT STEPS
@@ -5673,6 +6124,14 @@
 - `graph_ops_events.py`
 - `graph_queries.py`
 - `link_scoring.py`
+- `phases/completion.py`
+- `phases/generation.py`
+- `phases/link_cooling.py`
+- `phases/moment_draw.py`
+- `phases/moment_flow.py`
+- `phases/moment_interaction.py`
+- `phases/narrative_backflow.py`
+- `phases/rejection.py`
 - `runtime/infrastructure/api/moments.py`
 - `runtime/infrastructure/orchestration/orchestrator.py`
 - `runtime/models/links.py`
@@ -5701,14 +6160,6 @@
 - `runtime/physics/tick_v1_2_queries.py`
 - `runtime/physics/tick_v1_2_types.py`
 - `runtime/physics/traversal_logger.py`
-- `phases/completion.py`
-- `phases/generation.py`
-- `phases/link_cooling.py`
-- `phases/moment_draw.py`
-- `phases/moment_flow.py`
-- `phases/moment_interaction.py`
-- `phases/narrative_backflow.py`
-- `phases/rejection.py`
 - `synthesis.py`
 
 **Doc refs:**
@@ -5816,377 +6267,197 @@
 - ## VALIDATION ID INDEX
 - ## MARKERS
 
-**Doc refs:**
-- `templates/CLAUDE_ADDITION.md`
-- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
-- `templates/runtime/agents/manager/CLAUDE.md`
-
-**Sections:**
-- # mind Framework — Algorithm: Overview
-- ## CHAIN
-- ## OVERVIEW
-- ## CONTENTS
-- ## ALGORITHM: Install Protocol in Project
-- ## ALGORITHM: Agent Starts Task
-- ## ALGORITHM: Create New Module
-- ## ALGORITHM: Modify Existing Module
-- ## ALGORITHM: Document Cross-Cutting Concept
-- ## NOTES
-
-**Doc refs:**
-- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
-
-**Sections:**
-- # mind Framework — Implementation: Overview
-- ## CHAIN
-- ## OVERVIEW
-- ## FILE STRUCTURE
-- ## SCHEMAS AND CONFIG
-- ## FLOWS AND LINKS
-- # DOCS: docs/{area}/{module}/PATTERNS_*.md
-
-**Sections:**
-- # ALGORITHM: Project Health Doctor
-- ## OVERVIEW
-- ## ID CONVENTION
-- # Issues
-- # Objectives
-- # Tasks
-- # Spaces (modules)
-- # Things (files)
-- # Semantic links (with role name)
-- # Structural links
-- ## MAIN FLOW
-- ## 1. FETCH OBJECTIVES
-- # Example: narrative_OBJECTIVE_engine-physics-documented
-- # Objective-specific fields
-- ## 2. SURFACE ISSUES
-- # ... etc
-- # Each failure becomes an issue
-- # TEST_FAILED, TEST_ERROR, TEST_TIMEOUT
-- # Each failure becomes an issue
-- # HEALTH_FAILED, INVARIANT_VIOLATED
-- # Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
-- ## {ISSUE_TYPE}
-- # Issue-specific fields
-- # Space contains Issue
-- # Issue relates to Thing (file)
-- # Update: severity, message, detected_at, status=open
-- # Create new with links
-- ## 3. TRAVERSE UP
-- # Step 1: Find Space
-- # ID: space_MODULE_{module}
-- # Step 2: Check doc chain exists
-- # Step 3: Find objective
-- # ID: narrative_OBJECTIVE_{module}-{type}
-- # → narrative_OBJECTIVE_engine-physics-documented
-- # Determine outcome
-- ## 4. CREATE TASKS
-- # Example: narrative_TASK_serve-engine-physics-documented_01
-- ## Task: Serve documented for engine-physics
-- # Task-specific fields
-- # Task serves Objective (direction: support)
-- # Task includes Issue (direction: subsume)
-- # Issue blocks Objective (direction: oppose)
-- # Group by outcome
-- # SERVE tasks: group by objective, split if > MAX
-- # Create links
-- # RECONSTRUCT tasks: one per module with gaps
-- # TRIAGE tasks: one per orphan module
-- ## 5. OUTPUT
-- ## OBJECTIVE → SKILL MAPPING
-- ## ISSUE TYPE → OBJECTIVE MAPPING
-- ## CLI INTEGRATION
-- # Basic doctor (static only)
-- # With tests
-- # With health checks
-- # Full (static + tests + health)
-- # Output formats
-- # Show tasks only
-- ## AUTO-RESOLVE
-- ## CHAIN
-
-**Sections:**
-- # BEHAVIORS: Project Health Doctor
-- ## COMMAND INTERFACE
-- # Basic health check
-- # With specific directory
-- # Output formats
-- # Filter by severity
-- # Specific checks
-- ## HEALTH CHECKS
-- ## SPECIAL MARKERS
-- ## OUTPUT BEHAVIOR
-- ## Critical (2 issues)
-- ## Warnings (3 issues)
-- ## Info (3 issues)
-- ## Suggested Actions
-- ## GUIDED REMEDIATION
-- ## Current State
-- ## Recommended Steps
-- # DOCS: docs/api/PATTERNS_Api_Design.md
-- ## Template Commands
-- # Generate PATTERNS from template
-- ## Reference
-- ## EXIT CODES
-- ## CONFIGURATION
-- # Thresholds
-- # Ignore patterns
-- # Disable specific checks
-- # Custom severity overrides
-- ## FALSE POSITIVE SUPPRESSION
-- ## DOC TEMPLATE DRIFT DEFERMENTS
-- ## NON-STANDARD DOC TYPE DEFERMENTS
-- ## RESOLVED ESCALATION MARKERS
-- ## MARKER STANDARDIZATION
-- ## CHAIN
-
 **Code refs:**
-- `doctor_checks.py`
-- `doctor_report.py`
-- `runtime/doctor.py`
-
-**Doc refs:**
-- `docs/tui/HEALTH_TUI_Coverage.md`
+- `runtime/connectome/procedure_runner.py`
 
 **Sections:**
-- # Project Health Doctor — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
+- # Procedure — Algorithm: Deterministic Execution Flow
 - ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: Score Sanity
-- ## HOW TO RUN
-- # Run all doctor checks on the current project
-- # Run with JSON output for machine parsing
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/doctor.py`
-- `runtime/doctor_checks.py`
-- `runtime/doctor_checks_content.py`
-- `runtime/doctor_checks_core.py`
-- `runtime/doctor_checks_docs.py`
-- `runtime/doctor_checks_metadata.py`
-- `runtime/doctor_checks_naming.py`
-- `runtime/doctor_checks_prompt_integrity.py`
-- `runtime/doctor_checks_quality.py`
-- `runtime/doctor_checks_reference.py`
-- `runtime/doctor_checks_stub.py`
-- `runtime/doctor_checks_sync.py`
-- `runtime/doctor_files.py`
-
-**Sections:**
-- # Project Health Doctor — Implementation: Code architecture and docking
-- ## CHAIN
-- ## CODE STRUCTURE
+- ## OVERVIEW
+- ## OBJECTIVES AND BEHAVIORS
+- ## DATA STRUCTURES
+- ## What you're doing
+- ## Why
+- ## How
+- ## Watch out
+- ## Validation to pass this step
+- ## ALGORITHM: start_procedure
+- ## ALGORITHM: continue_procedure
+- ## ALGORITHM: end_procedure
+- ## V1 API (Python)
+- # 1. Create Run Space
+- # 2. Link to procedure template
+- # 3. Get Step 1
+- # 4. Link Run Space to Step 1 (active)
+- # 5. Link Actor to Run Space
+- # Check validation
+- # Flip current step (cool down)
+- # Heat next step
+- ## VALIDATION TYPES (V1)
 - ## DATA FLOW
-- ## DOC-LINK COMPLIANCE
-- ## LOCATIONS
-- ## GAPS / IDEAS
-
-**Sections:**
-- # PATTERNS: Project Health Doctor
-- ## THE PROBLEM
-- ## THE INSIGHT
-- ## DESIGN DECISIONS
-- ## WHAT WE CHECK
-- ## WHAT WE DON'T CHECK
-- ## ALTERNATIVES CONSIDERED
-- ## CHAIN
-
-**Code refs:**
-- `doctor.py`
-- `runtime/doctor.py`
-- `runtime/doctor_checks.py`
-- `runtime/solve_escalations.py`
-
-**Doc refs:**
-- `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
-- `docs/cli/prompt/SYNC_Prompt_Command_State.md`
-- `docs/mcp-design/doctor/IMPLEMENTATION_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/SYNC_Project_Health_Doctor.md`
-
-**Sections:**
-- # SYNC: Project Health Doctor
-- ## MATURITY
-- ## CURRENT STATE
-- ## IMPLEMENTATION ORDER
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## GAPS
-- ## NEW MARKERS (2025-12-29 Review)
-- ## CHAIN
-
-**Sections:**
-- # VALIDATION: Project Health Doctor
-- ## INVARIANTS
-- ## CHECK CORRECTNESS
-- ## OUTPUT FORMAT CORRECTNESS
-- ## EDGE CASES
-- ## PERFORMANCE BOUNDS
-- ## VERIFICATION COMMANDS
-- # Verify determinism
-- # Verify exit codes
-- # Verify JSON validity
-- # Verify ignore patterns
-- ## CHAIN
-
-**Sections:**
-- # Agent Trace Logging — Behaviors: Observable Effects
-- ## CHAIN
-- ## COMMANDS
-- ## AUTOMATIC TRACING
-- ## TRACE FILE FORMAT
-- ## INTEGRATION POINTS
-- ## Usage (auto-generated)
-- ## WHAT GETS TRACED
-- ## WHAT DOESN'T GET TRACED
-
-**Sections:**
-- # Agent Trace Logging — Patterns: Why This Design
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE INSIGHT
-- ## DESIGN DECISIONS
-- ## WHAT THIS ENABLES
-- ## TRADEOFFS
-- ## ALTERNATIVES CONSIDERED
-- ## OPEN QUESTIONS
-
-**Code refs:**
-- `runtime/cli.py`
-
-**Sections:**
-- # Agent Trace Logging — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## IMPLEMENTATION PLAN
-- ## HANDOFF: FOR AGENTS
-- ## TODO
-- ## OPEN QUESTIONS
+- ## COMPLEXITY
+- ## HELPER FUNCTIONS
+- ## KEY DECISIONS
 - ## MARKERS
 
-**Sections:**
-- # mind Framework — Algorithm: Overview
-- ## CHAIN
-- ## ENTRY POINT
+**Code refs:**
+- `runtime/connectome/procedure_runner.py`
 
 **Sections:**
-- # mind Framework — Behaviors: Observable Protocol Effects
+- # Procedure — Behaviors: Observable Execution Effects
 - ## CHAIN
 - ## BEHAVIORS
+- ## OBJECTIVES SERVED
 - ## INPUTS / OUTPUTS
 - ## EDGE CASES
 - ## ANTI-BEHAVIORS
 - ## MARKERS
 
 **Code refs:**
-- `runtime/prompt.py`
-- `runtime/validate.py`
-
-**Doc refs:**
-- `docs/cli/HEALTH_CLI_Coverage.md`
+- `runtime/health/procedure_health.py`
 
 **Sections:**
-- # mind Framework — Health: Protocol Verification and Mechanics
+- # Procedure — Health: Verification Mechanics and Coverage
+- ## WHEN TO USE HEALTH (NOT TESTS)
 - ## PURPOSE OF THIS FILE
 - ## WHY THIS PATTERN
 - ## CHAIN
 - ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
 - ## HEALTH INDICATORS SELECTED
+- ## OBJECTIVES COVERAGE
 - ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
 - ## CHECKER INDEX
-- ## INDICATOR: Chain Completeness
+- ## INDICATOR: Single Active Step
+- ## INDICATOR: Guide Completeness
+- ## INDICATOR: Zombie Runs
 - ## HOW TO RUN
-- # Verify protocol health for the current project
-- # Verify a specific module
+- # Run all health checks for this module
+- # Run a specific checker
 - ## KNOWN GAPS
+- ## RESOLVED DECISIONS
+- # Example: "2025-12-29T10:30:00.000000Z"
 - ## MARKERS
 
-**Doc refs:**
-- `docs/mcp-design/ALGORITHM/ALGORITHM_Protocol_Process_Flow.md`
+**Code refs:**
+- `doc_chain.py`
+- `persistence.py`
+- `procedure_runner.py`
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/procedure_runner.py`
+- `runtime/connectome/schema.py`
+- `runtime/connectome/validation.py`
 
 **Sections:**
-- # mind Framework — Implementation: Overview
+- # Procedure — Implementation: Code Architecture and Structure
 - ## CHAIN
-- ## ENTRY POINT
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## SCHEMA
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## BIDIRECTIONAL LINKS
+- ## RESOLVED DECISIONS
+- ## MARKERS
 
 **Sections:**
-- # OBJECTIVES — Protocol
+- # OBJECTIVES — Procedure
+- ## CHAIN
 - ## PRIMARY OBJECTIVES (ranked)
 - ## NON-OBJECTIVES
 - ## TRADEOFFS (canonical decisions)
 - ## SUCCESS SIGNALS (observable)
+- ## MARKERS
+
+**Code refs:**
+- `cluster_presentation.py`
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/procedure_runner.py`
+- `runtime/physics/subentity.py`
 
 **Sections:**
-- # mind Framework — Patterns: Bidirectional Documentation Chain for AI Agent Workflows
+- # Procedure — Patterns: Self-Contained Steps with Audit Trail
 - ## CHAIN
 - ## THE PROBLEM
 - ## THE PATTERN
+- ## What you're doing
+- ## Why
+- ## How
+- ## Watch out
+- ## Validation to pass this step
 - ## PRINCIPLES
-- # Descriptive names
-- # Not
+- ## BEHAVIORS SUPPORTED
+- ## BEHAVIORS PREVENTED
+- ## DOC CHAIN IN GRAPH
+- ## SCOPE
 - ## DEPENDENCIES
 - ## INSPIRATIONS
-- ## WHAT THIS DOES NOT SOLVE
 - ## MARKERS
 
 **Code refs:**
-- `runtime/cli.py`
+- `doc_chain.py`
+- `mcp/server.py`
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/procedure_runner.py`
+- `runtime/connectome/schema.py`
+- `runtime/connectome/validation.py`
+- `runtime/health/procedure_health.py`
 
 **Doc refs:**
-- `archive/SYNC_archive_2024-12.md`
-- `docs/mcp-design/BEHAVIORS_Observable_Protocol_Effects.md`
-- `docs/mcp-design/IMPLEMENTATION/IMPLEMENTATION_File_Structure.md`
-- `docs/mcp-design/PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md`
-- `docs/mcp-design/SYNC_Protocol_Current_State.md`
-- `templates/CLAUDE_ADDITION.md`
-- `templates/runtime/PRINCIPLES.md`
-- `templates/runtime/PROTOCOL.md`
+- `docs/physics/subentity/SYNC_SubEntity.md`
+- `docs/schema/SYNC_Schema.md`
 
 **Sections:**
-- # mind Framework — Sync: Current State
-- ## MATURITY
+- # Procedure — SYNC: Current State
+- ## CHAIN
 - ## CURRENT STATE
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## STRUCTURE
-- ## POINTERS
+- ## HANDOFFS
+- ## BLOCKED ON
+- ## MARKERS
 - ## ARCHIVE
-- ## Agent Observations
-- ## GAPS
-- ## NEW MARKERS (2025-12-29 Review)
 
 **Code refs:**
-- `scripts/check_chain_links.py`
-- `scripts/check_doc_completeness.py`
-- `scripts/check_doc_refs.py`
-- `scripts/check_orphans.py`
+- `runtime/connectome/procedure_runner.py`
 
 **Sections:**
-- # mind Framework — Validation: Protocol Invariants
+- # Archived: SYNC_Procedure.md
+- ## MATURITY
+- ## RESOLVED DECISIONS
+- ## RECENT CHANGES
+
+**Code refs:**
+- `runtime/connectome/procedure_runner.py`
+
+**Sections:**
+- # Procedure — Validation: What Must Be True
 - ## CHAIN
+- ## PURPOSE
 - ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # Check all invariants
-- # Check specific invariant
-- # Check specific module
-- ## SYNC STATUS
+- ## PRIORITY
+- ## INVARIANT INDEX
+- ## RESOLVED DECISIONS
+- ## MARKERS
+
+**Sections:**
+- # Procedure — Vocabulary: Terms and Imports
+- ## CHAIN
+- ## PURPOSE
+- ## TERMS
+- ## EXECUTORS
+- # Agent executor - needs guide
+- # Code executor - needs command
+- # Actor executor - needs event
+- # Hybrid executor - needs both
+- ## NARRATIVE SUBTYPES
+- ## SKILL IMPORTS
+- ## PROCEDURE IMPORTS
+- ## SCHEMA MAPPING
 - ## MARKERS
 
 **Code refs:**
-- `runtime/graph/health/check_health.py`
+- `mind/graph/health/check_health.py`
 
 **Sections:**
 - # Schema — Algorithm: Schema Loading and Validation Procedures
@@ -6344,7 +6615,7 @@
 - ## INVARIANTS
 
 **Code refs:**
-- `runtime/graph/health/check_health.py`
+- `mind/graph/health/check_health.py`
 
 **Sections:**
 - # Schema — Health: Verification Mechanics and Coverage
@@ -6373,12 +6644,12 @@
 **Code refs:**
 - `base.py`
 - `check_health.py`
+- `nodes.py`
 - `runtime/graph/health/check_health.py`
 - `runtime/graph/health/test_schema.py`
 - `runtime/models/base.py`
 - `runtime/models/links.py`
 - `runtime/models/nodes.py`
-- `nodes.py`
 - `test_schema.py`
 - `test_schema_links.py`
 - `test_schema_nodes.py`
@@ -6469,7 +6740,7 @@
 
 **Code refs:**
 - `check_health.py`
-- `runtime/graph/health/check_health.py`
+- `mind/graph/health/check_health.py`
 
 **Sections:**
 - # Schema — Validation: Invariants and Verification
@@ -6653,6 +6924,7 @@
 - `Next.js`
 - `Node.js`
 - `__init__.py`
+- `__main__.py`
 - `adapter.py`
 - `agent_cli.py`
 - `agents/handler.py`
@@ -6669,9 +6941,21 @@
 - `building/ingest/create.py`
 - `building/ingest/discover.py`
 - `building/ingest/parse.py`
+- `check_github_for_latest_version.py`
 - `check_health.py`
+- `check_mind_status_in_directory.py`
 - `cli.py`
 - `cli/__main__.py`
+- `cli/commands/fix_embeddings.py`
+- `cli/commands/init.py`
+- `cli/commands/status.py`
+- `cli/commands/upgrade.py`
+- `cli/config.py`
+- `cli/helpers/generate_embeddings_for_graph_nodes.py`
+- `cli/helpers/ingest_repo_files_to_graph.py`
+- `cli/helpers/inject_seed_yaml_to_graph.py`
+- `cli/helpers/show_upgrade_notice_if_available.py`
+- `cluster_presentation.py`
 - `config.py`
 - `config/agents.py`
 - `config/mapping.py`
@@ -6682,7 +6966,13 @@
 - `context.py`
 - `context/format.py`
 - `context/query.py`
+- `copy_ecosystem_templates_to_target.py`
+- `copy_runtime_package_to_target.py`
 - `core_utils.py`
+- `create_ai_config_files_for_claude_agents_gemini.py`
+- `create_database_config_yaml.py`
+- `create_env_example_file.py`
+- `create_mcp_config_json.py`
 - `crystallization.py`
 - `deployment/backup.py`
 - `deployment/deployer.py`
@@ -6692,6 +6982,7 @@
 - `diagnosis/layer_attribution.py`
 - `diagnosis/pattern_detector.py`
 - `diffusion_sim_v2.py`
+- `doc_chain.py`
 - `doctor.py`
 - `doctor_checks.py`
 - `doctor_cli_parser_and_run_checker.py`
@@ -6701,11 +6992,15 @@
 - `exploration.py`
 - `factory.py`
 - `falkordb_adapter.py`
+- `fix_embeddings_for_nodes_and_links.py`
 - `flow.py`
 - `frontend/app/scenarios/page.tsx`
 - `frontend/app/start/page.tsx`
 - `frontend/hooks/useGameState.ts`
 - `gemini_agent.py`
+- `generate_repo_overview_maps.py`
+- `get_mcp_version_from_config.py`
+- `get_paths_for_templates_and_runtime.py`
 - `graph_interface.py`
 - `graph_ops.py`
 - `graph_ops_apply.py`
@@ -6721,12 +7016,49 @@
 - `ingest/discover.py`
 - `ingest/markers.py`
 - `ingest/parse.py`
+- `ingest_repo_files_to_graph.py`
+- `inject_seed_yaml_to_graph.py`
 - `learning/embeddings.py`
 - `learning/extractor.py`
 - `learning/pattern_library.py`
 - `link_scoring.py`
 - `loop.py`
 - `mcp/server.py`
+- `mind/api/app.py`
+- `mind/cli.py`
+- `mind/core_utils.py`
+- `mind/graph/health/check_health.py`
+- `mind/llms/gemini_agent.py`
+- `mind/prompt.py`
+- `mind/repair.py`
+- `mind/repair_verification.py`
+- `mind/tests/test_moment.py`
+- `mind/validate.py`
+- `mock_adapter.py`
+- `models.py`
+- `moment_processor.py`
+- `narrator.py`
+- `narrator/prompt_builder.py`
+- `nature.py`
+- `neo4j_adapter.py`
+- `nodes.py`
+- `orchestrator.py`
+- `persistence.py`
+- `phases/completion.py`
+- `phases/generation.py`
+- `phases/link_cooling.py`
+- `phases/moment_draw.py`
+- `phases/moment_flow.py`
+- `phases/moment_interaction.py`
+- `phases/narrative_backflow.py`
+- `phases/rejection.py`
+- `procedure_runner.py`
+- `proposals/generator.py`
+- `proposals/scorer.py`
+- `proposals/types.py`
+- `protocol_runner.py`
+- `repair_verification.py`
+- `route.ts`
 - `runtime/agent_cli.py`
 - `runtime/api/app.py`
 - `runtime/cli.py`
@@ -6734,7 +7066,9 @@
 - `runtime/cluster_health.py`
 - `runtime/cluster_metrics.py`
 - `runtime/connectome/persistence.py`
+- `runtime/connectome/procedure_runner.py`
 - `runtime/connectome/runner.py`
+- `runtime/connectome/schema.py`
 - `runtime/connectome/session.py`
 - `runtime/connectome/steps.py`
 - `runtime/connectome/templates.py`
@@ -6764,6 +7098,7 @@
 - `runtime/graph/health/lint_terminology.py`
 - `runtime/graph/health/test_schema.py`
 - `runtime/handlers/base.py`
+- `runtime/health/procedure_health.py`
 - `runtime/infrastructure/api/app.py`
 - `runtime/infrastructure/api/graphs.py`
 - `runtime/infrastructure/api/moments.py`
@@ -6840,6 +7175,7 @@
 - `runtime/physics/health/checkers/energy_conservation.py`
 - `runtime/physics/health/checkers/moment_lifecycle.py`
 - `runtime/physics/link_scoring.py`
+- `runtime/physics/nature.py`
 - `runtime/physics/phases/completion.py`
 - `runtime/physics/phases/generation.py`
 - `runtime/physics/phases/link_cooling.py`
@@ -6889,38 +7225,19 @@
 - `runtime/tests/test_traversal_logger.py`
 - `runtime/validate.py`
 - `runtime/work.py`
-- `mock_adapter.py`
-- `models.py`
-- `moment_processor.py`
-- `narrator.py`
-- `narrator/prompt_builder.py`
-- `neo4j_adapter.py`
-- `nodes.py`
-- `orchestrator.py`
-- `phases/completion.py`
-- `phases/generation.py`
-- `phases/link_cooling.py`
-- `phases/moment_draw.py`
-- `phases/moment_flow.py`
-- `phases/moment_interaction.py`
-- `phases/narrative_backflow.py`
-- `phases/rejection.py`
-- `proposals/generator.py`
-- `proposals/scorer.py`
-- `proposals/types.py`
-- `protocol_runner.py`
-- `repair_verification.py`
-- `route.ts`
 - `scripts/check_chain_links.py`
 - `scripts/check_doc_completeness.py`
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
 - `semantic_proximity_based_character_node_selector.py`
+- `setup_database_and_apply_schema.py`
+- `show_upgrade_notice_if_available.py`
 - `signals/aggregator.py`
 - `signals/collector.py`
 - `snake_case.py`
 - `stream_dialogue.py`
 - `surface.py`
+- `sync_skills_to_ai_tool_directories.py`
 - `synthesis.py`
 - `test_loader.py`
 - `test_runner.py`
@@ -6932,6 +7249,8 @@
 - `test_validation.py`
 - `tests/building/test_agents.py`
 - `tests/building/test_ingest.py`
+- `tests/mind/test_cli.py`
+- `tests/mind/test_cluster_builder.py`
 - `tests/runtime/test_cli.py`
 - `tests/runtime/test_cluster_builder.py`
 - `tests/test_cluster_stability.py`
@@ -6943,7 +7262,9 @@
 - `tools/migrate_v11_fields.py`
 - `tools/stream_dialogue.py`
 - `tools/test_health_live.py`
+- `update_gitignore_with_runtime_entry.py`
 - `utils.py`
+- `validate_embedding_config_matches_stored.py`
 - `validation/modes/shadow.py`
 - `validation/modes/unit_test.py`
 - `validation/validator.py`
@@ -6986,6 +7307,7 @@
 - `docs/architecture/cybernetic_studio_architecture/PATTERNS_Cybernetic_Studio_Architecture.md`
 - `docs/architecture/cybernetic_studio_architecture/SYNC_Cybernetic_Studio_Architecture_State.md`
 - `docs/architecture/cybernetic_studio_architecture/VALIDATION_Cybernetic_Studio_Architectural_Invariants.md`
+- `docs/capabilities/PATTERNS_Capabilities.md`
 - `docs/cli/ALGORITHM_CLI_Command_Execution_Logic.md`
 - `docs/cli/HEALTH_CLI_Coverage.md`
 - `docs/cli/archive/SYNC_CLI_Development_State_archive_2025-12.md`
@@ -6994,6 +7316,7 @@
 - `docs/cli/core/ALGORITHM_CLI_Command_Execution_Logic/ALGORITHM_Overview.md`
 - `docs/cli/core/BEHAVIORS_CLI_Command_Effects.md`
 - `docs/cli/core/HEALTH_CLI_Command_Test_Coverage.md`
+- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture.md`
 - `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/overview/IMPLEMENTATION_Overview.md`
 - `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/runtime/IMPLEMENTATION_Runtime_And_Dependencies.md`
 - `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/schema/IMPLEMENTATION_Schema.md`
@@ -7022,6 +7345,7 @@
 - `docs/infrastructure/tempo/ALGORITHM_Tempo_Controller.md`
 - `docs/infrastructure/tempo/IMPLEMENTATION_Tempo.md`
 - `docs/infrastructure/tempo/PATTERNS_Tempo.md`
+- `docs/ingest/PATTERNS_Doc_Ingestion.md`
 - `docs/ingest/PATTERNS_File_Ingestion.md`
 - `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
 - `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
@@ -7033,16 +7357,9 @@
 - `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`
 - `docs/membrane/IMPLEMENTATION_Membrane_System.md`
 - `docs/membrane/VALIDATION_Completion_Verification.md`
-- `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
-- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
-- `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
-- `docs/runtime/models/HEALTH_Models.md`
-- `docs/runtime/models/PATTERNS_Models.md`
-- `docs/runtime/models/VALIDATION_Models.md`
-- `docs/runtime/moments/PATTERNS_Moments.md`
-- `docs/runtime/moments/SYNC_Moments.md`
+- `docs/mind/models/HEALTH_Models.md`
+- `docs/mind/models/PATTERNS_Models.md`
+- `docs/mind/models/VALIDATION_Models.md`
 - `docs/mind_cli_core/OBJECTIVES_mind_cli_core.md`
 - `docs/mind_cli_core/PATTERNS_mind_cli_core.md`
 - `docs/mind_cli_core/SYNC_mind_cli_core.md`
@@ -7073,19 +7390,19 @@
 - `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
 - `docs/physics/subentity/ALGORITHM_SubEntity.md`
 - `docs/physics/subentity/BEHAVIORS_SubEntity.md`
+- `docs/physics/subentity/SYNC_SubEntity.md`
 - `docs/physics/subentity/VALIDATION_SubEntity.md`
 - `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md`
-- `docs/mcp-design/ALGORITHM/ALGORITHM_Protocol_Process_Flow.md`
-- `docs/mcp-design/BEHAVIORS_Observable_Protocol_Effects.md`
-- `docs/mcp-design/HEALTH_Protocol_Verification.md`
-- `docs/mcp-design/IMPLEMENTATION/IMPLEMENTATION_File_Structure.md`
-- `docs/mcp-design/PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md`
-- `docs/mcp-design/SYNC_Protocol_Current_State.md`
-- `docs/mcp-design/archive/SYNC_Archive_2024-12.md`
-- `docs/mcp-design/doctor/ALGORITHM_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/IMPLEMENTATION_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/PATTERNS_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/SYNC_Project_Health_Doctor.md`
+- `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
+- `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
+- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
+- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
+- `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
+- `docs/runtime/models/HEALTH_Models.md`
+- `docs/runtime/models/PATTERNS_Models.md`
+- `docs/runtime/models/VALIDATION_Models.md`
+- `docs/runtime/moments/PATTERNS_Moments.md`
+- `docs/runtime/moments/SYNC_Moments.md`
 - `docs/schema/GRAMMAR_Link_Synthesis.md`
 - `docs/schema/PATTERNS_Schema.md`
 - `docs/schema/SCHEMA.md`
@@ -7110,6 +7427,9 @@
 - `state/SYNC_Project_State.md`
 - `templates/CLAUDE_ADDITION.md`
 - `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
+- `templates/mind/PRINCIPLES.md`
+- `templates/mind/PROTOCOL.md`
+- `templates/mind/agents/manager/CLAUDE.md`
 - `templates/runtime/PRINCIPLES.md`
 - `templates/runtime/PROTOCOL.md`
 - `templates/runtime/agents/manager/CLAUDE.md`
@@ -7138,6 +7458,9 @@
 - `def _resolve_actor()`
 - `async def _ask_async()`
 - `async def _ask_single()`
+- `def _tool_capability_status()`
+- `def _tool_capability_trigger()`
+- `def _tool_capability_list()`
 - `def _format_response()`
 - `def _success_response()`
 - `def _error_response()`
@@ -7762,15 +8085,77 @@
 - `async def run()`
 - `def stop()`
 
+**Docs:** `docs/capabilities/PATTERNS_Capabilities.md`
+
+**Definitions:**
+- `def ingest_capabilities()`
+- `def _ingest_capability()`
+- `def _upsert_node()`
+- `def _upsert_link()`
+- `def _generate_synthesis()`
+- `def _parse_procedure_yaml()`
+- `def _extract_procedure_reference()`
+- `def _extract_task_references()`
+
+**Docs:** `docs/ingest/PATTERNS_Doc_Ingestion.md`
+
+**Definitions:**
+- `def _load_required_sections()`
+- `def _validate_doc_template()`
+- `def _find_modules()`
+- `def _escape_content()`
+- `def _get_synthesis()`
+- `def _parse_impl_references()`
+- `def _parse_doc_references()`
+- `def ingest_docs_to_graph()`
+- `def ensure_space()`
+- `def create_task()`
+- `def create_doc_node()`
+- `def create_impl_links()`
+- `def create_doc_reference_links()`
+- `def ingest_mind_to_graph()`
+- `def ensure_space()`
+- `def get_subtype()`
+- `def ingest_file()`
+
 **Docs:** `docs/ingest/PATTERNS_File_Ingestion.md`
 
 **Definitions:**
+- `def _parse_code_imports()`
 - `def scan_and_ingest_files()`
 - `def _ensure_space()`
 - `def _create_thing()`
+- `def _compute_physics_properties()`
 - `def _generate_synthesis()`
 - `def _scan_dir()`
 - `def _embed_all_nodes()`
+
+**Definitions:**
+- `class MembraneBroadcast`
+- `def __init__()`
+- `def _query()`
+- `def broadcast_node()`
+- `def remove_node()`
+- `def sync_all_public()`
+- `def get_broadcast()`
+- `def on_node_public()`
+- `def on_node_private()`
+
+**Definitions:**
+- `def _cosine_similarity()`
+- `class MembraneQueries`
+- `def __init__()`
+- `def _query()`
+- `def search()`
+- `def health_check()`
+- `def get_membrane_queries()`
+
+**Definitions:**
+- `class StimulusHandler`
+- `def __init__()`
+- `def handle_query()`
+- `def cosine_sim()`
+- `def get_stimulus_handler()`
 
 **Docs:** `docs/schema/PATTERNS_Schema.md`
 
@@ -7899,23 +8284,6 @@
 - `def _get_narrative_links()`
 - `def _decay_energy()`
 - `def _update_narrative_weights()`
-
-**Docs:** `docs/physics/graph/PATTERNS_Graph.md`
-
-**Definitions:**
-- `class GraphClient`
-- `def query()`
-- `def get_character()`
-- `def get_all_characters()`
-- `def get_characters_at()`
-- `def get_place()`
-- `def get_path_between()`
-- `def get_player_location()`
-- `def get_narrative()`
-- `def get_character_beliefs()`
-- `def get_narrative_believers()`
-- `def get_narratives_about()`
-- `def build_scene_context()`
 
 **Docs:** `docs/physics/graph/PATTERNS_Graph.md`
 
@@ -8083,6 +8451,12 @@
 - `def dijkstra_with_resistance()`
 - `def dijkstra_single_source()`
 - `def view_to_scene_tree()`
+
+**Definitions:**
+- `class CleanupReport`
+- `def cleanup_invalid_nodes()`
+- `def fix_node_types_from_labels()`
+- `def get_schema_health()`
 
 **Docs:** `docs/physics/HEALTH_Energy_Physics.md`
 
@@ -8271,6 +8645,7 @@
 - `def phase_rejection()`
 
 **Definitions:**
+- `class IntentionType`
 - `class ClusterNode`
 - `class ClusterLink`
 - `class RawCluster`
@@ -8415,7 +8790,18 @@
 - `def regenerate_node_synthesis_if_drifted()`
 
 **Definitions:**
-- `def default_floats()`
+- `def _load_nature()`
+- `def _get_all_verbs()`
+- `def get_defaults()`
+- `def get_pre_modifiers()`
+- `def get_post_modifiers()`
+- `def get_weight_annotations()`
+- `def get_intensifiers()`
+- `def get_translations()`
+- `def get_synonyms()`
+- `def _build_reverse_synonyms()`
+- `def resolve_synonym()`
+- `def _resolve_nature_string()`
 - `def parse_nature()`
 - `def nature_to_floats()`
 - `def parse_with_conflicts()`
@@ -8424,8 +8810,9 @@
 - `def select_verb_form()`
 - `def translate()`
 - `def get_verb_for_nature()`
-- `def get_vocab_reference()`
-- `def get_vocab_compact()`
+- `def get_nature_reference()`
+- `def get_nature_compact()`
+- `def reload_nature()`
 
 **Definitions:**
 - `class ExplorationContext`
@@ -8435,7 +8822,6 @@
 - `def exists()`
 - `def unregister()`
 - `def all_active()`
-- `class IntentionType`
 - `class SubEntityState`
 - `class SubEntityTransitionError`
 - `class SubEntity`
@@ -8810,29 +9196,6 @@
 - `def _link_to_embed_text()`
 - `def sync_file_things_to_graph()`
 
-**Docs:** `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md`
-
-**Definitions:**
-- `def _get_mind_root()`
-- `def _configure_mcp_membrane()`
-- `def _generate_mcp_config_file()`
-- `def _escape_marker_tokens()`
-- `def _copy_skills()`
-- `def _update_root_claude_md()`
-- `def _build_root_claude_section()`
-- `def _build_claude_addition()`
-- `def _build_agents_addition()`
-- `def _build_manager_agents_addition()`
-- `def _remove_write_permissions()`
-- `def _enforce_readonly_for_views()`
-- `def _enforce_readonly_for_templates()`
-- `def _find_seed_injection_files()`
-- `def _init_graph_and_inject_seeds()`
-- `def _upsert_node()`
-- `def _upsert_link()`
-- `def init_protocol()`
-- `def copy_protocol_partial()`
-
 **Definitions:**
 - `def _get_cluster_validator()`
 - `def _get_markdown_sync()`
@@ -8878,6 +9241,34 @@
 - `class StepError`
 - `def run_protocol_command()`
 - `def preset_answers()`
+
+**Docs:** `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture.md`
+
+**Definitions:**
+- `class Colors`
+- `def colorize()`
+- `def maturity_color()`
+- `def severity_color()`
+- `def doc_status_color()`
+- `class DocChainStatus`
+- `def completeness_score()`
+- `def to_bar()`
+- `def get_all_docs()`
+- `class HealthIssue`
+- `class ModuleStatus`
+- `def load_modules_yaml()`
+- `def extract_doc_status()`
+- `def find_doc_chain()`
+- `def extract_sync_details()`
+- `def _path_matches_glob()`
+- `def get_all_health_issues()`
+- `def get_module_health_issues()`
+- `def filter_issues_for_module()`
+- `def get_module_status()`
+- `def get_all_modules_status()`
+- `def format_module_status()`
+- `def format_global_status()`
+- `def status_command()`
 
 **Docs:** `specs/symbol-extraction.yaml`
 
@@ -8984,716 +9375,6 @@
 - `def format_todo_suggestion()`
 - `def should_suggest_todos()`
 
-**Sections:**
-- # architect (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # architect
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be architect
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # architect (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # fixer (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # fixer
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be fixer
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # fixer (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # groundwork (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # groundwork
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be groundwork
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # groundwork (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # herald (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # herald
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be herald
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # herald (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # keeper (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # keeper
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be keeper
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # keeper (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # scout (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # scout
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be scout
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # scout (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # steward (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # steward
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be steward
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-- ## Circular Complement
-
-**Sections:**
-- # steward (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-- ## Circular Complement
-
-**Sections:**
-- # voice (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # voice
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be voice
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # voice (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # weaver (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # weaver
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be weaver
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # weaver (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # witness (Claude Agent SDK)
-- ## System Prompt
-- ## Anchor Vocabulary
-- ## Output Format
-- ## Switching Triggers
-
-**Sections:**
-- # witness
-- ## Posture
-- ## How This Shapes Work
-- ## Example Behavior
-- ## Protocols
-- ## When to Be witness
-- ## When to Switch
-- ## Field Signals
-- ## Memory
-- ## Complements
-
-**Sections:**
-- # witness (Gemini)
-- ## Posture
-- ## Anchor
-- ## How You Work
-- ## Your Blind Spot
-- ## Output
-- ## Handoff
-
-**Sections:**
-- # Skill: `mind.add_cluster`
-- ## Maps to VIEW
-- ## Purpose
-- ## When to Use
-- ## Inputs
-- ## Outputs
-- ## Protocols
-- ## Atomicity
-- ## Link Requirements by Subtype
-- ## Valid Link Targets
-- # narrative.health can link to:
-- # narrative.validation can link to:
-- # thing.dock can link to:
-- ## Design vs Implementation
-- # Both required - health verifies the design via the implementation
-- ## Protocol Composition
-- ## Cluster Templates
-- ## Pre-Commit Validation
-- ## Cluster Design Knowledge
-- ## Link Types (from schema)
-- ## Semantic Properties on `relates`
-- # This validation ensures that behavior
-- # This narrative contradicts that one
-- # Health indicator verifies validation
-- ## Node Type Reference (from schema)
-- ## Quality Criteria
-- ## Process
-- ## Gates
-- ## Evidence & Referencing
-- ## Markers
-- ## Never-stop Rule
-- ## Existing Node Discovery
-- ## Connectivity Metrics
-- # objectives are roots, fewer incoming links expected
-- ## Scenario Examples
-- # Total existing: 7 nodes
-- # Total new: 4 nodes
-- # Missing: docks!
-- # Total existing: 6 nodes
-- # Total new: 2 nodes
-- # Total existing: 6 nodes
-- # Total new: 2 nodes
-- ## Protocol Feedback
-- ## Connectivity Thresholds
-- ## Summary of Cluster Rules
-- ## CHAIN
-
-**Doc refs:**
-- `docs/physics/subentity/ALGORITHM_SubEntity.md`
-- `docs/physics/subentity/BEHAVIORS_SubEntity.md`
-- `docs/physics/subentity/VALIDATION_SubEntity.md`
-
-**Sections:**
-- # Skill: `mind.assess_subentity_exploration`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Diagnostic Layers
-- ## Process
-- ## Common Patterns
-- ## Report Template
-- # Exploration Diagnosis: {exploration_id}
-- ## Symptom
-- ## Expected Outcome
-- ## Diagnosis
-- ## Root Cause
-- ## Improvements
-- ## Follow-up Actions
-- ## Procedures Referenced
-- ## Evidence
-- ## Never-stop
-
-**Sections:**
-- # Skill: `mind.author_procedures`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- # Part 1: Question Design
-- ## The Core Idea
-- ## Question Anatomy
-- ## Example: Rich Question
-- ## The Comment Field
-- ## Question Flow
-- ## Context Injection
-- ## Guidance Types
-- ## Comment → Moment Chain
-- ## Dense Linking Through Questions
-- ## Answer Creation Guidance
-- ## Question Design Summary
-- # Part 2: Protocol Structure
-- ## Gates
-- ## Process
-- ## Protocol Template
-- # ... batch 3-7 questions
-- # fields...
-- ## Step Types
-- # Part 3: Contextual Knowledge
-- ## Contextual Knowledge Examples
-- # Part 4: Verification
-- ## Verification Checklist
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Sections:**
-- # Skill: `mind.author_skills`
-- ## Maps to VIEW
-- ## Context
-- ## Pre-flight
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Process
-- ## Complexity Tiers
-- ## Signals: Overcomplicating
-- ## Membrane Integration
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Sections:**
-- # Skill: `mind.author_agents`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Process
-- ## Agent Set Design
-- ## Anti-patterns
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Sections:**
-- # Skill: `mind.create_module_documentation`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Process
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Sections:**
-- # Skill: `mind.health_define_and_verify`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Process
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Doc refs:**
-- `docs/schema/PATTERNS_Schema.md`
-
-**Sections:**
-- # Skill: `mind.module_define_boundaries`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- # ID follows convention: {node-type}_{SUBTYPE}_{instance}
-- # Example: space_MODULE_engine-physics
-- # ID: narrative_OBJECTIVE_{module}-{type}
-- # Example: narrative_OBJECTIVE_engine-physics-documented
-- ## Gates
-- ## Process
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Sections:**
-- # Skill: `mind.ingest_docs_to_graph`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Process
-- # Space contains doc
-- # Chain ordering (if previous doc exists)
-- ## Procedures Referenced
-- ## Quality Criteria
-- ## Skill Markers
-
-**Sections:**
-- # Skill: `mind.orchestrate_feature_integration`
-- ## Maps to VIEW
-- ## Context
-- ## Purpose
-- ## Inputs
-- ## Outputs
-- ## Gates
-- ## Process
-- ## Skills Called
-- ## Procedures Referenced
-- ## Evidence
-- ## Markers
-- ## Never-stop
-
-**Sections:**
-- # Project — Sync: Current State
-- ## CURRENT STATE
-- ## ACTIVE WORK
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## AREAS
-- ## MODULE COVERAGE
-
-**Code refs:**
-- `{path/to/main/source/file.py`
-
-**Sections:**
-- # {Module Name} — Algorithm: {Brief Description of Procedures and Logic}
-- ## CHAIN
-- ## OVERVIEW
-- ## OBJECTIVES AND BEHAVIORS
-- ## DATA STRUCTURES
-- ## ALGORITHM: {Primary Function Name}
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-
-**Code refs:**
-- `{path/to/main/source/file.py`
-
-**Sections:**
-- # {Module Name} — Behaviors: {Brief Description of Observable Effects}
-- ## CHAIN
-- ## BEHAVIORS
-- ## OBJECTIVES SERVED
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Code refs:**
-- `{path/to/health/checker_script.py`
-
-**Sections:**
-- # {Module} — Health: Verification Mechanics and Coverage
-- ## WHEN TO USE HEALTH (NOT TESTS)
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## HOW TO USE THIS TEMPLATE
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: {Indicator Name}
-- ## HOW TO RUN
-- # Run all health checks for this module
-- # Run a specific checker
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `{path/to/main/source/file.py`
-
-**Sections:**
-- # {Module} — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## EXTRACTION CANDIDATES
-- ## MARKERS
-
-**Sections:**
-- # {Project} — Mapping: Translation to mind Schema
-- ## PURPOSE
-- ## MIND UNIVERSAL SCHEMA
-- ## NODE MAPPINGS
-- ## LINK MAPPINGS
-- ## COMMON PATTERNS
-- ## MARKERS
-
-**Code refs:**
-- `{path/to/main/source/file.py`
-
-**Sections:**
-- # {Module Name} — Patterns: {Brief Design Philosophy Description}
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## BEHAVIORS SUPPORTED
-- ## BEHAVIORS PREVENTED
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Sections:**
-- # {Module/Area/Project} — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-
-**Sections:**
-- # {Project} — Taxonomy: Domain Vocabulary
-- ## PURPOSE
-- ## TERMS
-- ## TERMINOLOGY DECISIONS
-- ## META-ATTRIBUTE DEFINITIONS
-- ## MARKERS
-
-**Sections:**
-- # {Module Name} — Validation: What Must Be True
-- ## CHAIN
-- ## PURPOSE
-- ## INVARIANTS
-- ## PRIORITY
-- ## INVARIANT INDEX
-- ## MARKERS
-
-**Doc refs:**
-- `docs/MAPPING.md`
-- `docs/TAXONOMY.md`
-
-**Sections:**
-- # {Module Name} — Vocabulary: New Terms
-- ## CHAIN
-- ## PURPOSE
-- ## NEW TERMS
-- ## NEW RELATIONSHIPS
-- ## TERMINOLOGY PROPOSALS
-- ## MERGE STATUS
-- ## MARKERS
-
-**Code refs:**
-- `doctor_cli_parser_and_run_checker.py`
-- `semantic_proximity_based_character_node_selector.py`
-- `snake_case.py`
-
-**Sections:**
-- # mind Framework
-- ## WHY THIS PROTOCOL EXISTS
-- ## COMPANION: PRINCIPLES.md
-- ## THE CORE INSIGHT
-- ## HOW TO USE THIS
-- ## FILE TYPES AND THEIR PURPOSE
-- ## KEY PRINCIPLES (from PRINCIPLES.md)
-- ## STRUCTURING YOUR DOCS
-- ## WHEN DOCS DON'T EXIST
-- ## THE DOCUMENTATION PROCESS
-- ## Maturity
-- ## NAMING ENGINEERING PRINCIPLES
-- ## MARKERS
-- ## CLI COMMANDS
-- # Run scripts with local runtime
-- # my_script.py - imports work normally
-- ## MCP MEMBRANE TOOLS
-- ## MIND UNIVERSAL SCHEMA
-- ## THE PROTOCOL IS A TOOL
-
-**Sections:**
-- # Working Principles
-- ## Architecture: One Solution Per Problem
-- ## Verification: Test Before Claiming Built
-- ## Communication: Depth Over Brevity
-- ## Quality: Never Degrade
-- ## Code Discipline: No Safety Theater
-- ## Experience: User Before Infrastructure
-- ## Feedback Loop: Human-Agent Collaboration
-- ## How These Principles Integrate
-
-**Sections:**
-- ## 4. Protocol-First Reading
-- ## 5. Parallel Work Awareness
-- ## 6. Operational Proactivity
-- ## 5. Communication Principles
-
-**Sections:**
-- ## GEMINI Agent Operating Principles (Derived from mind Protocol)
-- ## Operational Directives
-
 **Code refs:**
 - `doctor_cli_parser_and_run_checker.py`
 - `semantic_proximity_based_character_node_selector.py`
@@ -9751,6 +9432,7 @@
 - `Next.js`
 - `Node.js`
 - `__init__.py`
+- `__main__.py`
 - `adapter.py`
 - `agent_cli.py`
 - `agents/handler.py`
@@ -9767,9 +9449,21 @@
 - `building/ingest/create.py`
 - `building/ingest/discover.py`
 - `building/ingest/parse.py`
+- `check_github_for_latest_version.py`
 - `check_health.py`
+- `check_mind_status_in_directory.py`
 - `cli.py`
 - `cli/__main__.py`
+- `cli/commands/fix_embeddings.py`
+- `cli/commands/init.py`
+- `cli/commands/status.py`
+- `cli/commands/upgrade.py`
+- `cli/config.py`
+- `cli/helpers/generate_embeddings_for_graph_nodes.py`
+- `cli/helpers/ingest_repo_files_to_graph.py`
+- `cli/helpers/inject_seed_yaml_to_graph.py`
+- `cli/helpers/show_upgrade_notice_if_available.py`
+- `cluster_presentation.py`
 - `config.py`
 - `config/agents.py`
 - `config/mapping.py`
@@ -9780,7 +9474,13 @@
 - `context.py`
 - `context/format.py`
 - `context/query.py`
+- `copy_ecosystem_templates_to_target.py`
+- `copy_runtime_package_to_target.py`
 - `core_utils.py`
+- `create_ai_config_files_for_claude_agents_gemini.py`
+- `create_database_config_yaml.py`
+- `create_env_example_file.py`
+- `create_mcp_config_json.py`
 - `crystallization.py`
 - `deployment/backup.py`
 - `deployment/deployer.py`
@@ -9790,6 +9490,7 @@
 - `diagnosis/layer_attribution.py`
 - `diagnosis/pattern_detector.py`
 - `diffusion_sim_v2.py`
+- `doc_chain.py`
 - `doctor.py`
 - `doctor_checks.py`
 - `doctor_cli_parser_and_run_checker.py`
@@ -9799,11 +9500,15 @@
 - `exploration.py`
 - `factory.py`
 - `falkordb_adapter.py`
+- `fix_embeddings_for_nodes_and_links.py`
 - `flow.py`
 - `frontend/app/scenarios/page.tsx`
 - `frontend/app/start/page.tsx`
 - `frontend/hooks/useGameState.ts`
 - `gemini_agent.py`
+- `generate_repo_overview_maps.py`
+- `get_mcp_version_from_config.py`
+- `get_paths_for_templates_and_runtime.py`
 - `graph_interface.py`
 - `graph_ops.py`
 - `graph_ops_apply.py`
@@ -9819,12 +9524,49 @@
 - `ingest/discover.py`
 - `ingest/markers.py`
 - `ingest/parse.py`
+- `ingest_repo_files_to_graph.py`
+- `inject_seed_yaml_to_graph.py`
 - `learning/embeddings.py`
 - `learning/extractor.py`
 - `learning/pattern_library.py`
 - `link_scoring.py`
 - `loop.py`
 - `mcp/server.py`
+- `mind/api/app.py`
+- `mind/cli.py`
+- `mind/core_utils.py`
+- `mind/graph/health/check_health.py`
+- `mind/llms/gemini_agent.py`
+- `mind/prompt.py`
+- `mind/repair.py`
+- `mind/repair_verification.py`
+- `mind/tests/test_moment.py`
+- `mind/validate.py`
+- `mock_adapter.py`
+- `models.py`
+- `moment_processor.py`
+- `narrator.py`
+- `narrator/prompt_builder.py`
+- `nature.py`
+- `neo4j_adapter.py`
+- `nodes.py`
+- `orchestrator.py`
+- `persistence.py`
+- `phases/completion.py`
+- `phases/generation.py`
+- `phases/link_cooling.py`
+- `phases/moment_draw.py`
+- `phases/moment_flow.py`
+- `phases/moment_interaction.py`
+- `phases/narrative_backflow.py`
+- `phases/rejection.py`
+- `procedure_runner.py`
+- `proposals/generator.py`
+- `proposals/scorer.py`
+- `proposals/types.py`
+- `protocol_runner.py`
+- `repair_verification.py`
+- `route.ts`
 - `runtime/agent_cli.py`
 - `runtime/api/app.py`
 - `runtime/cli.py`
@@ -9832,7 +9574,9 @@
 - `runtime/cluster_health.py`
 - `runtime/cluster_metrics.py`
 - `runtime/connectome/persistence.py`
+- `runtime/connectome/procedure_runner.py`
 - `runtime/connectome/runner.py`
+- `runtime/connectome/schema.py`
 - `runtime/connectome/session.py`
 - `runtime/connectome/steps.py`
 - `runtime/connectome/templates.py`
@@ -9862,6 +9606,7 @@
 - `runtime/graph/health/lint_terminology.py`
 - `runtime/graph/health/test_schema.py`
 - `runtime/handlers/base.py`
+- `runtime/health/procedure_health.py`
 - `runtime/infrastructure/api/app.py`
 - `runtime/infrastructure/api/graphs.py`
 - `runtime/infrastructure/api/moments.py`
@@ -9938,6 +9683,7 @@
 - `runtime/physics/health/checkers/energy_conservation.py`
 - `runtime/physics/health/checkers/moment_lifecycle.py`
 - `runtime/physics/link_scoring.py`
+- `runtime/physics/nature.py`
 - `runtime/physics/phases/completion.py`
 - `runtime/physics/phases/generation.py`
 - `runtime/physics/phases/link_cooling.py`
@@ -9987,38 +9733,19 @@
 - `runtime/tests/test_traversal_logger.py`
 - `runtime/validate.py`
 - `runtime/work.py`
-- `mock_adapter.py`
-- `models.py`
-- `moment_processor.py`
-- `narrator.py`
-- `narrator/prompt_builder.py`
-- `neo4j_adapter.py`
-- `nodes.py`
-- `orchestrator.py`
-- `phases/completion.py`
-- `phases/generation.py`
-- `phases/link_cooling.py`
-- `phases/moment_draw.py`
-- `phases/moment_flow.py`
-- `phases/moment_interaction.py`
-- `phases/narrative_backflow.py`
-- `phases/rejection.py`
-- `proposals/generator.py`
-- `proposals/scorer.py`
-- `proposals/types.py`
-- `protocol_runner.py`
-- `repair_verification.py`
-- `route.ts`
 - `scripts/check_chain_links.py`
 - `scripts/check_doc_completeness.py`
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
 - `semantic_proximity_based_character_node_selector.py`
+- `setup_database_and_apply_schema.py`
+- `show_upgrade_notice_if_available.py`
 - `signals/aggregator.py`
 - `signals/collector.py`
 - `snake_case.py`
 - `stream_dialogue.py`
 - `surface.py`
+- `sync_skills_to_ai_tool_directories.py`
 - `synthesis.py`
 - `test_loader.py`
 - `test_runner.py`
@@ -10030,6 +9757,8 @@
 - `test_validation.py`
 - `tests/building/test_agents.py`
 - `tests/building/test_ingest.py`
+- `tests/mind/test_cli.py`
+- `tests/mind/test_cluster_builder.py`
 - `tests/runtime/test_cli.py`
 - `tests/runtime/test_cluster_builder.py`
 - `tests/test_cluster_stability.py`
@@ -10041,7 +9770,9 @@
 - `tools/migrate_v11_fields.py`
 - `tools/stream_dialogue.py`
 - `tools/test_health_live.py`
+- `update_gitignore_with_runtime_entry.py`
 - `utils.py`
+- `validate_embedding_config_matches_stored.py`
 - `validation/modes/shadow.py`
 - `validation/modes/unit_test.py`
 - `validation/validator.py`
@@ -10084,6 +9815,7 @@
 - `docs/architecture/cybernetic_studio_architecture/PATTERNS_Cybernetic_Studio_Architecture.md`
 - `docs/architecture/cybernetic_studio_architecture/SYNC_Cybernetic_Studio_Architecture_State.md`
 - `docs/architecture/cybernetic_studio_architecture/VALIDATION_Cybernetic_Studio_Architectural_Invariants.md`
+- `docs/capabilities/PATTERNS_Capabilities.md`
 - `docs/cli/ALGORITHM_CLI_Command_Execution_Logic.md`
 - `docs/cli/HEALTH_CLI_Coverage.md`
 - `docs/cli/archive/SYNC_CLI_Development_State_archive_2025-12.md`
@@ -10092,6 +9824,7 @@
 - `docs/cli/core/ALGORITHM_CLI_Command_Execution_Logic/ALGORITHM_Overview.md`
 - `docs/cli/core/BEHAVIORS_CLI_Command_Effects.md`
 - `docs/cli/core/HEALTH_CLI_Command_Test_Coverage.md`
+- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture.md`
 - `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/overview/IMPLEMENTATION_Overview.md`
 - `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/runtime/IMPLEMENTATION_Runtime_And_Dependencies.md`
 - `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/schema/IMPLEMENTATION_Schema.md`
@@ -10120,6 +9853,7 @@
 - `docs/infrastructure/tempo/ALGORITHM_Tempo_Controller.md`
 - `docs/infrastructure/tempo/IMPLEMENTATION_Tempo.md`
 - `docs/infrastructure/tempo/PATTERNS_Tempo.md`
+- `docs/ingest/PATTERNS_Doc_Ingestion.md`
 - `docs/ingest/PATTERNS_File_Ingestion.md`
 - `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
 - `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
@@ -10131,16 +9865,9 @@
 - `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`
 - `docs/membrane/IMPLEMENTATION_Membrane_System.md`
 - `docs/membrane/VALIDATION_Completion_Verification.md`
-- `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
-- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
-- `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
-- `docs/runtime/models/HEALTH_Models.md`
-- `docs/runtime/models/PATTERNS_Models.md`
-- `docs/runtime/models/VALIDATION_Models.md`
-- `docs/runtime/moments/PATTERNS_Moments.md`
-- `docs/runtime/moments/SYNC_Moments.md`
+- `docs/mind/models/HEALTH_Models.md`
+- `docs/mind/models/PATTERNS_Models.md`
+- `docs/mind/models/VALIDATION_Models.md`
 - `docs/mind_cli_core/OBJECTIVES_mind_cli_core.md`
 - `docs/mind_cli_core/PATTERNS_mind_cli_core.md`
 - `docs/mind_cli_core/SYNC_mind_cli_core.md`
@@ -10171,19 +9898,19 @@
 - `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
 - `docs/physics/subentity/ALGORITHM_SubEntity.md`
 - `docs/physics/subentity/BEHAVIORS_SubEntity.md`
+- `docs/physics/subentity/SYNC_SubEntity.md`
 - `docs/physics/subentity/VALIDATION_SubEntity.md`
 - `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md`
-- `docs/mcp-design/ALGORITHM/ALGORITHM_Protocol_Process_Flow.md`
-- `docs/mcp-design/BEHAVIORS_Observable_Protocol_Effects.md`
-- `docs/mcp-design/HEALTH_Protocol_Verification.md`
-- `docs/mcp-design/IMPLEMENTATION/IMPLEMENTATION_File_Structure.md`
-- `docs/mcp-design/PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md`
-- `docs/mcp-design/SYNC_Protocol_Current_State.md`
-- `docs/mcp-design/archive/SYNC_Archive_2024-12.md`
-- `docs/mcp-design/doctor/ALGORITHM_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/IMPLEMENTATION_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/PATTERNS_Project_Health_Doctor.md`
-- `docs/mcp-design/doctor/SYNC_Project_Health_Doctor.md`
+- `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
+- `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
+- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
+- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
+- `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
+- `docs/runtime/models/HEALTH_Models.md`
+- `docs/runtime/models/PATTERNS_Models.md`
+- `docs/runtime/models/VALIDATION_Models.md`
+- `docs/runtime/moments/PATTERNS_Moments.md`
+- `docs/runtime/moments/SYNC_Moments.md`
 - `docs/schema/GRAMMAR_Link_Synthesis.md`
 - `docs/schema/PATTERNS_Schema.md`
 - `docs/schema/SCHEMA.md`
@@ -10208,6 +9935,9 @@
 - `state/SYNC_Project_State.md`
 - `templates/CLAUDE_ADDITION.md`
 - `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
+- `templates/mind/PRINCIPLES.md`
+- `templates/mind/PROTOCOL.md`
+- `templates/mind/agents/manager/CLAUDE.md`
 - `templates/runtime/PRINCIPLES.md`
 - `templates/runtime/PROTOCOL.md`
 - `templates/runtime/agents/manager/CLAUDE.md`

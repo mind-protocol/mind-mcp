@@ -4,9 +4,9 @@ from pathlib import Path
 
 
 def update_gitignore(target_dir: Path) -> None:
-    """Add .mind/mind/ to .gitignore."""
+    """Add .mind/runtime/ to .gitignore."""
     path = target_dir / ".gitignore"
-    entry = ".mind/mind/"
+    entry = ".mind/runtime/"
 
     if path.exists():
         content = path.read_text()

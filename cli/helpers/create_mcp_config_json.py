@@ -20,7 +20,7 @@ def create_mcp_config(target_dir: Path) -> None:
         config["mcpServers"] = {}
 
     # Add/update mind server
-    mind_runtime = target_dir / ".mind" / "mind"
+    mind_runtime = target_dir / ".mind" / "runtime"
     config["mcpServers"]["mind"] = {
         "command": "python3",
         "args": ["-m", "mcp.server"],

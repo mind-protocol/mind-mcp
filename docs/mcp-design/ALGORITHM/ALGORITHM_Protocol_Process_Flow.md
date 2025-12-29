@@ -42,7 +42,7 @@ Detailed workflows are consolidated here for easier navigation.
 2. Update bootstrap files.
    - Append `templates/CLAUDE_ADDITION.md` to `.mind/CLAUDE.md` (create if missing).
    - Mirror the same content to root `AGENTS.md` and append `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`.
-   - For manager role, write `.mind/agents/manager/AGENTS.md` using `templates/mind/agents/manager/CLAUDE.md` plus the Codex addition.
+   - For manager role, write `.mind/actors/ACTOR_Manager.md` using actor template.
 3. Initialize `...mind/state/SYNC_Project_State.md` with current state.
 4. (Optional) Create `docs/` and add module docs as needed.
 
