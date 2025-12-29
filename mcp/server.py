@@ -418,6 +418,36 @@ class MindServer:
                     }
                 },
                 {
+                    "name": "file_watcher",
+                    "description": "Start or stop the file watcher for automatic file.on_* triggers.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "action": {
+                                "type": "string",
+                                "enum": ["start", "stop", "status"],
+                                "description": "Action to perform"
+                            }
+                        },
+                        "required": ["action"]
+                    }
+                },
+                {
+                    "name": "git_trigger",
+                    "description": "Fire a git trigger (post_commit or pre_commit).",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "trigger": {
+                                "type": "string",
+                                "enum": ["post_commit", "pre_commit"],
+                                "description": "Which git trigger to fire"
+                            }
+                        },
+                        "required": ["trigger"]
+                    }
+                },
+                {
                     "name": "task_claim",
                     "description": "Atomically claim a pending task for an agent. Returns success/failure.",
                     "inputSchema": {
@@ -519,6 +549,10 @@ class MindServer:
             return self._tool_capability_trigger(arguments)
         elif tool_name == "capability_list":
             return self._tool_capability_list(arguments)
+        elif tool_name == "file_watcher":
+            return self._tool_file_watcher(arguments)
+        elif tool_name == "git_trigger":
+            return self._tool_git_trigger(arguments)
         elif tool_name == "task_claim":
             return self._tool_task_claim(arguments)
         elif tool_name == "task_complete":
@@ -1260,6 +1294,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
         lines.append(f"Initialized: {status['initialized']}")
         lines.append(f"Capabilities: {status['capabilities']}")
         lines.append(f"Cron Scheduler: {'running' if status['cron_running'] else 'stopped'}")
+        lines.append(f"File Watcher: {'running' if status.get('file_watcher_running') else 'stopped'}")
 
         if status.get("registry"):
             reg = status["registry"]
@@ -1364,6 +1399,70 @@ Please investigate and fix this issue. Follow the project's coding standards and
             lines.append("")
 
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+    def _tool_file_watcher(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Control the file watcher."""
+        if not self.capability_manager:
+            return {"content": [{"type": "text", "text": "Capability system not available"}]}
+
+        action = args.get("action")
+
+        if action == "start":
+            self.capability_manager.start_file_watcher()
+            running = self.capability_manager.file_watcher and self.capability_manager.file_watcher.running
+            if running:
+                return {"content": [{"type": "text", "text": "File watcher started"}]}
+            else:
+                return {"content": [{"type": "text", "text": "Failed to start file watcher"}]}
+
+        elif action == "stop":
+            self.capability_manager.stop_file_watcher()
+            return {"content": [{"type": "text", "text": "File watcher stopped"}]}
+
+        elif action == "status":
+            running = self.capability_manager.file_watcher and self.capability_manager.file_watcher.running
+            status = "running" if running else "stopped"
+            return {"content": [{"type": "text", "text": f"File watcher: {status}"}]}
+
+        else:
+            return {"content": [{"type": "text", "text": "Error: action must be 'start', 'stop', or 'status'"}]}
+
+    def _tool_git_trigger(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Fire a git trigger."""
+        if not self.capability_manager:
+            return {"content": [{"type": "text", "text": "Capability system not available"}]}
+
+        trigger = args.get("trigger")
+        git_hooks = self.capability_manager.get_git_hooks()
+
+        if not git_hooks:
+            return {"content": [{"type": "text", "text": "Git hooks not available"}]}
+
+        try:
+            if trigger == "post_commit":
+                result = git_hooks.fire_post_commit()
+            elif trigger == "pre_commit":
+                result = git_hooks.fire_pre_commit()
+            else:
+                return {"content": [{"type": "text", "text": "Error: trigger must be 'post_commit' or 'pre_commit'"}]}
+
+            lines = [f"Git trigger: {trigger}\n"]
+            lines.append(f"Checks run: {result.get('checks_run', 0)}")
+            lines.append(f"  Healthy: {result.get('healthy', 0)}")
+            lines.append(f"  Degraded: {result.get('degraded', 0)}")
+            lines.append(f"  Critical: {result.get('critical', 0)}")
+
+            task_runs = result.get("task_runs", [])
+            if task_runs:
+                lines.append(f"\nTask runs created: {len(task_runs)}")
+                for task_id in task_runs[:5]:
+                    lines.append(f"  - {task_id}")
+
+            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+        except Exception as e:
+            logger.exception("Git trigger failed")
+            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
 
     def _tool_task_claim(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Atomically claim a task."""

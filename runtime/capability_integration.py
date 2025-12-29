@@ -230,6 +230,46 @@ class CapabilityManager:
             self.cron_scheduler = None
             log.info("Cron scheduler stopped")
 
+    def start_file_watcher(self, watch_paths: list[str] = None) -> None:
+        """Start the file watcher for filesystem events."""
+        if self.file_watcher:
+            return
+
+        try:
+            from runtime.triggers import FileWatcher
+            self.file_watcher = FileWatcher(
+                target_dir=self.target_dir,
+                fire_trigger=self.fire_trigger,
+                watch_paths=watch_paths,
+            )
+            self.file_watcher.start()
+            log.info("File watcher started")
+        except ImportError as e:
+            log.warning(f"FileWatcher not available: {e}")
+        except Exception as e:
+            log.error(f"Failed to start file watcher: {e}")
+
+    def stop_file_watcher(self) -> None:
+        """Stop the file watcher."""
+        if self.file_watcher:
+            self.file_watcher.stop()
+            self.file_watcher = None
+            log.info("File watcher stopped")
+
+    def get_git_hooks(self):
+        """Get GitHooks instance for manual trigger firing."""
+        if not self.git_hooks:
+            try:
+                from runtime.triggers import GitHooks
+                self.git_hooks = GitHooks(
+                    target_dir=self.target_dir,
+                    fire_trigger=self.fire_trigger,
+                )
+            except ImportError as e:
+                log.warning(f"GitHooks not available: {e}")
+                return None
+        return self.git_hooks
+
     def get_status(self) -> dict:
         """Get capability system status."""
         throttler = get_throttler() if CAPABILITY_RUNTIME_AVAILABLE else None
@@ -240,6 +280,7 @@ class CapabilityManager:
             "capabilities": len(self.capabilities),
             "registry": self.registry.get_stats() if self._initialized else {},
             "cron_running": self.cron_scheduler is not None and self.cron_scheduler.running,
+            "file_watcher_running": self.file_watcher is not None and self.file_watcher.running,
         }
 
         if throttler:
