@@ -287,6 +287,103 @@ class AgentGraph:
             logger.warning(f"[AgentGraph] Failed to boost {agent_id} energy: {e}")
             return False
 
+    def set_agent_space(self, agent_id: str, space_id: str) -> bool:
+        """Set the agent's current active space and link them."""
+        if not self._connect():
+            return False
+
+        try:
+            timestamp = int(time.time())
+            # Update agent's current_space and link to space
+            cypher = """
+            MATCH (a:Actor {id: $agent_id})
+            MERGE (s:Space {id: $space_id})
+            SET s.node_type = 'space',
+                s.name = $space_name,
+                s.updated_at_s = $timestamp,
+                s.created_at_s = coalesce(s.created_at_s, $timestamp)
+            SET a.current_space = $space_id, a.updated_at_s = $timestamp
+            MERGE (a)-[r:active_in]->(s)
+            SET r.since = $timestamp
+            RETURN a.id
+            """
+            self._graph_ops._query(cypher, {
+                "agent_id": agent_id,
+                "space_id": space_id,
+                "space_name": space_id.replace("space_", "").replace("_", "/"),
+                "timestamp": timestamp,
+            })
+            logger.info(f"[AgentGraph] Set {agent_id} active in {space_id}")
+            return True
+        except Exception as e:
+            logger.warning(f"[AgentGraph] Failed to set agent space: {e}")
+            return False
+
+    def get_task_space(self, task_id: str) -> Optional[str]:
+        """
+        Get the space (module) for a task by following links:
+        1. task → (implements) → thing → space
+        2. task.path or task.module
+        3. issue → task path
+        """
+        if not self._connect():
+            return None
+
+        try:
+            # First try: follow implements links to find space
+            cypher = """
+            MATCH (t:Narrative {id: $task_id})
+            OPTIONAL MATCH (t)-[:implements]->(thing)-[:in|part_of]->(s:Space)
+            OPTIONAL MATCH (t)-[:implements]->(thing2)
+            OPTIONAL MATCH (i:Narrative {type: 'issue'})-[:relates]->(t)
+            RETURN s.id as space_id,
+                   thing2.path as impl_path,
+                   t.path as task_path,
+                   t.module as task_module,
+                   collect(i.path)[0] as issue_path
+            """
+            result = self._graph_ops._query(cypher, {"task_id": task_id})
+            if result and result[0]:
+                # Priority: direct space link > impl path > task path > module > issue path
+                space_id = result[0][0]
+                if space_id:
+                    return space_id
+
+                impl_path = result[0][1]
+                task_path = result[0][2]
+                task_module = result[0][3]
+                issue_path = result[0][4]
+
+                # Derive space from best available path
+                path = impl_path or task_path or task_module or issue_path
+                if path:
+                    from pathlib import Path as P
+                    path_parts = P(str(path)).parts[:2]
+                    if path_parts:
+                        return f"space_{'_'.join(path_parts)}"
+            return None
+        except Exception as e:
+            logger.warning(f"[AgentGraph] Failed to get task space: {e}")
+            return None
+
+    def get_agent_space(self, agent_id: str) -> Optional[str]:
+        """Get the agent's current active space."""
+        if not self._connect():
+            return None
+
+        try:
+            cypher = """
+            MATCH (a:Actor {id: $agent_id})
+            RETURN a.current_space
+            """
+            result = self._graph_ops._query(cypher, {"agent_id": agent_id})
+            if result and result[0]:
+                return result[0][0]
+            return None
+        except Exception as e:
+            logger.warning(f"[AgentGraph] Failed to get agent space: {e}")
+            return None
+
     def link_agent_to_task(self, agent_id: str, task_id: str) -> bool:
         """Create assigned_to link between agent and task narrative."""
         if not self._connect():
@@ -548,14 +645,24 @@ class AgentGraph:
                     SET r.created_at_s = $timestamp
                     """, {"moment_id": moment_id, "about_id": about_id, "timestamp": timestamp})
 
-            # Link: moment occurs_in space
+            # Link: moment occurs_in space (auto-create space if needed)
             if space_id:
                 self._graph_ops._query("""
+                MERGE (s:Space {id: $space_id})
+                SET s.node_type = 'space',
+                    s.name = $space_name,
+                    s.updated_at_s = $timestamp,
+                    s.created_at_s = coalesce(s.created_at_s, $timestamp)
+                WITH s
                 MATCH (m:Moment {id: $moment_id})
-                MATCH (s:Space {id: $space_id})
                 MERGE (m)-[r:occurs_in]->(s)
                 SET r.created_at_s = $timestamp
-                """, {"moment_id": moment_id, "space_id": space_id, "timestamp": timestamp})
+                """, {
+                    "moment_id": moment_id,
+                    "space_id": space_id,
+                    "space_name": space_id.replace("space_", "").replace("_", "/"),
+                    "timestamp": timestamp,
+                })
 
             logger.info(f"[AgentGraph] Created moment: {moment_id} (follows: {prev_moment_id or 'none'}, space: {space_id or 'none'})")
             return moment_id

@@ -871,6 +871,13 @@ class MindServer:
             path_parts = Path(path).parts[:2]  # Take first 2 parts
             if path_parts:
                 space_id = f"space_{'_'.join(path_parts)}"
+        elif task_id:
+            # Get space from task
+            space_id = self.agent_graph.get_task_space(task_id)
+
+        # Set agent's active space
+        if space_id:
+            self.agent_graph.set_agent_space(agent_id, space_id)
 
         # Upsert issue/task narratives before linking
         issue_ids = None

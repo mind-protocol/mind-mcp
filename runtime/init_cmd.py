@@ -405,7 +405,6 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     Initialize the mind in a project directory.
 
     Copies protocol files and updates .mind/CLAUDE.md and root AGENTS.md with inlined content.
-    Also initializes graph and injects seed-injection.yaml files from docs/.
 
     Args:
         target_dir: The project directory to initialize

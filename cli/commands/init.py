@@ -15,6 +15,7 @@ from ..helpers.create_mcp_config_json import create_mcp_config
 from ..helpers.update_gitignore_with_runtime_entry import update_gitignore
 from ..helpers.ingest_repo_files_to_graph import ingest_repo_files
 from ..helpers.ingest_capabilities_to_graph import ingest_capabilities
+from ..helpers.inject_agents_to_graph import inject_agents
 from ..helpers.generate_repo_overview_maps import generate_overview
 from ..helpers.generate_embeddings_for_graph_nodes import generate_embeddings
 from ..helpers.get_mcp_version_from_config import get_mcp_version
