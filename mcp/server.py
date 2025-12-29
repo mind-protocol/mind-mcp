@@ -894,18 +894,25 @@ Please investigate and fix this issue. Follow the project's coding standards and
 
         # Actually spawn and run the agent
         try:
-            spawn_result = asyncio.run(
-                spawn_work_agent(
-                    agent_id=agent_id,
-                    prompt=prompt,
-                    target_dir=self.target_dir,
-                    agent_provider=provider,
-                    timeout=300.0,
-                    use_continue=True,
-                    task_id=assignment_task_id,
-                    issue_ids=issue_ids,
-                )
+            coro = spawn_work_agent(
+                agent_id=agent_id,
+                prompt=prompt,
+                target_dir=self.target_dir,
+                agent_provider=provider,
+                timeout=300.0,
+                use_continue=True,
+                task_id=assignment_task_id,
+                issue_ids=issue_ids,
             )
+            # Handle both sync and async contexts
+            try:
+                loop = asyncio.get_running_loop()
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor() as pool:
+                    spawn_result = pool.submit(asyncio.run, coro).result()
+            except RuntimeError:
+                # No running loop, use asyncio.run directly
+                spawn_result = asyncio.run(coro)
 
             # Build response
             if task_id:
