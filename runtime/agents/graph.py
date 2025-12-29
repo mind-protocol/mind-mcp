@@ -489,8 +489,8 @@ class AgentGraph:
                 n.message = $message,
                 n.severity = $severity,
                 n.status = 'open',
-                n.updated_at_s = $timestamp
-            ON CREATE SET n.created_at_s = $timestamp
+                n.updated_at_s = $timestamp,
+                n.created_at_s = coalesce(n.created_at_s, $timestamp)
             RETURN n.id
             """
             result = self._graph_ops._query(cypher, {
@@ -533,8 +533,8 @@ class AgentGraph:
                 n.content = $content,
                 n.name = $name,
                 n.status = 'pending',
-                n.updated_at_s = $timestamp
-            ON CREATE SET n.created_at_s = $timestamp
+                n.updated_at_s = $timestamp,
+                n.created_at_s = coalesce(n.created_at_s, $timestamp)
             RETURN n.id
             """
             result = self._graph_ops._query(cypher, {
