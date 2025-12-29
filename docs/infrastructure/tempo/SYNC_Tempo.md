@@ -50,7 +50,7 @@ None — v1 complete.
 
 - **What:** TempoController with pause()/resume() and freeze semantics.
 - **Why:** Decision made: pause = freeze (no flush).
-- **Files:** mind/infrastructure/tempo/tempo_controller.py
+- **Files:** runtime/infrastructure/tempo/tempo_controller.py
 - **Key changes:**
   - Added `paused` state and `tick_at_pause` tracking
   - `pause()` clears asyncio.Event, blocking loop efficiently
@@ -106,7 +106,7 @@ Tempo controller implemented with freeze behavior. Pause = 0 ticks, queue frozen
 - Event-based pause (no busy-wait)
 
 **Ready to use:**
-`mind/infrastructure/tempo/tempo_controller.py`
+`runtime/infrastructure/tempo/tempo_controller.py`
 
 ---
 
@@ -116,7 +116,7 @@ Tempo controller implemented with freeze behavior. Pause = 0 ticks, queue frozen
 
 ```bash
 mind validate
-pytest mind/infrastructure/tempo/ -v
+pytest runtime/infrastructure/tempo/ -v
 ```
 
 ### Immediate
@@ -151,7 +151,7 @@ How strict the pacing guarantees need to be for the UI.
 
 | What | Where |
 |------|-------|
-| Implementation | `mind/infrastructure/tempo/tempo_controller.py` |
+| Implementation | `runtime/infrastructure/tempo/tempo_controller.py` |
 | Tempo algorithm | `docs/infrastructure/tempo/ALGORITHM_Tempo_Controller.md` |
 | Tempo patterns | `docs/infrastructure/tempo/PATTERNS_Tempo.md` |
 | Canon holder | `docs/infrastructure/canon/PATTERNS_Canon.md` |

@@ -1,7 +1,7 @@
 {
   "package": "mind-skills",
   "version": "0.4.0",
-  "root": ".mind-mcp/skills",
+  "root": ".mind/skills",
   "naming_pattern": "TYPE_Explicit_Solutions_Contained_With_First_Letter_Capitalized.md",
   "type_prefix": {
     "skill": "SKILL",

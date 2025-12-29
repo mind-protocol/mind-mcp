@@ -297,7 +297,7 @@ def check_anomaly_count(log: List[StepRecord]) -> HealthResult:
 
 ### Reading JSONL Logs
 
-Logs are stored in `mind/data/logs/traversal/traversal_{id}.jsonl`.
+Logs are stored in `runtime/data/logs/traversal/traversal_{id}.jsonl`.
 
 ```python
 import json
@@ -322,7 +322,7 @@ def analyze_exploration_log(log_path: str) -> Dict[str, HealthResult]:
 
 ### Reading TXT Logs
 
-For human review, check `mind/data/logs/traversal/traversal_{id}.txt`.
+For human review, check `runtime/data/logs/traversal/traversal_{id}.txt`.
 
 **Quality signals to look for:**
 
@@ -509,7 +509,7 @@ model defined in `SKILL_Assess_SubEntity_Exploration_Quality_From_Logs.md`.
 
 ### Diagnostic Report Structure
 
-Stored at: `mind/data/logs/traversal/diagnostic_{exploration_id}.md`
+Stored at: `runtime/data/logs/traversal/diagnostic_{exploration_id}.md`
 
 ```markdown
 # Diagnostic Report: {exploration_id}

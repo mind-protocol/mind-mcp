@@ -33,18 +33,18 @@ IMPL:            mind/prompt.py
 ### V1: Prompt always cites protocol/principles state
 
 ```
-The generated prompt must include the `.mind-mcp/PROTOCOL.md`, `.mind-mcp/PRINCIPLES.md`, and `...mind-mcp/state/SYNC_Project_State.md` paths in their own section.
+The generated prompt must include the `.mind/PROTOCOL.md`, `.mind/PRINCIPLES.md`, and `...mind/state/SYNC_Project_State.md` paths in their own section.
 ```
 
-**Checked by:** `generate_bootstrap_prompt()` output parsing (reference: `mind/prompt.py — generate_bootstrap_prompt()`) and periodic spot-check that `@mind:id: CLI.PROMPT.PATTERNS` sections remain unchanged.
+**Checked by:** `generate_bootstrap_prompt()` output parsing (reference: `runtime/prompt.py — generate_bootstrap_prompt()`) and periodic spot-check that `@mind:id: CLI.PROMPT.PATTERNS` sections remain unchanged.
 
 ### V2: Prompt lists each canonical VIEW entry
 
 ```
-Every VIEW listed in `.mind-mcp/views/` (per the prompt table) must appear in the VIEW table section with the task description.
+Every VIEW listed in `.mind/views/` (per the prompt table) must appear in the VIEW table section with the task description.
 ```
 
-**Checked by:** Compare rendered prompt table rows to the `.mind-mcp/views` table defined in `ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md` (linked via `@mind:id: CLI.PROMPT.ALGORITHM`) and ensure the union matches `mind/prompt.py — _VIEW_TABLE`.
+**Checked by:** Compare rendered prompt table rows to the `.mind/views` table defined in `ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md` (linked via `@mind:id: CLI.PROMPT.ALGORITHM`) and ensure the union matches `runtime/prompt.py — _VIEW_TABLE`.
 
 ### V3: Prompt concludes with update checklist
 
@@ -140,6 +140,6 @@ RESULT:
 
 ## MARKERS
 
-<!-- @mind:todo @mind:TODO Automate VIEW-table verification across `.mind-mcp/views` to keep the prompt stable (interfaces with `docs/protocol/HEALTH_Protocol_Verification.md` doctor check #1). -->
-<!-- @mind:proposition Align prompt invariants with doctor checks in `docs/protocol/HEALTH_Protocol_Verification.md` by feeding `prompt_doc_reference_check` into the chain integrity monitor. -->
+<!-- @mind:todo @mind:TODO Automate VIEW-table verification across `.mind/views` to keep the prompt stable (interfaces with `docs/mcp-design/HEALTH_Protocol_Verification.md` doctor check #1). -->
+<!-- @mind:proposition Align prompt invariants with doctor checks in `docs/mcp-design/HEALTH_Protocol_Verification.md` by feeding `prompt_doc_reference_check` into the chain integrity monitor. -->
 <!-- @mind:escalation Should we track which views agents actually load after reading the prompt to feed back into `HEALTH_Prompt_Runtime_Verification.md` metrics? -->

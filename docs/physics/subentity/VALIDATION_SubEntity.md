@@ -502,8 +502,8 @@ def check_fatigue_stopping(subentity: SubEntity, stopped_by_fatigue: bool) -> bo
 
 ## VERIFICATION PROCEDURE
 
-1. Run unit tests in `mind/tests/test_subentity.py`
-2. Run traversal logger tests in `mind/tests/test_traversal_logger.py`
+1. Run unit tests in `runtime/tests/test_subentity.py`
+2. Run traversal logger tests in `runtime/tests/test_traversal_logger.py`
 3. Execute exploration on test graph, verify all invariants
 4. Check logs for anomaly warnings (see HEALTH_SubEntity.md)
 5. Record results in SYNC_SubEntity.md

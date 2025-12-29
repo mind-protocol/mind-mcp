@@ -7,7 +7,7 @@ What the Narrator receives from the Orchestrator.
 ## Script Locations
 
 ```
-mind/infrastructure/orchestration/narrator.py  # Narrator caller + prompt builder
+runtime/infrastructure/orchestration/narrator.py  # Narrator caller + prompt builder
 mind/models/                                   # Pydantic models for validation
 ```
 

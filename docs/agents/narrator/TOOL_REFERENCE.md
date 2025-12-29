@@ -1,6 +1,6 @@
 # Narrator Tool Reference
 
-Definitive output schema for narrator responses. For full type definitions, see `docs/schema/SCHEMA.md` and `mind/models/`.
+Definitive output schema for narrator responses. For full type definitions, see `docs/schema/SCHEMA.md` and `runtime/models/`.
 
 ---
 
@@ -104,7 +104,7 @@ interface DialogueChunk {
 
 ## Graph Mutations
 
-Mutation payloads must validate against Pydantic models in `mind/models/`.
+Mutation payloads must validate against Pydantic models in `runtime/models/`.
 
 ```typescript
 interface GraphMutation {
@@ -135,4 +135,4 @@ Only include `time_elapsed` for significant actions (>= 5 minutes).
 1. `scene` is `{}` for conversational actions and SceneTree for significant actions.
 2. Every clickable has `speaks` + `intent` and either `response` or `waitingMessage`.
 3. Clickable keys appear in the text they annotate.
-4. Mutations validate against `mind/models/`.
+4. Mutations validate against `runtime/models/`.

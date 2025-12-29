@@ -21,7 +21,7 @@ The DatabaseAdapter module has been designed to enable switching between FalkorD
 | Component | State | Notes |
 |-----------|-------|-------|
 | PATTERNS doc | CANONICAL | Design approach finalized |
-| Adapter infrastructure | NOT_STARTED | `mind/physics/graph/adapters/` |
+| Adapter infrastructure | NOT_STARTED | `runtime/physics/graph/adapters/` |
 | FalkorDBAdapter | NOT_STARTED | Extract from current code |
 | Neo4jAdapter | NOT_STARTED | New implementation |
 | MockAdapter | NOT_STARTED | For testing |
@@ -39,18 +39,18 @@ These files contain `from falkordb import FalkorDB` and must be refactored:
 
 | File | Priority | Complexity | Status |
 |------|----------|------------|--------|
-| `mind/physics/graph/graph_queries.py` | HIGH | Medium | Pending |
-| `mind/physics/graph/graph_ops.py` | HIGH | Medium | Pending |
-| `mind/physics/graph/graph_ops_read_only_interface.py` | HIGH | Low | Pending |
-| `mind/infrastructure/api/graphs.py` | MEDIUM | Low | Pending |
-| `mind/init_db.py` | MEDIUM | Low | Pending |
-| `mind/graph/health/test_schema.py` | MEDIUM | Low | Pending |
-| `mind/graph/health/lint_terminology.py` | MEDIUM | Low | Pending |
-| `mind/migrations/migrate_to_content_field.py` | LOW | Low | Pending |
-| `mind/migrations/migrate_temporal_v171.py` | LOW | Low | Pending |
-| `mind/migrations/migrate_to_v2_schema.py` | LOW | Low | Pending |
-| `mind/migrations/migrate_tick_to_tick_created.py` | LOW | Low | Pending |
-| `mind/migrations/migrate_001_schema_alignment.py` | LOW | Low | Pending |
+| `runtime/physics/graph/graph_queries.py` | HIGH | Medium | Pending |
+| `runtime/physics/graph/graph_ops.py` | HIGH | Medium | Pending |
+| `runtime/physics/graph/graph_ops_read_only_interface.py` | HIGH | Low | Pending |
+| `runtime/infrastructure/api/graphs.py` | MEDIUM | Low | Pending |
+| `runtime/init_db.py` | MEDIUM | Low | Pending |
+| `runtime/graph/health/test_schema.py` | MEDIUM | Low | Pending |
+| `runtime/graph/health/lint_terminology.py` | MEDIUM | Low | Pending |
+| `runtime/migrations/migrate_to_content_field.py` | LOW | Low | Pending |
+| `runtime/migrations/migrate_temporal_v171.py` | LOW | Low | Pending |
+| `runtime/migrations/migrate_to_v2_schema.py` | LOW | Low | Pending |
+| `runtime/migrations/migrate_tick_to_tick_created.py` | LOW | Low | Pending |
+| `runtime/migrations/migrate_001_schema_alignment.py` | LOW | Low | Pending |
 | `app/api/connectome/tick/route.ts` | LOW | Low | Pending |
 | `.next/server/app/api/connectome/tick/route.js` | LOW | Low | Auto-generated |
 
@@ -58,22 +58,22 @@ These files contain `from falkordb import FalkorDB` and must be refactored:
 
 These files use `self.graph` or `.graph.` patterns but don't import FalkorDB directly. They will work once the core adapters are in place:
 
-- `mind/physics/exploration.py`
-- `mind/physics/tick_v1_2.py`
-- `mind/physics/graph/graph_queries_search.py`
-- `mind/physics/graph/graph_queries_moments.py`
-- `mind/physics/graph/graph_ops_apply.py`
-- `mind/physics/graph/graph_ops_moments.py`
-- `mind/physics/graph/graph_ops_links.py`
-- `mind/moment_graph/queries.py`
-- `mind/moment_graph/traversal.py`
-- `mind/moment_graph/surface.py`
-- `mind/infrastructure/orchestration/world_runner.py`
-- `mind/infrastructure/tempo/tempo_controller.py`
-- `mind/infrastructure/memory/moment_processor.py`
-- `mind/connectome/persistence.py`
-- `mind/connectome/steps.py`
-- `mind/connectome/runner.py`
+- `runtime/physics/exploration.py`
+- `runtime/physics/tick_v1_2.py`
+- `runtime/physics/graph/graph_queries_search.py`
+- `runtime/physics/graph/graph_queries_moments.py`
+- `runtime/physics/graph/graph_ops_apply.py`
+- `runtime/physics/graph/graph_ops_moments.py`
+- `runtime/physics/graph/graph_ops_links.py`
+- `runtime/moment_graph/queries.py`
+- `runtime/moment_graph/traversal.py`
+- `runtime/moment_graph/surface.py`
+- `runtime/infrastructure/orchestration/world_runner.py`
+- `runtime/infrastructure/tempo/tempo_controller.py`
+- `runtime/infrastructure/memory/moment_processor.py`
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/steps.py`
+- `runtime/connectome/runner.py`
 - ... and 50+ more (see PATTERNS doc for grep command)
 
 ---
@@ -81,7 +81,7 @@ These files use `self.graph` or `.graph.` patterns but don't import FalkorDB dir
 ## Implementation Order
 
 ### Phase 1: Adapter Infrastructure
-1. Create `mind/physics/graph/adapters/` directory
+1. Create `runtime/physics/graph/adapters/` directory
 2. Implement `base.py` with `GraphAdapter` ABC
 3. Implement `falkordb_adapter.py` (extract from current code)
 4. Implement `__init__.py` with factory function
@@ -133,7 +133,7 @@ These files use `self.graph` or `.graph.` patterns but don't import FalkorDB dir
 
 **For next agent:**
 - PATTERNS doc is complete with full change inventory
-- Start with Phase 1: create `mind/physics/graph/adapters/` structure
+- Start with Phase 1: create `runtime/physics/graph/adapters/` structure
 - FalkorDBAdapter should just extract current code from graph_queries.py `_connect()` and `_query()`
 - Test with existing FalkorDB first before adding Neo4j
 

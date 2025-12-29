@@ -50,7 +50,7 @@ Documentation stays current after the template alignment work, with the module i
 
 - **What:** Expanded `HEALTH_Narrator.md` with `WHY THIS PATTERN`, `HOW TO USE THIS TEMPLATE`, `OBJECTIVES COVERAGE`, a full set of indicator subsections including `mutation_validity`, and a GAPS / IDEAS / QUESTIONS section, then recorded the revision in this SYNC entry and the project state log.
 - **Why:** The DOC_TEMPLATE_DRIFT warning singled out the health doc, so filling every template clause makes the verification story explicit without touching runtime prompts.
-- **Files:** `docs/agents/narrator/HEALTH_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/narrator/HEALTH_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate`
 
 ### 2025-12-29: Expand narrator validation coverage
@@ -75,29 +75,29 @@ Documentation stays current after the template alignment work, with the module i
 
 - **What:** Filled the health doc with the missing objectives coverage, usage guidance, indicator details, and GAPS / IDEAS / QUESTIONS prose so the template stops flagging drift and every observable signal now references concrete docks, aggregations, and failure modes.
 - **Why:** DOC_TEMPLATE_DRIFT complained about missing objectives, usage guidance, and indicator writeups, so the fix keeps the canonical health ledger aligned without touching any runtime code.
-- **Files:** `docs/agents/narrator/HEALTH_Narrator.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/narrator/HEALTH_Narrator.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate` *(still reports pre-existing connectome/health and membrane naming warnings)*
 
 ### 2025-12-31: Clarify narrator health usage guidance
 ### 2025-12-31: Clarify narrator health usage guidance
 
-- **What:** Added a usage reminder about logging each indicator update in `...mind-mcp/state/SYNC_Project_Health.md`, explained how each checker run feeds the health score, enriched the GAPS section with a CLI-warning catalog idea, and tied the doc to observable tooling so every indicator has a documented trail.
+- **What:** Added a usage reminder about logging each indicator update in `...mind/state/SYNC_Project_Health.md`, explained how each checker run feeds the health score, enriched the GAPS section with a CLI-warning catalog idea, and tied the doc to observable tooling so every indicator has a documented trail.
 - **Why:** Keeping the health template traceable requires linking prose to the tooling runs that generate the indicators, so future agents can follow the signal without guessing which boundary they are watching.
-- **Files:** `docs/agents/narrator/HEALTH_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/narrator/HEALTH_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate` *(fails: still the known connectome/health and membrane naming warnings)*
 
 ### 2025-12-27: Expand Narrator sync coverage
 
 - **What:** Added IN PROGRESS, KNOWN ISSUES, HANDOFF: FOR HUMAN, and CONSCIOUSNESS TRACE narratives to this sync doc so the template no longer reports missing sections or terse content, and we can now point future agents directly at these prose anchors when the doctor re-checks the module.
 - **Why:** Without these sections the doctor complains about template drift, so bookkeeping them with a bit of extra context lets the module stay CANONICAL without altering the stable prompt story.
-- **Files:** `docs/agents/narrator/SYNC_Narrator.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/narrator/SYNC_Narrator.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate` *(still signals the pre-existing connectome/health and membrane/name warnings already tracked by the doctor)*
 
 ### 2025-12-26: Expand Narrator implementation template coverage
 
 - **What:** Added runtime behavior sequencing, fresh bidirectional link tables, and a GAPS/IDEAS/QUESTIONS section to `IMPLEMENTATION_Narrator.md` so the implementation doc meets template length expectations and traces to actual code.
 - **Why:** The DOC_TEMPLATE_DRIFT warning flagged missing sections in the implementation doc, so filling them with concrete startup, request-cycle, and shutdown behavior plus link tables was necessary.
-- **Files:** `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate`
 
 ### 2025-12-20: Mind Framework Refactor

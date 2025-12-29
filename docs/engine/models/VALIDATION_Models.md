@@ -25,7 +25,7 @@ IMPL:            mind/models/
 
 ## OVERVIEW
 
-This document defines the invariants and properties that all Pydantic data models within the `mind/models/` module must uphold. These validations ensure the structural integrity, type consistency, and logical correctness of the data before it is persisted in the graph or used by other engine components.
+This document defines the invariants and properties that all Pydantic data models within the `runtime/models/` module must uphold. These validations ensure the structural integrity, type consistency, and logical correctness of the data before it is persisted in the graph or used by other engine components.
 
 ---
 
@@ -140,7 +140,7 @@ SYMPTOM: Application crashes or logging indicates an invalid enum value.
 ### Manual Checklist
 
 ```
-[ ] Review all model definitions in `mind/models/` for correct type hints, `Field` constraints, and enum usage.
+[ ] Review all model definitions in `runtime/models/` for correct type hints, `Field` constraints, and enum usage.
 [ ] Verify `default_factory` is used for all mutable default fields.
 [ ] Inspect `@property` methods for correct derivation logic.
 ```

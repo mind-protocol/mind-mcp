@@ -37,7 +37,7 @@ mind-mcp is the **L1 client layer** of the Mind Protocol. It runs locally on use
 
 ### 3. MCP Server
 - Exposes tools to AI agents (Claude, etc.)
-- graph_query, membrane_start, agent_spawn
+- graph_query, procedure_start, agent_spawn
 - Structured dialogue via membranes
 
 ### 4. CLI
@@ -86,7 +86,7 @@ User/Agent Action
   MCP Server (mcp/server.py)
        │
        ▼
-  Physics Engine (mind/physics/)
+  Physics Engine (runtime/physics/)
        │
        ├──► Graph Queries (read)
        │

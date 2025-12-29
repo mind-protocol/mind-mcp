@@ -33,7 +33,7 @@ Query canonical graph state, map it into authored scenes, and only fall back on
 on-demand generation when coverage gaps appear. Pre-authored responses cover
 major beats, while the narrator tracks open questions, compiles clickables,
 and writes follow-up text that persists back into the graph. The runtime
-orchestration (`mind/infrastructure/orchestration/narrator.py`) stitches
+orchestration (`runtime/infrastructure/orchestration/narrator.py`) stitches
 prompts, executes session loops, and ensures every mutation is recorded before
 the next response is released.
 
@@ -62,7 +62,7 @@ non-narrator agent responsibilities such as tooling or CLI routing decisions.
 ## Data
 
 Inputs:
-- Graph truth (nodes, edges, canon tags) from `mind/physics/graph/graph_ops.py`.
+- Graph truth (nodes, edges, canon tags) from `runtime/physics/graph/graph_ops.py`.
 - Session metadata (player tags, active path, click sequence) from the narrator
   loop.
 - Prompt instructions captured in `agents/narrator/CLAUDE.md`.
@@ -135,11 +135,11 @@ only the inevitable gaps.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/infrastructure/orchestration/narrator.py` | Orchestrates session loops and prompt assembly. |
-| `mind/physics/graph/graph_ops.py` | Reads canonical nodes/edges and applies mutations. |
-| `mind/physics/graph/graph_queries.py` | Supplies domain-specific queries needed to frame scenes. |
+| `runtime/infrastructure/orchestration/narrator.py` | Orchestrates session loops and prompt assembly. |
+| `runtime/physics/graph/graph_ops.py` | Reads canonical nodes/edges and applies mutations. |
+| `runtime/physics/graph/graph_queries.py` | Supplies domain-specific queries needed to frame scenes. |
 | `agents/narrator/CLAUDE.md` | Captures voice instructions, style, and allowed improvisation. |
-| `mind/infrastructure/scene_memory/` | Stores session metadata that informs pacing and scope. |
+| `runtime/infrastructure/scene_memory/` | Stores session metadata that informs pacing and scope. |
 
 ---
 

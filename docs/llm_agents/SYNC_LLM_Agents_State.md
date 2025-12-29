@@ -40,7 +40,7 @@ THIS:            SYNC_LLM_Agents_State.md (you are here)
 
 ## CURRENT STATE
 
-`mind/llms/gemini_agent.py` implements a standalone CLI process that authenticates with GEMINI_API_KEY (CLI arg, `.env`, or env var), sends a prompt to Gemini, streams JSON output for the TUI, and executes basic local tools (filesystem/search/web fetch). Google search requests use a configurable base URL via `MIND_GOOGLE_SEARCH_URL`. The CLI builds the subprocess invocation from `mind/agent_cli.py` when the `gemini` provider is selected.
+`runtime/llms/gemini_agent.py` implements a standalone CLI process that authenticates with GEMINI_API_KEY (CLI arg, `.env`, or env var), sends a prompt to Gemini, streams JSON output for the TUI, and executes basic local tools (filesystem/search/web fetch). Google search requests use a configurable base URL via `MIND_GOOGLE_SEARCH_URL`. The CLI builds the subprocess invocation from `runtime/agent_cli.py` when the `gemini` provider is selected.
 
 ---
 
@@ -108,8 +108,8 @@ That only the Gemini adapter exists, so the docs should stay lean.
 
 | What | Where |
 |------|-------|
-| Gemini adapter | `mind/llms/gemini_agent.py` |
-| CLI integration | `mind/agent_cli.py` |
+| Gemini adapter | `runtime/llms/gemini_agent.py` |
+| CLI integration | `runtime/agent_cli.py` |
 
 
 ---

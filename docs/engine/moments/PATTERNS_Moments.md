@@ -19,7 +19,7 @@ IMPLEMENTATION: ./IMPLEMENTATION_Moment_Graph_Stub.md
 TEST:           ./TEST_Moment_Graph_Coverage.md
 SYNC:           ./SYNC_Moments.md
 SCHEMA:         ../../schema/SCHEMA_Moments.md
-IMPL:           ../../../mind/moments/__init__.py
+IMPL:           ../../../runtime/moments/__init__.py
 ```
 
 ===============================================================================
@@ -64,7 +64,7 @@ moment graph is the canonical source for what happened and what can happen.
 
 ### Principle 3: Single Module Owner
 
-All moment-graph logic belongs in this module (mind/moments) so callers have a
+All moment-graph logic belongs in this module (runtime/moments) so callers have a
 single place to integrate.
 
 ===============================================================================
@@ -74,7 +74,7 @@ single place to integrate.
 | Module | Why We Depend On It |
 |--------|----------------------|
 | docs/schema/SCHEMA_Moments.md | Canonical schema definitions for moments |
-| mind/physics/graph | Graph operations that will back moment queries |
+| runtime/physics/graph | Graph operations that will back moment queries |
 
 ===============================================================================
 ## WHAT THIS DOES NOT SOLVE

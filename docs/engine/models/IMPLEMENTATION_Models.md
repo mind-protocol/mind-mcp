@@ -39,10 +39,10 @@ mind/models/links.py     # CharacterNarrative, PlacePlace, etc. models
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
-| `mind/models/__init__.py` | Module aggregation | Exports all models | ~90 | OK |
-| `mind/models/base.py` | Core enums & shared types | `CharacterType`, `Modifier`, `GameTimestamp` | ~300 | OK |
-| `mind/models/nodes.py` | Graph node definitions | `Character`, `Place`, `Thing`, `Narrative`, `Moment` | ~300 | OK |
-| `mind/models/links.py` | Graph link definitions | `CharacterNarrative`, `PlacePlace` | ~200 | OK |
+| `runtime/models/__init__.py` | Module aggregation | Exports all models | ~90 | OK |
+| `runtime/models/base.py` | Core enums & shared types | `CharacterType`, `Modifier`, `GameTimestamp` | ~300 | OK |
+| `runtime/models/nodes.py` | Graph node definitions | `Character`, `Place`, `Thing`, `Narrative`, `Moment` | ~300 | OK |
+| `runtime/models/links.py` | Graph link definitions | `CharacterNarrative`, `PlacePlace` | ~200 | OK |
 
 **Size Thresholds:**
 - **OK** (<400 lines): Healthy size, easy to understand
@@ -72,7 +72,7 @@ mind/models/links.py     # CharacterNarrative, PlacePlace, etc. models
 
 - **Logic Sprawl**: Avoid adding complex business logic directly into models; defer to services (e.g., `GraphOps`, `Orchestrator`).
 - **Redundant Validation**: Do not re-implement Pydantic's native validation checks with custom `@validator` functions unless truly necessary.
-- **Circular Dependencies**: Structure files to avoid `A imports B` and `B imports A` loops, especially between `mind/models/nodes.py`, `mind/models/links.py`, `mind/models/base.py`.
+- **Circular Dependencies**: Structure files to avoid `A imports B` and `B imports A` loops, especially between `runtime/models/nodes.py`, `runtime/models/links.py`, `runtime/models/base.py`.
 
 ### Boundaries
 
@@ -84,7 +84,7 @@ mind/models/links.py     # CharacterNarrative, PlacePlace, etc. models
 
 ## SCHEMA
 
-The primary schema is the sum of all Pydantic models in this module. Refer to individual model definitions in `mind/models/nodes.py`, `mind/models/links.py`, and `mind/models/base.py` for full details. High-level schema contracts for specific domains (e.g., Moment Graph) are documented in `docs/schema/`.
+The primary schema is the sum of all Pydantic models in this module. Refer to individual model definitions in `runtime/models/nodes.py`, `runtime/models/links.py`, and `runtime/models/base.py` for full details. High-level schema contracts for specific domains (e.g., Moment Graph) are documented in `docs/schema/`.
 
 ---
 
@@ -92,9 +92,9 @@ The primary schema is the sum of all Pydantic models in this module. Refer to in
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| Model instantiation | `mind/models/nodes.py:Character(...)` | World scraping, API, Orchestrator |
-| `GameTimestamp.parse()` | `mind/models/base.py:284` | Parsing game event strings |
-| `embeddable_text()` | `mind/models/nodes.py:100` | `EmbeddingService` for vectorization |
+| Model instantiation | `runtime/models/nodes.py:Character(...)` | World scraping, API, Orchestrator |
+| `GameTimestamp.parse()` | `runtime/models/base.py:284` | Parsing game event strings |
+| `embeddable_text()` | `runtime/models/nodes.py:100` | `EmbeddingService` for vectorization |
 
 ---
 
@@ -198,10 +198,10 @@ mind/models/links.py
 
 | Package | Used For | Imported By |
 |---------|----------|-------------|
-| `pydantic` | Core data modeling | All files in `mind/models/` |
-| `enum` | Enumerated types | `mind/models/base.py` |
-| `datetime` | Date/time fields | `mind/models/base.py` |
-| `typing` | Type hints | All files in `mind/models/` |
+| `pydantic` | Core data modeling | All files in `runtime/models/` |
+| `enum` | Enumerated types | `runtime/models/base.py` |
+| `datetime` | Date/time fields | `runtime/models/base.py` |
+| `typing` | Type hints | All files in `runtime/models/` |
 
 ---
 
@@ -252,7 +252,7 @@ Models are frequently serialized to dictionaries or JSON (e.g., for API response
 
 | Config | Location | Default | Description |
 |--------|----------|---------|-------------|
-| `Config allow_population_by_field_name` | `Moment` model in `mind/models/nodes.py` | `True` | Allows `tick` to be set via `tick_created` alias. |
+| `Config allow_population_by_field_name` | `Moment` model in `runtime/models/nodes.py` | `True` | Allows `tick` to be set via `tick_created` alias. |
 | `Field(ge=..., le=...)` | Various fields | N/A | Numeric range constraints. |
 | `Field(default_factory=list)` | `List` fields | `[]` | Ensures unique mutable defaults. |
 
@@ -264,17 +264,17 @@ Models are frequently serialized to dictionaries or JSON (e.g., for API response
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/models/__init__.py` | 5 | `docs/schema/models/PATTERNS_Pydantic_Schema_Models.md` |
-| `mind/models/base.py` | 5 | `docs/mind/models/VALIDATION_Models.md` |
-| `mind/models/nodes.py` | 5 | `docs/mind/models/PATTERNS_Models.md` |
+| `runtime/models/__init__.py` | 5 | `docs/schema/models/PATTERNS_Pydantic_Schema_Models.md` |
+| `runtime/models/base.py` | 5 | `docs/mind/models/VALIDATION_Models.md` |
+| `runtime/models/nodes.py` | 5 | `docs/mind/models/PATTERNS_Models.md` |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| Character model | `mind/models/nodes.py:Character` |
-| Place model | `mind/models/nodes.py:Place` |
-| `GameTimestamp` operations | `mind/models/base.py:GameTimestamp` |
+| Character model | `runtime/models/nodes.py:Character` |
+| Place model | `runtime/models/nodes.py:Place` |
+| `GameTimestamp` operations | `runtime/models/base.py:GameTimestamp` |
 
 ---
 

@@ -115,27 +115,27 @@ This archive is intentionally simple; its silence is a feature that keeps the na
 
 ### 2025-12-19: Updated default model and CLI integration
 
-- **What:** Set default Gemini model to `gemini-3-flash-preview` and updated `mind/agent_cli.py` to use the internal `gemini_agent` adapter instead of the external `gemini` CLI.
+- **What:** Set default Gemini model to `gemini-3-flash-preview` and updated `runtime/agent_cli.py` to use the internal `gemini_agent` adapter instead of the external `gemini` CLI.
 - **Why:** To fulfill user request for latest model and align the codebase with documentation while enabling local tools for Gemini.
-- **Files:** `mind/llms/gemini_agent.py`, `mind/agent_cli.py`, `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`, `docs/llm_agents/SYNC_LLM_Agents_State.md`
+- **Files:** `runtime/llms/gemini_agent.py`, `runtime/agent_cli.py`, `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`, `docs/llm_agents/SYNC_LLM_Agents_State.md`
 
 ### 2025-12-19: Externalized Google search base URL
 
 - **What:** Replaced the hardcoded Google search URL with `MIND_GOOGLE_SEARCH_URL` (defaulting to the prior value).
-- **Why:** Address HARDCODED_CONFIG in `mind/llms/gemini_agent.py`.
-- **Files:** `mind/llms/gemini_agent.py`, `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
+- **Why:** Address HARDCODED_CONFIG in `runtime/llms/gemini_agent.py`.
+- **Files:** `runtime/llms/gemini_agent.py`, `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
 
 ### 2025-12-19: Implemented Gemini tool handlers
 
 - **What:** Replaced placeholder tool handlers with working filesystem, search, web fetch/search, todo, and memory helpers.
-- **Why:** INCOMPLETE_IMPL flagged empty tool functions in `mind/llms/gemini_agent.py`.
-- **Files:** `mind/llms/gemini_agent.py`, `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`, `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`, `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`, `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`, `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
+- **Why:** INCOMPLETE_IMPL flagged empty tool functions in `runtime/llms/gemini_agent.py`.
+- **Files:** `runtime/llms/gemini_agent.py`, `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`, `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`, `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`, `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`, `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
 
 ### 2025-12-19: Documented LLM agent module
 
-- **What:** Added full doc chain + module mapping for `mind/llms`.
+- **What:** Added full doc chain + module mapping for `runtime/llms`.
 - **Why:** The module was previously undocumented, causing unmapped code warnings and incomplete chain validation failures.
-- **Files:** `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`, `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`, `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`, `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`, `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`, `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`, `docs/llm_agents/SYNC_LLM_Agents_State.md`, `modules.yaml`, `mind/llms/gemini_agent.py`
+- **Files:** `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`, `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`, `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`, `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`, `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`, `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`, `docs/llm_agents/SYNC_LLM_Agents_State.md`, `modules.yaml`, `runtime/llms/gemini_agent.py`
 - **Struggles/Insights:** Needed the full chain to satisfy `mind validate`.
 
 ### 2025-12-19: Fixed implementation doc links

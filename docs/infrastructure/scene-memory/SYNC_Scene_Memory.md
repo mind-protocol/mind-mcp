@@ -24,14 +24,14 @@ STATUS: CANONICAL
 
 | Component | Status | Location |
 |-----------|--------|----------|
-| Moment model | CANONICAL | `mind/models/nodes.py:189` |
-| MomentProcessor | CANONICAL | `mind/infrastructure/memory/moment_processor.py` |
-| Graph moment ops | CANONICAL | `mind/physics/graph/graph_ops.py:792` |
-| Moment lifecycle | CANONICAL | `mind/physics/graph/graph_ops_moments.py` |
-| Moment queries | CANONICAL | `mind/physics/graph/graph_queries_moments.py` |
-| Moment Graph engine | CANONICAL | `mind/moment_graph/` |
-| API endpoints | CANONICAL | `mind/infrastructure/api/moments.py` |
-| Tests | CANONICAL | `mind/tests/test_moment*.py` (5 files) |
+| Moment model | CANONICAL | `runtime/models/nodes.py:189` |
+| MomentProcessor | CANONICAL | `runtime/infrastructure/memory/moment_processor.py` |
+| Graph moment ops | CANONICAL | `runtime/physics/graph/graph_ops.py:792` |
+| Moment lifecycle | CANONICAL | `runtime/physics/graph/graph_ops_moments.py` |
+| Moment queries | CANONICAL | `runtime/physics/graph/graph_queries_moments.py` |
+| Moment Graph engine | CANONICAL | `runtime/moment_graph/` |
+| API endpoints | CANONICAL | `runtime/infrastructure/api/moments.py` |
+| Tests | CANONICAL | `runtime/tests/test_moment*.py` (5 files) |
 
 ===============================================================================
 ## MATURITY
@@ -57,7 +57,7 @@ What's proposed (v2):
 
 Scene Memory remains a legacy documentation wrapper around the canonical
 Moment Graph implementation; the code and runtime behavior live in
-`mind/infrastructure/memory/` and graph ops, while this SYNC tracks
+`runtime/infrastructure/memory/` and graph ops, while this SYNC tracks
 documentation alignment and repair history for drift checks.
 
 ===============================================================================
@@ -111,15 +111,15 @@ drifting into duplicate specifications.
 ## POINTERS
 ===============================================================================
 
-- Canonical Moment Graph behavior and schemas live in `docs/mind/moments/`.
-- Runtime traversal and query mechanics live in `docs/mind/moment-graph-mind/`.
+- Canonical Moment Graph behavior and schemas live in `docs/runtime/moments/`.
+- Runtime traversal and query mechanics live in `docs/runtime/moment-graph-mind/`.
 - Graph physics interactions live in `docs/physics/`.
 
 ===============================================================================
 ## REPAIR LOG (2025-12-20)
 ===============================================================================
 
-- Verified `mind/infrastructure/memory/moment_processor.py` already implements
+- Verified `runtime/infrastructure/memory/moment_processor.py` already implements
   `_write_transcript`, `last_moment_id`, `transcript_line_count`, and
   `get_moment_processor` for repair #16; no code changes required.
 ## OPEN QUESTIONS

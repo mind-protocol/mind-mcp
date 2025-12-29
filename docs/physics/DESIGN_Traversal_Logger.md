@@ -273,7 +273,7 @@ One JSON object per line for easy parsing:
 {"header":{"timestamp":"2025-12-26T14:32:01.456Z",...},"state":{...},"decision":{...}}
 ```
 
-File: `mind/data/logs/traversal_{exploration_id}.jsonl`
+File: `runtime/data/logs/traversal_{exploration_id}.jsonl`
 
 ### Human-Readable Summary
 
@@ -311,7 +311,7 @@ Started: 2025-12-26T14:30:00Z
 ═══ END exp_abc123 (1.2s, 47 steps, 5 subentities) ═══
 ```
 
-File: `mind/data/logs/traversal_{exploration_id}.txt`
+File: `runtime/data/logs/traversal_{exploration_id}.txt`
 
 ---
 
@@ -474,7 +474,7 @@ async def run_exploration(actor_id: str, intention: str, ...):
 ## CONFIGURATION
 
 ```yaml
-# .mind-mcp/config.yaml
+# .mind/config.yaml
 traversal_logging:
   enabled: true
   level: STEP              # TRACE, STEP, EVENT, SUMMARY
@@ -545,7 +545,7 @@ traversal_logging:
 
 ## NEXT STEPS
 
-1. Implement `TraversalLogger` class in `mind/physics/traversal_logger.py`
+1. Implement `TraversalLogger` class in `runtime/physics/traversal_logger.py`
 2. Add data classes for decisions and movements
 3. Integrate with SubEntity and exploration runner
 4. Add log rotation and index management

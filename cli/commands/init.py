@@ -13,6 +13,9 @@ from ..helpers.create_env_example_file import create_env_example
 from ..helpers.create_mcp_config_json import create_mcp_config
 from ..helpers.update_gitignore_with_runtime_entry import update_gitignore
 from ..helpers.ingest_repo_files_to_graph import ingest_repo_files
+from ..helpers.inject_seed_yaml_to_graph import inject_seed_yaml
+from ..helpers.generate_repo_overview_maps import generate_overview
+from ..helpers.generate_embeddings_for_graph_nodes import generate_embeddings
 from ..helpers.get_mcp_version_from_config import get_mcp_version
 
 
@@ -57,25 +60,40 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     setup_database(target_dir, database, graph_name)
     steps.append("database_setup")
 
-    # 7. File ingestion
+    # 7. File ingestion (creates Spaces and Things from repo files)
     print("\n## File Ingestion")
     ingest_repo_files(target_dir, graph_name)
     steps.append("file_ingest")
 
-    # 8. Env example
+    # 8. Seed injection (creates Actors, Narratives, links to existing Spaces)
+    print("\n## Seed Injection")
+    inject_seed_yaml(target_dir, graph_name)
+    steps.append("seed_inject")
+
+    # 9. Env example
     print("\n## Environment")
     create_env_example(target_dir, database)
     steps.append("env_example")
 
-    # 9. MCP config
+    # 10. MCP config
     print("\n## MCP Server")
     create_mcp_config(target_dir)
     steps.append("mcp_config")
 
-    # 10. Gitignore
+    # 11. Gitignore
     print("\n## Gitignore")
     update_gitignore(target_dir)
     steps.append("gitignore")
+
+    # 12. Overview (generates map.md files)
+    print("\n## Overview")
+    generate_overview(target_dir)
+    steps.append("overview")
+
+    # 13. Embeddings (with progress bar)
+    print("\n## Embeddings")
+    generate_embeddings(graph_name)
+    steps.append("embeddings")
 
     # Write to SYNC file
     _update_sync_file(target_dir, version, database, graph_name, steps)

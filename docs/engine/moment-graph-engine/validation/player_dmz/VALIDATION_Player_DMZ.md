@@ -13,7 +13,7 @@ VERIFIED: 2025-12-20 against local tree
 ```
 THIS:            VALIDATION_Player_DMZ.md
 IMPL:            ../../../../../mind/world_builder/*
-                 ../../../../../mind/moment_graph/queries.py
+                 ../../../../../runtime/moment_graph/queries.py
 
 # Note: PATTERNS and BEHAVIORS files planned but not yet created
 ```

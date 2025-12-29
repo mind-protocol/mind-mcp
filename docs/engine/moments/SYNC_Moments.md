@@ -18,7 +18,7 @@ VALIDATION:     ./VALIDATION_Moment_Graph_Invariants.md
 IMPLEMENTATION: ./IMPLEMENTATION_Moment_Graph_Stub.md
 TEST:           ./TEST_Moment_Graph_Coverage.md
 THIS:           SYNC_Moments.md (you are here)
-IMPL:           mind/moments/__init__.py
+IMPL:           runtime/moments/__init__.py
 ```
 
 ---
@@ -52,9 +52,9 @@ real graph-backed moment model is implemented.
 
 - **What:** Added/updated PATTERNS + SYNC docs, mapped the module in
   `modules.yaml`, and aligned the entry point DOCS reference.
-- **Why:** Repair task flagged `mind/moments` as undocumented.
-- **Files:** `docs/mind/moments/PATTERNS_Moments.md`,
-  `docs/mind/moments/SYNC_Moments.md`, `mind/moments/__init__.py`,
+- **Why:** Repair task flagged `runtime/moments` as undocumented.
+- **Files:** `docs/runtime/moments/PATTERNS_Moments.md`,
+  `docs/runtime/moments/SYNC_Moments.md`, `runtime/moments/__init__.py`,
   `modules.yaml`
 
 ---

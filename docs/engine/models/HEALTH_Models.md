@@ -10,7 +10,7 @@ UPDATED: 2025-12-20
 
 ## PURPOSE OF THIS FILE
 
-This file defines the health checks and verification mechanics for the `mind/models/` module. It ensures the integrity and consistency of the game's data schema, protecting against type mismatches, missing required fields, and incorrect value ranges.
+This file defines the health checks and verification mechanics for the `runtime/models/` module. It ensures the integrity and consistency of the game's data schema, protecting against type mismatches, missing required fields, and incorrect value ranges.
 
 What it protects:
 - **Type Safety**: Ensuring all data adheres to Python type hints and Pydantic field definitions.

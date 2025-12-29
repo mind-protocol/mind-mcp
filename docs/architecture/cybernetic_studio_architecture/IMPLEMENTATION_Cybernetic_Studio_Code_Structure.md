@@ -49,8 +49,8 @@ blood-ledger/               # Game Cartridge (world content + player experience)
 
 | Area | Purpose | Key Artifacts | Status |
 |------|---------|---------------|--------|
-| `mind` | Graph physics + stimuli ingestion + Places + agent orchestration | `mind/`, `docs/` | DESIGNING |
-| `blood-ledger` | Game content + UI + cartridge orchestration | `mind/`, `frontend/`, `data/` | DESIGNING |
+| `mind` | Graph physics + stimuli ingestion + Places + agent orchestration | `runtime/`, `docs/` | DESIGNING |
+| `blood-ledger` | Game content + UI + cartridge orchestration | `runtime/`, `frontend/`, `data/` | DESIGNING |
 | graph service | Graph storage + traversal + pressure computation (owned by `mind`) | external service | DESIGNING |
 
 ---
@@ -85,7 +85,7 @@ blood-ledger/               # Game Cartridge (world content + player experience)
 
 | Entry Point | File | Triggered By |
 |-------------|------|--------------|
-| `mind` CLI | `mind/` | Dev workflows (validation, sync, repair) |
+| `mind` CLI | `runtime/` | Dev workflows (validation, sync, repair) |
 | `blood-ledger` runtime | run script (external) | Game orchestration in dev |
 
 ---
@@ -175,7 +175,7 @@ flow:
   steps:
     - id: sync_edit
       description: Edit SYNC file in repo
-      file: ...mind-mcp/state/SYNC_*.md
+      file: ...mind/state/SYNC_*.md
       function: manual edit
       input: markdown update
       output: updated file
@@ -198,7 +198,7 @@ flow:
       - id: dock_sync_edit
         type: file
         direction: input
-        file: ...mind-mcp/state/SYNC_Project_State.md
+        file: ...mind/state/SYNC_Project_State.md
         function: manual edit
         trigger: edit
         payload: markdown diff

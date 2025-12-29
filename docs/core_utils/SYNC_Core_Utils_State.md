@@ -120,7 +120,7 @@ IMPL:            mind/core_utils.py
 
 | What | Where |
 |------|-------|
-| Code | `mind/core_utils.py` |
+| Code | `runtime/core_utils.py` |
 | PATTERNS | `docs/core_utils/PATTERNS_Core_Utils_Functions.md` |
 
 ---

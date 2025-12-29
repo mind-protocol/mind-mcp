@@ -3,7 +3,7 @@
 ```
 STATUS: DEPRECATED (alias to ALGORITHM_Api.md)
 CREATED: 2025-12-19
-VERIFIED: 2025-12-19 against mind/infrastructure/api/playthroughs.py (working tree)
+VERIFIED: 2025-12-19 against runtime/infrastructure/api/playthroughs.py (working tree)
 ```
 
 ---
@@ -21,7 +21,7 @@ SYNC:            ./SYNC_Api.md
 
 THIS:            ALGORITHM_Playthrough_Creation.md (legacy alias)
 
-IMPL:            mind/infrastructure/api/playthroughs.py
+IMPL:            runtime/infrastructure/api/playthroughs.py
 ```
 
 ---

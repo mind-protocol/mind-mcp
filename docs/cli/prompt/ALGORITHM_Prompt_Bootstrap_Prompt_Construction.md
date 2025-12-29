@@ -99,7 +99,7 @@ Rationale: collaborative mode keeps humans in the loop for complex choices.
 ## DATA FLOW
 
 ```
-input: project_dir path (per `modules.yaml: prompt`) → render doc path strings (`PROTOCOL.md`, `PRINCIPLES.md`, `SYNC_Project_State.md`) → format work-mode guidance → build VIEW table (per `.mind-mcp/views/VIEW_Review_Evaluate_Changes.md`) → append SYNC/health checklist → output: prompt text
+input: project_dir path (per `modules.yaml: prompt`) → render doc path strings (`PROTOCOL.md`, `PRINCIPLES.md`, `SYNC_Project_State.md`) → format work-mode guidance → build VIEW table (per `.mind/views/VIEW_Review_Evaluate_Changes.md`) → append SYNC/health checklist → output: prompt text
 ```
 
 ---
@@ -128,8 +128,8 @@ input: project_dir path (per `modules.yaml: prompt`) → render doc path strings
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| `mind/cli.py` | `print_bootstrap_prompt()` | human-readable prompt text |
-| `mind/prompt.py` | `generate_bootstrap_prompt()` | string used by CLI, docs, or tests |
+| `runtime/cli.py` | `print_bootstrap_prompt()` | human-readable prompt text |
+| `runtime/prompt.py` | `generate_bootstrap_prompt()` | string used by CLI, docs, or tests |
 
 ---
 

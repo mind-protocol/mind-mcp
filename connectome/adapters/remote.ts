@@ -18,7 +18,9 @@ import type {
   SearchOpts,
   SearchResult,
   FlowEvent,
+  GraphState,
   Unsubscribe,
+  Schema,
 } from '../core/types';
 
 export class RemoteAdapter implements ConnectomeAdapter {
@@ -28,6 +30,24 @@ export class RemoteAdapter implements ConnectomeAdapter {
 
   constructor(config: RemoteAdapterConfig) {
     this.config = config;
+  }
+
+  /**
+   * Get schema - RemoteAdapter doesn't load local schema
+   */
+  getSchema(): Schema | null {
+    return null;
+  }
+
+  /**
+   * Fetch full graph (nodes + links)
+   */
+  async fetchGraph(): Promise<GraphState> {
+    const [nodes, links] = await Promise.all([
+      this.getNodes(),
+      this.getLinks(),
+    ]);
+    return { nodes, links };
   }
 
   async getNodes(): Promise<Node[]> {

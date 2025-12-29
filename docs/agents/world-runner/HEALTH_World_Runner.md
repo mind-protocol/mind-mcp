@@ -173,11 +173,11 @@ docks:
   input:
     id: runner_input
     method: engine.infrastructure.orchestration.world_runner.WorldRunnerService.process_flips
-    location: mind/infrastructure/orchestration/world_runner.py:34-88
+    location: runtime/infrastructure/orchestration/world_runner.py:34-88
   output:
     id: graph_mutations
     method: engine.infrastructure.orchestration.world_runner.WorldRunnerService.process_flips
-    location: mind/infrastructure/orchestration/world_runner.py:110-145
+    location: runtime/infrastructure/orchestration/world_runner.py:110-145
 ```
 
 ### HEALTH REPRESENTATION
@@ -230,11 +230,11 @@ docks:
   input:
     id: runner_invocation
     method: engine.infrastructure.orchestration.world_runner.WorldRunnerService._call_claude
-    location: mind/infrastructure/orchestration/world_runner.py:62-99
+    location: runtime/infrastructure/orchestration/world_runner.py:62-99
   output:
     id: fallback_response
     method: engine.infrastructure.orchestration.world_runner.WorldRunnerService._fallback_response
-    location: mind/infrastructure/orchestration/world_runner.py:120-150
+    location: runtime/infrastructure/orchestration/world_runner.py:120-150
 ```
 
 ### HEALTH REPRESENTATION

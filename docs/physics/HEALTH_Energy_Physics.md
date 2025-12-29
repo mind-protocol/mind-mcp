@@ -81,7 +81,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Physics.md
 THIS:            HEALTH_Energy_Physics.md
 SYNC:            ./SYNC_Physics.md
 
-IMPL:            mind/physics/health/checker.py
+IMPL:            runtime/physics/health/checker.py
 ```
 
 > **Contract:** HEALTH checks verify input/output against VALIDATION with minimal or no code changes. After changes: update IMPL or add TODO to SYNC. Run HEALTH checks at throttled rates.
@@ -96,7 +96,7 @@ flows_analysis:
     purpose: Complete physics tick with all phases in order
     triggers:
       - type: schedule
-        source: mind/infrastructure/orchestration/world_runner.py:tick
+        source: runtime/infrastructure/orchestration/world_runner.py:tick
         notes: Called by world runner loop every 5 seconds
     frequency:
       expected_rate: 12/min
@@ -111,7 +111,7 @@ flows_analysis:
     purpose: Actors generate energy gated by player proximity
     triggers:
       - type: event
-        source: mind/physics/tick.py:phase_generate
+        source: runtime/physics/tick.py:phase_generate
         notes: Phase 1 of tick
     frequency:
       expected_rate: 12/min (per tick)
@@ -126,7 +126,7 @@ flows_analysis:
     purpose: Possible and active moments draw from actors
     triggers:
       - type: event
-        source: mind/physics/tick.py:phase_draw
+        source: runtime/physics/tick.py:phase_draw
         notes: Phase 2 of tick
     frequency:
       expected_rate: 12/min
@@ -141,7 +141,7 @@ flows_analysis:
     purpose: Active moments radiate to connected nodes
     triggers:
       - type: event
-        source: mind/physics/tick.py:phase_flow
+        source: runtime/physics/tick.py:phase_flow
         notes: Phase 3 of tick
     frequency:
       expected_rate: 12/min
@@ -156,7 +156,7 @@ flows_analysis:
     purpose: Every energy flow updates link energy, strength, emotions
     triggers:
       - type: event
-        source: mind/physics/flow.py:energy_flows_through
+        source: runtime/physics/flow.py:energy_flows_through
         notes: Called on every transfer
     frequency:
       expected_rate: 100-1000/tick (depends on graph)
@@ -171,7 +171,7 @@ flows_analysis:
     purpose: Hot links cool, energy returns to nodes or becomes strength
     triggers:
       - type: event
-        source: mind/physics/tick.py:phase_link_cooling
+        source: runtime/physics/tick.py:phase_link_cooling
         notes: Phase 5 of tick
     frequency:
       expected_rate: 12/min
@@ -186,7 +186,7 @@ flows_analysis:
     purpose: Moments transition through valid states
     triggers:
       - type: event
-        source: mind/infrastructure/canon/canon_holder.py:transition
+        source: runtime/infrastructure/canon/canon_holder.py:transition
         notes: Canon holder validates transitions
     frequency:
       expected_rate: 5-20/min (moment creation rate)
@@ -201,7 +201,7 @@ flows_analysis:
     purpose: Only top 20 links per node participate in physics
     triggers:
       - type: event
-        source: mind/physics/tick.py:get_hot_links
+        source: runtime/physics/tick.py:get_hot_links
         notes: Called per node per phase
     frequency:
       expected_rate: 500-2000/tick
@@ -286,7 +286,7 @@ health_indicators:
 
 ```yaml
 status:
-  stream_destination: mind/physics/health/status.json
+  stream_destination: runtime/physics/health/status.json
   result:
     representation: enum
     value: UNKNOWN
@@ -304,37 +304,37 @@ checkers:
     purpose: Verify total energy bounded and no negative values
     status: pending
     priority: high
-    file: mind/physics/health/checkers/energy_conservation.py
+    file: runtime/physics/health/checkers/energy_conservation.py
 
   - name: link_state_checker
     purpose: Verify hot/cold ratio healthy and strength growing
     status: pending
     priority: high
-    file: mind/physics/health/checkers/link_state.py
+    file: runtime/physics/health/checkers/link_state.py
 
   - name: tick_integrity_checker
     purpose: Verify phases execute in order and complete
     status: pending
     priority: high
-    file: mind/physics/health/checkers/tick_integrity.py
+    file: runtime/physics/health/checkers/tick_integrity.py
 
   - name: moment_lifecycle_checker
     purpose: Verify state transitions valid and no stuck moments
     status: pending
     priority: high
-    file: mind/physics/health/checkers/moment_lifecycle.py
+    file: runtime/physics/health/checkers/moment_lifecycle.py
 
   - name: proximity_checker
     purpose: Verify proximity values in bounds and correlate with graph distance
     status: pending
     priority: med
-    file: mind/physics/health/checkers/proximity.py
+    file: runtime/physics/health/checkers/proximity.py
 
   - name: top_n_checker
     purpose: Verify critical links not excluded by filter
     status: pending
     priority: med
-    file: mind/physics/health/checkers/top_n.py
+    file: runtime/physics/health/checkers/top_n.py
 ```
 
 ---
@@ -378,11 +378,11 @@ docks:
   input:
     id: DOCK-TICK-START
     method: engine.physics.tick.snapshot_energy_state
-    location: mind/physics/tick.py:99
+    location: runtime/physics/tick.py:99
   output:
     id: DOCK-TICK-END
     method: engine.physics.tick.snapshot_energy_state
-    location: mind/physics/tick.py:145
+    location: runtime/physics/tick.py:145
 ```
 
 ### ALGORITHM / CHECK MECHANISM
@@ -440,7 +440,7 @@ throttling:
 ```yaml
 forwarding:
   targets:
-    - location: mind/physics/health/status.json
+    - location: runtime/physics/health/status.json
       transport: file
       notes: Aggregated status for Doctor
     - location: logs/physics_health.log
@@ -503,11 +503,11 @@ docks:
   input:
     id: DOCK-ALL-ENERGIES
     method: engine.physics.graph.get_all_energies
-    location: mind/physics/graph/graph_queries.py:88
+    location: runtime/physics/graph/graph_queries.py:88
   output:
     id: DOCK-ALL-LINK-ENERGIES
     method: engine.physics.graph.get_all_link_energies
-    location: mind/physics/graph/graph_queries.py:95
+    location: runtime/physics/graph/graph_queries.py:95
 ```
 
 ### ALGORITHM / CHECK MECHANISM
@@ -599,11 +599,11 @@ docks:
   input:
     id: DOCK-ALL-LINK-ENERGIES
     method: engine.physics.graph.get_all_link_energies
-    location: mind/physics/graph/graph_queries.py:95
+    location: runtime/physics/graph/graph_queries.py:95
   output:
     id: DOCK-LINK-HOT-COLD
     method: engine.physics.tick.count_hot_cold_links
-    location: mind/physics/tick.py:get_hot_links
+    location: runtime/physics/tick.py:get_hot_links
 ```
 
 ### ALGORITHM / CHECK MECHANISM
@@ -705,11 +705,11 @@ docks:
   input:
     id: DOCK-PHASE-TIMESTAMP
     method: engine.physics.tick.get_phase_timestamps
-    location: mind/physics/tick.py:_record_phase
+    location: runtime/physics/tick.py:_record_phase
   output:
     id: DOCK-TICK-END
     method: engine.physics.tick.get_tick_complete
-    location: mind/physics/tick.py:145
+    location: runtime/physics/tick.py:145
 ```
 
 ### ALGORITHM / CHECK MECHANISM
@@ -802,7 +802,7 @@ docks:
   output:
     id: DOCK-MOMENT-TRANSITION
     method: engine.infrastructure.canon.canon_holder.transition
-    location: mind/infrastructure/canon/canon_holder.py:78
+    location: runtime/infrastructure/canon/canon_holder.py:78
 ```
 
 ### ALGORITHM / CHECK MECHANISM
@@ -902,11 +902,11 @@ docks:
   input:
     id: DOCK-TRAVERSAL
     method: engine.physics.flow.energy_flows_through
-    location: mind/physics/flow.py:15
+    location: runtime/physics/flow.py:15
   output:
     id: DOCK-TRAVERSAL
     method: engine.physics.flow.energy_flows_through
-    location: mind/physics/flow.py:25
+    location: runtime/physics/flow.py:25
 ```
 
 ### ALGORITHM / CHECK MECHANISM

@@ -19,7 +19,7 @@ THIS:            IMPLEMENTATION_Narrator.md (you are here)
 HEALTH:          ./HEALTH_Narrator.md
 SYNC:            ./SYNC_Narrator.md
 
-IMPL:            mind/infrastructure/orchestration/narrator.py
+IMPL:            runtime/infrastructure/orchestration/narrator.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -33,8 +33,8 @@ agents/narrator/
 ├── CLAUDE.md             # Core agent instructions (System Prompt)
 ├── .claude/              # Agent CLI state
 └── ...
-mind/infrastructure/orchestration/narrator.py  # Python entry point and prompt builder
-mind/infrastructure/orchestration/agent_cli.py # CLI wrapper for agent invocation
+runtime/infrastructure/orchestration/narrator.py  # Python entry point and prompt builder
+runtime/infrastructure/orchestration/agent_cli.py # CLI wrapper for agent invocation
 ```
 
 ### File Responsibilities
@@ -42,8 +42,8 @@ mind/infrastructure/orchestration/agent_cli.py # CLI wrapper for agent invocatio
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
 | `agents/narrator/CLAUDE.md` | Authorial intelligence rules | N/A | ~400 | OK |
-| `mind/infrastructure/orchestration/narrator.py` | Prompt construction and IO | `run_narrator` | ~300 | OK |
-| `mind/infrastructure/orchestration/agent_cli.py` | Subprocess management | `run_agent` | ~200 | OK |
+| `runtime/infrastructure/orchestration/narrator.py` | Prompt construction and IO | `run_narrator` | ~300 | OK |
+| `runtime/infrastructure/orchestration/agent_cli.py` | Subprocess management | `run_agent` | ~200 | OK |
 
 ---
 
@@ -59,7 +59,7 @@ mind/infrastructure/orchestration/agent_cli.py # CLI wrapper for agent invocatio
 
 | Pattern | Applied To | Purpose |
 |---------|------------|---------|
-| Prompt Builder | `mind/infrastructure/orchestration/narrator.py` | Dynamically assembles context for the LLM. |
+| Prompt Builder | `runtime/infrastructure/orchestration/narrator.py` | Dynamically assembles context for the LLM. |
 | Streaming | `tools/stream_dialogue.py` | Delivers incremental output to the frontend via SSE. |
 
 ---
@@ -84,7 +84,7 @@ NarratorOutput:
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| Narrator Call | `mind/infrastructure/orchestration/narrator.py:50` | Orchestrator.process_action |
+| Narrator Call | `runtime/infrastructure/orchestration/narrator.py:50` | Orchestrator.process_action |
 
 ---
 
@@ -102,7 +102,7 @@ flow:
   steps:
     - id: step_1_context
       description: Orchestrator gathers graph context and world state.
-      file: mind/infrastructure/orchestration/narrator.py
+      file: runtime/infrastructure/orchestration/narrator.py
       function: build_prompt
       input: playthrough_id, player_action
       output: full_prompt_string
@@ -118,11 +118,11 @@ flow:
       side_effects: none
     - id: step_3_apply
       description: Extract and apply graph mutations from output.
-      file: mind/physics/graph/graph_ops.py
+      file: runtime/physics/graph/graph_ops.py
       function: apply_mutation
       input: mutation_list
       output: success_boolean
-      trigger: mind/infrastructure/orchestration/narrator.py parsing
+      trigger: runtime/infrastructure/orchestration/narrator.py parsing
       side_effects: graph state changed
   docking_points:
     guidance:
@@ -131,7 +131,7 @@ flow:
       - id: narrator_input
         type: custom
         direction: input
-        file: mind/infrastructure/orchestration/narrator.py
+        file: runtime/infrastructure/orchestration/narrator.py
         function: run_narrator
         trigger: Orchestrator
         payload: PromptContext
@@ -141,7 +141,7 @@ flow:
       - id: narrator_output
         type: custom
         direction: output
-        file: mind/infrastructure/orchestration/narrator.py
+        file: runtime/infrastructure/orchestration/narrator.py
         function: run_narrator
         trigger: return response
         payload: NarratorOutput
@@ -163,7 +163,7 @@ flow:
 
 ```
 Agent authored "fact"
-  → mind/infrastructure/orchestration/narrator.py extracts mutations
+  → runtime/infrastructure/orchestration/narrator.py extracts mutations
     → graph_ops.py applies to FalkorDB
       → fact is now queryable by physics/other agents
 ```
@@ -175,9 +175,9 @@ Agent authored "fact"
 ### Internal Dependencies
 
 ```
-mind/infrastructure/orchestration/narrator.py
-    ├── imports → mind/physics/graph
-    └── imports → mind/moment_graph
+runtime/infrastructure/orchestration/narrator.py
+    ├── imports → runtime/physics/graph
+    └── imports → runtime/moment_graph
 ```
 
 ---
@@ -223,7 +223,7 @@ mind/infrastructure/orchestration/narrator.py
 ```
 1. The engine calls `NarratorService.generate` with player actions, scene context, and optional world injections so the prompt builder can bake precise canonical state into the request.
 2. The service runs `agent_cli.run_agent`, passing the continuation flag, streaming hooks, and `CLAUDE.md` instructions so the LLM can respond via SSE/JSON while the CLI awaits completion.
-3. Parsed `NarratorOutput` flows through `mind/physics/graph/graph_ops.py:apply_mutations` before the orchestrator streams the updated scene, elapsed time, and clickables back to the UI and logs success.
+3. Parsed `NarratorOutput` flows through `runtime/physics/graph/graph_ops.py:apply_mutations` before the orchestrator streams the updated scene, elapsed time, and clickables back to the UI and logs success.
 ```
 
 The output is streamed back through `tools/stream_dialogue.py`'s SSE wiring, which buffers narrator packets, annotates clickables, and records the final JSON payload in the health logs before the UI consumes it; thinking of the stream as two layers (chunk emitter + health logger) helps keep the CLI steady when applying backpressure.
@@ -244,16 +244,16 @@ The output is streamed back through `tools/stream_dialogue.py`'s SSE wiring, whi
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/infrastructure/orchestration/narrator.py` | 7 | `# DOCS: docs/agents/narrator/` (includes this implementation doc) |
+| `runtime/infrastructure/orchestration/narrator.py` | 7 | `# DOCS: docs/agents/narrator/` (includes this implementation doc) |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| RUNTIME BEHAVIOR (Main Loop / Request Cycle) | `mind/infrastructure/orchestration/narrator.py:45-165` (`generate`, `_build_prompt`, `_call_claude`) |
-| DATA FLOW AND DOCKING (Scene Generation: Action → Narrator → Graph) | `mind/physics/graph/graph_ops.py:704-742` (`apply_mutations`, logging) |
-| LOGIC CHAINS (LC1: Invention to Canon) | `mind/physics/graph/graph_ops.py:704-742` (`apply_mutations`, graph logging) |
-| STATE MANAGEMENT (Thread History resets) | `mind/infrastructure/orchestration/narrator.py:197-200` (`reset_session`) |
+| RUNTIME BEHAVIOR (Main Loop / Request Cycle) | `runtime/infrastructure/orchestration/narrator.py:45-165` (`generate`, `_build_prompt`, `_call_claude`) |
+| DATA FLOW AND DOCKING (Scene Generation: Action → Narrator → Graph) | `runtime/physics/graph/graph_ops.py:704-742` (`apply_mutations`, logging) |
+| LOGIC CHAINS (LC1: Invention to Canon) | `runtime/physics/graph/graph_ops.py:704-742` (`apply_mutations`, graph logging) |
+| STATE MANAGEMENT (Thread History resets) | `runtime/infrastructure/orchestration/narrator.py:197-200` (`reset_session`) |
 
 --- 
 
@@ -263,7 +263,7 @@ The output is streamed back through `tools/stream_dialogue.py`'s SSE wiring, whi
 
 | File | Current | Target | Extract To | What to Move |
 |------|---------|--------|------------|--------------|
-| `mind/infrastructure/orchestration/narrator.py` | ~200L (OK) | <400L | `narrator/prompt_builder.py` | Split prompt serialization and fallback plumbing once rolling-window logic grows to keep CLI wiring lean. |
+| `runtime/infrastructure/orchestration/narrator.py` | ~200L (OK) | <400L | `narrator/prompt_builder.py` | Split prompt serialization and fallback plumbing once rolling-window logic grows to keep CLI wiring lean. |
 
 ### Missing Implementation
 

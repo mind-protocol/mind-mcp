@@ -99,7 +99,7 @@ Check for:
 When investigating SubEntity issues:
 
 1. Read VALIDATION_SubEntity.md for invariants
-2. Check traversal logs at `mind/data/logs/traversal/`
+2. Check traversal logs at `runtime/data/logs/traversal/`
 3. Use log analysis functions from HEALTH_SubEntity.md
 4. Focus on state transitions and energy injection
 
@@ -135,7 +135,7 @@ Before modifying SubEntity:
 
 **Implementation completed 2025-12-26**
 
-All v2.0 features have been implemented in `mind/physics/subentity.py`:
+All v2.0 features have been implemented in `runtime/physics/subentity.py`:
 
 1. **New fields added to SubEntity dataclass:**
    - `awareness_depth: List[float]` = [up, down] unbounded accumulator
@@ -153,7 +153,7 @@ All v2.0 features have been implemented in `mind/physics/subentity.py`:
    - `merge_child_results()`: NO propagation to parent, returns children to crystallize
    - Graph is source of truth, not parent memory
 
-**Tests added to `mind/tests/test_subentity.py`:**
+**Tests added to `runtime/tests/test_subentity.py`:**
 - TestAwarenessTracking: 4 tests for depth accumulation
 - TestProgressTracking: 2 tests for progress history
 - TestFatigueDetection: 4 tests for fatigue stopping
@@ -167,7 +167,7 @@ All 70 tests passing.
 
 ### v2.0 Implementation (Awareness Depth + Breadth) — COMPLETE ✓
 
-All v2.0 features implemented in `mind/physics/subentity.py`:
+All v2.0 features implemented in `runtime/physics/subentity.py`:
 - `awareness_depth: List[float]` = [up, down] accumulator
 - `progress_history: List[float]` = delta sequence toward intention
 - `update_depth()`: Accumulates hierarchy on UP/DOWN links
@@ -176,12 +176,12 @@ All v2.0 features implemented in `mind/physics/subentity.py`:
 - `should_child_crystallize()`: Systematic crystallization (unless 90%+ match)
 - `merge_child_results()`: Returns children to crystallize, NO propagation
 
-All 70 tests passing in `mind/tests/test_subentity.py`.
+All 70 tests passing in `runtime/tests/test_subentity.py`.
 
 ### Remaining Backlog
 
 1. **Update traversal logger**: Include awareness_depth and progress in logs
-2. **Implement health checker CLI**: `mind/physics/health/check_subentity.py`
+2. **Implement health checker CLI**: `runtime/physics/health/check_subentity.py`
 3. **Add CI integration**: Run health checks on exploration log commits
 4. **Build aggregate reports**: Cross-exploration trend analysis
 

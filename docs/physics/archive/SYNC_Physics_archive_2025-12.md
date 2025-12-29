@@ -23,31 +23,31 @@ belong in the live SYNC file, not here.
 ## RECENT CHANGES
 
 **2025-12-19: Repair 12 re-verified physics tick energy helpers**
-- Confirmed `_flow_energy_to_narratives`, `_propagate_energy`, `_decay_energy`, and `_update_narrative_weights` in `mind/physics/tick.py` already have implementations
+- Confirmed `_flow_energy_to_narratives`, `_propagate_energy`, `_decay_energy`, and `_update_narrative_weights` in `runtime/physics/tick.py` already have implementations
 - Repair task marked as stale; no runtime changes
 
 **2025-12-19: Reconfirmed moment graph query helpers already implemented**
-- Rechecked `get_dormant_moments`, `get_wait_triggers`, and `get_moments_attached_to_tension` in `mind/moment_graph/queries.py`
+- Rechecked `get_dormant_moments`, `get_wait_triggers`, and `get_moments_attached_to_tension` in `runtime/moment_graph/queries.py`
 - Repair task marked as stale; no runtime changes
 
 **2025-12-19: Repair 13 verified physics tick energy helpers already implemented**
-- Confirmed `_flow_energy_to_narratives`, `_propagate_energy`, `_decay_energy`, and `_update_narrative_weights` in `mind/physics/tick.py` contain concrete logic
+- Confirmed `_flow_energy_to_narratives`, `_propagate_energy`, `_decay_energy`, and `_update_narrative_weights` in `runtime/physics/tick.py` contain concrete logic
 - Repair task marked as stale; no runtime changes
 
 **2025-12-19: Verified moment graph traversal helpers already implemented**
-- Confirmed `make_dormant` and `process_wait_triggers` in `mind/moment_graph/traversal.py` already have concrete logic
+- Confirmed `make_dormant` and `process_wait_triggers` in `runtime/moment_graph/traversal.py` already have concrete logic
 - Repair task marked as stale; no runtime changes
 
 **2025-12-19: Verified moment graph query helpers already implemented**
-- Confirmed `get_dormant_moments`, `get_wait_triggers`, and `get_moments_attached_to_tension` in `mind/moment_graph/queries.py` are implemented
+- Confirmed `get_dormant_moments`, `get_wait_triggers`, and `get_moments_attached_to_tension` in `runtime/moment_graph/queries.py` are implemented
 - Repair task marked as stale; no runtime changes
 
 **2025-12-19: Normalized moment graph query row handling**
-- `mind/moment_graph/queries.py` now normalizes dict/list query rows for dormant moments, wait triggers, and tension-attached moments
+- `runtime/moment_graph/queries.py` now normalizes dict/list query rows for dormant moments, wait triggers, and tension-attached moments
 - Keeps traversal/reactivation logic stable across FalkorDB result formats
 
 **2025-12-19: Moment API resolves playthrough graph names from configured directory**
-- `mind/infrastructure/api/moments.py` now reads `player.yaml` under the router's `playthroughs_dir` when resolving graph names
+- `runtime/infrastructure/api/moments.py` now reads `player.yaml` under the router's `playthroughs_dir` when resolving graph names
 - Falls back to `get_playthrough_graph_name()` if no playthrough metadata is present
 
 **2025-12-19: Consolidated physics algorithm docs**
@@ -74,7 +74,7 @@ belong in the live SYNC file, not here.
 - Removed file extensions from tree structure names (clarity: they're all .py files, noted at end)
 - Removed backticks from numeric config defaults (0.02, 0.8, etc.) that were being falsely detected as file references
 - Removed backticks from code expressions (moment.weight, place.atmosphere, weight >= 0.8) that were false positives
-- Updated planned module reference `mind/handlers/base.py` to note it doesn't exist yet
+- Updated planned module reference `runtime/handlers/base.py` to note it doesn't exist yet
 - All 17 actual file references now validate correctly
 
 **2025-12-19: Completed ApplyOperationsMixin extraction from graph_ops.py**
@@ -98,7 +98,7 @@ belong in the live SYNC file, not here.
 
 **2024-12-19: Fixed broken implementation links**
 - Updated IMPLEMENTATION_Physics.md to clearly separate existing vs planned code
-- Added full `mind/` prefix to all file paths for clarity
+- Added full `runtime/` prefix to all file paths for clarity
 - Added missing file `graph_ops_apply.py` to code structure
 - Updated all test file references to match actual test files
 - Separated "Existing" and "Planned" tables in File Responsibilities, Entry Points, Module Dependencies, and Bidirectional Links sections
@@ -183,8 +183,8 @@ traceability without altering runtime behavior.
 ### Remarks
 - Moments API now resolves graph names from the router-configured `playthroughs_dir` before falling back to `get_playthrough_graph_name()`.
 - Moment graph query helpers now normalize FalkorDB dict/list row shapes for traversal workflows.
-- Moment graph traversal helpers in `mind/moment_graph/traversal.py` were already implemented; repair task was stale.
-- Physics tick energy helper implementations in `mind/physics/tick.py` were already present; repair task was stale.
+- Moment graph traversal helpers in `runtime/moment_graph/traversal.py` were already implemented; repair task was stale.
+- Physics tick energy helper implementations in `runtime/physics/tick.py` were already present; repair task was stale.
 - Reverified physics tick energy helper implementations for repair 12; no code changes needed.
 
 ### Suggestions
@@ -327,13 +327,13 @@ Original file: SYNC_Physics.md
 
 - **What:** Normalized belief-based injection and enforced zero-sum propagation with supersedes drain, clamping to `MIN_WEIGHT`.
 - **Why:** Close the incomplete-impl gap for physics tick energy flow and align with the documented algorithm.
-- **Files:** `mind/physics/tick.py:300`, `mind/physics/tick.py:342`, `docs/physics/IMPLEMENTATION_Physics.md`
+- **Files:** `runtime/physics/tick.py:300`, `runtime/physics/tick.py:342`, `docs/physics/IMPLEMENTATION_Physics.md`
 
 ### 2025-12-19: Documented physics module mapping
 
-- **What:** Added `modules.yaml` entry for `mind/physics/**` and linked `mind/physics/tick.py` to the physics doc chain.
+- **What:** Added `modules.yaml` entry for `runtime/physics/**` and linked `runtime/physics/tick.py` to the physics doc chain.
 - **Why:** Close the undocumented module gap and make `mind context` resolve physics docs.
-- **Files:** `modules.yaml`, `mind/physics/tick.py`
+- **Files:** `modules.yaml`, `runtime/physics/tick.py`
 
 
 ## Agent Observations
@@ -396,9 +396,9 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Physics.md (+ Runtime Patterns from INFRASTRUC
 
 HEALTH:          ../HEALTH_Physics.md
 
-IMPL (existing): ../../mind/physics/tick.py, ../../mind/physics/graph/
+IMPL (existing): ../../runtime/physics/tick.py, ../../runtime/physics/graph/
 
-IMPL (planned):  ../../mind/handlers/, ../../mind/canon/, ../../mind/infrastructure/orchestration/speed.py
+IMPL (planned):  ../../mind/handlers/, ../../mind/canon/, ../../runtime/infrastructure/orchestration/speed.py
 
 ```
 

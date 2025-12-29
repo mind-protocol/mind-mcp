@@ -18,7 +18,7 @@ VALIDATION:      ./VALIDATION_Membrane_Modulation.md
 HEALTH:          ./HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL:            mind/physics/tick.py
+IMPL:            runtime/physics/tick.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.

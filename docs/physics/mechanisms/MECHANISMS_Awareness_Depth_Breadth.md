@@ -4,7 +4,7 @@
 STATUS: CANONICAL
 CREATED: 2025-12-26
 UPDATED: 2025-12-26
-IMPL: mind/physics/subentity.py
+IMPL: runtime/physics/subentity.py
 TESTS: mind/tests/test_subentity.py
 ```
 ---
@@ -252,4 +252,4 @@ All steps completed:
 1. ✓ Added P11 to PATTERNS_SubEntity.md
 2. ✓ Updated ALGORITHM_SubEntity.md with fatigue-based stopping
 3. ✓ Updated VALIDATION_SubEntity.md with V7, V11-V13 invariants
-4. ✓ Implemented in mind/physics/subentity.py (70 tests passing)
+4. ✓ Implemented in runtime/physics/subentity.py (70 tests passing)

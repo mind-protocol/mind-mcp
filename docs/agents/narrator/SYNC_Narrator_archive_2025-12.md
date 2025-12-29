@@ -168,7 +168,7 @@ Original file: SYNC_Narrator.md
 
 - **What:** Updated narrator implementation file metadata, corrected input reference script locations, added a DOCS reference in the narrator service, and mapped the narrator module in `modules.yaml`.
 - **Why:** Remove stale references to the deprecated narrator prompt file and ensure code/doc links resolve in `mind context`.
-- **Files:** `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `docs/agents/narrator/INPUT_REFERENCE.md`, `mind/infrastructure/orchestration/narrator.py`, `modules.yaml`, `docs/agents/narrator/SYNC_Narrator.md`
+- **Files:** `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `docs/agents/narrator/INPUT_REFERENCE.md`, `runtime/infrastructure/orchestration/narrator.py`, `modules.yaml`, `docs/agents/narrator/SYNC_Narrator.md`
 
 ### 2025-12-19: Documented legacy narrator prompt file
 
@@ -184,13 +184,13 @@ Original file: SYNC_Narrator.md
 
 ### 2025-12-19: Centralized agent CLI handling for narrator
 
-- **What:** Added `mind/infrastructure/orchestration/agent_cli.py` and routed narrator CLI calls through the shared wrapper with `AGENTS_MODEL` provider selection.
+- **What:** Added `runtime/infrastructure/orchestration/agent_cli.py` and routed narrator CLI calls through the shared wrapper with `AGENTS_MODEL` provider selection.
 - **Why:** Standardize command construction and response parsing across agent CLI usage.
-- **Files:** `mind/infrastructure/orchestration/agent_cli.py`, `mind/infrastructure/orchestration/narrator.py`, `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`
+- **Files:** `runtime/infrastructure/orchestration/agent_cli.py`, `runtime/infrastructure/orchestration/narrator.py`, `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`
 
 ### 2025-12-19: Clarified narrator implementation file references
 
-- **What:** Removed colon-qualified file references, standardized full paths in boundary/chain tables, and noted that the prompt builder lives in `mind/infrastructure/orchestration/narrator.py`.
+- **What:** Removed colon-qualified file references, standardized full paths in boundary/chain tables, and noted that the prompt builder lives in `runtime/infrastructure/orchestration/narrator.py`.
 - **Why:** Avoid broken file link detection and keep the implementation doc aligned with the current code layout.
 - **Files:** `docs/agents/narrator/IMPLEMENTATION_Narrator.md`, `docs/agents/narrator/SYNC_Narrator.md`
 

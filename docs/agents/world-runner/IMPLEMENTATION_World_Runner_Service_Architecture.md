@@ -19,7 +19,7 @@ THIS:           IMPLEMENTATION_World_Runner_Service_Architecture.md
 HEALTH:         ./HEALTH_World_Runner.md
 SYNC:           ./SYNC_World_Runner.md
 
-IMPL:           mind/infrastructure/orchestration/world_runner.py
+IMPL:           runtime/infrastructure/orchestration/world_runner.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -45,7 +45,7 @@ mind/
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
 | `agents/world_runner/CLAUDE.md` | Agent instructions and output contract | — | ~650 | WATCH |
-| `mind/infrastructure/orchestration/world_runner.py` | Build prompt, call agent CLI, parse JSON | `WorldRunnerService` | ~156 | OK |
+| `runtime/infrastructure/orchestration/world_runner.py` | Build prompt, call agent CLI, parse JSON | `WorldRunnerService` | ~156 | OK |
 
 ---
 
@@ -95,7 +95,7 @@ flow:
   steps:
     - id: step_1_prompt
       description: Assemble prompt from flips and graph context.
-      file: mind/infrastructure/orchestration/world_runner.py
+      file: runtime/infrastructure/orchestration/world_runner.py
       function: _build_prompt
       input: flips (List), graph_context (Dict)
       output: prompt_string
@@ -103,7 +103,7 @@ flow:
       side_effects: none
     - id: step_2_call
       description: Invoke agent CLI and capture stdout.
-      file: mind/infrastructure/orchestration/world_runner.py
+      file: runtime/infrastructure/orchestration/world_runner.py
       function: _call_claude
       input: prompt_string
       output: json_response_string
@@ -111,7 +111,7 @@ flow:
       side_effects: none
     - id: step_3_resolve
       description: Return structured output to Orchestrator.
-      file: mind/infrastructure/orchestration/world_runner.py
+      file: runtime/infrastructure/orchestration/world_runner.py
       function: process_flips
       input: json_response_string
       output: WorldRunnerOutput (Dict)
@@ -124,7 +124,7 @@ flow:
       - id: runner_input
         type: custom
         direction: input
-        file: mind/infrastructure/orchestration/world_runner.py
+        file: runtime/infrastructure/orchestration/world_runner.py
         function: process_flips
         trigger: Orchestrator
         payload: PromptContext
@@ -134,7 +134,7 @@ flow:
       - id: runner_output
         type: event
         direction: output
-        file: mind/infrastructure/orchestration/world_runner.py
+        file: runtime/infrastructure/orchestration/world_runner.py
         function: _call_claude
         trigger: json.loads
         payload: WorldRunnerOutput
@@ -153,7 +153,7 @@ flow:
 ### Internal Dependencies
 
 ```
-mind/infrastructure/orchestration/orchestrator.py
+runtime/infrastructure/orchestration/orchestrator.py
     └── imports → WorldRunnerService
 ```
 
@@ -189,7 +189,7 @@ At runtime the service behaves as a stateless adapter: each `process_flips` invo
 
 ## BIDIRECTIONAL LINKS
 
-- `mind/infrastructure/orchestration/world_runner.py` declares `# DOCS: docs/agents/world-runner/PATTERNS_World_Runner.md`, keeping the code-to-docs link explicit so any code refactor knows to revisit the documented pattern.
+- `runtime/infrastructure/orchestration/world_runner.py` declares `# DOCS: docs/agents/world-runner/PATTERNS_World_Runner.md`, keeping the code-to-docs link explicit so any code refactor knows to revisit the documented pattern.
 - This implementation doc points to `HEALTH_World_Runner.md` and `SYNC_World_Runner.md`, while the SYNC references it under `CHAIN`, ensuring future agents can jump back into the runtime contract from the service state summary.
 - The CLI instructions in `agents/world_runner/CLAUDE.md` are effectively linked bidirectionally because this doc captures how the prompt ducks into `_build_prompt`, and the CLAUDE doc can cite this implementation file to ground expectations for the JSON schema and fallback behavior.
 

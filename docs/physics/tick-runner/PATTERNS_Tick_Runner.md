@@ -155,7 +155,7 @@ Without running ticks, `tick_integrity` reports "UNKNOWN - no tick phases record
 
 ```
 PATTERNS:        ./PATTERNS_Tick_Runner.md (you are here)
-IMPLEMENTATION:  mind/physics/tick_runner.py
-HEALTH:          mind/physics/health/checkers/tick_integrity.py
+IMPLEMENTATION:  runtime/physics/tick_runner.py
+HEALTH:          runtime/physics/health/checkers/tick_integrity.py
 SYNC:            ./SYNC_Tick_Runner.md
 ```

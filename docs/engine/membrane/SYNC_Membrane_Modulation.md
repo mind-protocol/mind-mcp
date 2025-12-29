@@ -40,7 +40,7 @@ The PATTERN now also captures the dynamic modulation function strategy so a sing
 - **What:** Merged the dynamic modulation function reasoning into `PATTERNS_Membrane_Scoping.md`, dropped the redundant duplicate doc, and refreshed the attention energy doc so references resolve to the single membrane PATTERN.
 - **Why:** Prevent doc duplication in the membrane folder so every behavior has one authoritative PATTERN.
 - **Impact:** Documentation is aligned with the "one solution per problem" principle; no runtime code changed.
-- **Files:** `docs/mind/membrane/PATTERNS_Membrane_Scoping.md`, `docs/physics/attention/PATTERNS_Attention_Energy_Split.md`, `docs/mind/membrane/SYNC_Membrane_Modulation.md`
+- **Files:** `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`, `docs/physics/attention/PATTERNS_Attention_Energy_Split.md`, `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
 - **Verification:** `mind validate`
 
 ### 2025-12-20: Added membrane scoping pattern
@@ -102,6 +102,6 @@ mind validate
 
 | What | Where |
 |------|-------|
-| Pattern | `docs/mind/membrane/PATTERNS_Membrane_Modulation.md` |
-| Behaviors | `docs/mind/membrane/BEHAVIORS_Membrane_Modulation.md` |
-| Scoping | `docs/mind/membrane/PATTERNS_Membrane_Scoping.md` |
+| Pattern | `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md` |
+| Behaviors | `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md` |
+| Scoping | `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md` |

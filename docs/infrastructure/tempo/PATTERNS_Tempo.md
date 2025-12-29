@@ -17,7 +17,7 @@ VALIDATION:      ./VALIDATION_Tempo.md
 HEALTH:          ./HEALTH_Tempo.md
 SYNC:            ./SYNC_Tempo.md
 
-IMPL:            mind/infrastructure/tempo/tempo_controller.py (planned)
+IMPL:            runtime/infrastructure/tempo/tempo_controller.py (planned)
 ```
 
 ### Bidirectional Contract
@@ -89,9 +89,9 @@ changes. The loop never generates content.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/physics/tick.py` | Runs physics updates per tick |
-| `mind/infrastructure/canon/` | Records surfaced moments |
-| `mind/infrastructure/api/tempo.py` | Speed/stop/start controls |
+| `runtime/physics/tick.py` | Runs physics updates per tick |
+| `runtime/infrastructure/canon/` | Records surfaced moments |
+| `runtime/infrastructure/api/tempo.py` | Speed/stop/start controls |
 
 ---
 

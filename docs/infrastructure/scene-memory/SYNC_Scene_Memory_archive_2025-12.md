@@ -72,14 +72,14 @@ Keeping the archive template-complete makes it easy to separate historical conte
 
 - Current scene-memory state: `docs/infrastructure/scene-memory/SYNC_Scene_Memory.md`
 - Scene-memory implementation: `docs/infrastructure/scene-memory/IMPLEMENTATION_Scene_Memory.md`
-- Canonical Moment Graph docs: `docs/mind/moments/`
+- Canonical Moment Graph docs: `docs/runtime/moments/`
 
 ---
 
 ## MOMENT NODE TYPE
 ===============================================================================
 
-From `mind/models/nodes.py`:
+From `runtime/models/nodes.py`:
 
 ```python
 class Moment:
@@ -108,7 +108,7 @@ class Moment:
 ## MOMENT PROCESSOR API
 ===============================================================================
 
-`mind/infrastructure/memory/moment_processor.py`:
+`runtime/infrastructure/memory/moment_processor.py`:
 
 ```python
 processor = MomentProcessor(graph_ops, embed_fn, playthrough_id)
@@ -136,7 +136,7 @@ processor.link_narrative_to_moments(narrative_id, moment_ids)
 ### 2025-12-19
 - Verified repair 03-INCOMPLETE_IMPL-memory-moment_processor; implementations
   already present, no code changes required.
-- Rechecked `mind/infrastructure/memory/moment_processor.py` for incomplete
+- Rechecked `runtime/infrastructure/memory/moment_processor.py` for incomplete
   implementations; confirmed all flagged functions are implemented.
 - Noted that the repair task flagged `moment_processor.py` functions as incomplete,
   but implementations already exist; no code changes required.
@@ -176,15 +176,15 @@ Original file: SYNC_Scene_Memory.md
 
 ### 2025-12-19: Refreshed scene-memory implementation file metadata
 - **What:** Updated the implementation doc line counts to match the current
-  `mind/infrastructure/memory/__init__.py` and
-  `mind/infrastructure/memory/moment_processor.py` sizes.
+  `runtime/infrastructure/memory/__init__.py` and
+  `runtime/infrastructure/memory/moment_processor.py` sizes.
 - **Why:** Keep the file responsibility table and extraction candidate sizing
   aligned with the actual codebase layout.
 - **Files:** `docs/infrastructure/scene-memory/IMPLEMENTATION_Scene_Memory.md`
 
 ### 2025-12-19: Clarified extraction candidates to avoid stale file references
 - **What:** Reworded extraction target descriptions to emphasize they remain
-  internal helpers within `mind/infrastructure/memory/moment_processor.py`.
+  internal helpers within `runtime/infrastructure/memory/moment_processor.py`.
 - **Why:** Keep the implementation doc aligned with existing files while
   avoiding references to nonexistent modules.
 - **Files:** `docs/infrastructure/scene-memory/IMPLEMENTATION_Scene_Memory.md`
@@ -203,7 +203,7 @@ Original file: SYNC_Scene_Memory.md
 
 ### 2025-12-19: Updated scene-memory test path in modules.yaml
 - **What:** Switched the scene-memory `tests` entry from a glob to the concrete
-  file `mind/tests/test_moment.py`.
+  file `runtime/tests/test_moment.py`.
 - **Why:** `mind validate` treats glob strings as literal paths; pointing to an
   existing test file avoids YAML drift.
 - **Files:** `modules.yaml`
@@ -211,58 +211,58 @@ Original file: SYNC_Scene_Memory.md
 ### 2025-12-19: Rechecked moment processor helpers for current repair run
 - **What:** Confirmed `_write_transcript`, `last_moment_id`,
   `transcript_line_count`, and `get_moment_processor` are already implemented in
-  `mind/infrastructure/memory/moment_processor.py`.
+  `runtime/infrastructure/memory/moment_processor.py`.
 - **Why:** The INCOMPLETE_IMPL alert remains stale; no code changes required.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Logged moment processor helper verification for repair 02
 - **What:** Verified the helper implementations flagged by the repair task remain
   complete (`_write_transcript`, `last_moment_id`, `transcript_line_count`,
   `get_moment_processor`).
 - **Why:** This repair run confirms the INCOMPLETE_IMPL alert is stale.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Rechecked moment processor helper implementations for current repair run
 - **What:** Confirmed `_write_transcript`, `last_moment_id`, `transcript_line_count`,
   and `get_moment_processor` are already implemented in
-  `mind/infrastructure/memory/moment_processor.py`.
+  `runtime/infrastructure/memory/moment_processor.py`.
 - **Why:** The INCOMPLETE_IMPL alert is stale for this repair task.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Revalidated moment processor helpers for current repair run
 - **What:** Rechecked `_write_transcript`, `last_moment_id`,
   `transcript_line_count`, and `get_moment_processor`; all implementations
   remain present.
 - **Why:** Confirm the INCOMPLETE_IMPL alert is stale for this repair task.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Reconfirmed moment processor implementations
 - **What:** Rechecked the helper implementations flagged by the repair task;
   no missing bodies were found.
 - **Why:** This repair run validates the INCOMPLETE_IMPL alert is stale.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Reverified moment processor helpers for repair 03
 - **What:** Checked `_write_transcript`, `last_moment_id`,
   `transcript_line_count`, and `get_moment_processor` in
-  `mind/infrastructure/memory/moment_processor.py`; all implementations are
+  `runtime/infrastructure/memory/moment_processor.py`; all implementations are
   present.
 - **Why:** Confirm the INCOMPLETE_IMPL report is stale.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Reconfirmed moment processor implementations for repair 02
 - **What:** Rechecked the same helper implementations flagged in this repair run;
   no empty bodies were found.
 - **Why:** Validate the INCOMPLETE_IMPL alert remains stale.
-- **Files:** `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/moment_processor.py`
 
 ### 2025-12-19: Added DOCS references for memory module entry points
 - **What:** Added `# DOCS: docs/infrastructure/scene-memory/` to
-  `mind/infrastructure/memory/__init__.py` and standardized the comment in
-  `mind/infrastructure/memory/moment_processor.py`.
+  `runtime/infrastructure/memory/__init__.py` and standardized the comment in
+  `runtime/infrastructure/memory/moment_processor.py`.
 - **Why:** Ensure `mind` doc mapping resolves both files in the module.
-- **Files:** `mind/infrastructure/memory/__init__.py`,
-  `mind/infrastructure/memory/moment_processor.py`
+- **Files:** `runtime/infrastructure/memory/__init__.py`,
+  `runtime/infrastructure/memory/moment_processor.py`
 
 
 ---
@@ -292,8 +292,8 @@ Original file: SYNC_Scene_Memory.md
 | archive/SYNC_archive_2024-12.md | Archived | Legacy Scene Memory detail summary |
 
 **Canonical references:**
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/`
 
 ===============================================================================

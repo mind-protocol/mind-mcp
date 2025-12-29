@@ -81,7 +81,7 @@ and keeps the mission visible to future agents.
   experience.
 - Favor setsid-based backgrounding and log file redirection inside `run_stack.sh`
   so each process leaves a traceable log while stderr is appended to
-  `.mind-mcp/error.log`.
+  `.mind/error.log`.
 
 ## DATA FLOW
 
@@ -125,7 +125,7 @@ This module touches `docs/connectome/` (bundle outputs), `playthroughs/` (stream
 JSONL), the `engine.physics.graph` helpers (GraphOps/GraphQueries), and the
 frontend SSE feed. `tools/run_stack.sh` keeps the runtime stack humming so these
 helpers have backend services to talk to, and `tools/ngrok.yml` plus
-`.mind-mcp/systemd.env` set the environment that the scripts and services assume.
+`.mind/systemd.env` set the environment that the scripts and services assume.
 
 ## MARKERS
 

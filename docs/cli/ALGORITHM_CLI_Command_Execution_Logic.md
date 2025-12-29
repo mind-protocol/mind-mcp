@@ -20,7 +20,7 @@ HEALTH:          ./core/HEALTH_CLI_Command_Test_Coverage.md
 SYNC:            ./core/SYNC_CLI_Development_State.md
 
 IMPL:            mind/cli.py
-IMPL:            mind/doctor.py
+IMPL:            runtime/doctor.py
 ```
 
 > **Contract:** Understand the chain and refer to the CLI core doc set before touching implementation.
@@ -61,7 +61,7 @@ The resolved handler runs with the parsed args; it returns exit codes, writes SY
 
 ### Step 4: Emit health signals
 
-`doctor.py` and related modules translate issues into `...mind-mcp/state/SYNC_Project_Health.md` and supplemental Markdown reports.
+`doctor.py` and related modules translate issues into `...mind/state/SYNC_Project_Health.md` and supplemental Markdown reports.
 
 ---
 
@@ -104,7 +104,7 @@ user argv
           → SYNC + README + terminal output
 ```
 
-Docking points: `...mind-mcp/state/SYNC_Project_Health.md`, `...mind-mcp/state/SYNC_Project_Health_archive_*.md`, `.mind-mcp/traces/`.
+Docking points: `...mind/state/SYNC_Project_Health.md`, `...mind/state/SYNC_Project_Health_archive_*.md`, `.mind/traces/`.
 
 ---
 
@@ -140,15 +140,15 @@ Logic: executes the handler, collects DoctorIssue list, and calls `doctor_report
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| `mind/cli.py` | `dispatch_command()` | command exit code |
-| `mind/doctor.py` | `run_doctor()` | health score + SYNC update |
-| `mind/repair.py` | `run_repair()` | repair report + artifacts |
+| `runtime/cli.py` | `dispatch_command()` | command exit code |
+| `runtime/doctor.py` | `run_doctor()` | health score + SYNC update |
+| `runtime/repair.py` | `run_repair()` | repair report + artifacts |
 
 ---
 
 ## MARKERS
 
-<!-- @mind:todo Record per-command runtime metrics in `.mind-mcp/state` for future health graphs. -->
+<!-- @mind:todo Record per-command runtime metrics in `.mind/state` for future health graphs. -->
 <!-- @mind:todo Surface doc integrity hooks as part of the doctor run output. -->
 <!-- @mind:proposition Build a dedicated CLI diagnostics command to replay earlier doctor runs. -->
 <!-- @mind:escalation Should command dispatch load modules lazily to reduce startup time? -->

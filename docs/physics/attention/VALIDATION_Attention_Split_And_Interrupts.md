@@ -12,16 +12,16 @@ VERIFIED: 2025-12-20 against local tree
 
 ```
 PATTERNS:        ./PATTERNS_Attention_Energy_Split.md
-                 ../../mind/moment-graph-mind/PATTERNS_Instant_Traversal_Moment_Graph.md
+                 ../../runtime/moment-graph-mind/PATTERNS_Instant_Traversal_Moment_Graph.md
 BEHAVIORS:       ./BEHAVIORS_Attention_Split_And_Interrupts.md
-                 ../../mind/membrane/BEHAVIORS_Membrane_Modulation.md
+                 ../../runtime/membrane/BEHAVIORS_Membrane_Modulation.md
 THIS:            VALIDATION_Attention_Split_And_Interrupts.md
-IMPL:            ../../../mind/physics/attention_split_sink_mass_distribution_mechanism.py
-                 ../../../mind/physics/tick.py
-                 ../../../mind/moment_graph/surface.py
-                 ../../../mind/moment_graph/traversal.py
-                 ../../../mind/moment_graph/queries.py
-                 ../../../mind/infrastructure/canon/canon_holder.py
+IMPL:            ../../../runtime/physics/attention_split_sink_mass_distribution_mechanism.py
+                 ../../../runtime/physics/tick.py
+                 ../../../runtime/moment_graph/surface.py
+                 ../../../runtime/moment_graph/traversal.py
+                 ../../../runtime/moment_graph/queries.py
+                 ../../../runtime/infrastructure/canon/canon_holder.py
                  ../../../mind/world_builder/*
 ```
 

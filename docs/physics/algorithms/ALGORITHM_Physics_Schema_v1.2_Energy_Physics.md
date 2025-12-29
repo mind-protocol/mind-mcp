@@ -643,7 +643,7 @@ Simulation (`diffusion_sim_v2.py`) confirms:
 
 ### Todos
 
-<!-- @mind:todo Implement all 6 tick phases in mind/physics/tick.py -->
+<!-- @mind:todo Implement all 6 tick phases in runtime/physics/tick.py -->
 <!-- @mind:todo Add path resistance Dijkstra to graph_ops -->
 <!-- @mind:todo Implement link crystallization on moment completion -->
 <!-- @mind:todo Add moment state machine (possible→active→completed) to canon_holder -->

@@ -17,7 +17,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Moment_Graph_Runtime_Layout.md
 TEST:            ./TEST_Moment_Graph_Runtime_Coverage.md
 SYNC:            ./SYNC_Moment_Graph_Engine.md
 THIS:            BEHAVIORS_Traversal_And_Surfacing.md (you are here)
-IMPL:            ../../../mind/moment_graph/__init__.py
+IMPL:            ../../../runtime/moment_graph/__init__.py
 ```
 
 ===============================================================================

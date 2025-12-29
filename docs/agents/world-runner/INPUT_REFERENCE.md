@@ -7,7 +7,7 @@ What the World Runner receives from the Orchestrator.
 ## Script Location
 
 ```
-mind/infrastructure/orchestration/world_runner.py
+runtime/infrastructure/orchestration/world_runner.py
 mind/models/
 ```
 

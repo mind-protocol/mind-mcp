@@ -26,7 +26,7 @@ IMPL:            mind/prompt.py
 
 ### Bidirectional Contract
 
-**Before modifying:** Read every doc in this chain and `mind/prompt.py`.
+**Before modifying:** Read every doc in this chain and `runtime/prompt.py`.
 **After modifying:** Align implementation, or log a TODO in `SYNC_Prompt_Command_State.md` if implementation must wait.
 
 ---
@@ -103,6 +103,6 @@ The prompt includes references to doc paths and states what counts as verified. 
 
 ## MARKERS
 
-<!-- @mind:todo @mind:TODO Flesh out the preceding VIEW descriptions with LOC-aligned guidance from `.mind-mcp/views` and cite them here plus cross-cutting `@mind:id: PROMPT.INGEST.MODULE_CHAIN.FEATURE_INTEGRATION — ## Canon Linking Rules`. -->
+<!-- @mind:todo @mind:TODO Flesh out the preceding VIEW descriptions with LOC-aligned guidance from `.mind/views` and cite them here plus cross-cutting `@mind:id: PROMPT.INGEST.MODULE_CHAIN.FEATURE_INTEGRATION — ## Canon Linking Rules`. -->
 <!-- @mind:proposition Capture usage metrics (which VIEW is chosen most) via future health indicator described in `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md` (see `health_indicators` section). -->
 <!-- @mind:escalation Should the prompt ever auto-switch agents to autonomous mode when `SYNC_Project_State.md` is empty or flagged “DESIGNING”? If so, what doc + health signal anchors that decision? Document answer here. -->

@@ -18,7 +18,7 @@ What's still being designed:
 
 ## CURRENT STATE
 
-**Implementation Location:** `mind/infrastructure/api/app.py`
+**Implementation Location:** `runtime/infrastructure/api/app.py`
 
 The API module hosts the FastAPI application, including playthrough endpoints, moment APIs, and debug streaming.
 
@@ -26,8 +26,8 @@ The API module hosts the FastAPI application, including playthrough endpoints, m
 
 ### 2025-12-21: Guard SSE delivery and schema validation with tests
 
-- **What:** Added a burst-load SSE regression test in `mind/tests/test_moments_api.py` and introduced
-  `mind/tests/test_router_schema_validation.py` to exercise the playthrough and tempo router schemas.
+- **What:** Added a burst-load SSE regression test in `runtime/tests/test_moments_api.py` and introduced
+  `runtime/tests/test_router_schema_validation.py` to exercise the playthrough and tempo router schemas.
 - **Why:** Prevent regressions when SSE queues back up under sustained clicks and ensure router Pydantic
   models keep rejecting malformed payloads before expensive graph operations run.
 - **Impact:** Automated coverage now documents both SSE reliability and router request validation, so the
@@ -53,7 +53,7 @@ The API module hosts the FastAPI application, including playthrough endpoints, m
 ### 2025-12-20: Fix moment stream route collision
 
 - **What:** Moved `/api/moments/stream/{playthrough_id}` above the generic
-  `/{playthrough_id}/{moment_id}` route in `mind/infrastructure/api/moments.py`.
+  `/{playthrough_id}/{moment_id}` route in `runtime/infrastructure/api/moments.py`.
 - **Why:** The generic route was capturing `/stream/{id}` and returning 404.
 - **Impact:** SSE stream endpoint responds with 200 as expected.
 

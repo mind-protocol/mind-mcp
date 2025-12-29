@@ -27,8 +27,8 @@ ARCHIVE:         ./archive/SYNC_archive_2024-12.md
 
 Legacy behaviors for the pre-Moment-Graph Scene Memory design. Use current
 Moment Graph docs for canonical behavior definitions:
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/`
 
 ===============================================================================

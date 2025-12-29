@@ -18,10 +18,10 @@ VALIDATION:      ./VALIDATION_Membrane_Modulation.md
 HEALTH:          ./HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL:            mind/moment_graph/queries.py
-IMPL:            mind/moment_graph/surface.py
-IMPL:            mind/membrane/functions.py
-IMPL:            mind/physics/tick.py
+IMPL:            runtime/moment_graph/queries.py
+IMPL:            runtime/moment_graph/surface.py
+IMPL:            runtime/membrane/functions.py
+IMPL:            runtime/physics/tick.py
 ```
 
 ### Bidirectional Contract
@@ -33,7 +33,7 @@ IMPL:            mind/physics/tick.py
 **After modifying this doc:**
 1. Update the corresponding implementation(s) to match, or note the drift in `SYNC_Membrane_Modulation.md`.
 2. For membrane scoping updates, make sure the moment-graph framing code honors the place-scoped state.
-3. For dynamic modulation function updates, align `mind/membrane/functions.py` and `mind/physics/tick.py`, or add a TODO in `SYNC_Membrane_Modulation.md` describing the needed hook.
+3. For dynamic modulation function updates, align `runtime/membrane/functions.py` and `runtime/physics/tick.py`, or add a TODO in `SYNC_Membrane_Modulation.md` describing the needed hook.
 4. Run `mind validate`.
 
 **After modifying the code:**
@@ -126,11 +126,11 @@ Dynamic modulation functions rely on the `MembraneContext` aggregates above plus
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/moment_graph/queries.py` | Provides scene scope and local aggregates |
-| `mind/moment_graph/surface.py` | Scene changes and surfacing context |
-| `mind/membrane/functions.py` | Hosts the dynamic parameter functions that replace magic constants |
-| `mind/physics/tick.py` | Applies the modulation frame during traversal and uses the dynamic thresholds/decays |
-| `docs/mind/moment-graph-mind/PATTERNS_Instant_Traversal_Moment_Graph.md` | Hot path constraints |
+| `runtime/moment_graph/queries.py` | Provides scene scope and local aggregates |
+| `runtime/moment_graph/surface.py` | Scene changes and surfacing context |
+| `runtime/membrane/functions.py` | Hosts the dynamic parameter functions that replace magic constants |
+| `runtime/physics/tick.py` | Applies the modulation frame during traversal and uses the dynamic thresholds/decays |
+| `docs/runtime/moment-graph-mind/PATTERNS_Instant_Traversal_Moment_Graph.md` | Hot path constraints |
 | `docs/physics/PATTERNS_Physics.md` | Determinism and canon invariants |
 
 ---

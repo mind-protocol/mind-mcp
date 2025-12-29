@@ -98,7 +98,7 @@ health_indicators:
 
 ```yaml
 status:
-  stream_destination: ...mind-mcp/state/SYNC_Project_Health.md
+  stream_destination: ...mind/state/SYNC_Project_Health.md
   result:
     representation: binary
     value: 1
@@ -235,7 +235,7 @@ throttling:
 ```yaml
 forwarding:
   targets:
-    - location: ...mind-mcp/state/SYNC_Project_Health.md
+    - location: ...mind/state/SYNC_Project_Health.md
       transport: file
       notes: Doctor inspects this stream score through the canonical health log before surfacing drift tickets.
 display:
@@ -352,7 +352,7 @@ throttling:
 ```yaml
 forwarding:
   targets:
-    - location: ...mind-mcp/state/SYNC_Project_Health.md
+    - location: ...mind/state/SYNC_Project_Health.md
       transport: file
       notes: Doctor consumes this indicator to flag missing credentials before streaming begins.
 display:

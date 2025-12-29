@@ -18,7 +18,7 @@ THIS:           IMPLEMENTATION_Tempo.md
 HEALTH:         ./HEALTH_Tempo.md
 SYNC:           ./SYNC_Tempo.md
 
-IMPL:           mind/infrastructure/tempo/tempo_controller.py (planned)
+IMPL:           runtime/infrastructure/tempo/tempo_controller.py (planned)
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -28,15 +28,15 @@ IMPL:           mind/infrastructure/tempo/tempo_controller.py (planned)
 ## CODE STRUCTURE
 
 ```
-mind/infrastructure/tempo/__init__.py         # Exports TempoController
-mind/infrastructure/tempo/tempo_controller.py # Main loop and speed management
+runtime/infrastructure/tempo/__init__.py         # Exports TempoController
+runtime/infrastructure/tempo/tempo_controller.py # Main loop and speed management
 ```
 
 ### File Responsibilities
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
-| `mind/infrastructure/tempo/tempo_controller.py` | Main loop, pacing, tick calls | `TempoController` | ~300 | OK |
+| `runtime/infrastructure/tempo/tempo_controller.py` | Main loop, pacing, tick calls | `TempoController` | ~300 | OK |
 
 ---
 
@@ -53,8 +53,8 @@ latency while coordinating physics and canon scans.
 
 | Pattern | Applied To | Purpose |
 |---------|------------|---------|
-| Scheduler | `mind/infrastructure/tempo/tempo_controller.py` (TempoController.run) | pacing and timing |
-| Guard | `mind/infrastructure/tempo/tempo_controller.py` (_tick_interval) | enforce speed mapping |
+| Scheduler | `runtime/infrastructure/tempo/tempo_controller.py` (TempoController.run) | pacing and timing |
+| Guard | `runtime/infrastructure/tempo/tempo_controller.py` (_tick_interval) | enforce speed mapping |
 
 ### Anti-Patterns to Avoid
 
@@ -87,8 +87,8 @@ TempoState:
 
 | Entry Point | File | Triggered By |
 |-------------|------|--------------|
-| `TempoController.run()` | `mind/infrastructure/tempo/tempo_controller.py` | `asyncio.create_task()` |
-| `TempoController.set_speed()` | `mind/infrastructure/tempo/tempo_controller.py` | `/api/tempo/speed` |
+| `TempoController.run()` | `runtime/infrastructure/tempo/tempo_controller.py` | `asyncio.create_task()` |
+| `TempoController.set_speed()` | `runtime/infrastructure/tempo/tempo_controller.py` | `/api/tempo/speed` |
 
 ---
 
@@ -107,7 +107,7 @@ flow:
   steps:
     - id: step_1_interval
       description: compute tick interval from speed mode
-      file: mind/infrastructure/tempo/tempo_controller.py
+      file: runtime/infrastructure/tempo/tempo_controller.py
       function: _tick_interval
       input: speed
       output: float seconds
@@ -115,7 +115,7 @@ flow:
       side_effects: none
     - id: step_2_physics
       description: run physics tick and collect flips
-      file: mind/physics/tick.py
+      file: runtime/physics/tick.py
       function: GraphTick.run
       input: elapsed_minutes
       output: TickResult
@@ -123,7 +123,7 @@ flow:
       side_effects: graph writes
     - id: step_3_canon
       description: scan and record surfaced moments
-      file: mind/infrastructure/canon/canon_holder.py
+      file: runtime/infrastructure/canon/canon_holder.py
       function: record_to_canon
       input: possible moments
       output: canon writes
@@ -138,7 +138,7 @@ flow:
       - id: tempo_tick_in
         type: scheduler
         direction: input
-        file: mind/infrastructure/tempo/tempo_controller.py
+        file: runtime/infrastructure/tempo/tempo_controller.py
         function: run
         trigger: asyncio loop
         payload: speed, running
@@ -148,7 +148,7 @@ flow:
       - id: canon_broadcast
         type: stream
         direction: output
-        file: mind/infrastructure/canon/canon_holder.py
+        file: runtime/infrastructure/canon/canon_holder.py
         function: record_to_canon
         trigger: tempo tick
         payload: completed moment
@@ -189,9 +189,9 @@ speed change
 ### Internal Dependencies
 
 ```
-mind/infrastructure/tempo/tempo_controller.py
-    └── imports → mind/physics/tick.py
-    └── imports → mind/infrastructure/canon/canon_holder.py
+runtime/infrastructure/tempo/tempo_controller.py
+    └── imports → runtime/physics/tick.py
+    └── imports → runtime/infrastructure/canon/canon_holder.py
 ```
 
 ---
@@ -266,9 +266,9 @@ Async loop driven by `asyncio`. One loop per playthrough.
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| ALGORITHM Step 1 | `mind/infrastructure/tempo/tempo_controller.py` (_tick_interval) |
-| ALGORITHM Step 3 | `mind/physics/tick.py` (GraphTick.run) |
-| ALGORITHM Step 4 | `mind/infrastructure/canon/canon_holder.py` (record_to_canon) |
+| ALGORITHM Step 1 | `runtime/infrastructure/tempo/tempo_controller.py` (_tick_interval) |
+| ALGORITHM Step 3 | `runtime/physics/tick.py` (GraphTick.run) |
+| ALGORITHM Step 4 | `runtime/infrastructure/canon/canon_holder.py` (record_to_canon) |
 
 ---
 
@@ -276,7 +276,7 @@ Async loop driven by `asyncio`. One loop per playthrough.
 
 ### Missing Implementation
 
-<!-- @mind:todo Add `mind/infrastructure/api/tempo.py` endpoints. -->
+<!-- @mind:todo Add `runtime/infrastructure/api/tempo.py` endpoints. -->
 
 ### Questions
 

@@ -42,7 +42,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Tempo.md
 THIS:            HEALTH_Tempo.md
 SYNC:            ./SYNC_Tempo.md
 
-IMPL:            mind/infrastructure/tempo/health_check.py (planned)
+IMPL:            runtime/infrastructure/tempo/health_check.py (planned)
 ```
 
 ---
@@ -55,7 +55,7 @@ flows_analysis:
     purpose: ensure pacing and canon surfacing remain stable
     triggers:
       - type: schedule
-        source: mind/infrastructure/tempo/tempo_controller.py:run
+        source: runtime/infrastructure/tempo/tempo_controller.py:run
         notes: asyncio loop cadence
     frequency:
       expected_rate: 12/min
@@ -85,7 +85,7 @@ health_indicators:
 
 ```yaml
 status:
-  stream_destination: file:...mind-mcp/state/health_tempo.json
+  stream_destination: file:...mind/state/health_tempo.json
   result:
     representation: enum
     value: UNKNOWN
@@ -149,11 +149,11 @@ docks:
   input:
     id: tempo_tick_in
     method: TempoController.run
-    location: mind/infrastructure/tempo/tempo_controller.py:~70
+    location: runtime/infrastructure/tempo/tempo_controller.py:~70
   output:
     id: canon_broadcast
     method: CanonHolder.record_to_canon
-    location: mind/infrastructure/canon/canon_holder.py:~50
+    location: runtime/infrastructure/canon/canon_holder.py:~50
 ```
 
 ### ALGORITHM / CHECK MECHANISM
@@ -194,7 +194,7 @@ throttling:
 ```yaml
 forwarding:
   targets:
-    - location: ...mind-mcp/state/health_tempo.json
+    - location: ...mind/state/health_tempo.json
       transport: file
       notes: consumed by mind doctor
 
@@ -230,7 +230,7 @@ mind health tempo --checker tempo_tick_advances
 
 ## KNOWN GAPS
 
-<!-- @mind:todo Implement checker runner in mind/infrastructure/tempo/health_check.py -->
+<!-- @mind:todo Implement checker runner in runtime/infrastructure/tempo/health_check.py -->
 <!-- @mind:todo Define real cadence thresholds per speed mode -->
 
 ---

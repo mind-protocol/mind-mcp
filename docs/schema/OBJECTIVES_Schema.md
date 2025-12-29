@@ -16,7 +16,7 @@ VERIFIED: 2025-12-23 against schema.yaml v1.0
 
 4. **Polarity-enabled links** — Links carry `polarity` [-1, +1] to enable contradiction pressure mechanics. Narratives that contradict create tension.
 
-5. **Extensible through layering** — Base schema in `docs/schema/schema.yaml` defines structure. Projects overlay constraints via `mind/graph/health/schema.yaml`.
+5. **Extensible through layering** — Base schema in `docs/schema/schema.yaml` defines structure. Projects overlay constraints via `runtime/graph/health/schema.yaml`.
 
 ## NON-OBJECTIVES
 

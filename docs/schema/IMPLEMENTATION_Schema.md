@@ -62,12 +62,12 @@ mind/models/
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
 | `docs/schema/schema.yaml` | Authoritative base schema | NodeBase, LinkBase, nodes, links, invariants | ~240 | OK |
-| `mind/graph/health/check_health.py` | CLI health check | `check_graph_health()`, `validate_node()`, `HealthReport` | ~430 | WATCH |
-| `mind/graph/health/test_schema.py` | Pytest suite | `SchemaValidator`, 20+ test methods | ~880 | SPLIT |
-| `mind/graph/health/schema.yaml` | Blood Ledger overlay | Character, Place, Thing, Narrative enums | ~320 | OK |
-| `mind/models/base.py` | Pydantic enums | `CharacterType`, `PlaceType`, `ThingType`, etc. | ~460 | WATCH |
-| `mind/models/nodes.py` | Pydantic nodes | `Character`, `Place`, `Thing`, `Narrative`, `Moment` | ~320 | OK |
-| `mind/models/links.py` | Pydantic links | `CharacterNarrative`, `PlacePlace`, etc. | ~225 | OK |
+| `runtime/graph/health/check_health.py` | CLI health check | `check_graph_health()`, `validate_node()`, `HealthReport` | ~430 | WATCH |
+| `runtime/graph/health/test_schema.py` | Pytest suite | `SchemaValidator`, 20+ test methods | ~880 | SPLIT |
+| `runtime/graph/health/schema.yaml` | Blood Ledger overlay | Character, Place, Thing, Narrative enums | ~320 | OK |
+| `runtime/models/base.py` | Pydantic enums | `CharacterType`, `PlaceType`, `ThingType`, etc. | ~460 | WATCH |
+| `runtime/models/nodes.py` | Pydantic nodes | `Character`, `Place`, `Thing`, `Narrative`, `Moment` | ~320 | OK |
+| `runtime/models/links.py` | Pydantic links | `CharacterNarrative`, `PlacePlace`, etc. | ~225 | OK |
 
 **Size Thresholds:**
 - **OK** (<400 lines): Healthy size
@@ -151,7 +151,7 @@ LinkBase:
 |-------------|-----------|--------------|
 | CLI health check | `check_health.py:381` (`main()`) | `python check_health.py` |
 | Pytest runner | `test_schema.py:865` (`main()`) | `pytest test_schema.py` |
-| mind init | — | Copies schema.yaml to .mind-mcp/ |
+| mind init | — | Copies schema.yaml to .mind/ |
 
 ---
 
@@ -250,7 +250,7 @@ flow:
 docs/schema/schema.yaml (authoritative)
     └── loaded by → mind/graph/health/check_health.py
     └── loaded by → mind/graph/health/test_schema.py
-    └── copied to → .mind-mcp/schema.yaml (at init)
+    └── copied to → .mind/schema.yaml (at init)
 
 mind/graph/health/schema.yaml (Blood Ledger)
     └── overlays → base schema at load time

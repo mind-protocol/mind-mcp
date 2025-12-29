@@ -18,7 +18,7 @@ ALGORITHM:      ./ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md
 VALIDATION:     ./VALIDATION_Prompt_Bootstrap_Invariants.md
 THIS:           IMPLEMENTATION_Prompt_Code_Architecture.md
 HEALTH:         ./HEALTH_Prompt_Runtime_Verification.md
-SYNC:           ./prompt command sync (in ...mind-mcp/state/)
+SYNC:           ./prompt command sync (in ...mind/state/)
 
 IMPL:           mind/prompt.py
                 mind/cli.py
@@ -40,8 +40,8 @@ mind/
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
-| `mind/prompt.py` | Prompt generation helper | `generate_bootstrap_prompt`, `print_bootstrap_prompt` | ~90 | OK |
-| `mind/cli.py` | CLI routing for prompt command | `main()`, `print_bootstrap_prompt` invocation | ~400 | OK |
+| `runtime/prompt.py` | Prompt generation helper | `generate_bootstrap_prompt`, `print_bootstrap_prompt` | ~90 | OK |
+| `runtime/cli.py` | CLI routing for prompt command | `main()`, `print_bootstrap_prompt` invocation | ~400 | OK |
 
 ---
 
@@ -57,8 +57,8 @@ mind/
 
 | Pattern | Applied To | Purpose |
 |---------|------------|---------|
-| Template | `mind/prompt.py` | Reuses a static string template with placeholders for docs and views |
-| Router | `mind/cli.py` | Maps CLI subcommands to implementation helpers |
+| Template | `runtime/prompt.py` | Reuses a static string template with placeholders for docs and views |
+| Router | `runtime/cli.py` | Maps CLI subcommands to implementation helpers |
 
 ### Anti-Patterns to Avoid
 
@@ -94,8 +94,8 @@ prompt:
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| `print_bootstrap_prompt()` | `mind/cli.py:364` | `mind prompt` subcommand |
-| `generate_bootstrap_prompt()` | `mind/prompt.py:17` | `print_bootstrap_prompt()` |
+| `print_bootstrap_prompt()` | `runtime/cli.py:364` | `mind prompt` subcommand |
+| `generate_bootstrap_prompt()` | `runtime/prompt.py:17` | `print_bootstrap_prompt()` |
 
 ---
 
@@ -107,7 +107,7 @@ prompt:
 flow:
   name: prompt_construction
   purpose: Provide a guaranteed plan for agents to process the protocol
-  scope: `mind/prompt.py` string assembly -> CLI output
+  scope: `runtime/prompt.py` string assembly -> CLI output
   steps:
     - id: resolve_docs
       description: Render `.mind` doc paths
@@ -193,11 +193,11 @@ flow:
 
 ## MODULE DEPENDENCIES
 
-- CLI prompt uses `mind/cli.py` for the command entrypoint and relies on the doc chain (PATTERNS, BEHAVIORS, ALGORITHM, etc.) living under `docs/cli/prompt`. It also references the protocol docs to build the view table.
+- CLI prompt uses `runtime/cli.py` for the command entrypoint and relies on the doc chain (PATTERNS, BEHAVIORS, ALGORITHM, etc.) living under `docs/cli/prompt`. It also references the protocol docs to build the view table.
 
 ## STATE MANAGEMENT
 
-- State artifacts include `...mind-mcp/state/SYNC_Project_Health.md` (health runtime can detect prompt drift) and `...mind-mcp/state/SYNC_Prompt_Command_State.md` (prompt-specific health snapshots). Prompt generation itself is stateless but pushes reminders into SYNC for agent follow-ups.
+- State artifacts include `...mind/state/SYNC_Project_Health.md` (health runtime can detect prompt drift) and `...mind/state/SYNC_Prompt_Command_State.md` (prompt-specific health snapshots). Prompt generation itself is stateless but pushes reminders into SYNC for agent follow-ups.
 - Equivalent monitoring hooks may reference the same paths without the dot prefix.
 
 ## RUNTIME BEHAVIOR
@@ -214,12 +214,12 @@ flow:
 
 | Config | Location | Default | Description |
 |--------|----------|---------|-------------|
-| `prompt_docs` | config file (in `.mind-mcp/`) | `[]` | Additional docs to include in the prompt |
-| `prompt_views` | config file (in `.mind-mcp/`) | standard VIEW table | Custom VIEW options for agents |
+| `prompt_docs` | config file (in `.mind/`) | `[]` | Additional docs to include in the prompt |
+| `prompt_views` | config file (in `.mind/`) | standard VIEW table | Custom VIEW options for agents |
 
 ## BIDIRECTIONAL LINKS
 
-- Code → Docs: `mind/prompt.py` includes `DOCS:` references to this file and to the PATTERNS/ALGORITHM chain.
+- Code → Docs: `runtime/prompt.py` includes `DOCS:` references to this file and to the PATTERNS/ALGORITHM chain.
 - Docs → Code: `docs/cli/prompt/ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md` links back to `generate_bootstrap_prompt()` and mentions `print_bootstrap_prompt()` to keep the chain tidy.
 
 ## MARKERS

@@ -133,7 +133,7 @@ filters and query limits in graph ops.
 
 ## ALGORITHM: SubEntity Traversal (v1.8)
 
-Primary function: `run_exploration()` in `mind/physics/exploration.py`.
+Primary function: `run_exploration()` in `runtime/physics/exploration.py`.
 
 ### v1.8 Key Change: Query vs Intention
 

@@ -73,7 +73,7 @@ the SSE reader, CLI log, and replay archives all observe the same sequence of
   SSE endpoint, log archivist, and reviewers can tail in real time.
 - **Outputs (stack runner):** `tools/run_stack.sh` records each service restart
   (FalkorDB, backend, optional frontend, MCP server, ngrok) into `./logs/run_stack`
-  and appends stderr to `./.mind-mcp/error.log` so operators know what commands were
+  and appends stderr to `./.mind/error.log` so operators know what commands were
   issued and how the helper behaved during emergent restarts.
 
 ## EDGE CASES

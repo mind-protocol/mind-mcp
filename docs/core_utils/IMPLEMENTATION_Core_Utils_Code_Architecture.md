@@ -36,7 +36,7 @@ mind/
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
-| `mind/core_utils.py` | core helper functions and constants | `get_templates_path`, `find_module_directories` | ~106 | OK |
+| `runtime/core_utils.py` | core helper functions and constants | `get_templates_path`, `find_module_directories` | ~106 | OK |
 
 **Size Thresholds:**
 - **OK** (<400 lines): Healthy size, easy to understand
@@ -57,8 +57,8 @@ mind/
 
 | Pattern | Applied To | Purpose |
 |---------|------------|---------|
-| Guarded fallback | `mind/core_utils.py:get_templates_path` | Select the first valid templates location with a clear fallback order |
-| Prefix-based discovery | `mind/core_utils.py:find_module_directories` | Identify module docs without hard-coding names |
+| Guarded fallback | `runtime/core_utils.py:get_templates_path` | Select the first valid templates location with a clear fallback order |
+| Prefix-based discovery | `runtime/core_utils.py:find_module_directories` | Identify module docs without hard-coding names |
 
 ### Anti-Patterns to Avoid
 
@@ -84,8 +84,8 @@ No custom schemas. Uses `Path` from the standard library.
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| `get_templates_path` | `mind/core_utils.py:36` | CLI or templates lookup calls |
-| `find_module_directories` | `mind/core_utils.py:67` | docs scanning utilities |
+| `get_templates_path` | `runtime/core_utils.py:36` | CLI or templates lookup calls |
+| `find_module_directories` | `runtime/core_utils.py:67` | docs scanning utilities |
 
 ---
 
@@ -196,9 +196,9 @@ None. This module is intended to be dependency-light.
 
 | Package | Used For | Imported By |
 |---------|----------|-------------|
-| `pathlib` | filesystem paths and checks | `mind/core_utils.py` |
-| `typing` | type hints | `mind/core_utils.py` |
-| `yaml` (optional) | YAML detection via import | `mind/core_utils.py` |
+| `pathlib` | filesystem paths and checks | `runtime/core_utils.py` |
+| `typing` | type hints | `runtime/core_utils.py` |
+| `yaml` (optional) | YAML detection via import | `runtime/core_utils.py` |
 
 ---
 
@@ -208,8 +208,8 @@ None. This module is intended to be dependency-light.
 
 | State | Location | Scope | Lifecycle |
 |-------|----------|-------|-----------|
-| `HAS_YAML` | `mind/core_utils.py:10` | module | set at import time |
-| `IGNORED_EXTENSIONS` | `mind/core_utils.py:17` | module | constant at import time |
+| `HAS_YAML` | `runtime/core_utils.py:10` | module | set at import time |
+| `IGNORED_EXTENSIONS` | `runtime/core_utils.py:17` | module | constant at import time |
 
 ---
 
@@ -261,16 +261,16 @@ Files that reference this documentation:
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/core_utils.py` | 4 | `docs/core_utils/PATTERNS_Core_Utils_Functions.md` |
+| `runtime/core_utils.py` | 4 | `docs/core_utils/PATTERNS_Core_Utils_Functions.md` |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| ALGORITHM get_templates_path | `mind/core_utils.py:get_templates_path` |
-| ALGORITHM find_module_directories | `mind/core_utils.py:find_module_directories` |
-| BEHAVIOR B1 | `mind/core_utils.py:get_templates_path` |
-| BEHAVIOR B3 | `mind/core_utils.py:find_module_directories` |
+| ALGORITHM get_templates_path | `runtime/core_utils.py:get_templates_path` |
+| ALGORITHM find_module_directories | `runtime/core_utils.py:find_module_directories` |
+| BEHAVIOR B1 | `runtime/core_utils.py:get_templates_path` |
+| BEHAVIOR B3 | `runtime/core_utils.py:find_module_directories` |
 
 ---
 

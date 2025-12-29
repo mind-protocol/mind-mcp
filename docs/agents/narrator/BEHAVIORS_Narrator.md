@@ -42,7 +42,7 @@ Schema: `TOOL_REFERENCE.md`.
 
 - Every invention must be persisted as a mutation.
 - Mutations must link to existing graph nodes (or nodes in the same batch).
-- Mutation schemas are defined in `mind/models/` (see `TOOL_REFERENCE.md`).
+- Mutation schemas are defined in `runtime/models/` (see `TOOL_REFERENCE.md`).
 
 ---
 

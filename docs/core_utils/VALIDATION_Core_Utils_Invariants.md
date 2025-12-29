@@ -36,7 +36,7 @@ These must ALWAYS be true:
 get_templates_path() must only return a templates directory that contains templates/mind.
 ```
 
-**Checked by:** manual verification of `get_templates_path` in `mind/core_utils.py`
+**Checked by:** manual verification of `get_templates_path` in `runtime/core_utils.py`
 
 ### V2: docs/concepts is excluded from module discovery
 

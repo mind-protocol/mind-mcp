@@ -181,31 +181,31 @@ Repeat
 ## CONFLICTS
 
 ### DECISION: Graph Health Check Incomplete Impl
-- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `mind/graph/health/check_health.py`, but each function already implements concrete behavior.
+- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `runtime/graph/health/check_health.py`, but each function already implements concrete behavior.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already manage issues, counts, health status, and schema loading for the health report flow.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Ops Event Listener Incomplete Impl
-- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `mind/physics/graph/graph_ops_events.py`, but both functions already implement registration and removal logic.
+- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `runtime/physics/graph/graph_ops_events.py`, but both functions already implement registration and removal logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already mutate the listener registry and are exercised by graph ops event emission.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `mind/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
+- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions execute concrete Cypher queries and result parsing for narrative, transition, and clickable word lookups.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `mind/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
+- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already query FalkorDB and parse results as part of `GraphQueries` moment/view flows.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Ops Types Incomplete Impl
-- Conflict: Repair task flagged `__str__` and `success` as empty in `mind/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
+- Conflict: Repair task flagged `__str__` and `success` as empty in `runtime/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: `SimilarNode.__str__` and `ApplyResult.success` already provide concrete behavior used by graph ops apply reporting.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
@@ -326,31 +326,31 @@ Repeat
 ## CONFLICTS
 
 ### DECISION: Graph Health Check Incomplete Impl
-- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `mind/graph/health/check_health.py`, but each function already implements concrete behavior.
+- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `runtime/graph/health/check_health.py`, but each function already implements concrete behavior.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already manage issues, counts, health status, and schema loading for the health report flow.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: graph_ops_events listener registration
-- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `mind/physics/graph/graph_ops_events.py`, but both functions already implement registration/removal logic.
+- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `runtime/physics/graph/graph_ops_events.py`, but both functions already implement registration/removal logic.
 - Resolution: Keep existing implementation; document repair task as stale.
 - Reasoning: The listener registry is mutated and used by `emit_event`, so behavior is already present.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `mind/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
+- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions execute concrete Cypher queries and result parsing for narrative, transition, and clickable word lookups.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `mind/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
+- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already query FalkorDB and parse results as part of `GraphQueries` moment/view flows.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Ops Types Incomplete Impl
-- Conflict: Repair task flagged `__str__` and `success` as empty in `mind/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
+- Conflict: Repair task flagged `__str__` and `success` as empty in `runtime/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: `SimilarNode.__str__` and `ApplyResult.success` already provide concrete behavior used by graph ops apply reporting.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
@@ -473,31 +473,31 @@ Repeat
 ## CONFLICTS
 
 ### DECISION: Graph Health Check Incomplete Impl
-- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `mind/graph/health/check_health.py`, but each function already implements concrete behavior.
+- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `runtime/graph/health/check_health.py`, but each function already implements concrete behavior.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already manage issues, counts, health status, and schema loading for the health report flow.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: graph_ops_events listener registration
-- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `mind/physics/graph/graph_ops_events.py`, but both functions already implement registration/removal logic.
+- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `runtime/physics/graph/graph_ops_events.py`, but both functions already implement registration/removal logic.
 - Resolution: Keep existing implementation; document repair task as stale.
 - Reasoning: The listener registry is mutated and used by `emit_event`, so behavior is already present.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `mind/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
+- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions execute concrete Cypher queries and result parsing for narrative, transition, and clickable word lookups.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `mind/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
+- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already query FalkorDB and parse results as part of `GraphQueries` moment/view flows.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Ops Types Incomplete Impl
-- Conflict: Repair task flagged `__str__` and `success` as empty in `mind/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
+- Conflict: Repair task flagged `__str__` and `success` as empty in `runtime/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: `SimilarNode.__str__` and `ApplyResult.success` already provide concrete behavior used by graph ops apply reporting.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
@@ -508,13 +508,13 @@ Repeat
 ## Agent Observations
 
 ### Remarks
-- Repair task appears stale relative to `mind/physics/graph/graph_ops_events.py`.
-- Repair task appears stale relative to `mind/physics/graph/graph_queries_moments.py`.
-- Repair task appears stale relative to `mind/physics/graph/graph_ops_types.py`; `SimilarNode.__str__` and `ApplyResult.success` are already implemented.
-- Repair task appears stale relative to `mind/graph/health/check_health.py`.
-- Re-verified `mind/graph/health/check_health.py` already implements health report helpers; no code changes needed.
- - Verified moment query helpers in `mind/physics/graph/graph_queries_moments.py` already implement narrative, transition, and clickable-word queries.
-- Implemented markdown formatting and cosine similarity helpers directly in `mind/physics/graph/graph_queries_search.py` to complete search mixin methods.
+- Repair task appears stale relative to `runtime/physics/graph/graph_ops_events.py`.
+- Repair task appears stale relative to `runtime/physics/graph/graph_queries_moments.py`.
+- Repair task appears stale relative to `runtime/physics/graph/graph_ops_types.py`; `SimilarNode.__str__` and `ApplyResult.success` are already implemented.
+- Repair task appears stale relative to `runtime/graph/health/check_health.py`.
+- Re-verified `runtime/graph/health/check_health.py` already implements health report helpers; no code changes needed.
+ - Verified moment query helpers in `runtime/physics/graph/graph_queries_moments.py` already implement narrative, transition, and clickable-word queries.
+- Implemented markdown formatting and cosine similarity helpers directly in `runtime/physics/graph/graph_queries_search.py` to complete search mixin methods.
 
 ### Suggestions
 - None.
@@ -641,31 +641,31 @@ Repeat
 ## CONFLICTS
 
 ### DECISION: Graph Health Check Incomplete Impl
-- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `mind/graph/health/check_health.py`, but each function already implements concrete behavior.
+- Conflict: Repair task flagged `add_issue`, `error_count`, `warning_count`, `is_healthy`, and `load_schema` as empty in `runtime/graph/health/check_health.py`, but each function already implements concrete behavior.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already manage issues, counts, health status, and schema loading for the health report flow.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: graph_ops_events listener registration
-- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `mind/physics/graph/graph_ops_events.py`, but both functions already implement registration/removal logic.
+- Conflict: Repair task flagged `add_mutation_listener` and `remove_mutation_listener` as empty in `runtime/physics/graph/graph_ops_events.py`, but both functions already implement registration/removal logic.
 - Resolution: Keep existing implementation; document repair task as stale.
 - Reasoning: The listener registry is mutated and used by `emit_event`, so behavior is already present.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `mind/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
+- Conflict: Repair task flagged empty implementations for `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains full query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions execute concrete Cypher queries and result parsing for narrative, transition, and clickable word lookups.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Queries Moments Incomplete Impl
-- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `mind/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
+- Conflict: Repair task flagged `get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, and `get_clickable_words` as empty in `runtime/physics/graph/graph_queries_moments.py`, but each function already contains concrete Cypher query logic.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: The functions already query FalkorDB and parse results as part of `GraphQueries` moment/view flows.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
 
 ### DECISION: Graph Ops Types Incomplete Impl
-- Conflict: Repair task flagged `__str__` and `success` as empty in `mind/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
+- Conflict: Repair task flagged `__str__` and `success` as empty in `runtime/physics/graph/graph_ops_types.py`, but both functions already implement formatting and error-free status checks.
 - Resolution: Treat the issue as already resolved; no code changes required.
 - Reasoning: `SimilarNode.__str__` and `ApplyResult.success` already provide concrete behavior used by graph ops apply reporting.
 - Updated: `docs/physics/graph/SYNC_Graph.md`
@@ -676,13 +676,13 @@ Repeat
 ## Agent Observations
 
 ### Remarks
-- Repair task appears stale relative to `mind/physics/graph/graph_ops_events.py`.
-- Repair task appears stale relative to `mind/physics/graph/graph_queries_moments.py`.
-- Repair task appears stale relative to `mind/physics/graph/graph_ops_types.py`; `SimilarNode.__str__` and `ApplyResult.success` are already implemented.
-- Repair task appears stale relative to `mind/graph/health/check_health.py`.
-- Re-verified `mind/graph/health/check_health.py` already implements health report helpers; no code changes needed.
- - Verified moment query helpers in `mind/physics/graph/graph_queries_moments.py` already implement narrative, transition, and clickable-word queries.
-- Implemented markdown formatting and cosine similarity helpers directly in `mind/physics/graph/graph_queries_search.py` to complete search mixin methods.
+- Repair task appears stale relative to `runtime/physics/graph/graph_ops_events.py`.
+- Repair task appears stale relative to `runtime/physics/graph/graph_queries_moments.py`.
+- Repair task appears stale relative to `runtime/physics/graph/graph_ops_types.py`; `SimilarNode.__str__` and `ApplyResult.success` are already implemented.
+- Repair task appears stale relative to `runtime/graph/health/check_health.py`.
+- Re-verified `runtime/graph/health/check_health.py` already implements health report helpers; no code changes needed.
+ - Verified moment query helpers in `runtime/physics/graph/graph_queries_moments.py` already implement narrative, transition, and clickable-word queries.
+- Implemented markdown formatting and cosine similarity helpers directly in `runtime/physics/graph/graph_queries_search.py` to complete search mixin methods.
 - Consolidated weight computation into `docs/physics/graph/ALGORITHM_Energy_Flow.md` and redirected `docs/physics/graph/ALGORITHM_Weight.md`.
 
 ### Suggestions
@@ -711,7 +711,7 @@ Original file: SYNC_Graph.md
 The Orchestrator is built. It calls tick, detects flips, triggers World Runner.
 **But no API endpoint calls it.**
 
-**Add this to `mind/infrastructure/api/app.py`:**
+**Add this to `runtime/infrastructure/api/app.py`:**
 
 ```python
 @app.post("/api/action")
@@ -780,16 +780,16 @@ class ActionRequest(BaseModel):
   dependencies, inspirations, scope, gaps) for repair #16.
 - Recorded the PATTERNS template repair as the canonical graph patterns
   update for this module so future agents can trace the doc alignment.
-- Verified `mind/physics/graph/graph_queries_moments.py` moment query helpers (`get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, `get_clickable_words`) are fully implemented; repair task was stale.
+- Verified `runtime/physics/graph/graph_queries_moments.py` moment query helpers (`get_narrative_moments`, `get_narratives_from_moment`, `get_available_transitions`, `get_clickable_words`) are fully implemented; repair task was stale.
 - Confirmed the `physics-graph` module mapping in `modules.yaml`, removed the duplicate entry, and verified the `graph_ops.py` DOCS reference.
 - Confirmed tick.py, orchestrator.py are complete
 - Identified gap: no API endpoint calls orchestrator.process_action()
 - Created task spec for agents to add endpoint
-- Verified mutation listener helpers in `mind/physics/graph/graph_ops_events.py` are already implemented; repair flagged as INCOMPLETE_IMPL is stale.
-- Verified `mind/physics/graph/graph_ops_types.py` helpers (`SimilarNode.__str__`, `ApplyResult.success`) are already implemented; repair flagged as INCOMPLETE_IMPL is stale.
-- Verified `mind/physics/graph/graph_queries_moments.py` moment query helpers are implemented; repair flagged as INCOMPLETE_IMPL is stale.
+- Verified mutation listener helpers in `runtime/physics/graph/graph_ops_events.py` are already implemented; repair flagged as INCOMPLETE_IMPL is stale.
+- Verified `runtime/physics/graph/graph_ops_types.py` helpers (`SimilarNode.__str__`, `ApplyResult.success`) are already implemented; repair flagged as INCOMPLETE_IMPL is stale.
+- Verified `runtime/physics/graph/graph_queries_moments.py` moment query helpers are implemented; repair flagged as INCOMPLETE_IMPL is stale.
 - Removed duplicate graph algorithm doc by consolidating weight computation into `docs/physics/graph/ALGORITHM_Energy_Flow.md` and dropping `docs/physics/graph/ALGORITHM_Weight.md`.
-- Reconfirmed `mind/physics/graph/graph_ops_types.py` helper implementations for the current repair run; no code changes required.
+- Reconfirmed `runtime/physics/graph/graph_ops_types.py` helper implementations for the current repair run; no code changes required.
 - Filled the missing template sections in `docs/physics/graph/SYNC_Graph_archive_2025-12.md` to align the archive with current SYNC requirements for repair #16.
 - Verified `docs/physics/graph/SYNC_Graph_archive_2025-12.md` remains template-complete; no further edits were needed for this repair pass.
 - Re-verified the archive SYNC template completeness for repair #16; no additional edits were required in this pass.
@@ -811,22 +811,22 @@ Original file: SYNC_Graph.md
 
 ### 2025-12-21: Reorganized GraphReadOps into a dedicated module
 
-* **What:** Extracted `GraphReadOps` and `get_graph_reader` into `mind/physics/graph/graph_ops_read_only_interface.py` and now re-export them from `graph_ops.py`.
+* **What:** Extracted `GraphReadOps` and `get_graph_reader` into `runtime/physics/graph/graph_ops_read_only_interface.py` and now re-export them from `graph_ops.py`.
 * **Why:** Keep the mutation-focused facade (`GraphOps`) under the 800-line threshold while isolating Connectome read helpers and semantic search.
-* **Files:** `mind/physics/graph/graph_ops.py`, `mind/physics/graph/graph_ops_read_only_interface.py`
+* **Files:** `runtime/physics/graph/graph_ops.py`, `runtime/physics/graph/graph_ops_read_only_interface.py`
 * **Metrics:** GraphOps is now 799 lines; the reader module is 246 lines and satisfies the OK threshold.
 
 ### 2025-12-21: Added read-only graph access for Connectome
 
 * **What:** Added `GraphReadOps` with Cypher and simple natural-language queries and embedding-stripped output.
 * **Why:** Provide Connectome access to real nodes and links from the `seed` graph without embedding payloads.
-* **Files:** `mind/physics/graph/graph_ops.py`.
+* **Files:** `runtime/physics/graph/graph_ops.py`.
 
 ### 2025-12-21: Added embedding-based semantic search for Connectome
 
 * **What:** Added `search_semantic` using embeddings with hop expansion and a CLI runner; embeddings are never returned.
 * **Why:** Enable true semantic search while keeping payloads small.
-* **Files:** `mind/physics/graph/graph_ops.py`, `mind/physics/graph/connectome_read_cli.py`.
+* **Files:** `runtime/physics/graph/graph_ops.py`, `runtime/physics/graph/connectome_read_cli.py`.
 
 ---
 
@@ -848,7 +848,7 @@ Original file: SYNC_Graph.md
 - **What:** Methods `_world_injection_path`, `_get_world_tick`, `_load_world_injection` were over-indented (nested inside `new_game` method).
 - **Why:** `/api/action` endpoint was failing with `'Orchestrator' object has no attribute '_get_world_tick'`.
 - **Fix:** Corrected indentation from 8 spaces to 4 spaces for these methods.
-- **Files:** `mind/infrastructure/orchestration/orchestrator.py`
+- **Files:** `runtime/infrastructure/orchestration/orchestrator.py`
 
 ### 2025-12-22: Expanded GraphClient Protocol Interface
 
@@ -859,7 +859,7 @@ Original file: SYNC_Graph.md
   - `get_narrative_believers()` — used by Orchestrator
   - `get_path_between()` — used by tick.py
   - `get_narratives_about()` — used by tick.py
-- **Files:** `mind/physics/graph/graph_interface.py`
+- **Files:** `runtime/physics/graph/graph_interface.py`
 - **Markers added:**
   - `@mind:proposition` — documents the "minimal interface" design decision
   - `@mind:todo` — reminder to update blood-ledger proxy
@@ -868,7 +868,7 @@ Original file: SYNC_Graph.md
 
 - **What:** Added support for FalkorDB Edge objects in link extraction.
 - **Why:** Ensure `/api/connectome/graph` returns links (not nodes only).
-- **Files:** `mind/physics/graph/graph_query_utils.py`.
+- **Files:** `runtime/physics/graph/graph_query_utils.py`.
 
 ---
 

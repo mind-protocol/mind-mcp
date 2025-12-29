@@ -73,7 +73,7 @@ Pydantic `BaseModel` is the chosen tool for defining graph entity schemas.
 
 ### Principle 3: Source of Truth for Graph Entities
 
-The Pydantic models in `mind/models/` are the authoritative source for the structure of all nodes and links stored in the graph.
+The Pydantic models in `runtime/models/` are the authoritative source for the structure of all nodes and links stored in the graph.
 
 **Why it matters:**
 - Eliminates ambiguity about what constitutes a valid graph entity.

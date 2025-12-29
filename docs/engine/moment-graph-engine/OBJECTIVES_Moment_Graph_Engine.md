@@ -101,7 +101,7 @@ Define what the moment graph engine optimizes for, ranked by priority. These obj
 - Clear boundaries require explicit APIs
 - Changes require single-point updates
 
-**Measure:** No traversal/surfacing code outside mind/moment_graph/.
+**Measure:** No traversal/surfacing code outside runtime/moment_graph/.
 
 ---
 

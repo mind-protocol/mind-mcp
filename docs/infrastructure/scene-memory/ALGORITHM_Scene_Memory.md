@@ -185,9 +185,9 @@ pointer to the originating Moment for later reconstruction.
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| `mind/physics/graph/graph_ops.py` | `create_moment_node` (legacy) | Graph node IDs and links |
-| `mind/infrastructure/memory/transcript.py` | `append_entry` (legacy) | Persisted transcript line |
-| `mind/models/nodes.py` | `Moment` | Schema validation for node data |
+| `runtime/physics/graph/graph_ops.py` | `create_moment_node` (legacy) | Graph node IDs and links |
+| `runtime/infrastructure/memory/transcript.py` | `append_entry` (legacy) | Persisted transcript line |
+| `runtime/models/nodes.py` | `Moment` | Schema validation for node data |
 
 ===============================================================================
 ## MARKERS
@@ -206,8 +206,8 @@ pointer to the originating Moment for later reconstruction.
 ## CANONICAL REFERENCES
 ===============================================================================
 
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/`
 
 ===============================================================================

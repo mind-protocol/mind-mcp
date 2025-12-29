@@ -2,8 +2,11 @@
   "mcpServers": {
     "mind": {
       "command": "python3",
-      "args": ["-m", "mcp.server"],
-      "cwd": "/home/mind-protocol/mind-mcp"
+      "args": [
+        "-m",
+        "mcp.server"
+      ],
+      "cwd": "/home/mind-protocol/mind-mcp/.mind/mind"
     }
   }
 }

@@ -67,7 +67,7 @@ Runtime health signals for the DatabaseAdapter. What to monitor in production.
 ## HEALTH CHECK IMPLEMENTATION
 
 ```python
-# mind/infrastructure/database/health.py
+# runtime/infrastructure/database/health.py
 
 def check_database_health() -> dict:
     """Run all database health checks."""

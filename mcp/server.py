@@ -5,10 +5,10 @@ Mind MCP Server
 Exposes the mind graph system as MCP tools for AI agents.
 
 Tools:
-  - membrane_start: Start a structured dialogue session
-  - membrane_continue: Continue with an answer
-  - membrane_abort: Abort a session
-  - membrane_list: List available membranes
+  - procedure_start: Start a structured dialogue session
+  - procedure_continue: Continue with an answer
+  - procedure_abort: Abort a session
+  - procedure_list: List available procedures
   - doctor_check: Run health checks
   - agent_list: List work agents
   - agent_spawn: Spawn a work agent
@@ -48,11 +48,11 @@ sys.path.insert(0, str(project_root))
 from dotenv import load_dotenv
 load_dotenv(project_root / ".env")
 
-from mind.connectome import ConnectomeRunner
-from mind.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
-from mind.agent_spawn import spawn_work_agent, spawn_agent_for_issue
-from mind.doctor import run_doctor
-from mind.doctor_types import DoctorConfig
+from runtime.connectome import ConnectomeRunner
+from runtime.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
+from runtime.agent_spawn import spawn_work_agent, spawn_agent_for_issue
+from runtime.doctor import run_doctor
+from runtime.doctor_types import DoctorConfig
 
 logging.basicConfig(
     level=logging.INFO,
@@ -75,7 +75,7 @@ class MindServer:
 
         # Try to get graph connections if available
         try:
-            from mind.physics.graph import GraphOps, GraphQueries
+            from runtime.physics.graph import GraphOps, GraphQueries
             # Don't pass graph_name - let the adapter use config
             self.graph_ops = GraphOps()
             self.graph_queries = GraphQueries()
@@ -139,32 +139,32 @@ class MindServer:
         return {
             "tools": [
                 {
-                    "name": "membrane_start",
-                    "description": "Start a new membrane dialogue session. Returns the first step.",
+                    "name": "procedure_start",
+                    "description": "Start a new procedure dialogue session. Returns the first step.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
-                            "membrane": {
+                            "procedure": {
                                 "type": "string",
-                                "description": "Name of the membrane/connectome to run (e.g., 'create_validation', 'document_progress')"
+                                "description": "Name of the procedure to run (e.g., 'create_validation', 'document_progress')"
                             },
                             "context": {
                                 "type": "object",
                                 "description": "Optional initial context values (e.g., {\"actor_id\": \"actor_claude\"})"
                             }
                         },
-                        "required": ["membrane"]
+                        "required": ["procedure"]
                     }
                 },
                 {
-                    "name": "membrane_continue",
-                    "description": "Continue a membrane session with an answer to the current step.",
+                    "name": "procedure_continue",
+                    "description": "Continue a procedure session with an answer to the current step.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
                             "session_id": {
                                 "type": "string",
-                                "description": "Session ID from membrane_start"
+                                "description": "Session ID from procedure_start"
                             },
                             "answer": {
                                 "description": "Answer for the current step. Type depends on what the step expects."
@@ -174,8 +174,8 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "membrane_abort",
-                    "description": "Abort a membrane session. No changes will be committed.",
+                    "name": "procedure_abort",
+                    "description": "Abort a procedure session. No changes will be committed.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
@@ -188,8 +188,8 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "membrane_list",
-                    "description": "List available membrane definitions.",
+                    "name": "procedure_list",
+                    "description": "List available procedure definitions.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {}
@@ -339,13 +339,13 @@ class MindServer:
         tool_name = params.get("name", "")
         arguments = params.get("arguments", {})
 
-        if tool_name == "membrane_start":
+        if tool_name == "procedure_start":
             return self._tool_start(arguments)
-        elif tool_name == "membrane_continue":
+        elif tool_name == "procedure_continue":
             return self._tool_continue(arguments)
-        elif tool_name == "membrane_abort":
+        elif tool_name == "procedure_abort":
             return self._tool_abort(arguments)
-        elif tool_name == "membrane_list":
+        elif tool_name == "procedure_list":
             return self._tool_list(arguments)
         elif tool_name == "doctor_check":
             return self._tool_doctor_check(arguments)
@@ -363,18 +363,18 @@ class MindServer:
             raise ValueError(f"Unknown tool: {tool_name}")
 
     def _tool_start(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Start a membrane session."""
-        membrane_name = args.get("membrane")
+        """Start a procedure session."""
+        procedure_name = args.get("procedure")
         context = args.get("context", {})
 
-        if not membrane_name:
-            return {"content": [{"type": "text", "text": "Error: 'membrane' is required"}]}
+        if not procedure_name:
+            return {"content": [{"type": "text", "text": "Error: 'procedure' is required"}]}
 
-        response = self.runner.start(membrane_name, initial_context=context)
+        response = self.runner.start(procedure_name, initial_context=context)
         return self._format_response(response)
 
     def _tool_continue(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Continue a membrane session."""
+        """Continue a procedure session."""
         session_id = args.get("session_id")
         answer = args.get("answer")
 
@@ -385,7 +385,7 @@ class MindServer:
         return self._format_response(response)
 
     def _tool_abort(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Abort a membrane session."""
+        """Abort a procedure session."""
         session_id = args.get("session_id")
 
         if not session_id:
@@ -395,15 +395,15 @@ class MindServer:
         return self._format_response(response)
 
     def _tool_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List available membranes."""
-        membranes = []
+        """List available procedures."""
+        procedures = []
         if self.connectomes_dir and self.connectomes_dir.exists():
             for path in self.connectomes_dir.glob("*.yaml"):
-                membranes.append(path.stem)
+                procedures.append(path.stem)
 
-        text = "Available membranes:\n"
-        for m in membranes:
-            text += f"  - {m}\n"
+        text = "Available procedures:\n"
+        for p in procedures:
+            text += f"  - {p}\n"
 
         return {"content": [{"type": "text", "text": text}]}
 
@@ -425,7 +425,7 @@ class MindServer:
                 issues = [i for i in issues if path_filter in i.path]
 
             # Filter by depth
-            from mind.work_core import get_depth_types
+            from runtime.work_core import get_depth_types
             allowed_types = get_depth_types(depth)
             issues = [i for i in issues if i.issue_type in allowed_types]
 
@@ -883,11 +883,11 @@ Please investigate and fix this issue. Follow the project's coding standards and
     async def _ask_single(self, query: str, actor_id: str, top_k: int, timeout: float, debug: bool, debug_lines: List[str]) -> str:
         """Async SubEntity exploration to answer a single query."""
         import time
-        from mind.infrastructure.embeddings.service import get_embedding_service
+        from runtime.infrastructure.embeddings.service import get_embedding_service
         start = time.time()
 
         try:
-            from mind.explore_cmd import run_exploration
+            from runtime.explore_cmd import run_exploration
 
             if debug:
                 debug_lines.append(f"Starting SubEntity exploration...")

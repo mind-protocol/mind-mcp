@@ -14,7 +14,7 @@ pip install -e .
 mind init
 ```
 
-This creates `.mind/` with:
+This creates `.runtime/` with:
 - Protocol docs (PRINCIPLES.md, FRAMEWORK.md)
 - Agent definitions, skills, procedures
 - Python runtime for physics, graph, traversal
@@ -40,7 +40,7 @@ adapter = get_database_adapter()
 ## CLI Commands
 
 ```bash
-mind init [--database falkordb|neo4j]  # Initialize .mind/ with runtime
+mind init [--database falkordb|neo4j]  # Initialize .runtime/ with runtime
 mind status                             # Show status and modules
 mind upgrade                            # Check for updates
 ```
@@ -103,9 +103,9 @@ Add to `.mcp.json` in your project:
 | Tool | Description |
 |------|-------------|
 | `graph_query` | Semantic search across the graph |
-| `membrane_start` | Start a structured dialogue |
-| `membrane_continue` | Continue dialogue with answer |
-| `membrane_list` | List available dialogues |
+| `procedure_start` | Start a structured dialogue |
+| `procedure_continue` | Continue dialogue with answer |
+| `procedure_list` | List available dialogues |
 | `doctor_check` | Run health checks |
 | `agent_list` | List work agents |
 | `agent_spawn` | Spawn a work agent |
@@ -114,7 +114,7 @@ Add to `.mcp.json` in your project:
 ## Project Structure
 
 ```
-.mind/
+.runtime/
 ├── PRINCIPLES.md          # How to work
 ├── FRAMEWORK.md           # Navigation guide
 ├── config.yaml            # Mind config
@@ -123,7 +123,7 @@ Add to `.mcp.json` in your project:
 ├── skills/                # Executable capabilities
 ├── procedures/            # Structured dialogues
 ├── state/                 # SYNC files
-└── mind/                  # Python runtime
+└── runtime/                  # Python runtime
     ├── physics/           # Graph physics
     ├── graph/             # Graph operations
     ├── connectome/        # Dialogue runner

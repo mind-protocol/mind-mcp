@@ -27,7 +27,7 @@ The engine code spans models, moments, physics, and infrastructure. Without a ro
 
 ## THE PATTERN
 
-Treat `mind/` as the authoritative runtime umbrella. Submodules (models, moments, moment graph, physics) carry their own chains, but the engine root defines scope, ownership, and shared expectations.
+Treat `runtime/` as the authoritative runtime umbrella. Submodules (models, moments, moment graph, physics) carry their own chains, but the engine root defines scope, ownership, and shared expectations.
 
 ## PRINCIPLES
 

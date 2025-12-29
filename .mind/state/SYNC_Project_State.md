@@ -1,143 +1,36 @@
-# mind-mcp — Sync: Current State
+# Project — Sync: Current State
 
 ```
-LAST_UPDATED: 2025-12-28
-UPDATED_BY: claude (opus-4.5)
-STATUS: DESIGNING
+LAST_UPDATED: {DATE}
+UPDATED_BY: {AGENT/HUMAN}
 ```
 
 ---
 
 ## CURRENT STATE
 
-mind-mcp is the open-source client/engine for the Mind Protocol. Split from ngram repo. Core physics and graph code migrated, **import paths now fixed** (engine.* → mind.*). CLI working. MCP server exists but needs testing with Neo4j Aura.
-
-Package installable via `pip install -e .` - the `mind` command works globally.
-
----
-
-## ARCHITECTURAL DECISION: CONNECTOME
-
-**Decision (2025-12-28):** Connectome core lives here in mind-mcp. Platform imports from here.
-
-### Rationale
-
-Connectome visualizes engine internals (traversal, energy, physics). The engine lives here, so the visualization should too. Platform uses the same components with a different data adapter.
-
-### Structure (To Be Implemented)
-
-```
-mind-mcp/
-└── connectome/
-    ├── core/                    # SHARED - React components
-    │   ├── components/
-    │   │   ├── node-kit/        # Node rendering
-    │   │   ├── edge-kit/        # Edge rendering
-    │   │   ├── canvas/          # Flow canvas
-    │   │   └── panels/          # Log, health panels
-    │   ├── types/               # FlowEvent, NodeData, etc.
-    │   └── styles/              # CSS/tokens
-    │
-    ├── adapters/
-    │   ├── local.ts             # Connects to local Neo4j (dev tool)
-    │   └── remote.ts            # Connects to L4 API (for platform)
-    │
-    ├── lib/                     # Runtime (state store, engine)
-    │   ├── state-store.ts
-    │   ├── runtime-engine.ts
-    │   └── event-model.ts
-    │
-    └── server/                  # Local dev server
-        └── index.ts             # `mind connectome` CLI command
-```
-
-### Adapter Interface
-
-```typescript
-interface ConnectomeAdapter {
-  // Graph data
-  getNodes(): Promise<Node[]>
-  getLinks(): Promise<Link[]>
-  search(query: string, opts: SearchOpts): Promise<SearchResult>
-
-  // Realtime
-  subscribe(handler: (event: FlowEvent) => void): Unsubscribe
-
-  // Dev-only (optional)
-  nextStep?(): Promise<StepResult>
-  restart?(): void
-}
-```
-
-### Migration Path
-
-1. Create `connectome/` directory structure
-2. Move components from `mind-platform/app/connectome/components/`
-3. Create adapter interface
-4. Implement LocalAdapter (talks to local Neo4j)
-5. Add `mind connectome` CLI command
-6. Platform updates imports to use `mind-mcp/connectome/core`
+{Narrative of the project's current state. Not a feature list — the story of where things are.}
 
 ---
 
 ## ACTIVE WORK
 
-### Connectome Migration (IN PROGRESS)
+### {Work Stream}
 
-- **Area:** `connectome/`
-- **Status:** structure created, adapters defined
-- **Owner:** agent
-- **Context:** Moving shared Connectome components from mind-platform to here
-
-**Created:**
-- `connectome/package.json` — npm package config
-- `connectome/core/types/adapter.ts` — ConnectomeAdapter interface
-- `connectome/adapters/local.ts` — LocalAdapter skeleton
-- `connectome/adapters/remote.ts` — RemoteAdapter skeleton
-- `connectome/lib/index.ts` — lib placeholder
-- `connectome/README.md` — documentation
-
-**Next:**
-- Move React components from mind-platform
-- Implement LocalAdapter Neo4j connection
-- Add TypeScript build config
-
-### Core Engine Migration
-
-- **Area:** `mind/`
-- **Status:** imports fixed, testing needed
-- **Owner:** agent
-- **Context:** All `engine.*` and `ngram.*` imports migrated to `mind.*`. Basic imports verified working. ConnectomeRunner module not yet migrated (MCP membrane tools disabled until migrated).
+- **Area:** `{area}/`
+- **Status:** {in progress / blocked}
+- **Owner:** {agent/human}
+- **Context:** {what's happening, why it matters}
 
 ---
 
 ## RECENT CHANGES
 
-### 2025-12-28: Connectome Architecture Decision
+### {DATE}: {Summary}
 
-- **What:** Decided Connectome core lives in mind-mcp, platform imports from here
-- **Why:** Connectome visualizes engine internals; engine lives here
-- **Impact:** Need to migrate components from mind-platform, create adapter pattern
-- **Cross-repo:** Coordinated with mind-platform SYNC
-
-### 2025-12-28: Import Path Migration
-
-- **What:** Fixed all `engine.*` and `ngram.*` imports to use `mind.*`
-- **Why:** Repo split left stale import references
-- **Where:** `cli/commands/init.py`, `cli/commands/explore.py`, `cli/commands/doctor.py`, `mcp/server.py`, plus docstring refs in `mind/physics/`
-- **Impact:** Basic imports now work. ConnectomeRunner marked as TODO (missing module).
-
-### 2024-12-28: Repo Creation
-
-- **What:** Split from ngram monorepo into dedicated mind-mcp repo
-- **Why:** Clean separation of client engine from protocol/platform
-- **Impact:** Fresh start, needs dependency verification
-
-### 2024-12-28: CLI + Package Setup
-
-- **What:** Added entry point, fixed pyproject.toml for hatch
-- **Why:** Enable global `mind` command
-- **Impact:** Can now run `mind init` from any directory
+- **What:** {description}
+- **Why:** {motivation}
+- **Impact:** {what this affects}
 
 ---
 
@@ -145,147 +38,619 @@ interface ConnectomeAdapter {
 
 | Issue | Severity | Area | Notes |
 |-------|----------|------|-------|
-| Neo4j connection untested | high | `mind/physics/graph/` | Need to verify Aura connection |
-| ConnectomeRunner missing | medium | `mcp/` | Module not migrated, membrane dialogues disabled |
-| MCP server untested | medium | `mcp/` | Needs integration test |
-| Duplicate GraphOps/GraphQueries | low | `mind/` | Exists in both `mind/graph/ops/` and `mind/physics/graph/` |
-| Connectome not yet migrated | medium | `connectome/` | Components still in mind-platform |
-
----
-
-## TODO
-
-### High Priority — Connectome Migration
-
-- [ ] Create `connectome/` directory structure
-- [ ] Define adapter interface (`ConnectomeAdapter`)
-- [ ] Move components from mind-platform
-- [ ] Implement LocalAdapter (local Neo4j)
-- [ ] Add `mind connectome` CLI command
-- [ ] Create RemoteAdapter (L4 API) for platform use
-
-### High Priority — Engine
-
-- [ ] Test Neo4j Aura connection
-- [x] Verify all imports work (engine.* → mind.* migration complete)
-- [ ] Migrate ConnectomeRunner module from engine package
-- [ ] Test MCP server with Claude Code
-- [ ] Add missing dependencies to pyproject.toml
-
-### Backlog
-
-- [ ] Add comprehensive tests
-- [ ] Document all MCP tools
-- [ ] Add WebSocket client for L4 push
-- IDEA: Add offline queue for disconnected mode
-
----
-
-## AREAS
-
-| Area | Status | Description |
-|------|--------|-------------|
-| `mind/` | migrated | Core physics, graph, models |
-| `cli/` | working | CLI entry point |
-| `mcp/` | untested | MCP server for AI agents |
-| `templates/` | ready | .mind/ initialization templates |
-| `connectome/` | **in progress** | Graph visualization — structure + adapters done, components pending |
-
----
-
-## MODULE COVERAGE
-
-**Mapped modules:**
-
-| Module | Code | Description | Status |
-|--------|------|-------------|--------|
-| physics | `mind/physics/` | Graph physics engine | migrated |
-| graph | `mind/physics/graph/` | Neo4j operations | migrated |
-| models | `mind/models/` | Node/Link models | migrated |
-| infrastructure | `mind/infrastructure/` | DB, embeddings, API | migrated |
-| cli | `cli/` | Command line interface | working |
-| mcp | `mcp/` | MCP server | untested |
-| connectome | `connectome/` | Graph visualization | **planned** |
+| {description} | {level} | `{area}/` | {context} |
 
 ---
 
 ## HANDOFF: FOR AGENTS
 
-**Current focus:** Connectome migration + Neo4j testing
+**Likely VIEW for continuing:** {which VIEW}
 
-**Key files to create:**
-- `connectome/core/types/adapter.ts` — Adapter interface
-- `connectome/adapters/local.ts` — Local graph adapter
-- `connectome/server/index.ts` — CLI dev server
+**Current focus:** {what the project is working toward right now}
 
-**Source files (in mind-platform):**
-- `app/connectome/components/` — 22 React component files
-- `docs/connectome/` — Extensive documentation
+**Key context:**
+{The things an agent needs to know that aren't obvious from the code/docs}
 
 **Watch out for:**
-- ConnectomeRunner not yet migrated (membrane tools won't work)
-- Duplicate code: GraphOps exists in both `mind/graph/ops/` and `mind/physics/graph/`
-- Components have TypeScript imports that need updating
+{Project-level gotchas}
 
 ---
 
 ## HANDOFF: FOR HUMAN
 
 **Executive summary:**
-Connectome architecture decided: core lives here, platform imports. Next step is migration.
+{2-3 sentences on project state}
 
-**Decisions made:**
-- Connectome core → mind-mcp
-- Adapter pattern for local (dev) vs remote (platform) data sources
-- Platform will import shared components
+**Decisions made recently:**
+{Key choices with rationale}
 
 **Needs your input:**
-- Neo4j Aura credentials for testing
-- Confirm MCP server tool list is complete
+{Blocked items, strategic questions}
 
 **Concerns:**
-- ConnectomeRunner needs to be migrated for MCP membrane tools to work
+{Things that might be problems, flagged for awareness}
 
 ---
 
-## CROSS-REPO COORDINATION
+## TODO
 
-**Agents are allowed to work across all 4 repos.** This is intentional — the repos form a single system.
+### High Priority
 
-### Repo Map
+- [ ] Make init dynamic (detect env, show what will be created, confirm)
+- [ ] Test ConnectomeRunner dialogue flows end-to-end
 
-| Repo | Layer | Path | Access |
-|------|-------|------|--------|
-| `mind-mcp` | L1 Client | `/home/mind-protocol/mind-mcp` | open source |
-| `mind-protocol` | L4 Law | `/home/mind-protocol/mind-protocol` | open source |
-| `mind-platform` | L3 + UI | `/home/mind-protocol/mind-platform` | open source |
-| `mind-ops` | Ops | `/home/mind-protocol/mind-ops` | private |
+### Backlog
 
-### This Repo's Role
+- [ ] Add `mind connect` command to test database connection
+- [ ] Add runtime version tracking
+- IDEA: `mind migrate` for moving data between backends
 
-**mind-mcp is the ENGINE + CONNECTOME CORE:**
-- Graph physics, traversal, methodology
-- Local membrane client
-- MCP server for Claude
-- CLI tools (`mind` command)
-- **Connectome visualization core** (shared with platform)
+---
 
-**Exports to other repos:**
-- `connectome/core/` → mind-platform imports for web UI
-- `connectome/adapters/remote.ts` → platform uses for L4 connection
+## CONSCIOUSNESS TRACE
 
-### Coordination Hub: mind-ops
+**Project momentum:**
+{Is the project moving well? Stuck? What's the energy like?}
 
-**`mind-ops` is the main cross-repo organization point.**
+**Architectural concerns:**
+{Things that feel like they might become problems}
 
-- Cross-repo issues go in `mind-ops/runbooks/cross-repo/`
-- Deployment orchestration in `mind-ops/ci/`
-- Shared secrets configuration in `mind-ops/secrets/`
-- Integration tests that span repos in `mind-ops/tests/integration/`
+**Opportunities noticed:**
+{Ideas that came up during work}
 
-### Sync Protocol
+---
 
-When working across repos:
-1. Update SYNC in the repo you're leaving
-2. Update SYNC in the repo you're entering
-3. Note the cross-repo context in both
+## AREAS
+
+| Area | Status | SYNC |
+|------|--------|------|
+| `{area}/` | {status} | `docs/{area}/SYNC_*.md` |
+
+---
+
+## MODULE COVERAGE
+
+Check `modules.yaml` (project root) for full manifest.
+
+**Mapped modules:**
+| Module | Code | Docs | Maturity |
+|--------|------|------|----------|
+| {module} | `{code_path}` | `{docs_path}` | {status} |
+
+**Unmapped code:** (run `mind validate` to check)
+- {List any code directories without module mappings}
+
+**Coverage notes:**
+{Any notes about why certain code isn't mapped, or plans to add mappings}
+
+## Init: 2025-12-29 00:26
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, env_example, mcp_config, gitignore
+
+---
+
+## Init: 2025-12-29 00:51
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, seed_inject, file_ingest, env_example, mcp_config, gitignore
+
+---
+
+## Review: 2025-12-29 docs/mcp-design/ Analysis
+
+**Reviewer:** Claude (Opus 4.5)
+
+### Summary
+
+Reviewed all documentation in `docs/mcp-design/` against `.mind/FRAMEWORK.md`, `.mind/PRINCIPLES.md`, and actual implementations in `mind/doctor*.py`.
+
+### Key Findings
+
+1. **REDUNDANCY**: Root-level docs in `docs/mcp-design/` (PATTERNS, BEHAVIORS, ALGORITHM, etc.) describe the same framework concepts now canonically defined in `.mind/FRAMEWORK.md`. This creates confusion about authority.
+
+2. **PATH MISMATCH**: 64 occurrences in docs/mcp-design/ reference `.mind/` (with hyphen) but actual implementation uses `.mind/` (no hyphen). All paths are broken.
+
+3. **UNIMPLEMENTED FEATURES**:
+   - `mind trace` command (Agent Trace Logging) - fully documented, zero implementation
+   - `mind doctor --guide` remediation mode - documented but not implemented
+   - `mind doctor --check <name>` filter - documented but not implemented
+   - `mind doctor --format markdown` - documented but not implemented
+   - VIEWs referenced (VIEW_Implement.md etc.) - don't exist in `.mind/views/`
+
+4. **WELL-ALIGNED**: `docs/mcp-design/doctor/` documentation matches `mind/doctor*.py` implementation reasonably well for v1 features.
+
+### Escalations Added
+
+- Priority 1: Path mismatch (.mind/ vs .mind/)
+- Priority 2: Redundancy with .mind/FRAMEWORK.md
+- Priority 3: Agent Trace Logging not implemented
+- Priority 3: doctor --guide/--check/--format markdown not implemented
+
+### Propositions Added
+
+- Reorganize docs/mcp-design/ as module documentation
+- Move doctor/ docs under docs/cli/
+- Move Agent Trace Logging to proposed-features/
+
+### Files Modified
+
+- `docs/mcp-design/PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md`
+- `docs/mcp-design/SYNC_Protocol_Current_State.md`
+- `docs/mcp-design/doctor/SYNC_Project_Health_Doctor.md`
+- `docs/mcp-design/features/SYNC_Agent_Trace_Logging.md`
+
+---
+
+## Review: 2025-12-29 docs/infrastructure/sse/ SSE Documentation Analysis
+
+**Reviewer:** Claude (Opus 4.5)
+
+### Summary
+
+Critical documentation mismatch discovered in `docs/infrastructure/sse/` (8 files). Documentation describes a non-existent TypeScript/Next.js system while actual SSE implementation exists in Python/FastAPI.
+
+### Key Findings
+
+1. **COMPLETE MISMATCH**: Documentation describes `app/api/sse/route.ts` (TypeScript/Next.js). This file does not exist.
+
+2. **ACTUAL IMPLEMENTATION (Python/FastAPI)**:
+   - `mind/infrastructure/api/sse_broadcast.py` - Broadcast module for SSE client management
+   - `mind/infrastructure/api/moments.py` - SSE endpoint at `/api/moments/stream/{playthrough_id}`
+   - `mind/infrastructure/api/app.py` - Debug SSE endpoint at `/api/debug/stream`
+
+3. **EVENT TYPE MISMATCH**:
+   - Documented: `connectome_health`, `ping` (health monitoring)
+   - Implemented: `moment_activated`, `moment_completed`, `moment_decayed`, `weight_updated`, `click_traversed`, `connected`, `ping`
+
+4. **ARCHITECTURE CONFLICT**: Architecture spec (`mind-protocol-architecture-v1.md`) specifies WebSocket + GraphQL as primary protocol, not SSE for health monitoring.
+
+### Actions Taken
+
+- Added `@mind:escalation` to all 8 SSE doc files
+- Changed SYNC_SSE_API.md status from CANONICAL to DEPRECATED
+- Added `@mind:proposition` recommending deletion and proper documentation of actual implementation
+
+### Files Modified
+
+- `docs/infrastructure/sse/OBJECTIVES_SSE_API.md`
+- `docs/infrastructure/sse/PATTERNS_SSE_API.md`
+- `docs/infrastructure/sse/BEHAVIORS_SSE_API.md`
+- `docs/infrastructure/sse/ALGORITHM_SSE_API.md`
+- `docs/infrastructure/sse/VALIDATION_SSE_API.md`
+- `docs/infrastructure/sse/IMPLEMENTATION_SSE_API.md`
+- `docs/infrastructure/sse/HEALTH_SSE_API.md`
+- `docs/infrastructure/sse/SYNC_SSE_API.md`
+
+### Decision Needed
+
+**Recommendation:** Delete entire `docs/infrastructure/sse/` doc chain and document the actual Python SSE implementation at `docs/infrastructure/api/`.
+
+---
+
+## Review: 2025-12-29 docs/cli/core/ CLI Documentation Analysis
+
+**Reviewer:** Claude (Opus 4.5)
+
+### Summary
+
+Critical documentation mismatch discovered in `docs/cli/core/` (18 files). Documentation describes 12+ CLI commands that do not exist, references non-existent implementation files, and uses incorrect directory paths.
+
+### Key Findings
+
+1. **DOCUMENTED COMMANDS THAT DO NOT EXIST** (from BEHAVIORS_CLI_Command_Effects.md):
+   - `mind init --force` - NO --force flag exists
+   - `mind validate` - DOES NOT EXIST
+   - `mind doctor` - DOES NOT EXIST
+   - `mind work` (repair) - DOES NOT EXIST
+   - `mind context <file>` - DOES NOT EXIST
+   - `mind sync` - DOES NOT EXIST
+   - `mind prompt` - DOES NOT EXIST
+   - `mind overview` - DOES NOT EXIST
+   - `mind solve-markers` - DOES NOT EXIST
+   - `mind agents` - DOES NOT EXIST
+   - `mind refactor` - DOES NOT EXIST
+   - `mind docs-fix` - DOES NOT EXIST
+
+2. **ACTUAL CLI COMMANDS** (from cli/__main__.py):
+   - `mind init [--database falkordb|neo4j]` - Initialize .mind/
+   - `mind status` - Show status (UNDOCUMENTED)
+   - `mind upgrade` - Check for updates (UNDOCUMENTED)
+   - `mind fix-embeddings [--dry-run]` - Fix embeddings (UNDOCUMENTED)
+
+3. **PATH MISMATCHES**:
+   - Docs reference `.mind/` but actual is `.mind/`
+   - Docs reference `mind/cli.py`, `mind/doctor.py` etc. but actual is `cli/__main__.py`, `cli/commands/*.py`
+   - All IMPL: references point to non-existent files
+
+4. **DUPLICATE DOCUMENTATION CHAINS**:
+   - Chain 1: PATTERNS_Why_CLI_Over_Copy.md, BEHAVIORS_CLI_Command_Effects.md, etc. (detailed but incorrect)
+   - Chain 2: *_mind_cli_core.md files (generic, also incorrect)
+
+### Escalations Added
+
+- Priority CRITICAL: Documented commands do not exist
+- Priority CRITICAL: Path references incorrect (.mind/ vs .mind/)
+- Priority CRITICAL: Implementation paths reference non-existent files
+- Priority HIGH: Algorithm documentation describes non-existent commands
+- Priority HIGH: Subsystem files referenced do not exist
+
+### Propositions Added
+
+- Document existing undocumented commands (status, upgrade, fix-embeddings)
+- Consolidate duplicate documentation chains
+
+### Files Modified
+
+- `docs/cli/core/BEHAVIORS_CLI_Command_Effects.md`
+- `docs/cli/core/SYNC_CLI_Development_State.md`
+- `docs/cli/core/ALGORITHM_CLI_Command_Execution_Logic/ALGORITHM_Overview.md`
+- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/overview/IMPLEMENTATION_Overview.md`
+- `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md`
+- `docs/cli/core/SYNC_mind_cli_core.md`
+- `docs/cli/core/IMPLEMENTATION_mind_cli_core.md`
+
+### Decision Needed
+
+**Options:**
+1. **Implement documented commands** - Add validate, doctor, work, context, etc. to the CLI
+2. **Rewrite documentation** - Delete incorrect docs and document actual 4-command CLI
+3. **Clarify scope** - This may be documentation from a planned future version; if so, mark as PROPOSED and create accurate CANONICAL docs
+
+**Recommendation:** Option 2 - Rewrite documentation to match reality. The actual CLI (init, status, upgrade, fix-embeddings) is functional and should be properly documented. The documented commands appear to be aspirational/planned features.
+
+---
+
+## Review: 2025-12-29 docs/mcp-tools/ MCP Tools Documentation Analysis
+
+**Reviewer:** Claude (Opus 4.5)
+
+### Summary
+
+Complete review and correction of all 13 documentation files in `docs/mcp-tools/`. Updated naming from "Membrane System" to "MCP Tools" and corrected all path references.
+
+### Key Findings
+
+1. **NAMING INCONSISTENCY**: All files used "Membrane System" in titles/headers while filenames use "MCP_Tools". Updated all to use "MCP Tools" consistently.
+
+2. **PATH MISMATCHES** (now corrected):
+   - `tools/mcp/membrane_server.py` -> `mcp/server.py`
+   - `engine/connectome/` -> `mind/connectome/`
+   - CHAIN links used `*_Membrane_System.md` -> corrected to `*_MCP_Tools.md`
+
+3. **MISSING INFRASTRUCTURE**:
+   - `procedures/` directory does not exist (documented as having 20 protocols)
+   - `templates/mind/skills/` skills may not exist (documented as 15 skills)
+   - `tools/coverage/validate.py` may not exist
+   - `mind/repair_verification.py` needs verification
+
+4. **UNDOCUMENTED TOOLS** (in code but not in behaviors):
+   - `doctor_check` - Run health checks with agent assignment
+   - `agent_list` - List work agents and status
+   - `agent_spawn` - Spawn work agent for issue/task
+   - `agent_status` - Get/set agent status
+   - `task_list` - List available tasks
+   - `graph_query` - Natural language graph query
+
+### Markers Added
+
+**@mind:escalation markers (documented but missing):**
+- `procedures/` directory with 20 protocol YAML files
+- Skills in `templates/mind/skills/`
+- `tools/coverage/validate.py`
+- Test files in `tests/connectome_v0/`
+
+**@mind:proposition markers (exists but not documented):**
+- Agent orchestration tools (doctor_check, agent_list, agent_spawn, etc.)
+- Create `procedures/` directory with protocol definitions
+
+### Files Modified
+
+All 13 files in `docs/mcp-tools/`:
+- OBJECTIVES_MCP_Tools.md
+- PATTERNS_MCP_Tools.md
+- BEHAVIORS_MCP_Tools.md
+- ALGORITHM_MCP_Tools.md
+- VALIDATION_MCP_Tools.md
+- IMPLEMENTATION_MCP_Tools.md
+- HEALTH_MCP_Tools.md
+- SYNC_MCP_Tools.md
+- SYNC_MCP_Tools_archive_2025-12.md
+- MAPPING_Issue_Type_Verification.md
+- MAPPING_Doctor_Issues_To_Protocols.md
+- SKILLS_AND_PROTOCOLS_Mapping.md
+- VALIDATION_Completion_Verification.md
+
+### Decision Needed
+
+**Recommendation:** Create the `procedures/` directory with protocol YAML files to match the documented protocol inventory. This is the most significant gap between documentation and implementation.
+
+---
+
+## Init: 2025-12-29 01:00
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Init: 2025-12-29 01:01
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Init: 2025-12-29 01:02
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Init: 2025-12-29 01:10
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Init: 2025-12-29 01:10
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Init: 2025-12-29 01:14
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Init: 2025-12-29 01:33
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview
+
+---
+
+## Refactor: 2025-12-29 - MCP Tool Rename: membrane_* to procedure_*
+
+**Performed by:** Claude (Opus 4.5)
+
+### Summary
+
+Renamed all MCP membrane dialogue tools to procedure tools for clarity:
+- `membrane_start` -> `procedure_start`
+- `membrane_continue` -> `procedure_continue`
+- `membrane_abort` -> `procedure_abort`
+- `membrane_list` -> `procedure_list`
+
+### Rationale
+
+The tool names now better reflect what they do: start/continue/abort/list structured procedures. The term "membrane" remains appropriate for the integration layer concept (`mind/membrane/`) but was confusing when used for dialogue tool names.
+
+### Files Modified
+
+**MCP Server (core implementation):**
+- `mcp/server.py` - Tool definitions, handlers, docstrings
+
+**Documentation (all references updated):**
+- `docs/mcp-tools/IMPLEMENTATION_MCP_Tools.md`
+- `docs/mcp-tools/MAPPING_Issue_Type_Verification.md`
+- `docs/mcp-tools/VALIDATION_Completion_Verification.md`
+- `docs/mcp-tools/HEALTH_MCP_Tools.md`
+- `docs/mcp-tools/ALGORITHM_MCP_Tools.md`
+- `README.md`
+- `AGENTS.md`
+- `.mind/FRAMEWORK.md`
+- `templates/mind/FRAMEWORK.md`
+- `docs/ARCHITECTURE.md`
+
+**Python implementation files:**
+- `mind/init_cmd.py`
+- `mind/work_verification.py`
+
+### What Was NOT Changed
+
+- The `mind/membrane/` directory (different concept - integration layer)
+- References to "membrane" as a concept (e.g., "Membrane graph navigation")
+- Only the MCP tool names were renamed
+
+### Verification
+
+Grep search for old names returns no matches. All 100 occurrences across 13 files now use the new procedure_* naming convention.
+
+---
+
+## Init Command v0.2.0: 2025-12-29
+
+**Performed by:** Claude (Opus 4.5)
+
+### Summary
+
+Major update to `mind init` command. Now has 13 steps with proper ordering and embeddings with progress bar.
+
+### Changes
+
+1. **Seed injection now runs AFTER file ingestion** - Spaces exist before linking actors to them
+2. **Added git info injection** - Creates human actor from git config (user.name, user.email)
+3. **Added repo Thing from git remote** - URL + GitHub API metadata for public repos
+4. **Added overview generation** - Generates map.md files at end of init
+5. **Added embeddings step with progress bar** - All nodes embedded at end
+
+### Init Steps (13 total)
+
+1. Ecosystem templates
+2. Runtime package
+3. AI config files
+4. Skills sync
+5. Database config
+6. Database setup
+7. File ingestion (creates Spaces, Things)
+8. Seed injection (creates Actors, links to Spaces)
+9. Env example
+10. MCP config
+11. Gitignore
+12. Overview (map.md)
+13. Embeddings (with progress bar)
+
+### Files Modified
+
+- `cli/commands/init.py` - 13 steps, reordered
+- `cli/helpers/inject_seed_yaml_to_graph.py` - Git info + GitHub API
+- `cli/helpers/generate_embeddings_for_graph_nodes.py` - NEW, progress bar
+- `cli/helpers/ingest_repo_files_to_graph.py` - Removed embed parameter
+- `mind/ingest/files.py` - Removed embed option (always create nodes only)
+- `docs/building/seed-injection.yaml` - Minimal MCP client seed (5 agents)
+
+### Seed YAML Changes
+
+Removed generic "developer" actor from YAML (now created dynamically from git config). Agents: assistant, scout, fixer, builder, reviewer - all linked to space:root.
+
+---
+
+## Documentation Overhaul: 2025-12-29
+
+**Performed by:** Claude (Opus 4.5)
+
+### Summary
+
+Complete review and consolidation of imported documentation from ngram repo. Fixed massive doc-code drift across 4 areas.
+
+### Actions Completed
+
+1. **Copied procedures/** - 24 YAML protocol files from ngram
+2. **Fixed paths** - `.mind/` → `.mind/` in protocol docs
+3. **Deleted SSE docs** - TypeScript docs for non-existent implementation, created placeholder
+4. **Deleted CLI Chain 1** - Kept Chain 2 (*_mind_cli_core.md), deleted duplicate chain
+5. **Updated CLI docs** - Rewrote all 8 files for actual + future commands
+6. **Renamed MCP tools** - `membrane_*` → `procedure_*` (13 files)
+
+### Future `mind` Commands Decided
+
+| Command | Status | Purpose |
+|---------|--------|---------|
+| `init`, `status`, `upgrade`, `fix-embeddings` | CANONICAL | Existing |
+| `validate` | PROPOSED | Protocol enforcement |
+| `work` | PROPOSED | AI-assisted repair (redesign needed) |
+| `context` | PROPOSED | Node context for actors (redesign: graph-aware, optional question/intent) |
+| `sync-files` | PROPOSED | SYNC file management |
+| `human-review` | PROPOSED | Marker resolution for humans |
+| `talk` | PROPOSED | Talk with an agent |
+
+### Removed Commands
+
+- `doctor` - content dispatched elsewhere
+- `prompt` - merged into `context`
+- `overview` - internal (called by other commands)
+- `refactor`, `protocol`, `trace` - not needed
+
+### Pending
+
+- Verify `templates/mind/skills/` exists
+
+---
+
+## Init: 2025-12-29 01:47
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.1.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, runtime, ai_configs, skills, database_config, database_setup, file_ingest, seed_inject, env_example, mcp_config, gitignore, overview, embeddings
+
+---
+
+## Documentation: 2025-12-29 - MCP Tools Behaviors Documented
+
+**Performed by:** Claude (Opus 4.5)
+
+### Summary
+
+Documented 6 MCP tools in `docs/mcp-tools/BEHAVIORS_MCP_Tools.md` that were previously only in code. Removed the `@mind:proposition` marker since documentation is now complete.
+
+### Tools Documented
+
+| Tool | Purpose | Behaviors Added |
+|------|---------|-----------------|
+| `doctor_check` | Run health checks with agent assignment | B-DOC-CHK-1 through B-DOC-CHK-5 |
+| `agent_list` | List work agents and their status | B-AGT-LST-1 through B-AGT-LST-3 |
+| `agent_spawn` | Spawn work agent for issue/task | B-AGT-SPN-1 through B-AGT-SPN-7 |
+| `agent_status` | Get or set agent status | B-AGT-STS-1 through B-AGT-STS-3 |
+| `task_list` | List available tasks from graph | B-TSK-LST-1 through B-TSK-LST-6 |
+| `graph_query` | Natural language graph query | B-GRQ-1 through B-GRQ-9 |
+
+### Documentation Format
+
+Each tool documented with:
+- Behavior table (ID, Behavior, Observable Effect, Linked Goal)
+- GIVEN/WHEN/THEN specifications covering:
+  - Input parameters and their effects
+  - Normal operation behaviors
+  - Edge cases and error handling
+
+### Files Modified
+
+- `docs/mcp-tools/BEHAVIORS_MCP_Tools.md` - Added 6 new behavior sections (~420 lines)
+
+### Source Reference
+
+Implementation analyzed from `mcp/server.py`:
+- `_tool_doctor_check()` (lines 410-456)
+- `_tool_agent_list()` (lines 458-479)
+- `_tool_task_list()` (lines 481-540)
+- `_tool_agent_spawn()` (lines 542-729)
+- `_tool_agent_status()` (lines 731-759)
+- `_tool_graph_query()` (lines 761-818)
+
+---

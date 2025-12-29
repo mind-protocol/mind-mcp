@@ -69,7 +69,7 @@ Standard Python `os.path` and `shutil` modules.
 
 | File | Role |
 |------|------|
-| `mind/core_utils.py` | Canonical location for utility helpers; used by CLI commands, health checks, and other modules for path resolution, doc discovery, and file operations. |
+| `runtime/core_utils.py` | Canonical location for utility helpers; used by CLI commands, health checks, and other modules for path resolution, doc discovery, and file operations. |
 
 ```
 IMPL: mind/core_utils.py

@@ -17,7 +17,7 @@ VALIDATION:     ./VALIDATION_Moment_Graph_Invariants.md
 IMPLEMENTATION: ./IMPLEMENTATION_Moment_Graph_Stub.md
 SYNC:           ./SYNC_Moments.md
 THIS:           TEST_Moment_Graph_Coverage.md (you are here)
-IMPL:           mind/moments/__init__.py
+IMPL:           runtime/moments/__init__.py
 ```
 
 ---
@@ -29,10 +29,10 @@ moment graph module itself is still a stub.
 
 | Area | Coverage | Location |
 |------|----------|----------|
-| Moment graph behavior | partial | `mind/tests/test_moment_graph.py` |
-| Moment lifecycle | partial | `mind/tests/test_moment_lifecycle.py` |
-| Moments API | partial | `mind/tests/test_moments_api.py` |
-| End-to-end moment graph | partial | `mind/tests/test_e2e_moment_graph.py` |
+| Moment graph behavior | partial | `runtime/tests/test_moment_graph.py` |
+| Moment lifecycle | partial | `runtime/tests/test_moment_lifecycle.py` |
+| Moments API | partial | `runtime/tests/test_moments_api.py` |
+| End-to-end moment graph | partial | `runtime/tests/test_e2e_moment_graph.py` |
 
 ---
 

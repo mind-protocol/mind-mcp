@@ -19,7 +19,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_World_Runner_Service_Architecture.md
 TEST:            ./TEST_World_Runner_Coverage.md
 SYNC:            ./SYNC_World_Runner.md
 
-IMPL:            mind/infrastructure/orchestration/world_runner.py
+IMPL:            runtime/infrastructure/orchestration/world_runner.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -37,7 +37,7 @@ WorldRunnerService.process_flips() returns a dict containing:
   - world_injection: dict
 ```
 
-**Checked by:** Manual review of `_call_claude()` and `_fallback_response()` in `mind/infrastructure/orchestration/world_runner.py`.
+**Checked by:** Manual review of `_call_claude()` and `_fallback_response()` in `runtime/infrastructure/orchestration/world_runner.py`.
 
 ### V2: Runner Calls Are Stateless
 
@@ -168,7 +168,7 @@ SYMPTOM: logged timeout or "Agent CLI not found"
 ```
 LAST_VERIFIED: 2025-12-19
 VERIFIED_AGAINST:
-    impl: mind/infrastructure/orchestration/world_runner.py (working tree)
+    impl: runtime/infrastructure/orchestration/world_runner.py (working tree)
     test: none
 VERIFIED_BY: manual review
 RESULT:

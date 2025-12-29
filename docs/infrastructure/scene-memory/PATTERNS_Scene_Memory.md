@@ -29,8 +29,8 @@ The original Scene Memory concept evolved into the **Moment Graph** system.
 This document is kept as a legacy reference only.
 
 **Canonical docs:**
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/`
 
 ===============================================================================

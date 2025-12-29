@@ -30,7 +30,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Api.md
 THIS:            HEALTH_Api.md
 SYNC:            ./SYNC_Api.md
 
-IMPL:            mind/infrastructure/api/app.py
+IMPL:            runtime/infrastructure/api/app.py
 ```
 
 > **Contract:** HEALTH checks verify input/output against VALIDATION with minimal or no code changes. Run HEALTH checks at throttled rates.
@@ -144,11 +144,11 @@ docks:
   input:
     id: action_input
     method: engine.infrastructure.api.app.player_action
-    location: mind/infrastructure/api/app.py:120
+    location: runtime/infrastructure/api/app.py:120
   output:
     id: action_output
     method: engine.infrastructure.api.app.player_action
-    location: mind/infrastructure/api/app.py:150
+    location: runtime/infrastructure/api/app.py:150
 ```
 
 ---
@@ -167,5 +167,5 @@ curl -X POST http://localhost:8000/api/action -d '{"playthrough_id": "test", "ac
 
 ## KNOWN GAPS
 
-- None. SSE load regression and router schema validation are now automated via `mind/tests/test_moments_api.py`
-  and `mind/tests/test_router_schema_validation.py`.
+- None. SSE load regression and router schema validation are now automated via `runtime/tests/test_moments_api.py`
+  and `runtime/tests/test_router_schema_validation.py`.

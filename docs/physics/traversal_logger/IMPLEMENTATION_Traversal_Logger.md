@@ -18,15 +18,15 @@ Agent-comprehensible logging for SubEntity exploration. Every traversal step is 
 
 | Component | File | Description |
 |-----------|------|-------------|
-| TraversalLogger | `mind/physics/traversal_logger.py:692` | Main logger class |
-| Data Classes | `mind/physics/traversal_logger.py:66-354` | LinkCandidate, DecisionInfo, StepRecord, etc. |
-| ExplanationGenerator | `mind/physics/traversal_logger.py:399-527` | Natural language explanations |
-| AnomalyDetector | `mind/physics/traversal_logger.py:529-591` | Detects exploration anomalies |
-| CausalChainBuilder | `mind/physics/traversal_logger.py:594-641` | Builds cause-effect chains |
-| LearningSignalExtractor | `mind/physics/traversal_logger.py:644-685` | Extracts learning signals |
-| State Diagram | `mind/physics/traversal_logger.py:360-392` | ASCII state machine diagram |
-| generate_exploration_id | `mind/physics/traversal_logger.py:1186` | Descriptive ID generator |
-| Tests | `mind/tests/test_traversal_logger.py` | 48 tests |
+| TraversalLogger | `runtime/physics/traversal_logger.py:692` | Main logger class |
+| Data Classes | `runtime/physics/traversal_logger.py:66-354` | LinkCandidate, DecisionInfo, StepRecord, etc. |
+| ExplanationGenerator | `runtime/physics/traversal_logger.py:399-527` | Natural language explanations |
+| AnomalyDetector | `runtime/physics/traversal_logger.py:529-591` | Detects exploration anomalies |
+| CausalChainBuilder | `runtime/physics/traversal_logger.py:594-641` | Builds cause-effect chains |
+| LearningSignalExtractor | `runtime/physics/traversal_logger.py:644-685` | Extracts learning signals |
+| State Diagram | `runtime/physics/traversal_logger.py:360-392` | ASCII state machine diagram |
+| generate_exploration_id | `runtime/physics/traversal_logger.py:1186` | Descriptive ID generator |
+| Tests | `runtime/tests/test_traversal_logger.py` | 48 tests |
 
 ---
 
@@ -240,7 +240,7 @@ logger.log_crystallize(
 
 ### JSONL (Machine-Readable)
 
-Location: `mind/data/logs/traversal/traversal_{exploration_id}.jsonl`
+Location: `runtime/data/logs/traversal/traversal_{exploration_id}.jsonl`
 
 One JSON object per line:
 ```json
@@ -251,7 +251,7 @@ One JSON object per line:
 
 ### Human-Readable
 
-Location: `mind/data/logs/traversal/traversal_{exploration_id}.txt`
+Location: `runtime/data/logs/traversal/traversal_{exploration_id}.txt`
 
 Formatted output:
 ```
@@ -330,6 +330,6 @@ async def run_exploration(actor_id: str, intention: str, ...):
 
 - DESIGN: `docs/physics/DESIGN_Traversal_Logger.md`
 - EXAMPLE: `docs/physics/EXAMPLE_Traversal_Log.md`
-- IMPL: `mind/physics/traversal_logger.py`
-- TESTS: `mind/tests/test_traversal_logger.py`
-- SUBENTITY: `mind/physics/subentity.py`
+- IMPL: `runtime/physics/traversal_logger.py`
+- TESTS: `runtime/tests/test_traversal_logger.py`
+- SUBENTITY: `runtime/physics/subentity.py`

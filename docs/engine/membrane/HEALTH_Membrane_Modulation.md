@@ -35,7 +35,7 @@ VALIDATION:      ./VALIDATION_Membrane_Modulation.md
 THIS:            HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL:            mind/membrane/health_check.py
+IMPL:            runtime/membrane/health_check.py
 ```
 
 > **Contract:** HEALTH checks verify input/output against VALIDATION with minimal or no code changes.
@@ -50,7 +50,7 @@ flows_analysis:
     purpose: ensure modifiers remain bounded and cacheable
     triggers:
       - type: schedule
-        source: mind/membrane/provider.py
+        source: runtime/membrane/provider.py
         notes: computed before tick/view build
     frequency:
       expected_rate: 1/second
@@ -85,7 +85,7 @@ health_indicators:
 
 ```yaml
 status:
-  stream_destination: file:...mind-mcp/state/SYNC_Project_Health.md
+  stream_destination: file:...mind/state/SYNC_Project_Health.md
   result:
     representation: enum
     value: UNKNOWN
@@ -113,7 +113,7 @@ checkers:
 
 ## KNOWN GAPS
 
-<!-- @mind:todo Add a checker implementation in `mind/membrane/health_check.py`. -->
+<!-- @mind:todo Add a checker implementation in `runtime/membrane/health_check.py`. -->
 <!-- @mind:todo Wire a sampled log for applied frames. -->
 
 ---

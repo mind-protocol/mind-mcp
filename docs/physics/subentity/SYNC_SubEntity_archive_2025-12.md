@@ -79,12 +79,12 @@ Ideas for future versions, not actively being worked:
 
 | File | Lines | Status | Last Verified |
 |------|-------|--------|---------------|
-| mind/physics/subentity.py | 984 | OK | 2025-12-26 |
-| mind/physics/exploration.py | 1033 | OK | 2025-12-26 |
-| mind/physics/traversal_logger.py | 1247 | OK | 2025-12-26 |
-| mind/physics/link_scoring.py | ~200 | OK | 2025-12-26 |
-| mind/physics/crystallization.py | ~100 | OK | 2025-12-26 |
-| mind/physics/flow.py | ~300 | OK | 2025-12-26 |
+| runtime/physics/subentity.py | 984 | OK | 2025-12-26 |
+| runtime/physics/exploration.py | 1033 | OK | 2025-12-26 |
+| runtime/physics/traversal_logger.py | 1247 | OK | 2025-12-26 |
+| runtime/physics/link_scoring.py | ~200 | OK | 2025-12-26 |
+| runtime/physics/crystallization.py | ~100 | OK | 2025-12-26 |
+| runtime/physics/flow.py | ~300 | OK | 2025-12-26 |
 
 ### Test Files
 

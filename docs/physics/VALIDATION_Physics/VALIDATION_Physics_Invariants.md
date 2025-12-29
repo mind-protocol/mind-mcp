@@ -44,14 +44,14 @@ These should fail validation immediately rather than log and continue.
 
 ## TEST COVERAGE
 
-Physics validation relies on integration tests in `mind/tests/` plus schema
+Physics validation relies on integration tests in `runtime/tests/` plus schema
 checks in the graph-health suite. See `docs/physics/TEST_Physics.md` for
 specific cases, coverage notes, and known gaps.
 Manual verification notes supplement tests when dependencies are missing.
 
 ## VERIFICATION PROCEDURE
 
-1. Run automated physics and schema tests from `mind/tests/`.
+1. Run automated physics and schema tests from `runtime/tests/`.
 2. Execute a short simulated scenario at 1x and 3x to compare canon chains.
 3. Inspect graph queries for invariant violations (status, weights, links).
 4. Review SYNC notes for open gaps before claiming completion.
@@ -643,7 +643,7 @@ simulation credibility.
 ## TEST COVERAGE
 
 Primary coverage lives in `docs/physics/TEST_Physics.md` and the engine test
-suite under `mind/tests/`, especially tests that exercise moment graph
+suite under `runtime/tests/`, especially tests that exercise moment graph
 consistency and physics tick behavior. The validation checklist maps to those
 tests, and any gaps are tracked in the physics TEST doc and SYNC file.
 
@@ -651,7 +651,7 @@ tests, and any gaps are tracked in the physics TEST doc and SYNC file.
 
 1. Review `docs/physics/ALGORITHM_Physics.md` and confirm invariants align with
    the documented tick, decay, flip, and canon mechanics.
-2. Run the relevant physics tests from `mind/tests/` and confirm no skips
+2. Run the relevant physics tests from `runtime/tests/` and confirm no skips
    obscure missing coverage for tick, graph, or handler logic.
 3. Validate graph integrity checks against a representative playthrough
    dataset, confirming status, weight, link, and THEN-link requirements.

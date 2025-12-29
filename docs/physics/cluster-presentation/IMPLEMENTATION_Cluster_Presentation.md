@@ -17,10 +17,10 @@ Implementation of the cluster presentation system that transforms raw exploratio
 
 | File | Purpose |
 |------|---------|
-| `mind/physics/cluster_presentation.py` | Core presentation logic |
-| `mind/physics/synthesis_unfold.py` | Synthesis to prose conversion |
-| `mind/physics/__init__.py` | Exports (v1.9 additions) |
-| `mind/tests/test_cluster_presentation.py` | Tests (34 cases) |
+| `runtime/physics/cluster_presentation.py` | Core presentation logic |
+| `runtime/physics/synthesis_unfold.py` | Synthesis to prose conversion |
+| `runtime/physics/__init__.py` | Exports (v1.9 additions) |
+| `runtime/tests/test_cluster_presentation.py` | Tests (34 cases) |
 
 ---
 
@@ -29,7 +29,7 @@ Implementation of the cluster presentation system that transforms raw exploratio
 ### Data Structures
 
 ```python
-# mind/physics/cluster_presentation.py
+# runtime/physics/cluster_presentation.py
 
 @dataclass
 class ClusterNode:
@@ -78,7 +78,7 @@ class PresentedCluster:
 ### Synthesis Parsing
 
 ```python
-# mind/physics/synthesis_unfold.py
+# runtime/physics/synthesis_unfold.py
 
 @dataclass
 class ParsedNodeSynthesis:
@@ -304,7 +304,7 @@ Adjective → adverb and verb → participle conversions use lookup tables for c
 
 ## Test Coverage
 
-34 tests in `mind/tests/test_cluster_presentation.py`:
+34 tests in `runtime/tests/test_cluster_presentation.py`:
 
 - Point of interest detection (9 tests)
 - Path building (1 test)

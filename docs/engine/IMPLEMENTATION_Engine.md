@@ -25,18 +25,18 @@ SYNC:            ./SYNC_Engine.md
 
 Primary code paths:
 
-- `mind/`
-- `mind/models/`
-- `mind/moments/`
-- `mind/moment_graph/`
-- `mind/physics/`
-- `mind/infrastructure/`
+- `runtime/`
+- `runtime/models/`
+- `runtime/moments/`
+- `runtime/moment_graph/`
+- `runtime/physics/`
+- `runtime/infrastructure/`
 
 Submodule chains are documented in:
 
 - `docs/mind/models/`
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/`
 - `docs/infrastructure/`
 

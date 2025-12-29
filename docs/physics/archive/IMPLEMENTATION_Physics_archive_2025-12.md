@@ -43,6 +43,6 @@ Implementation documentation now delegates the detailed structure, schema, data 
 
 ## SIGNPOSTS
 
-- `mind/physics/tick.py` remains the living world heart; refer to the code structure doc for line counts and responsibilities.
+- `runtime/physics/tick.py` remains the living world heart; refer to the code structure doc for line counts and responsibilities.
 - Extraction candidates are tracked in the runtime doc, so follow that file when splitting graph query/write helpers.
 - Bidirectional links table ensures the docs point back to the code paths that implement each behavior.

@@ -19,7 +19,7 @@ Schema module is **DRAFT v1.8.1** — added node subtype field.
   - space: "area", "module", "directory"
   - thing: "file", "uri", "artifact"
 - Used by doctor system for issues/objectives/tasks
-- Already implemented in `mind/doctor_graph.py`
+- Already implemented in `runtime/doctor_graph.py`
 
 **v1.8 changes:**
 - Query vs Intention separation (query=WHAT, intention=WHY)
@@ -84,10 +84,10 @@ Schema module is **DRAFT v1.8.1** — added node subtype field.
 |------|---------|--------|
 | `docs/schema/schema.yaml` | Authoritative base schema | **v1.8.1** |
 | `docs/schema/GRAMMAR_Link_Synthesis.md` | Synthesis generation grammar | **v2.0** |
-| `mind/models/links.py` | Pydantic link models | **v1.3** |
-| `mind/models/nodes.py` | Pydantic node models | **v1.7.1** |
-| `mind/doctor_graph.py` | Doctor node types with type field | **v1.8.1** |
-| `mind/physics/cluster_presentation.py` | Cluster presentation (uses type) | **v1.9.1** |
+| `runtime/models/links.py` | Pydantic link models | **v1.3** |
+| `runtime/models/nodes.py` | Pydantic node models | **v1.7.1** |
+| `runtime/doctor_graph.py` | Doctor node types with type field | **v1.8.1** |
+| `runtime/physics/cluster_presentation.py` | Cluster presentation (uses type) | **v1.9.1** |
 | `docs/schema/PATTERNS_Schema.md` | Design philosophy | CANONICAL |
 | `docs/schema/SYNC_Schema.md` | This file | **v1.8.1** |
 

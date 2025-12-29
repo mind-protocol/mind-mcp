@@ -105,7 +105,7 @@ for node_type, node_def in base['nodes'].items():
 
 ### Step 2: Overlay Project Schema
 
-Load `mind/graph/health/schema.yaml` and merge.
+Load `runtime/graph/health/schema.yaml` and merge.
 
 ```python
 project = yaml.safe_load(PROJECT_SCHEMA_PATH)

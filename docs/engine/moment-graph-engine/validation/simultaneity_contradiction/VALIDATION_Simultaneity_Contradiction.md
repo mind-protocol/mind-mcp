@@ -12,8 +12,8 @@ VERIFIED: 2025-12-20 against local tree
 
 ```
 THIS:            VALIDATION_Simultaneity_Contradiction.md
-IMPL:            ../../../../../mind/infrastructure/canon/canon_holder.py
-                 ../../../../../mind/moment_graph/surface.py
+IMPL:            ../../../../../runtime/infrastructure/canon/canon_holder.py
+                 ../../../../../runtime/moment_graph/surface.py
 
 # Note: PATTERNS and BEHAVIORS files planned but not yet created
 ```

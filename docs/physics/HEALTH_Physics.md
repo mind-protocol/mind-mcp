@@ -30,7 +30,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Physics.md
 THIS:            HEALTH_Physics.md
 SYNC:            ./SYNC_Physics.md
 
-IMPL:            mind/physics/tick.py
+IMPL:            runtime/physics/tick.py
 ```
 
 > **Contract:** HEALTH checks verify input/output against VALIDATION with minimal or no code changes. After changes: update IMPL or add TODO to SYNC. Run HEALTH checks at throttled rates.
@@ -220,11 +220,11 @@ docks:
   input:
     id: tick_input
     method: engine.physics.tick.GraphTick.run
-    location: mind/physics/tick.py:68
+    location: runtime/physics/tick.py:68
   output:
     id: flip_output
     method: engine.physics.tick.GraphTick.run
-    location: mind/physics/tick.py:126
+    location: runtime/physics/tick.py:126
 ```
 
 ---
@@ -248,7 +248,7 @@ See original `TEST_Physics.md` for detailed walk-throughs of these scenarios.
 ## CHECK: Snap Display Sequence
 
 - **Purpose:** Ensure The Snap transition filters moments at 3x, enforces the frozen beat, and lands at 1x only when interrupts occur.
-- **Implementation reference:** `mind/physics/display_snap_transition_checker.py`
+- **Implementation reference:** `runtime/physics/display_snap_transition_checker.py`
 - **How to run:** `pytest mind/tests/test_physics_display_snap.py`
 - **What to observe:** The test mirrors Phase 1 (blurred running), Phase 2 (300-500ms beat), and Phase 3 (arrival) durations plus speed reset.
 
@@ -257,7 +257,7 @@ See original `TEST_Physics.md` for detailed walk-throughs of these scenarios.
 ## CHECK: Cluster Energy Monitor
 
 - **Purpose:** Verify large clusters expose real-time energy totals so surges can be surfaced before running away.
-- **Implementation reference:** `mind/physics/cluster_energy_monitor.py`
+- **Implementation reference:** `runtime/physics/cluster_energy_monitor.py`
 - **How to run:** `pytest mind/tests/test_cluster_energy_monitor.py`
 - **What to observe:** The monitor records snapshots, surfaces clusters with ≥50 nodes, and flags spikes when total energy jumps beyond 1.5× the running average.
 
@@ -277,14 +277,14 @@ pytest mind/tests/test_moment_graph.py -v
 ### Snap transition display rules
 
 - **Checker:** `snap_display_checker`
-- **Purpose:** Validates the three-phase Snap transition (3x blur → silence beat → 1x arrival) through `mind/physics/display_snap_transition_checker.py`.
+- **Purpose:** Validates the three-phase Snap transition (3x blur → silence beat → 1x arrival) through `runtime/physics/display_snap_transition_checker.py`.
 - **Verification:** `pytest mind/tests/test_physics_display_snap.py`
 - **Signal:** Fails when the beat duration drifts outside 300–500 ms, non-interrupts leak through 3x, or the speed never resets to 1x.
 
 ### Real-time cluster energy monitoring
 
 - **Checker:** `cluster_energy_monitor_checker`
-- **Purpose:** Summarizes energy per graph cluster via `mind/physics/cluster_energy_monitor.py` and flags surges that exceed 1.5× the running average.
+- **Purpose:** Summarizes energy per graph cluster via `runtime/physics/cluster_energy_monitor.py` and flags surges that exceed 1.5× the running average.
 - **Verification:** `pytest mind/tests/test_cluster_energy_monitor.py`
 - **Signal:** Telemetry can surface reports and spike alerts before dense clusters overwhelm the simulation.
 
@@ -417,4 +417,4 @@ representation:
 | Exploration coverage | Pending | Requires exploration metrics |
 | Exploration timeout | Pending | Safety limit enforcement |
 
-<!-- @mind:todo SUBENTITY_HEALTH_IMPL: Implement SubEntity health checkers once mind/physics/subentity.py exists -->
+<!-- @mind:todo SUBENTITY_HEALTH_IMPL: Implement SubEntity health checkers once runtime/physics/subentity.py exists -->

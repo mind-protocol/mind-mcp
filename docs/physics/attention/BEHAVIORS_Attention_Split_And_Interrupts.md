@@ -19,7 +19,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Attention_Energy_Split.md
 HEALTH:          ./HEALTH_Attention_Energy_Split.md
 SYNC:            ./SYNC_Attention_Energy_Split.md
 
-IMPL:            mind/physics/attention_split_sink_mass_distribution_mechanism.py
+IMPL:            runtime/physics/attention_split_sink_mass_distribution_mechanism.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.

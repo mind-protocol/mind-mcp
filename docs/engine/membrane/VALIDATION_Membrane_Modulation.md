@@ -19,9 +19,9 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Membrane_Modulation.md
 HEALTH:          ./HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL:            mind/physics/tick.py
-IMPL:            mind/moment_graph/queries.py
-IMPL:            mind/moment_graph/surface.py
+IMPL:            runtime/physics/tick.py
+IMPL:            runtime/moment_graph/queries.py
+IMPL:            runtime/moment_graph/surface.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.

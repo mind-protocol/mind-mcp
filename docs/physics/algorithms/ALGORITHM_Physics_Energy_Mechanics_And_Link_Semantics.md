@@ -3301,7 +3301,7 @@ def set_speed(new_speed: str):
 
 ### DATA STRUCTURES
 
-#### `TickResult` (mind/physics/tick.py)
+#### `TickResult` (runtime/physics/tick.py)
 
 ```
 flips: List[Dict[str, Any]]      # Energy threshold crossings detected
@@ -3563,26 +3563,26 @@ O(N + P) for energy + pressure caches (pressure contexts are computed on-demand)
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| `mind/physics/graph/graph_queries.py` | `get_all_characters()` | Characters list |
-| `mind/physics/graph/graph_queries.py` | `get_character_beliefs()` | Belief weights |
-| `mind/physics/graph/graph_queries.py` | `get_narratives_about()` | Narratives about character |
-| `mind/physics/graph/graph_queries.py` | `get_path_between()` | Travel distance |
-| `mind/physics/graph/graph_queries.py` | `detect_narrative_pressure()` | Computed pressure contexts |
-| `mind/physics/graph/graph_queries.py` | `get_narrative()` | Narrative type/focus |
-| `mind/physics/graph/graph_ops_moments.py` | `decay_moments()` | Moment decay writes |
-| `mind/moment_graph/queries.py` | `find_click_targets()` | Traversal targets |
+| `runtime/physics/graph/graph_queries.py` | `get_all_characters()` | Characters list |
+| `runtime/physics/graph/graph_queries.py` | `get_character_beliefs()` | Belief weights |
+| `runtime/physics/graph/graph_queries.py` | `get_narratives_about()` | Narratives about character |
+| `runtime/physics/graph/graph_queries.py` | `get_path_between()` | Travel distance |
+| `runtime/physics/graph/graph_queries.py` | `detect_narrative_pressure()` | Computed pressure contexts |
+| `runtime/physics/graph/graph_queries.py` | `get_narrative()` | Narrative type/focus |
+| `runtime/physics/graph/graph_ops_moments.py` | `decay_moments()` | Moment decay writes |
+| `runtime/moment_graph/queries.py` | `find_click_targets()` | Traversal targets |
 
 ### SNAP DISPLAY SEQUENCER
 
-**Implementation:** `mind/physics/display_snap_transition_checker.py`  
+**Implementation:** `runtime/physics/display_snap_transition_checker.py`  
 **Purpose:** Mirrors the 3× → 1× transition described in B11, applying `should_display()` filters, emitting `SnapPhaseRecord` for each visual phase, and resetting speed state once the beat completes.  
-**Verification:** `mind/tests/test_physics_display_snap.py` ensures 3× interrupts trigger the beat with a 300–500 ms pause before arrival and non-interrupts remain filtered.
+**Verification:** `runtime/tests/test_physics_display_snap.py` ensures 3× interrupts trigger the beat with a 300–500 ms pause before arrival and non-interrupts remain filtered.
 
 ### REAL-TIME CLUSTER ENERGY MONITOR
 
-**Implementation:** `mind/physics/cluster_energy_monitor.py`  
+**Implementation:** `runtime/physics/cluster_energy_monitor.py`  
 **Purpose:** Maintains histories of cluster energy readings, surfaces snapshots for clusters with ≥50 nodes, and flags spikes that exceed a configurable multiplier of the running average so dashboards can park fast attention.  
-**Verification:** `mind/tests/test_cluster_energy_monitor.py` drives the monitor with large clusters to prove summaries and spike detection remain stable even with high node counts.
+**Verification:** `runtime/tests/test_cluster_energy_monitor.py` drives the monitor with large clusters to prove summaries and spike detection remain stable even with high node counts.
 
 ### MARKERS
 

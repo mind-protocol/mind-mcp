@@ -22,7 +22,7 @@ The exploration:
 
 ## Human-Readable Format
 
-File: `mind/data/logs/traversal_exp_7f3a2b.txt`
+File: `runtime/data/logs/traversal_exp_7f3a2b.txt`
 
 ```
 ═══════════════════════════════════════════════════════════════════════════════
@@ -180,7 +180,7 @@ File: `mind/data/logs/traversal_exp_7f3a2b.txt`
 
 ## JSONL Format (Machine-Readable)
 
-File: `mind/data/logs/traversal_exp_7f3a2b.jsonl`
+File: `runtime/data/logs/traversal_exp_7f3a2b.jsonl`
 
 Each line is one JSON object. Here are key entries:
 
@@ -441,7 +441,7 @@ Each line is one JSON object. Here are key entries:
 
 ## Index Entry
 
-File: `mind/data/logs/traversal_index.jsonl`
+File: `runtime/data/logs/traversal_index.jsonl`
 
 ```json
 {"exploration_id":"exp_7f3a2b","actor_id":"actor_edmund","intention":"find truth about the betrayal","started":"2025-12-26T14:30:00.000Z","duration_ms":847,"subentities":3,"steps":12,"narratives_found":2,"crystallized":false,"satisfaction":0.71,"log_file":"traversal_exp_7f3a2b.jsonl"}

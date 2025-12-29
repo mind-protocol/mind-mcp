@@ -71,7 +71,7 @@ drives behavior without ad hoc condition checks.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/physics/graph/**` | Supplies graph reads/writes for energy flow and flip detection. |
+| `runtime/physics/graph/**` | Supplies graph reads/writes for energy flow and flip detection. |
 | `docs/schema/SCHEMA_Moments.md` | Defines the moment and link fields that physics assumes. |
 | `docs/infrastructure/api/` | Feeds player input and surfaces physics outputs to clients. |
 

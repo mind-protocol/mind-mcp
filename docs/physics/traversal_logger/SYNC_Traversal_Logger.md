@@ -47,8 +47,8 @@ Agent-comprehensible SubEntity exploration logging with:
 
 | File | Purpose |
 |------|---------|
-| `mind/physics/traversal_logger.py` | Implementation (~1200 lines) |
-| `mind/tests/test_traversal_logger.py` | Tests (41 tests) |
+| `runtime/physics/traversal_logger.py` | Implementation (~1200 lines) |
+| `runtime/tests/test_traversal_logger.py` | Tests (41 tests) |
 | `docs/physics/DESIGN_Traversal_Logger.md` | Design specification |
 | `docs/physics/EXAMPLE_Traversal_Log.md` | Example output |
 | `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md` | Implementation doc |

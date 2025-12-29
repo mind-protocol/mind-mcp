@@ -22,7 +22,7 @@ is now complete and references mechanism spec + implementation.
 
 - **What:** Added `apply_attention_split` and related helpers.
 - **Why:** Enable deterministic attention redistribution per v0 spec.
-- **Files:** `mind/physics/attention_split_sink_mass_distribution_mechanism.py`.
+- **Files:** `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`.
 
 ### 2025-12-21: Added attention split doc chain
 

@@ -18,7 +18,7 @@ VALIDATION:     ./VALIDATION_Moment_Traversal_Invariants.md
 IMPLEMENTATION: ./IMPLEMENTATION_Moment_Graph_Runtime_Layout.md
 TEST:           ./TEST_Moment_Graph_Runtime_Coverage.md
 SYNC:           ./SYNC_Moment_Graph_Engine.md
-IMPL:           ../../../mind/moment_graph/__init__.py
+IMPL:           ../../../runtime/moment_graph/__init__.py
 ```
 
 ===============================================================================
@@ -72,13 +72,13 @@ moment graph so the visible moment set is always derived from graph state.
 
 | Module | Why We Depend On It |
 |--------|----------------------|
-| mind/physics/graph | Graph queries and mutations for moment traversal |
+| runtime/physics/graph | Graph queries and mutations for moment traversal |
 
 ===============================================================================
 ## WHAT THIS DOES NOT SOLVE
 ===============================================================================
 
-- It does not define the moment schema contract (see docs/mind/moments).
+- It does not define the moment schema contract (see docs/runtime/moments).
 - It does not handle UI rendering of moments.
 - It does not perform narrative planning or LLM-driven reasoning.
 

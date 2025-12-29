@@ -29,7 +29,7 @@ IMPL:            Pending import from external repo (PROPOSED)
 ## CODE STRUCTURE
 
 ```
-mind/infrastructure/api/
+runtime/infrastructure/api/
 ├── __init__.py         # Package export surface
 ├── app.py              # FastAPI app factory + legacy endpoints
 ├── moments.py          # Moment graph router + SSE stream
@@ -42,11 +42,11 @@ mind/infrastructure/api/
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
-| `mind/infrastructure/api/app` | App factory, core endpoints, debug SSE | `create_app`, `player_action` | ~735 | SPLIT |
-| `mind/infrastructure/api/moments` | Moment graph endpoints + SSE stream | `create_moments_router` | ~489 | WATCH |
-| `mind/infrastructure/api/playthroughs` | Playthrough creation | `create_playthrough` | ~579 | WATCH |
-| `mind/infrastructure/api/tempo` | Tempo endpoints | `create_tempo_router` | ~234 | OK |
-| `mind/infrastructure/api/sse_broadcast` | Shared SSE fan-out registry | `register_sse_client` | ~81 | OK |
+| `runtime/infrastructure/api/app` | App factory, core endpoints, debug SSE | `create_app`, `player_action` | ~735 | SPLIT |
+| `runtime/infrastructure/api/moments` | Moment graph endpoints + SSE stream | `create_moments_router` | ~489 | WATCH |
+| `runtime/infrastructure/api/playthroughs` | Playthrough creation | `create_playthrough` | ~579 | WATCH |
+| `runtime/infrastructure/api/tempo` | Tempo endpoints | `create_tempo_router` | ~234 | OK |
+| `runtime/infrastructure/api/sse_broadcast` | Shared SSE fan-out registry | `register_sse_client` | ~81 | OK |
 
 **Size Thresholds:**
 - **OK** (<400 lines): Healthy size, easy to understand
@@ -108,8 +108,8 @@ PlaythroughCreateRequest:
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| `create_app()` | `mind/infrastructure/api/app:110` | Import-time wiring or tests |
-| `app = create_app()` | `mind/infrastructure/api/app:731` | Uvicorn import path |
+| `create_app()` | `runtime/infrastructure/api/app:110` | Import-time wiring or tests |
+| `app = create_app()` | `runtime/infrastructure/api/app:731` | Uvicorn import path |
 
 ---
 
@@ -127,7 +127,7 @@ flow:
   steps:
     - id: step_1_receive
       description: POST /api/action receives ActionRequest.
-      file: mind/infrastructure/api/app
+      file: runtime/infrastructure/api/app
       function: player_action
       input: ActionRequest
       output: Response payload
@@ -135,7 +135,7 @@ flow:
       side_effects: none
     - id: step_2_process
       description: Orchestrator coordinates narrator and physics tick.
-      file: mind/infrastructure/orchestration/orchestrator.py
+      file: runtime/infrastructure/orchestration/orchestrator.py
       function: process_action
       input: action_text, playthrough_id
       output: ActionResult
@@ -148,7 +148,7 @@ flow:
       - id: action_input
         type: api
         direction: input
-        file: mind/infrastructure/api/app
+        file: runtime/infrastructure/api/app
         function: player_action
         trigger: POST /api/action
         payload: ActionRequest
@@ -158,7 +158,7 @@ flow:
       - id: action_output
         type: api
         direction: output
-        file: mind/infrastructure/api/app
+        file: runtime/infrastructure/api/app
         function: player_action
         trigger: return payload
         payload: object
@@ -194,11 +194,11 @@ GET /health
 ### Internal Dependencies
 
 ```
-mind/infrastructure/api
-    ├── imports → mind/infrastructure/orchestration
-    ├── imports → mind/physics/graph
-    ├── imports → mind/moment_graph
-    └── imports → mind/infrastructure/tempo
+runtime/infrastructure/api
+    ├── imports → runtime/infrastructure/orchestration
+    ├── imports → runtime/physics/graph
+    ├── imports → runtime/moment_graph
+    └── imports → runtime/infrastructure/tempo
 ```
 
 ### External Dependencies
@@ -259,14 +259,14 @@ mind/infrastructure/api
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/infrastructure/api/app` | 13 | `DOCS: docs/infrastructure/api/` |
+| `runtime/infrastructure/api/app` | 13 | `DOCS: docs/infrastructure/api/` |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| App factory | `mind/infrastructure/api/app:create_app` |
-| Health check | `mind/infrastructure/api/app:health_check` |
+| App factory | `runtime/infrastructure/api/app:create_app` |
+| Health check | `runtime/infrastructure/api/app:health_check` |
 
 ---
 

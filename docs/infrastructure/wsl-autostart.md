@@ -38,11 +38,11 @@ Si vos chemins sont differents, mettez a jour les fichiers dans
 
 ## 4) Configurer le frontend
 
-Le service frontend attend `FE_CMD` dans `~/mind/.mind-mcp/systemd.env`.
+Le service frontend attend `FE_CMD` dans `~/mind/.mind/systemd.env`.
 Renseignez la commande exacte du frontend (aucune supposition n'est faite):
 
 ```bash
-sed -n '1,20p' ~/mind/.mind-mcp/systemd.env
+sed -n '1,20p' ~/mind/.mind/systemd.env
 ```
 
 ## 5) Installer les units systemd
@@ -105,11 +105,11 @@ systemctl --user status ngrok-falkor.service
 
 Fichiers locaux (human-friendly):
 
-- `~/mind/.mind-mcp/logs/mind-be.log`
-- `~/mind/.mind-mcp/logs/mind-fe.log`
-- `~/mind/.mind-mcp/logs/falkor-mcp.log`
-- `~/mind/.mind-mcp/logs/ngrok-falkor.log`
-- `~/mind/.mind-mcp/error.log`
+- `~/mind/.mind/logs/mind-be.log`
+- `~/mind/.mind/logs/mind-fe.log`
+- `~/mind/.mind/logs/falkor-mcp.log`
+- `~/mind/.mind/logs/ngrok-falkor.log`
+- `~/mind/.mind/error.log`
 
 ## 8) Checks de sante
 

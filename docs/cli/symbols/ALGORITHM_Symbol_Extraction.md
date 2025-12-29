@@ -110,11 +110,11 @@ def run_tick():
 ### 2. Reference Detection
 Scan IMPLEMENTATION*.md, PATTERNS*.md for:
 - Code references: `function_name` in backticks
-- File paths: mind/physics/tick.py
+- File paths: runtime/physics/tick.py
 
 ### 3. Module Convention
 ```
-mind/physics/*.py → docs/mind/physics/IMPLEMENTATION*.md
+runtime/physics/*.py → docs/runtime/physics/IMPLEMENTATION*.md
 ```
 
 ## Graph Upsert

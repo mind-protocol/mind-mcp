@@ -26,7 +26,7 @@ SYNC:           ./SYNC_SubEntity.md
 ## CODE STRUCTURE
 
 ```
-mind/physics/
+runtime/physics/
 ├── subentity.py              # Core SubEntity dataclass + helpers (984 lines)
 ├── exploration.py            # ExplorationRunner async state machine (1033 lines)
 ├── traversal_logger.py       # Agent-comprehensible logging (1247 lines)
@@ -49,7 +49,7 @@ mind/data/logs/traversal/   # Log output directory
 
 ## FILE RESPONSIBILITIES
 
-### mind/physics/subentity.py
+### runtime/physics/subentity.py
 
 **Purpose:** Core SubEntity dataclass and supporting utilities.
 
@@ -70,7 +70,7 @@ mind/data/logs/traversal/   # Log output directory
 
 ---
 
-### mind/physics/exploration.py
+### runtime/physics/exploration.py
 
 **Purpose:** Async ExplorationRunner that executes state machine.
 
@@ -99,7 +99,7 @@ mind/data/logs/traversal/   # Log output directory
 
 ---
 
-### mind/physics/traversal_logger.py
+### runtime/physics/traversal_logger.py
 
 **Purpose:** Agent-comprehensible logging for exploration.
 
@@ -125,7 +125,7 @@ mind/data/logs/traversal/   # Log output directory
 
 ---
 
-### mind/physics/link_scoring.py
+### runtime/physics/link_scoring.py
 
 **Purpose:** Link score computation for SEEKING decisions.
 
@@ -143,7 +143,7 @@ mind/data/logs/traversal/   # Log output directory
 
 ---
 
-### mind/physics/crystallization.py
+### runtime/physics/crystallization.py
 
 **Purpose:** Crystallization embedding computation.
 
@@ -157,7 +157,7 @@ mind/data/logs/traversal/   # Log output directory
 
 ---
 
-### mind/physics/flow.py
+### runtime/physics/flow.py
 
 **Purpose:** Graph coloring and energy operations.
 
@@ -326,7 +326,7 @@ State machine loop in `_run_subentity()` continues until:
 ### Code → Docs
 
 ```python
-# mind/physics/subentity.py:1
+# runtime/physics/subentity.py:1
 """
 SubEntity — Temporary Consciousness Traversal (v1.9)
 

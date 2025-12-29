@@ -1,72 +1,74 @@
 /**
  * ConnectomeAdapter Interface
  *
- * Defines the contract for data sources that power the Connectome visualization.
+ * Types are loaded dynamically from .mind/schema.yaml at runtime.
+ * See: ./schema.ts for runtime loader and validation.
+ *
  * Two implementations:
- * - LocalAdapter: Connects to local Neo4j (for mind-mcp dev tool)
- * - RemoteAdapter: Connects to L4 API (for mind-platform web UI)
+ * - LocalAdapter: Calls Python GraphReadOps via HTTP (FalkorDB default, Neo4j supported)
+ * - RemoteAdapter: Connects to L4 API via GraphQL/WebSocket
  */
 
+import { loadSchemaSync, Schema, getNodeTypes } from './schema';
+
 // =============================================================================
-// Node Types (from L4 schema)
+// Dynamic Types (loaded from schema.yaml)
 // =============================================================================
 
-export type NodeType = 'actor' | 'moment' | 'narrative' | 'space' | 'thing';
+// Load schema at module init (sync for type definitions)
+let _schema: Schema | null = null;
 
-export interface NodeBase {
+function getSchema(): Schema {
+  if (!_schema) {
+    try {
+      _schema = loadSchemaSync();
+    } catch {
+      // Schema not found - use minimal defaults for type safety
+      console.warn('schema.yaml not found, using minimal types');
+    }
+  }
+  return _schema!;
+}
+
+/**
+ * Node type - dynamically from schema
+ * Fallback: 'actor' | 'moment' | 'narrative' | 'space' | 'thing'
+ */
+export type NodeType = string; // Runtime validated against schema.nodes
+
+/**
+ * Get valid node types from loaded schema
+ */
+export function validNodeTypes(): string[] {
+  const schema = getSchema();
+  return schema ? getNodeTypes(schema) : ['actor', 'moment', 'narrative', 'space', 'thing'];
+}
+
+/**
+ * Generic node - fields from schema.yaml NodeBase
+ * All fields are dynamic, validated at runtime
+ */
+export interface Node {
+  // Required (from schema)
   id: string;
   name: string;
   node_type: NodeType;
-  type?: string; // subtype
 
-  // Physics
-  weight: number;
-  energy: number;
-
-  // Semantics
-  synthesis: string;
-  content?: string;
-
-  // Position (for visualization)
-  x?: number;
-  y?: number;
+  // Optional fields loaded from schema
+  [key: string]: unknown;
 }
 
-export interface MomentNode extends NodeBase {
-  node_type: 'moment';
-  status: 'possible' | 'active' | 'completed';
-  tick_created: number;
-  tick_resolved?: number;
-}
-
-export type Node = NodeBase | MomentNode;
-
-// =============================================================================
-// Link Types (from L4 schema)
-// =============================================================================
-
+/**
+ * Generic link - fields from schema.yaml LinkBase
+ */
 export interface Link {
+  // Required (from schema)
   id: string;
   node_a: string;
   node_b: string;
 
-  // Physics
-  weight: number;
-  energy: number;
-
-  // Semantic axes
-  polarity: [number, number]; // [a→b, b→a] each [0,1]
-  hierarchy: number; // [-1, +1] -1=contains, +1=elaborates
-  permanence: number; // [0, 1] 0=speculative, 1=definitive
-
-  // Plutchik emotions
-  joy_sadness: number;
-  trust_disgust: number;
-  fear_anger: number;
-  surprise_anticipation: number;
-
-  // Semantics
-  synthesis?: string;
+  // Optional fields loaded from schema
+  [key: string]: unknown;
 }
 
 // =============================================================================
@@ -125,16 +127,15 @@ export interface HealthUpdateEvent extends FlowEvent {
 // =============================================================================
 
 export interface SearchOpts {
-  similarity_threshold?: number; // 0-1, default 0.7
-  max_hops?: number; // expand results by N hops
-  top_k?: number; // max results
-  node_types?: NodeType[]; // filter by type
+  threshold?: number; // similarity threshold 0-1, default 0.3
+  hops?: number; // expand results by N hops, default 1
+  limit?: number; // max results, default 50
+  node_types?: string[]; // filter by type
 }
 
 export interface SearchResult {
   node: Node;
-  score: number; // similarity score
-  path?: string[]; // path from query context
+  similarity: number;
 }
 
 // =============================================================================
@@ -143,11 +144,17 @@ export interface SearchResult {
 
 export interface StepResult {
   event: FlowEvent;
-  state: {
-    nodes: Node[];
-    links: Link[];
-  };
+  state: GraphState;
   has_more: boolean;
+}
+
+// =============================================================================
+// Graph State
+// =============================================================================
+
+export interface GraphState {
+  nodes: Node[];
+  links: Link[];
 }
 
 // =============================================================================
@@ -157,60 +164,75 @@ export interface StepResult {
 export type Unsubscribe = () => void;
 
 export interface ConnectomeAdapter {
-  /**
-   * Get all nodes in the graph
-   */
+  /** Get the loaded schema */
+  getSchema(): Schema | null;
+
+  /** Get all nodes and links */
+  fetchGraph(): Promise<GraphState>;
+
+  /** Get all nodes */
   getNodes(): Promise<Node[]>;
 
-  /**
-   * Get all links in the graph
-   */
+  /** Get all links */
   getLinks(): Promise<Link[]>;
 
-  /**
-   * Semantic search for nodes
-   */
+  /** Semantic search */
   search(query: string, opts?: SearchOpts): Promise<SearchResult[]>;
 
-  /**
-   * Subscribe to realtime flow events
-   */
+  /** Subscribe to realtime events */
   subscribe(handler: (event: FlowEvent) => void): Unsubscribe;
 
-  /**
-   * [Dev-only] Step to the next event (stepper mode)
-   */
+  /** List available graphs */
+  listGraphs?(): Promise<string[]>;
+
+  /** [Dev] Step to next event */
   nextStep?(): Promise<StepResult>;
 
-  /**
-   * [Dev-only] Restart playback from the beginning
-   */
+  /** [Dev] Restart playback */
   restart?(): void;
 
-  /**
-   * [Dev-only] Load a step script for playback
-   */
+  /** [Dev] Load step script */
   loadScript?(events: FlowEvent[]): void;
 
-  /**
-   * Disconnect and cleanup
-   */
+  /** Disconnect */
   disconnect(): void;
 }
 
 // =============================================================================
-// Adapter Factory Types
+// Adapter Configs
 // =============================================================================
 
 export interface LocalAdapterConfig {
-  neo4j_uri?: string;
-  neo4j_user?: string;
-  neo4j_password?: string;
+  /** Backend API URL (default: http://localhost:8765) */
+  api_url?: string;
+  /** Graph name (default: from config or "seed") */
   graph_name?: string;
+  /** Path to schema.yaml (auto-detected if not provided) */
+  schema_path?: string;
 }
 
 export interface RemoteAdapterConfig {
-  api_url: string; // L4 API base URL
-  ws_url?: string; // WebSocket URL for realtime
+  /** L4 API base URL */
+  api_url: string;
+  /** WebSocket URL for realtime */
+  ws_url?: string;
+  /** Auth token */
   auth_token?: string;
 }
+
+// =============================================================================
+// Re-exports from schema.ts
+// =============================================================================
+
+export {
+  loadSchema,
+  loadSchemaSync,
+  validateNode,
+  validateLink,
+  applyNodeDefaults,
+  applyLinkDefaults,
+  getNodeFields,
+  getLinkFields,
+} from './schema';
+
+export type { Schema, SchemaField, ValidationError } from './schema';

@@ -6,9 +6,9 @@ from pathlib import Path
 def ingest_repo_files(target_dir: Path, graph_name: str) -> None:
     """Ingest repository files as Thing nodes."""
     try:
-        from mind.ingest import scan_and_ingest_files
+        from runtime.ingest import scan_and_ingest_files
 
-        stats = scan_and_ingest_files(target_dir, graph_name=graph_name, embed=False)
+        stats = scan_and_ingest_files(target_dir, graph_name=graph_name)
 
         print(f"✓ Files: {stats['files_scanned']} scanned, "
               f"{stats['things_created']} created, "

@@ -31,7 +31,7 @@ Original file: SYNC_CLI_State.md
 
 ### 2025-12-18: Fixed BROKEN_IMPL_LINK in IMPLEMENTATION Doc
 
-- Normalized file references to full paths under `mind/`
+- Normalized file references to full paths under `runtime/`
 - Avoided bare filenames that failed link validation
 
 ### 2025-12-18: Reduced documentation size (LARGE_DOC_MODULE fix)
@@ -41,7 +41,7 @@ Original file: SYNC_CLI_State.md
 
 ### 2025-12-18: Extracted doctor_checks.py
 
-- Moved all `doctor_check_*()` functions into `mind/doctor_checks.py`
+- Moved all `doctor_check_*()` functions into `runtime/doctor_checks.py`
 - Updated docs and modules.yaml references
 
 ---
@@ -68,7 +68,7 @@ This file now subsumes the historical snapshots that were previously stored in t
 - Escaped literal escalation/proposition markers across the CLI docs to keep doc scanners honest and kept the archive focused on the same `context` as the active work.
 - Repaired `spawn_repair_agent_async`, added the missing `DoctorConfig` import, and documented the improved retry/control flow.
 - Added proposition support (`solve-markers`), LOG_ERROR health checks for `.log` issues, and externalized repo-overview scan length plus the SVG namespace config.
-- Updated `modules.yaml` with the cleaned CLI module mapping, simplified `docs/cli` content to trim size, and verified `mind/repair_core.py` no longer trips INCOMPLETE_IMPL false positives.
+- Updated `modules.yaml` with the cleaned CLI module mapping, simplified `docs/cli` content to trim size, and verified `runtime/repair_core.py` no longer trips INCOMPLETE_IMPL false positives.
 
 ### Legacy snapshot (2024-12)
 
@@ -120,4 +120,4 @@ Snapshot of the CLI SYNC state as of 2025-12-18. Core commands stable; archives 
 | What | Where |
 |------|-------|
 | Active CLI SYNC | `docs/cli/core/SYNC_CLI_Development_State.md` |
-| Protocol archive | `docs/protocol/archive/SYNC_Archive_2024-12.md` |
+| Protocol archive | `docs/mcp-design/archive/SYNC_Archive_2024-12.md` |

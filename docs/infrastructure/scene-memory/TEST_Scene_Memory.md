@@ -58,9 +58,9 @@ STATUS: not run
 ```
 
 Relevant files:
-- `mind/tests/test_moment_graph.py`
-- `mind/tests/test_moment_lifecycle.py`
-- `mind/tests/test_e2e_moment_graph.py`
+- `runtime/tests/test_moment_graph.py`
+- `runtime/tests/test_moment_lifecycle.py`
+- `runtime/tests/test_e2e_moment_graph.py`
 
 ---
 
@@ -81,7 +81,7 @@ Relevant files:
 | MomentProcessor | partial | Unit tests exist but not run in this repair |
 | Transcript IO | partial | Covered via temp dir tests |
 | GraphOps integration | partial | Separate graph tests exercise ops |
-| Moments API | partial | `mind/tests/test_moments_api.py` |
+| Moments API | partial | `runtime/tests/test_moments_api.py` |
 
 ---
 

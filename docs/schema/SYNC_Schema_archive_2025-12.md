@@ -385,7 +385,7 @@ v1.6.1 = search system. v1.2 physics tick disabled during development.
 
 ## v1.6.1 IMPLEMENTATION TODOS
 
-@mind:todo — **SUBENTITY_CLASS:** Implement SubEntity dataclass in mind/physics/
+@mind:todo — **SUBENTITY_CLASS:** Implement SubEntity dataclass in runtime/physics/
 - Identity: id, actor_id, origin_moment
 - Tree structure: parent, siblings, children (references)
 - Traversal: state, position, path, depth

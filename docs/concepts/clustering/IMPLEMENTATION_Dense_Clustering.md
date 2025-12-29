@@ -253,7 +253,7 @@ class DockProcessor:
 ### Doctor Integration
 
 ```python
-# In mind/doctor.py
+# In runtime/doctor.py
 
 def doctor_command(dir, ..., extract_docs=True):
     """Run doctor with optional dense clustering."""

@@ -42,7 +42,7 @@ AND:    It ends by asking the agent to state current project context before taki
 ### B2: Guide VIEW selection
 
 ```
-GIVEN:  The list of views defined in `.mind-mcp/views`
+GIVEN:  The list of views defined in `.mind/views`
 WHEN:   The prompt prints the VIEW table
 THEN:   Agents can choose the exact VIEW that matches their task without guessing
 ```
@@ -83,7 +83,7 @@ THEN:   The printed prompt still references the expected `.mind` paths so the ag
 ### E2: Read-only scenario
 
 ```
-GIVEN:  Files like `.mind-mcp/PROTOCOL.md` are locked
+GIVEN:  Files like `.mind/PROTOCOL.md` are locked
 THEN:   The prompt includes the intended paths but does not fail the CLI (reading is not required at generation time)
 ```
 

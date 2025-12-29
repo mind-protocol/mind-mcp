@@ -407,8 +407,8 @@ External Events (health breach, pattern, periodic, human)
     ▼                                                                  │
 ┌─────────────┐     ┌─────────────────────────────────────────────┐   │
 │   DEPLOY    │ ──▶ │ Affected Files                              │   │
-└─────────────┘     │  • mind/physics/constants.py              │   │
-    │               │  • mind/physics/*.py                      │   │
+└─────────────┘     │  • runtime/physics/constants.py              │   │
+    │               │  • runtime/physics/*.py                      │   │
     │               │  • protocols/*.yaml                         │   │
     │               │  • skills/*.md                              │   │
     │               └─────────────────────────────────────────────┘   │

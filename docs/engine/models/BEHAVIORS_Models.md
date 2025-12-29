@@ -26,7 +26,7 @@ IMPL:            mind/models/
 
 ## OVERVIEW
 
-This document describes the observable behaviors of the data models within the `mind/models/` module. It focuses on how these Pydantic models behave when instantiated, validated, and converted, ensuring a consistent and predictable data contract across the game engine.
+This document describes the observable behaviors of the data models within the `runtime/models/` module. It focuses on how these Pydantic models behave when instantiated, validated, and converted, ensuring a consistent and predictable data contract across the game engine.
 
 ---
 

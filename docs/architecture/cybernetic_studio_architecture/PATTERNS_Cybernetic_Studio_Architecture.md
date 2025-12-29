@@ -124,7 +124,7 @@ The graph service is owned and operated by the `mind` platform. `blood-ledger` i
 
 ### 3.2 Tooling Relationship
 - `mind` runs against `blood-ledger` as a target repo.
-- `blood-ledger` includes `...mind-mcp/state/SYNC_*.md` which are repo-backed Places.
+- `blood-ledger` includes `...mind/state/SYNC_*.md` which are repo-backed Places.
 
 ### 3.3 Graph Relationship (Meaning Layer)
 - Both repos connect to the same graph service.
@@ -175,7 +175,7 @@ An evidence reference is a string or structured object (implementation choice) t
 
 - repo: `mind` | `blood-ledger`
 - commit_sha: `abc123`
-- path: `mind/doctor_checks.py`
+- path: `runtime/doctor_checks.py`
 - range: `L120-L220` (optional)
 - fingerprint: `stack_fingerprint:...` (optional)
 - run_id / test_id (optional)
@@ -259,7 +259,7 @@ Pressure is an input to salience and flip likelihood; not a persistent object.
 ### 8.1 Repo-Backed Place (SYNC as Place)
 Each SYNC file defines a stable Place:
 - Place ID: `place://sync/Project_State`
-- Artifact: `...mind-mcp/state/SYNC_Project_State.md`
+- Artifact: `...mind/state/SYNC_Project_State.md`
 - Updates create Moments (“SYNC updated”) and distill Narratives (“current state is…”)- SYNC rooms behave like chat rooms: they’re where state is negotiated and handed off.
 
 ### 8.2 UI Rooms (Human ↔ AI)
@@ -390,10 +390,10 @@ without needing separate “DEV/DESIGNER personalities.”
 ### A1) Thing: file_ref (no duplication)
 - type: thing
   id: thing_repo_mind_doctor_checks
-  name: "mind/doctor_checks.py"
+  name: "runtime/doctor_checks.py"
   kind: file_ref
   repo: "mind"
-  path: "mind/doctor_checks.py"
+  path: "runtime/doctor_checks.py"
   head_sha: "abc123"
 
 ### A2) Narrative: issue/invariant/observation

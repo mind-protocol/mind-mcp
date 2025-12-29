@@ -19,7 +19,7 @@ THIS:            IMPLEMENTATION_Attention_Energy_Split.md (you are here)
 HEALTH:          ./HEALTH_Attention_Energy_Split.md
 SYNC:            ./SYNC_Attention_Energy_Split.md
 
-IMPL:            mind/physics/attention_split_sink_mass_distribution_mechanism.py
+IMPL:            runtime/physics/attention_split_sink_mass_distribution_mechanism.py
 ```
 
 ---
@@ -28,7 +28,7 @@ IMPL:            mind/physics/attention_split_sink_mass_distribution_mechanism.p
 
 | File | Responsibility | Key Functions |
 |------|----------------|---------------|
-| `mind/physics/attention_split_sink_mass_distribution_mechanism.py` | Compute sink mass, softmax split, energy blend | `apply_attention_split`, `compute_sink_mass` |
+| `runtime/physics/attention_split_sink_mass_distribution_mechanism.py` | Compute sink mass, softmax split, energy blend | `apply_attention_split`, `compute_sink_mass` |
 
 ---
 

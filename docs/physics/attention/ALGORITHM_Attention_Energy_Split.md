@@ -20,7 +20,7 @@ HEALTH:          ./HEALTH_Attention_Energy_Split.md
 SYNC:            ./SYNC_Attention_Energy_Split.md
 
 MECHANISM:       ../mechanisms/MECHANISMS_Attention_Energy_Split.md
-IMPL:            mind/physics/attention_split_sink_mass_distribution_mechanism.py
+IMPL:            runtime/physics/attention_split_sink_mass_distribution_mechanism.py
 ```
 
 ---

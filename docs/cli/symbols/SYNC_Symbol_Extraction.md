@@ -26,13 +26,13 @@ Implementation complete and integrated with CLI.
 
 ```bash
 # Dry run extraction
-$ mind symbols --dry-run -f mind/physics
+$ mind symbols --dry-run -f runtime/physics
 Files scanned: 36
 Symbols extracted: 407
 Links created: 776
 
 # With graph upsert
-$ mind symbols -f mind/physics --graph mind
+$ mind symbols -f runtime/physics --graph mind
 ```
 
 ## Markers

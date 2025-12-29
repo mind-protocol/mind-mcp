@@ -24,4 +24,4 @@ SYNC:            ./SYNC_Engine.md
 ## HEALTH CHECKS
 
 - `mind doctor` should report engine paths as documented.
-- Run engine tests when available (see `mind/tests/`).
+- Run engine tests when available (see `runtime/tests/`).

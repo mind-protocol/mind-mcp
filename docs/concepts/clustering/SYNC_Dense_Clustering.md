@@ -30,18 +30,18 @@ The dense clustering concept is documented. Implementation is pending.
 
 | Component | Status | Location |
 |-----------|--------|----------|
-| Code symbol extraction | DONE | `mind/symbol_extractor.py` |
-| Doc structure extraction | PENDING | `mind/doc_extractor.py` |
-| Cluster building | PENDING | `mind/cluster_builder.py` |
-| Health checks | PENDING | `mind/cluster_health.py` |
-| CLI integration | PENDING | `mind/cli.py` |
+| Code symbol extraction | DONE | `runtime/symbol_extractor.py` |
+| Doc structure extraction | PENDING | `runtime/doc_extractor.py` |
+| Cluster building | PENDING | `runtime/cluster_builder.py` |
+| Health checks | PENDING | `runtime/cluster_health.py` |
+| CLI integration | PENDING | `runtime/cli.py` |
 | Tests | PENDING | `tests/mind/test_cluster_builder.py` |
 
 ## Implementation Plan
 
 ### Phase 1: DocExtractor
 
-Create `mind/doc_extractor.py`:
+Create `runtime/doc_extractor.py`:
 - YAML block parsing
 - Marker extraction (@mind:todo, etc.)
 - Reference detection
@@ -49,7 +49,7 @@ Create `mind/doc_extractor.py`:
 
 ### Phase 2: ClusterBuilder
 
-Create `mind/cluster_builder.py`:
+Create `runtime/cluster_builder.py`:
 - Node creation from definitions
 - Link creation from relationships
 - Reference resolution (find or stub)
@@ -58,14 +58,14 @@ Create `mind/cluster_builder.py`:
 
 ### Phase 3: CLI Integration
 
-Update `mind/cli.py`:
+Update `runtime/cli.py`:
 - Add `--cluster` flag to doctor
 - Add `mind cluster` command
 - Integrate with existing symbol extraction
 
 ### Phase 4: Health Checks
 
-Create `mind/cluster_health.py`:
+Create `runtime/cluster_health.py`:
 - Implement H-CLUSTER-* checks
 - Add to doctor scan
 - Create coverage queries
@@ -91,8 +91,8 @@ Create `tests/mind/test_cluster_builder.py`:
 
 | Depends On | For |
 |------------|-----|
-| `mind/symbol_extractor.py` | Pattern reference, shared utilities |
-| `mind/physics/graph/graph_ops.py` | Graph queries |
+| `runtime/symbol_extractor.py` | Pattern reference, shared utilities |
+| `runtime/physics/graph/graph_ops.py` | Graph queries |
 | Doctor scan infrastructure | CLI integration |
 
 ## Open Questions

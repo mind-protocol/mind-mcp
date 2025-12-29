@@ -10,7 +10,7 @@ Original file: SYNC_Physics.md
 STATUS: v1.2 IMPLEMENTED, v1.6.1 DESIGNING
 
 What's canonical (v1.2):
-- Modular 8-phase tick (mind/physics/phases/)
+- Modular 8-phase tick (runtime/physics/phases/)
 - NO DECAY — link cooling (drain + weight growth)
 - Hot/cold filtering (Top-N links)
 - Unified traversal (energy + weight + emotions)
@@ -206,7 +206,7 @@ v1.6.1 SubEntity is for search. v1.2 physics tick disabled during SubEntity deve
 ## v1.6.1 IMPLEMENTATION TODOS
 
 @mind:todo — **SUBENTITY_CLASS:** Implement SubEntity dataclass
-- Location: `mind/physics/subentity.py`
+- Location: `runtime/physics/subentity.py`
 - Identity: id, actor_id, origin_moment
 - Tree structure: parent, siblings, children (references)
 - Traversal: state, position, path, depth
@@ -283,8 +283,8 @@ Agent-comprehensible SubEntity exploration logging:
 - 41 tests passing
 
 Files:
-- `mind/physics/traversal_logger.py` (1200 lines)
-- `mind/tests/test_traversal_logger.py` (41 tests)
+- `runtime/physics/traversal_logger.py` (1200 lines)
+- `runtime/tests/test_traversal_logger.py` (41 tests)
 - `docs/physics/traversal_logger/` (IMPLEMENTATION + SYNC)
 
 ### 2025-12-26: SubEntity v1.7.2 Complete
@@ -318,7 +318,7 @@ SubEntity class implemented with:
 - Created `docs/physics/VALIDATION_Energy_Physics.md` — 19 validation IDs
 - Created `docs/physics/HEALTH_Energy_Physics.md` — Health indicators
 - Implemented health checker CLI: `python -m engine.physics.health.checker`
-- Checker infrastructure in `mind/physics/health/checkers/`
+- Checker infrastructure in `runtime/physics/health/checkers/`
 
 ### 2025-12-23: Schema v1.1 Spec Complete
 

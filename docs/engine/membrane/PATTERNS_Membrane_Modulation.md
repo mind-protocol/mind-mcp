@@ -17,7 +17,7 @@ VALIDATION:      ./VALIDATION_Membrane_Modulation.md
 HEALTH:          ./HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL:            mind/physics/tick.py
+IMPL:            runtime/physics/tick.py
 ```
 
 ### Bidirectional Contract
@@ -136,11 +136,11 @@ Why this matters: prevents stagnation without introducing fiat outcomes.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/physics/tick.py` | Applies per-tick thresholds and decay rates |
-| `mind/moment_graph/*` | Consumes transfer coefficients and traversal thresholds |
-| `docs/mind/moment-graph-mind/PATTERNS_Instant_Traversal_Moment_Graph.md` | Hot path constraints |
+| `runtime/physics/tick.py` | Applies per-tick thresholds and decay rates |
+| `runtime/moment_graph/*` | Consumes transfer coefficients and traversal thresholds |
+| `docs/runtime/moment-graph-mind/PATTERNS_Instant_Traversal_Moment_Graph.md` | Hot path constraints |
 | `docs/physics/PATTERNS_Physics.md` | Energy and canon constraints |
-| `docs/mind/moments/PATTERNS_Moments.md` | Player-visible artifact constraints |
+| `docs/runtime/moments/PATTERNS_Moments.md` | Player-visible artifact constraints |
 
 ---
 

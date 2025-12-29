@@ -38,7 +38,7 @@ mind/
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|-----------------------|-------|--------|
-| `mind/llms/gemini_agent.py` | Launches the Gemini subprocess, configures the SDK, streams structured JSON, and shields CLI logic from provider SDKs. | `main`, the tool helper definitions, `tool_map`, streaming loop. | ~270 | OK |
+| `runtime/llms/gemini_agent.py` | Launches the Gemini subprocess, configures the SDK, streams structured JSON, and shields CLI logic from provider SDKs. | `main`, the tool helper definitions, `tool_map`, streaming loop. | ~270 | OK |
 
 The file is currently manageable, but the tool helper definitions are the first candidates for extraction if additional providers are folded into the same directory.
 
@@ -51,7 +51,7 @@ mind/llms/
 └── gemini_agent.py         # CLI-invoked subprocess entry for Gemini
 ```
 
-The CLI (`mind/agent_cli.py`) builds `python -m mind.llms.gemini_agent` with the selected provider arguments. Because the entire adapter fits within `mind.llms`, no extra modules exist yet, but the CLI and adapter remain tightly coupled by the shared command-line schema.
+The CLI (`runtime/agent_cli.py`) builds `python -m mind.llms.gemini_agent` with the selected provider arguments. Because the entire adapter fits within `mind.llms`, no extra modules exist yet, but the CLI and adapter remain tightly coupled by the shared command-line schema.
 
 ---
 
@@ -67,7 +67,7 @@ The CLI (`mind/agent_cli.py`) builds `python -m mind.llms.gemini_agent` with the
 
 | Pattern | Applied To | Purpose |
 |---------|------------|---------|
-| Strategy | `tool_map` inside `mind/llms/gemini_agent.py` | Allows the Gemini response to invoke different helper functions by name without inlining call handling logic. |
+| Strategy | `tool_map` inside `runtime/llms/gemini_agent.py` | Allows the Gemini response to invoke different helper functions by name without inlining call handling logic. |
 | Functional pipeline | The helper definitions for each tool | Wraps external effects (filesystem, search) into predictable tool results before sending them back to the chat loop. |
 
 ### Anti-Patterns to Avoid
@@ -120,7 +120,7 @@ ToolInvocationPayload:
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| `main()` | `mind/llms/gemini_agent.py:14` | Called when `mind/agent_cli.py` launches `python -m mind.llms.gemini_agent` for the `gemini` provider. |
+| `main()` | `runtime/llms/gemini_agent.py:14` | Called when `runtime/agent_cli.py` launches `python -m mind.llms.gemini_agent` for the `gemini` provider. |
 
 ---
 
@@ -194,7 +194,7 @@ flow:
         trigger: Gemini invokes helper call
         payload: ToolInvocationPayload + helper result
         async_hook: optional
-        needs: result verification and optional persistence to `.mind-mcp/state`
+        needs: result verification and optional persistence to `.mind/state`
         notes: Tool calls mutate files or run shell commands, so schedulers should inspect them for safety.
     health_recommended:
       - dock_id: dock_stream_json
@@ -255,11 +255,11 @@ mind/agent_cli.py
 
 | Package | Used For | Imported By |
 |---------|----------|-------------|
-| `google.genai` | Gemini API client, chat streaming, tool wiring | `mind/llms/gemini_agent.py` |
-| `dotenv` | `.env` file loading for credentials and overrides | `mind/llms/gemini_agent.py` |
-| `argparse` | CLI flag parsing for prompts, output format, API key, and allowed tools | `mind/llms/gemini_agent.py` |
-| `subprocess`, `glob`, `shutil`, `urllib` | Tool helpers rely on file system commands, global matching, and web fetches | `mind/llms/gemini_agent.py` |
-| `json`, `os`, `sys`, `re` | Logging stream-json, environment inspection, error handling, regex search | `mind/llms/gemini_agent.py` |
+| `google.genai` | Gemini API client, chat streaming, tool wiring | `runtime/llms/gemini_agent.py` |
+| `dotenv` | `.env` file loading for credentials and overrides | `runtime/llms/gemini_agent.py` |
+| `argparse` | CLI flag parsing for prompts, output format, API key, and allowed tools | `runtime/llms/gemini_agent.py` |
+| `subprocess`, `glob`, `shutil`, `urllib` | Tool helpers rely on file system commands, global matching, and web fetches | `runtime/llms/gemini_agent.py` |
+| `json`, `os`, `sys`, `re` | Logging stream-json, environment inspection, error handling, regex search | `runtime/llms/gemini_agent.py` |
 
 ---
 
@@ -269,9 +269,9 @@ mind/agent_cli.py
 
 | State | Location | Scope | Lifecycle |
 |-------|----------|-------|-----------|
-| `history` | `mind/llms/gemini_agent.py` | Local (per process) | Initialized when `main` starts, extended with system prompt tokens, discarded after exit. |
-| `tool_map` | `mind/llms/gemini_agent.py` | Local helper registry | Built once after helper definitions, referenced for every tool invocation. |
-| `google_search_base_url` | `mind/llms/gemini_agent.py` | Local configuration state | Loaded once from `.env` / env vars to keep the helper deterministic. |
+| `history` | `runtime/llms/gemini_agent.py` | Local (per process) | Initialized when `main` starts, extended with system prompt tokens, discarded after exit. |
+| `tool_map` | `runtime/llms/gemini_agent.py` | Local helper registry | Built once after helper definitions, referenced for every tool invocation. |
+| `google_search_base_url` | `runtime/llms/gemini_agent.py` | Local configuration state | Loaded once from `.env` / env vars to keep the helper deterministic. |
 
 ### State Transitions
 
@@ -340,15 +340,15 @@ No explicit async or threading constructs are present, so the adapter relies on 
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/llms/gemini_agent.py` | 2 | `# DOCS: docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md` |
+| `runtime/llms/gemini_agent.py` | 2 | `# DOCS: docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md` |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| ALGORITHM_Gemini_Stream_Flow stream loop | `mind/llms/gemini_agent.py:main` |
-| PROVIDER PATTERNS subprocess boundary | `mind/llms/gemini_agent.py` tool helper registry |
-| HEALTH coverage assertions | `mind/llms/gemini_agent.py` (tool helper error handling) |
+| ALGORITHM_Gemini_Stream_Flow stream loop | `runtime/llms/gemini_agent.py:main` |
+| PROVIDER PATTERNS subprocess boundary | `runtime/llms/gemini_agent.py` tool helper registry |
+| HEALTH coverage assertions | `runtime/llms/gemini_agent.py` (tool helper error handling) |
 
 ---
 
@@ -358,7 +358,7 @@ No explicit async or threading constructs are present, so the adapter relies on 
 
 | File | Current | Target | Extract To | What to Move |
 |------|---------|--------|------------|--------------|
-| `mind/llms/gemini_agent.py` | ~270L | <250L | `mind/llms/tool_helpers.py` | Pull the repeated tool helper definitions (read, list, glob, shell, search, etc.) into a shared helper module to keep the adapter focused on wiring. |
+| `runtime/llms/gemini_agent.py` | ~270L | <250L | `runtime/llms/tool_helpers.py` | Pull the repeated tool helper definitions (read, list, glob, shell, search, etc.) into a shared helper module to keep the adapter focused on wiring. |
 
 ### Missing Implementation
 
@@ -368,7 +368,7 @@ No explicit async or threading constructs are present, so the adapter relies on 
 ### Ideas
 
 <!-- @mind:proposition Introduce a shared adapter base that other providers can subclass to keep tooling and streaming logic consistent. -->
-<!-- @mind:proposition Persist `tool_result` payloads to `...mind-mcp/state/agent_memory.jsonl` when they mutate disks, enabling replay or audits. -->
+<!-- @mind:proposition Persist `tool_result` payloads to `...mind/state/agent_memory.jsonl` when they mutate disks, enabling replay or audits. -->
 
 ### Questions
 

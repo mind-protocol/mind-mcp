@@ -38,9 +38,9 @@ graph layers.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| mind/physics/graph | GraphOps/GraphQueries power mutations and health checks. |
-| mind/infrastructure/orchestration | Orchestrator processes actions and drives the loop. |
-| mind/infrastructure/embeddings | Optional embeddings used during playthrough creation. |
+| runtime/physics/graph | GraphOps/GraphQueries power mutations and health checks. |
+| runtime/infrastructure/orchestration | Orchestrator processes actions and drives the loop. |
+| runtime/infrastructure/embeddings | Optional embeddings used during playthrough creation. |
 | scenarios/ | Scenario YAML and opening templates drive playthrough creation. |
 | FastAPI | HTTP server and routing framework for the API surface. |
 

@@ -37,8 +37,8 @@ Validation notes align with `docs/infrastructure/api/SYNC_Api.md` and the curren
 
 -## MARKERS
 
-- [x] Add explicit API integration tests that assert health and SSE behavior (covered by `mind/tests/test_moments_api.py`
-  and `mind/tests/test_router_schema_validation.py`).
+- [x] Add explicit API integration tests that assert health and SSE behavior (covered by `runtime/tests/test_moments_api.py`
+  and `runtime/tests/test_router_schema_validation.py`).
 <!-- @mind:proposition Document a reproducible smoke-test script for playthrough creation and action dispatch. -->
 <!-- @mind:escalation Should validation include an auth-required health mode once gateway decisions are final? -->
 

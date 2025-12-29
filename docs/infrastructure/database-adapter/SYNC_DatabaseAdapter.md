@@ -41,7 +41,7 @@ The DatabaseAdapter is fully implemented with both FalkorDB and Neo4j backends w
 ### Core Files
 
 ```
-mind/infrastructure/database/
+runtime/infrastructure/database/
 ├── __init__.py           # Public exports
 ├── adapter.py            # Abstract base class
 ├── falkordb_adapter.py   # FalkorDB implementation
@@ -53,8 +53,8 @@ mind/infrastructure/database/
 
 ### What's Migrated
 
-- `mind/physics/graph/graph_ops.py` - Uses adapter
-- `mind/physics/graph/graph_queries.py` - Uses adapter
+- `runtime/physics/graph/graph_ops.py` - Uses adapter
+- `runtime/physics/graph/graph_queries.py` - Uses adapter
 
 ### What's Remaining (Low Priority)
 
@@ -68,7 +68,7 @@ mind/infrastructure/database/
 
 ### Phase 1: Foundation (DONE)
 
-- [x] Create `mind/infrastructure/database/` directory
+- [x] Create `runtime/infrastructure/database/` directory
 - [x] Create `adapter.py` with ABC
 - [x] Create `falkordb_adapter.py`
 - [x] Create `factory.py`
@@ -77,16 +77,16 @@ mind/infrastructure/database/
 
 ### Phase 2: Core Migration (PARTIAL)
 
-- [ ] Migrate `mind/init_db.py`
-- [x] Migrate `mind/physics/graph/graph_ops.py`
-- [x] Migrate `mind/physics/graph/graph_queries.py`
+- [ ] Migrate `runtime/init_db.py`
+- [x] Migrate `runtime/physics/graph/graph_ops.py`
+- [x] Migrate `runtime/physics/graph/graph_queries.py`
 - [ ] Migrate remaining graph_* files (6 files)
 
 ### Phase 3: API & Connectome (Not Started)
 
-- [ ] Migrate `mind/infrastructure/api/graphs.py`
-- [ ] Migrate `mind/connectome/session.py`
-- [ ] Migrate `mind/connectome/persistence.py`
+- [ ] Migrate `runtime/infrastructure/api/graphs.py`
+- [ ] Migrate `runtime/connectome/session.py`
+- [ ] Migrate `runtime/connectome/persistence.py`
 
 ### Phase 4: Health & Tests (Not Started)
 
@@ -148,17 +148,17 @@ The documentation is complete. Next steps:
 
 ### This Module Depends On
 
-- `mind/data/database_config.yaml` (to be created)
+- `runtime/data/database_config.yaml` (to be created)
 
 ### Modules That Depend On This
 
 After migration, all of these will depend on DatabaseAdapter:
 
-- `mind/physics/graph/*`
-- `mind/infrastructure/api/graphs.py`
-- `mind/connectome/*`
-- `mind/graph/health/*`
-- `mind/physics/health/*`
+- `runtime/physics/graph/*`
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/connectome/*`
+- `runtime/graph/health/*`
+- `runtime/physics/health/*`
 
 ---
 

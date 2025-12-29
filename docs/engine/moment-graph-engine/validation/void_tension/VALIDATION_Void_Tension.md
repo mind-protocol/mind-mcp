@@ -12,8 +12,8 @@ VERIFIED: 2025-12-20 against local tree
 
 ```
 THIS:            VALIDATION_Void_Tension.md
-IMPL:            ../../../../../mind/physics/tick.py
-                 ../../../../../mind/moment_graph/surface.py
+IMPL:            ../../../../../runtime/physics/tick.py
+                 ../../../../../runtime/moment_graph/surface.py
 
 # Note: PATTERNS and BEHAVIORS files planned but not yet created
 ```
@@ -107,7 +107,7 @@ pytest tests/runtime/test_void_pressure.py
 ```
 LAST_VERIFIED: 2025-12-20
 VERIFIED_AGAINST:
-  impl: mind/physics/tick.py @ UNKNOWN
+  impl: runtime/physics/tick.py @ UNKNOWN
   test: tests/runtime/test_void_pressure.py @ UNKNOWN
 VERIFIED_BY: NOT RUN
 RESULT:

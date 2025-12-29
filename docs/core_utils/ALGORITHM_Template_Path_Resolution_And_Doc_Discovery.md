@@ -52,13 +52,13 @@ Used to identify whether a directory contains module documentation files.
 ### Step 1: Check package templates
 
 - Build `package_templates = Path(__file__).parent / "templates"`.
-- If it exists and contains `mind/`, return it.
+- If it exists and contains `runtime/`, return it.
 
 ### Step 2: Check repo-root templates
 
 - Compute `repo_root = Path(__file__).parent.parent`.
 - Build `repo_templates = repo_root / "templates"`.
-- If it exists and contains `mind/`, return it.
+- If it exists and contains `runtime/`, return it.
 
 ### Step 3: Fail with context
 

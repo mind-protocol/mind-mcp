@@ -19,14 +19,14 @@ VALIDATION:      ../VALIDATION_Physics.md
 HEALTH:          ../HEALTH_Physics.md
 SYNC:            ../SYNC_Physics.md
 
-IMPL:            mind/physics/tick.py
-IMPL:            mind/physics/graph/graph_queries.py
-IMPL:            mind/physics/graph/graph_ops_moments.py
-IMPL:            mind/moment_graph/traversal.py
-IMPL:            mind/moment_graph/surface.py
-IMPL:            mind/physics/attention_split_sink_mass_distribution_mechanism.py
-IMPL:            mind/physics/primes_lag_and_half_life_decay_mechanism.py
-IMPL:            mind/physics/contradiction_pressure_from_negative_polarity_mechanism.py
+IMPL:            runtime/physics/tick.py
+IMPL:            runtime/physics/graph/graph_queries.py
+IMPL:            runtime/physics/graph/graph_ops_moments.py
+IMPL:            runtime/moment_graph/traversal.py
+IMPL:            runtime/moment_graph/surface.py
+IMPL:            runtime/physics/attention_split_sink_mass_distribution_mechanism.py
+IMPL:            runtime/physics/primes_lag_and_half_life_decay_mechanism.py
+IMPL:            runtime/physics/contradiction_pressure_from_negative_polarity_mechanism.py
 ```
 
 ---

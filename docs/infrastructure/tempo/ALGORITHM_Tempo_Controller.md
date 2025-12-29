@@ -17,7 +17,7 @@ VALIDATION:      ./VALIDATION_Tempo.md
 HEALTH:          ./HEALTH_Tempo.md
 SYNC:            ./SYNC_Tempo.md
 
-IMPL:            mind/infrastructure/tempo/tempo_controller.py (planned)
+IMPL:            runtime/infrastructure/tempo/tempo_controller.py (planned)
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -152,8 +152,8 @@ TickResult
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| `mind/physics/tick.py` | `GraphTick.run()` | flips + energy stats |
-| `mind/infrastructure/canon/` | `record_to_canon()` | surfaced moments |
+| `runtime/physics/tick.py` | `GraphTick.run()` | flips + energy stats |
+| `runtime/infrastructure/canon/` | `record_to_canon()` | surfaced moments |
 
 ---
 

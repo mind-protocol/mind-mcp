@@ -60,7 +60,7 @@ flows_analysis:
     purpose: Ensure SYNC edits become Place moments.
     triggers:
       - type: event
-        source: ...mind-mcp/state/SYNC_*.md edits
+        source: ...mind/state/SYNC_*.md edits
         notes: manual or agent edits
     frequency:
       expected_rate: human-driven

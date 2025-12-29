@@ -92,7 +92,7 @@ health_indicators:
 
 ```yaml
 status:
-  stream_destination: ...mind-mcp/state/SYNC_Prompt_Command_State.md
+  stream_destination: ...mind/state/SYNC_Prompt_Command_State.md
   result:
     representation: binary
     value: 1
@@ -105,8 +105,8 @@ status:
 ## DOCK TYPES (COMPLETE LIST)
 
 - `cli` — `mind prompt` stdout includes doc sections, VIEW table, and checklist.
-- `file` — Canonical docs referenced (e.g., `.mind-mcp/PROTOCOL.md`, `.mind-mcp/views/*.md`).
-- `state` — `...mind-mcp/state/SYNC_Prompt_Command_State.md` records health verification outcomes.
+- `file` — Canonical docs referenced (e.g., `.mind/PROTOCOL.md`, `.mind/views/*.md`).
+- `state` — `...mind/state/SYNC_Prompt_Command_State.md` records health verification outcomes.
 
 ---
 
@@ -135,14 +135,14 @@ checkers:
 | Signal | Maps to invariant | Docking point | Description |
 |--------|------------------|---------------|-------------|
 | `prompt_doc_reference_check` | V1: canonical docs appear (`VALIDATION_Prompt_Bootstrap_Invariants.md`) | `dock_docs` | Ensures `generate_bootstrap_prompt()` still emits the canonical protocol and state references. |
-| `prompt_view_table_check` | V2: Every `.mind-mcp/views/` entry appears | `dock_view_table` | Confirms the VIEW table still renders the authoritative rows defined by the ALGORITHM doc. |
+| `prompt_view_table_check` | V2: Every `.mind/views/` entry appears | `dock_view_table` | Confirms the VIEW table still renders the authoritative rows defined by the ALGORITHM doc. |
 | `prompt_checklist_presence_check` | V3: prompt ends with `### Checklist` and SYNC reminder | `dock_checklist` | Validates the final checklist block that asks agents to update SYNC remains. |
 
 ---
 
 ## VERIFICATION RESULTS
 
-- `prompt_doc_reference_check`: PASS — `python3 - <<'PY'` confirmed `generate_bootstrap_prompt(Path('.'))` still emits `.mind-mcp/PROTOCOL.md`, `.mind-mcp/PRINCIPLES.md`, and `...mind-mcp/state/SYNC_Project_State.md`, and `mind doctor --format json` reported zero `DOC_LINK_INTEGRITY` issues for the prompt doc chain (`doc_link count 0`).
+- `prompt_doc_reference_check`: PASS — `python3 - <<'PY'` confirmed `generate_bootstrap_prompt(Path('.'))` still emits `.mind/PROTOCOL.md`, `.mind/PRINCIPLES.md`, and `...mind/state/SYNC_Project_State.md`, and `mind doctor --format json` reported zero `DOC_LINK_INTEGRITY` issues for the prompt doc chain (`doc_link count 0`).
 - `prompt_view_table_check`: PASS — the same script verified the prompt still renders the canonical `| Task | VIEW |` table described in the algorithm doc, so each view entry remains visible to agents.
 - `prompt_checklist_presence_check`: PASS — `### Checklist` is still present in prompt output, and `mind doctor --format json` did not raise any checklist-related warnings.
 
@@ -151,7 +151,7 @@ checkers:
 ## INDICATOR: Prompt Doc Reference Health
 
 - **Purpose:** Track that canonical protocol docs are present in the prompt output.
-- **Dock:** `dock_docs` (stdout string) and `...mind-mcp/state/SYNC_Project_State.md`.
+- **Dock:** `dock_docs` (stdout string) and `...mind/state/SYNC_Project_State.md`.
 - **Validation:** `VALIDATION_Prompt_Bootstrap_Invariants.md` V1-V2.
 
 ## INDICATOR: Prompt Checklist Presence
@@ -182,6 +182,6 @@ mind doctor --format json > /tmp/doctor_prompt.json
 
 ## MARKERS
 
-<!-- @mind:todo Triaged the doc-link integrity and code-doc delta warnings emitted by `mind doctor` and promoted the highest-priority follow-ups to `...mind-mcp/state/SYNC_Project_Health.md`. -->
-<!-- @mind:proposition Save the last prompt output snapshot under `.mind-mcp/traces/` for audit and doc-link validation. -->
+<!-- @mind:todo Triaged the doc-link integrity and code-doc delta warnings emitted by `mind doctor` and promoted the highest-priority follow-ups to `...mind/state/SYNC_Project_Health.md`. -->
+<!-- @mind:proposition Save the last prompt output snapshot under `.mind/traces/` for audit and doc-link validation. -->
 <!-- @mind:escalation Should prompt health metrics feed into the CLI health dashboard or the doc-link metrics aggregated by doctor? -->

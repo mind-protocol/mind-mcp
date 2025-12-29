@@ -27,8 +27,8 @@ ARCHIVE:         ./archive/SYNC_archive_2024-12.md
 
 Legacy validation expectations for the pre-Moment-Graph Scene Memory design.
 Current invariants and tests live under:
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/`
 
 ===============================================================================

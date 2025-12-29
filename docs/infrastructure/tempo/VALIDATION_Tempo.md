@@ -18,7 +18,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Tempo.md
 HEALTH:          ./HEALTH_Tempo.md
 SYNC:            ./SYNC_Tempo.md
 
-IMPL:            mind/infrastructure/tempo/tempo_controller.py (planned)
+IMPL:            runtime/infrastructure/tempo/tempo_controller.py (planned)
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -114,7 +114,7 @@ mind validate
 ```
 LAST_VERIFIED: 2025-12-20
 VERIFIED_AGAINST:
-    impl: mind/infrastructure/tempo/tempo_controller.py @ planned
+    impl: runtime/infrastructure/tempo/tempo_controller.py @ planned
     test: mind/tests/test_tempo.py @ not yet created
 VERIFIED_BY: manual review (doc-only)
 RESULT:

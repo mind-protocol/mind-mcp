@@ -115,7 +115,7 @@ status:
 - Link indicators back to validation IDs in `VALIDATION_Narrator.md` and describe the dock types and cadence to make the check repeatable without rerunning the code search.
 - Capture what each checker observes, how often the indicator is sampled, and any gap reminders in the same narrative length so the validator’s minimum-character guardrail never flags the doc.
 - Once the health flow is defined, describe how to run the check in practice (integration test, CLI exercise, manual replay) so human operators can reproduce the runtime signal before blaming the doctor.
-- Finally, record how each indicator is updated in `...mind-mcp/state/SYNC_Project_Health.md` so the doctor can trace degraded scores back to concrete log entries during manual reviews.
+- Finally, record how each indicator is updated in `...mind/state/SYNC_Project_Health.md` so the doctor can trace degraded scores back to concrete log entries during manual reviews.
 
 ## CHECKER INDEX
 
@@ -155,11 +155,11 @@ docks:
   input:
     id: narrator_input
     method: engine.infrastructure.orchestration.narrator.run_narrator
-    location: mind/infrastructure/orchestration/narrator.py:50
+    location: runtime/infrastructure/orchestration/narrator.py:50
   output:
     id: narrator_output
     method: engine.infrastructure.orchestration.narrator.run_narrator
-    location: mind/infrastructure/orchestration/narrator.py:100
+    location: runtime/infrastructure/orchestration/narrator.py:100
 ```
 
 ### HEALTH REPRESENTATION
@@ -228,7 +228,7 @@ docks:
   input:
     id: narrator_mutations
     method: engine.infrastructure.orchestration.narrator.NarratorService.generate
-    location: mind/infrastructure/orchestration/narrator.py:27-110
+    location: runtime/infrastructure/orchestration/narrator.py:27-110
   output:
     id: mutation_validation
     method: mutation_safety_checker
@@ -283,7 +283,7 @@ docks:
   input:
     id: narrator_stream_request
     method: engine.infrastructure.orchestration.narrator.NarratorService.stream_scene
-    location: mind/infrastructure/orchestration/narrator.py:140-180
+    location: runtime/infrastructure/orchestration/narrator.py:140-180
   output:
     id: narrator_stream_events
     method: agents/narrator/stream_dialogue.py:send

@@ -19,9 +19,9 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Membrane_Modulation.md
 HEALTH:          ./HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL:            mind/moment_graph/queries.py
-IMPL:            mind/moment_graph/surface.py
-IMPL:            mind/moment_graph/traversal.py
+IMPL:            runtime/moment_graph/queries.py
+IMPL:            runtime/moment_graph/surface.py
+IMPL:            runtime/moment_graph/traversal.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -166,9 +166,9 @@ ModulationFrame (cached per place_id)
 
 | Module | What We Call | What We Get |
 |--------|--------------|-------------|
-| `mind/moment_graph/queries.py` | `get_current_view` | aggregate metrics |
-| `mind/membrane/functions.py` | `activation_threshold` | dynamic thresholds |
-| `mind/membrane/provider.py` | `set_frame` | cached frame by place_id |
+| `runtime/moment_graph/queries.py` | `get_current_view` | aggregate metrics |
+| `runtime/membrane/functions.py` | `activation_threshold` | dynamic thresholds |
+| `runtime/membrane/provider.py` | `set_frame` | cached frame by place_id |
 
 ---
 

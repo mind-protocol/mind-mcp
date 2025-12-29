@@ -25,7 +25,7 @@ IMPL:            mind/models/
 
 ## OVERVIEW
 
-This document describes the algorithmic aspects of the `mind/models/` module, focusing on how Pydantic processes data during instantiation, validation, and property access. It outlines the sequence of operations that ensure data integrity and type consistency.
+This document describes the algorithmic aspects of the `runtime/models/` module, focusing on how Pydantic processes data during instantiation, validation, and property access. It outlines the sequence of operations that ensure data integrity and type consistency.
 
 ---
 
@@ -139,7 +139,7 @@ Validated Model Instance
 
 ## HELPER FUNCTIONS
 
-- **`_node_to_text()` (from `mind/infrastructure/embeddings/service.py`)**: While not in `mind/models` itself, this helper demonstrates how model data is extracted and transformed for external services. It reads model fields to create a composite string, a common pattern for downstream consumption of model data.
+- **`_node_to_text()` (from `runtime/infrastructure/embeddings/service.py`)**: While not in `runtime/models` itself, this helper demonstrates how model data is extracted and transformed for external services. It reads model fields to create a composite string, a common pattern for downstream consumption of model data.
 
 ---
 

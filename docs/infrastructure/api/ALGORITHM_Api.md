@@ -135,7 +135,7 @@ Time scales linearly with the number of scenario nodes, links, and opening lines
 
 ### Interactions
 
-Creates playthrough artifacts consumed by `GET /api/view/{playthrough_id}`, relies on `mind/physics/graph` for mutations, and loads scenario assets from `scenarios/*.yaml`.
+Creates playthrough artifacts consumed by `GET /api/view/{playthrough_id}`, relies on `runtime/physics/graph` for mutations, and loads scenario assets from `scenarios/*.yaml`.
 
 ### Gaps / Ideas / Questions
 
@@ -256,11 +256,11 @@ Creates playthrough artifacts consumed by `GET /api/view/{playthrough_id}`, reli
 |------|------|---------|
 | 1-2 | `frontend/app/start/page.tsx` | Name/gender input |
 | 2 | `frontend/app/scenarios/page.tsx` | Scenario selection |
-| 3-7 | `mind/infrastructure/api/playthroughs.py` | POST /playthrough/create |
-| 3 | `mind/init_db.py` | load_initial_state() |
+| 3-7 | `runtime/infrastructure/api/playthroughs.py` | POST /playthrough/create |
+| 3 | `runtime/init_db.py` | load_initial_state() |
 | 4 | `scenarios/*.yaml` | Scenario definitions |
-| 5 | `mind/physics/graph/graph_ops.py` | apply() for graph injection |
-| 6 | `mind/physics/graph/graph_ops.py` | add_moment() |
+| 5 | `runtime/physics/graph/graph_ops.py` | apply() for graph injection |
+| 6 | `runtime/physics/graph/graph_ops.py` | add_moment() |
 | 8 | `frontend/hooks/useGameState.ts` | Fetches view, renders scene |
 
 ### API Endpoints

@@ -30,7 +30,7 @@ IMPLEMENTATION: ./IMPLEMENTATION_World_Runner_Service_Architecture.md
 THIS:           TEST_World_Runner_Coverage.md
 SYNC:           ./SYNC_World_Runner.md
 
-IMPL:           mind/infrastructure/orchestration/world_runner.py
+IMPL:           runtime/infrastructure/orchestration/world_runner.py
 ```
 
 > **Contract:** HEALTH checks verify intent and failure modes without touching core agent logic.
@@ -124,11 +124,11 @@ docks:
   input:
     id: runner_input
     method: engine.infrastructure.orchestration.world_runner.WorldRunnerService.process_flips
-    location: mind/infrastructure/orchestration/world_runner.py:34
+    location: runtime/infrastructure/orchestration/world_runner.py:34
   output:
     id: runner_output
     method: engine.infrastructure.orchestration.world_runner.WorldRunnerService._call_claude
-    location: mind/infrastructure/orchestration/world_runner.py:84
+    location: runtime/infrastructure/orchestration/world_runner.py:84
 ```
 
 ---

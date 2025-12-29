@@ -72,7 +72,7 @@ mutation application until the database is available again.
 ## TEST COVERAGE
 
 Coverage draws from the behavior tests in this validation document plus the
-physics engine tests in `mind/tests/` that exercise graph integrity,
+physics engine tests in `runtime/tests/` that exercise graph integrity,
 propagation, and flip mechanics. Any manual validation runs should be noted
 in `docs/physics/graph/SYNC_Graph.md` to avoid drift.
 
@@ -82,7 +82,7 @@ in `docs/physics/graph/SYNC_Graph.md` to avoid drift.
 
 ## VERIFICATION PROCEDURE
 
-1. Run the automated physics and graph-related tests in `mind/tests/`.
+1. Run the automated physics and graph-related tests in `runtime/tests/`.
 2. Apply representative mutation batches and confirm partial persistence
    behavior matches the examples and error handling described above.
 3. Simulate a short travel sequence and confirm world-runner narratives

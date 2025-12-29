@@ -17,7 +17,7 @@ VALIDATION:      ./VALIDATION_Moment_Traversal_Invariants.md
 IMPLEMENTATION:  ./IMPLEMENTATION_Moment_Graph_Runtime_Layout.md
 SYNC:            ./SYNC_Moment_Graph_Engine.md
 THIS:            TEST_Moment_Graph_Runtime_Coverage.md (you are here)
-IMPL:            ../../../mind/moment_graph/traversal.py
+IMPL:            ../../../runtime/moment_graph/traversal.py
 ```
 
 ===============================================================================
@@ -26,8 +26,8 @@ IMPL:            ../../../mind/moment_graph/traversal.py
 
 | Area | Coverage | Location |
 |------|----------|----------|
-| Graph ops + moment queries | partial | `mind/tests/test_moment_graph.py` |
-| End-to-end traversal | integration | `mind/tests/test_e2e_moment_graph.py` |
+| Graph ops + moment queries | partial | `runtime/tests/test_moment_graph.py` |
+| End-to-end traversal | integration | `runtime/tests/test_e2e_moment_graph.py` |
 
 ===============================================================================
 ## HOW TO RUN

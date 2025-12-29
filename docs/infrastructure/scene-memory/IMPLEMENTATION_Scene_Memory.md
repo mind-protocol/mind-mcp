@@ -20,7 +20,7 @@ TEST:            ./TEST_Scene_Memory.md
 SYNC:            ./SYNC_Scene_Memory.md
 ARCHIVE:         ./archive/SYNC_archive_2024-12.md
 
-IMPL:            mind/infrastructure/memory/moment_processor.py
+IMPL:            runtime/infrastructure/memory/moment_processor.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -30,17 +30,17 @@ IMPL:            mind/infrastructure/memory/moment_processor.py
 ## CODE STRUCTURE
 
 ```
-mind/infrastructure/memory/
-├── mind/infrastructure/memory/__init__.py          # Exports MomentProcessor for external use
-└── mind/infrastructure/memory/moment_processor.py  # Moment creation + transcript management
+runtime/infrastructure/memory/
+├── runtime/infrastructure/memory/__init__.py          # Exports MomentProcessor for external use
+└── runtime/infrastructure/memory/moment_processor.py  # Moment creation + transcript management
 ```
 
 ### File Responsibilities
 
 | File | Purpose | Key Functions/Classes | Lines | Status |
 |------|---------|----------------------|-------|--------|
-| `mind/infrastructure/memory/__init__.py` | Module export surface | `MomentProcessor` | ~11 | OK |
-| `mind/infrastructure/memory/moment_processor.py` | Create moments, manage transcript, connect to GraphOps | `MomentProcessor`, `get_moment_processor` | ~585 | WATCH |
+| `runtime/infrastructure/memory/__init__.py` | Module export surface | `MomentProcessor` | ~11 | OK |
+| `runtime/infrastructure/memory/moment_processor.py` | Create moments, manage transcript, connect to GraphOps | `MomentProcessor`, `get_moment_processor` | ~585 | WATCH |
 
 **Size Thresholds:** OK <400 lines, WATCH 400-700 lines, SPLIT >700 lines.
 
@@ -50,16 +50,16 @@ mind/infrastructure/memory/
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| `MomentProcessor` | `mind/infrastructure/memory/moment_processor.py:17` | Orchestration setup for a playthrough |
-| `set_context` | `mind/infrastructure/memory/moment_processor.py:108` | Scene start / location change |
-| `process_dialogue` | `mind/infrastructure/memory/moment_processor.py:126` | Narrator dialogue line |
-| `process_narration` | `mind/infrastructure/memory/moment_processor.py:191` | Narrator narration line |
-| `process_player_action` | `mind/infrastructure/memory/moment_processor.py:252` | Player click/freeform/choice |
-| `process_hint` | `mind/infrastructure/memory/moment_processor.py:319` | Hint or whispered line |
-| `create_possible_moment` | `mind/infrastructure/memory/moment_processor.py:380` | Pre-seed possible moments |
-| `link_moments` | `mind/infrastructure/memory/moment_processor.py:450` | Connect moments for traversal |
-| `link_narrative_to_moments` | `mind/infrastructure/memory/moment_processor.py:483` | Attribute narratives to moments |
-| `get_moment_processor` | `mind/infrastructure/memory/moment_processor.py:559` | Convenience factory |
+| `MomentProcessor` | `runtime/infrastructure/memory/moment_processor.py:17` | Orchestration setup for a playthrough |
+| `set_context` | `runtime/infrastructure/memory/moment_processor.py:108` | Scene start / location change |
+| `process_dialogue` | `runtime/infrastructure/memory/moment_processor.py:126` | Narrator dialogue line |
+| `process_narration` | `runtime/infrastructure/memory/moment_processor.py:191` | Narrator narration line |
+| `process_player_action` | `runtime/infrastructure/memory/moment_processor.py:252` | Player click/freeform/choice |
+| `process_hint` | `runtime/infrastructure/memory/moment_processor.py:319` | Hint or whispered line |
+| `create_possible_moment` | `runtime/infrastructure/memory/moment_processor.py:380` | Pre-seed possible moments |
+| `link_moments` | `runtime/infrastructure/memory/moment_processor.py:450` | Connect moments for traversal |
+| `link_narrative_to_moments` | `runtime/infrastructure/memory/moment_processor.py:483` | Attribute narratives to moments |
+| `get_moment_processor` | `runtime/infrastructure/memory/moment_processor.py:559` | Convenience factory |
 
 ---
 
@@ -102,7 +102,7 @@ interleaved line numbers or partial JSON writes.
 ### Internal
 
 ```
-mind/infrastructure/memory/moment_processor.py
+runtime/infrastructure/memory/moment_processor.py
     └── imports → engine.physics.graph.graph_ops.GraphOps
     └── imports → engine.infrastructure.embeddings.service.get_embedding_service
 ```
@@ -124,16 +124,16 @@ mind/infrastructure/memory/moment_processor.py
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/infrastructure/memory/moment_processor.py` | 1 | `DOCS: docs/infrastructure/scene-memory/` |
+| `runtime/infrastructure/memory/moment_processor.py` | 1 | `DOCS: docs/infrastructure/scene-memory/` |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| Spoken moment creation | `mind/infrastructure/memory/moment_processor.py:126` |
-| Player action processing | `mind/infrastructure/memory/moment_processor.py:252` |
-| Possible moment seeding | `mind/infrastructure/memory/moment_processor.py:380` |
-| Transcript persistence | `mind/infrastructure/memory/moment_processor.py:66` |
+| Spoken moment creation | `runtime/infrastructure/memory/moment_processor.py:126` |
+| Player action processing | `runtime/infrastructure/memory/moment_processor.py:252` |
+| Possible moment seeding | `runtime/infrastructure/memory/moment_processor.py:380` |
+| Transcript persistence | `runtime/infrastructure/memory/moment_processor.py:66` |
 
 ---
 
@@ -143,8 +143,8 @@ mind/infrastructure/memory/moment_processor.py
 
 | File | Current | Target | Extract To | What to Move |
 |------|---------|--------|------------|--------------|
-| `mind/infrastructure/memory/moment_processor.py` | ~585L | <400L | internal transcript helpers (stay in `mind/infrastructure/memory/moment_processor.py`) | `_load_transcript_line_count`, `_write_transcript`, `_append_to_transcript` |
-| `mind/infrastructure/memory/moment_processor.py` | ~585L | <400L | internal ID helpers (stay in `mind/infrastructure/memory/moment_processor.py`) | `_generate_id`, `_tick_to_time_of_day` |
+| `runtime/infrastructure/memory/moment_processor.py` | ~585L | <400L | internal transcript helpers (stay in `runtime/infrastructure/memory/moment_processor.py`) | `_load_transcript_line_count`, `_write_transcript`, `_append_to_transcript` |
+| `runtime/infrastructure/memory/moment_processor.py` | ~585L | <400L | internal ID helpers (stay in `runtime/infrastructure/memory/moment_processor.py`) | `_generate_id`, `_tick_to_time_of_day` |
 
 ### Questions
 

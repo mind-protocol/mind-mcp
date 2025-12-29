@@ -2,16 +2,25 @@
   "name": "@mind-protocol/connectome",
   "version": "0.1.0",
   "description": "Graph visualization components for Mind Protocol",
-  "main": "core/index.ts",
-  "types": "core/types/index.ts",
+  "main": "./index.ts",
+  "types": "./index.ts",
   "exports": {
-    ".": "./core/index.ts",
+    ".": "./index.ts",
     "./core": "./core/index.ts",
+    "./core/types": "./core/types/index.ts",
     "./adapters": "./adapters/index.ts",
     "./adapters/local": "./adapters/local.ts",
     "./adapters/remote": "./adapters/remote.ts",
     "./lib": "./lib/index.ts",
     "./styles": "./core/styles/index.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "zustand": "^4.5.0",
+    "js-yaml": "^4.1.0"
   },
   "peerDependencies": {
     "react": "^18.0.0",
@@ -20,8 +29,10 @@
   },
   "devDependencies": {
     "typescript": "^5.0.0",
+    "@types/node": "^20.0.0",
     "@types/react": "^18.0.0",
-    "@types/react-dom": "^18.0.0"
+    "@types/react-dom": "^18.0.0",
+    "@types/js-yaml": "^4.0.0"
   },
   "repository": {
     "type": "git",

@@ -35,17 +35,17 @@ Specifies where code lives, what files to create, and what files need modificati
 
 | File | Purpose |
 |------|---------|
-| `mind/infrastructure/database/adapter.py` | Abstract base class `DatabaseAdapter` |
-| `mind/infrastructure/database/falkordb_adapter.py` | FalkorDB implementation |
-| `mind/infrastructure/database/neo4j_adapter.py` | Neo4j implementation |
-| `mind/infrastructure/database/factory.py` | Factory: `get_database_adapter()` |
-| `mind/infrastructure/database/__init__.py` | Public exports |
+| `runtime/infrastructure/database/adapter.py` | Abstract base class `DatabaseAdapter` |
+| `runtime/infrastructure/database/falkordb_adapter.py` | FalkorDB implementation |
+| `runtime/infrastructure/database/neo4j_adapter.py` | Neo4j implementation |
+| `runtime/infrastructure/database/factory.py` | Factory: `get_database_adapter()` |
+| `runtime/infrastructure/database/__init__.py` | Public exports |
 
 ### Configuration
 
 | File | Purpose |
 |------|---------|
-| `mind/data/database_config.yaml` | Backend selection & connection settings |
+| `runtime/data/database_config.yaml` | Backend selection & connection settings |
 
 ---
 
@@ -57,41 +57,41 @@ These files contain all FalkorDB imports and must be adapted first.
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/physics/graph/graph_ops.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_ops_apply.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_ops_moments.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_queries.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_queries_moments.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_queries_search.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_query_utils.py` | Direct FalkorDB import | Use adapter interface |
-| `mind/physics/graph/graph_ops_read_only_interface.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_ops.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_ops_apply.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_ops_moments.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_queries.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_queries_moments.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_queries_search.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_query_utils.py` | Direct FalkorDB import | Use adapter interface |
+| `runtime/physics/graph/graph_ops_read_only_interface.py` | Direct FalkorDB import | Use adapter interface |
 
 ### Priority 2: Database Initialization (Critical)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/init_db.py` | FalkorDB.Graph() initialization | Use factory |
+| `runtime/init_db.py` | FalkorDB.Graph() initialization | Use factory |
 
 ### Priority 3: API Layer (High)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/infrastructure/api/graphs.py` | FalkorDB import | Use adapter interface |
+| `runtime/infrastructure/api/graphs.py` | FalkorDB import | Use adapter interface |
 
 ### Priority 4: Connectome (High)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/connectome/session.py` | Likely FalkorDB | Use adapter interface |
-| `mind/connectome/persistence.py` | Likely FalkorDB | Use adapter interface |
+| `runtime/connectome/session.py` | Likely FalkorDB | Use adapter interface |
+| `runtime/connectome/persistence.py` | Likely FalkorDB | Use adapter interface |
 
 ### Priority 5: Health Checks (Medium)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/graph/health/check_health.py` | FalkorDB import | Use adapter interface |
-| `mind/physics/health/checkers/energy_conservation.py` | FalkorDB import | Use adapter interface |
-| `mind/physics/health/checkers/moment_lifecycle.py` | FalkorDB import | Use adapter interface |
+| `runtime/graph/health/check_health.py` | FalkorDB import | Use adapter interface |
+| `runtime/physics/health/checkers/energy_conservation.py` | FalkorDB import | Use adapter interface |
+| `runtime/physics/health/checkers/moment_lifecycle.py` | FalkorDB import | Use adapter interface |
 
 ### Priority 6: Migration Scripts (Low)
 
@@ -99,7 +99,7 @@ These may need dual-backend support or be run separately per backend.
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/migrations/migrate_to_v2_schema.py` | FalkorDB specific | May need backend-specific versions |
+| `runtime/migrations/migrate_to_v2_schema.py` | FalkorDB specific | May need backend-specific versions |
 | `tools/migrate_v11_fields.py` | FalkorDB specific | May need backend-specific versions |
 | `tools/archive/migrate_schema_v11.py` | FalkorDB specific | May need backend-specific versions |
 
@@ -107,43 +107,43 @@ These may need dual-backend support or be run separately per backend.
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `mind/tests/test_energy_v1_2.py` | FalkorDB import | Use adapter interface |
-| `mind/tests/test_moments_api.py` | FalkorDB import | Use adapter interface |
+| `runtime/tests/test_energy_v1_2.py` | FalkorDB import | Use adapter interface |
+| `runtime/tests/test_moments_api.py` | FalkorDB import | Use adapter interface |
 
 ### Priority 8: Tools & Utilities (Low)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
 | `tools/test_health_live.py` | FalkorDB import | Use adapter interface |
-| `mind/doctor_graph.py` | FalkorDB import | Use adapter interface |
+| `runtime/doctor_graph.py` | FalkorDB import | Use adapter interface |
 
 ---
 
 ## FULL FILE LIST (31 files with FalkorDB references)
 
 ```
-mind/physics/graph/graph_ops.py
-mind/physics/graph/graph_ops_apply.py
-mind/physics/graph/graph_ops_moments.py
-mind/physics/graph/graph_queries.py
-mind/physics/graph/graph_queries_moments.py
-mind/physics/graph/graph_queries_search.py
-mind/physics/graph/graph_query_utils.py
-mind/physics/graph/graph_ops_read_only_interface.py
+runtime/physics/graph/graph_ops.py
+runtime/physics/graph/graph_ops_apply.py
+runtime/physics/graph/graph_ops_moments.py
+runtime/physics/graph/graph_queries.py
+runtime/physics/graph/graph_queries_moments.py
+runtime/physics/graph/graph_queries_search.py
+runtime/physics/graph/graph_query_utils.py
+runtime/physics/graph/graph_ops_read_only_interface.py
 mind/init_db.py
-mind/infrastructure/api/graphs.py
-mind/connectome/session.py
-mind/connectome/persistence.py
+runtime/infrastructure/api/graphs.py
+runtime/connectome/session.py
+runtime/connectome/persistence.py
 mind/graph/health/check_health.py
-mind/physics/health/checkers/energy_conservation.py
-mind/physics/health/checkers/moment_lifecycle.py
+runtime/physics/health/checkers/energy_conservation.py
+runtime/physics/health/checkers/moment_lifecycle.py
 mind/migrations/migrate_to_v2_schema.py
 mind/tests/test_energy_v1_2.py
 mind/tests/test_moments_api.py
 tools/migrate_v11_fields.py
 tools/archive/migrate_schema_v11.py
 tools/test_health_live.py
-mind/doctor_graph.py
+runtime/doctor_graph.py
 ```
 
 ---
@@ -151,7 +151,7 @@ mind/doctor_graph.py
 ## ADAPTER INTERFACE
 
 ```python
-# mind/infrastructure/database/adapter.py
+# runtime/infrastructure/database/adapter.py
 
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional, ContextManager
@@ -195,7 +195,7 @@ class DatabaseAdapter(ABC):
 ## FACTORY FUNCTION
 
 ```python
-# mind/infrastructure/database/factory.py
+# runtime/infrastructure/database/factory.py
 
 from typing import Optional
 from .adapter import DatabaseAdapter

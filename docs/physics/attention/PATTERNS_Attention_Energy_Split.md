@@ -19,7 +19,7 @@ VALIDATION:      ./VALIDATION_Attention_Split_And_Interrupts.md
 HEALTH:          ./HEALTH_Attention_Energy_Split.md
 SYNC:            ./SYNC_Attention_Energy_Split.md
 
-IMPL:            mind/physics/attention_split_sink_mass_distribution_mechanism.py
+IMPL:            runtime/physics/attention_split_sink_mass_distribution_mechanism.py
 ```
 
 ### Bidirectional Contract
@@ -139,10 +139,10 @@ Why this matters: avoids hidden heuristics and preserves determinism.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/physics/tick.py` | Applies energy propagation and decay |
+| `runtime/physics/tick.py` | Applies energy propagation and decay |
 | `docs/physics/PATTERNS_Physics.md` | Energy and determinism constraints |
-| `docs/mind/moments/PATTERNS_Moments.md` | Player-visible artifact rules |
-| `docs/mind/membrane/PATTERNS_Membrane_Scoping.md` | Dynamic parameter policy, scoping context |
+| `docs/runtime/moments/PATTERNS_Moments.md` | Player-visible artifact rules |
+| `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md` | Dynamic parameter policy, scoping context |
 
 ---
 

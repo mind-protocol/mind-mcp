@@ -544,4 +544,4 @@ async def render_cluster(path, focus_node, graph, mode='compact'):
 
 - PATTERNS_Cluster_Presentation.md — Design patterns
 - IMPLEMENTATION_Cluster_Presentation.md — Code locations
-- mind/physics/cluster_presentation.py — Implementation
+- runtime/physics/cluster_presentation.py — Implementation

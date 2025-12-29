@@ -10,12 +10,12 @@ UPDATED: 2025-12-20
 STATUS: DRAFT
 
 What's canonical (v1):
-- The Pydantic models for nodes, links are defined in `mind/models/`.
+- The Pydantic models for nodes, links are defined in `runtime/models/`.
 - Basic type enforcement and field validation are in place.
 
 ## CURRENT STATE
 
-The `mind/models/` module provides the core data structures for the game. All major node and link types are defined using Pydantic, ensuring type safety and basic data validation. This module acts as the authoritative source for the game's graph schema.
+The `runtime/models/` module provides the core data structures for the game. All major node and link types are defined using Pydantic, ensuring type safety and basic data validation. This module acts as the authoritative source for the game's graph schema.
 
 ## RECENT CHANGES
 
@@ -26,31 +26,31 @@ The `mind/models/` module provides the core data structures for the game. All ma
 
 ### 2025-12-20: Node Helper Properties Verified (Repair 12)
 
-- **What:** Verified `is_core_type`, `tick`, `should_embed`, `is_active`, `is_spoken`, and `can_surface` in `mind/models/nodes.py` already have concrete implementations; no code changes required for issue #16.
+- **What:** Verified `is_core_type`, `tick`, `should_embed`, `is_active`, `is_spoken`, and `can_surface` in `runtime/models/nodes.py` already have concrete implementations; no code changes required for issue #16.
 - **Why:** Repair 12 (INCOMPLETE_IMPL-models-nodes) flagged these helpers as incomplete.
 - **Impact:** No functional changes; logged verification to prevent repeat flags.
 
 ### 2025-12-20: Link Helper Accessors Verified (Repair 11)
 
-- **What:** Verified `belief_intensity`, `is_present`, `has_item`, and `is_here` in `mind/models/links.py` already have concrete implementations; no code changes required for issue #16.
+- **What:** Verified `belief_intensity`, `is_present`, `has_item`, and `is_here` in `runtime/models/links.py` already have concrete implementations; no code changes required for issue #16.
 - **Why:** Repair 11 (INCOMPLETE_IMPL-models-links) flagged these accessors as incomplete.
 - **Impact:** No functional changes; logged verification to prevent repeat flags.
 
 ### 2025-12-20: Base Timestamp Comparators Verified
 
-- **What:** Verified `GameTimestamp.__str__`, `__le__`, and `__gt__` in `mind/models/base.py` are fully implemented; no code changes required for issue #16.
+- **What:** Verified `GameTimestamp.__str__`, `__le__`, and `__gt__` in `runtime/models/base.py` are fully implemented; no code changes required for issue #16.
 - **Why:** Repair 10 (INCOMPLETE_IMPL-models-base) flagged empty implementations that are already present.
 - **Impact:** No functional changes; reconfirmed during repair `10-INCOMPLETE_IMPL-models-base`.
 
 ### 2025-12-20: Initial Mind Documentation Creation
 
-- **What:** Created `PATTERNS_Models.md`, `BEHAVIORS_Models.md`, `ALGORITHM_Models.md`, `VALIDATION_Models.md`, `IMPLEMENTATION_Models.md`, `HEALTH_Models.md`, and `SYNC_Models.md` for the `mind/models` module.
+- **What:** Created `PATTERNS_Models.md`, `BEHAVIORS_Models.md`, `ALGORITHM_Models.md`, `VALIDATION_Models.md`, `IMPLEMENTATION_Models.md`, `HEALTH_Models.md`, and `SYNC_Models.md` for the `runtime/models` module.
 - **Why:** To align with the `mind` framework and provide comprehensive documentation for the data models.
-- **Impact:** The `mind/models` module is now documented with a complete `mind` documentation chain.
+- **Impact:** The `runtime/models` module is now documented with a complete `mind` documentation chain.
 
 ## IN PROGRESS
 
-- Currently, no active code development is ongoing for the `mind/models` module. The focus is on completing and refining the documentation chain.
+- Currently, no active code development is ongoing for the `runtime/models` module. The focus is on completing and refining the documentation chain.
 
 ## KNOWN ISSUES
 
@@ -67,7 +67,7 @@ The core data models are well-defined and documented. Key areas for review invol
 
 ## TODO
 
-<!-- @mind:todo Add `mind/models` mapping to `modules.yaml` (already done in previous step). -->
+<!-- @mind:todo Add `runtime/models` mapping to `modules.yaml` (already done in previous step). -->
 <!-- @mind:todo Implement unit tests for all Pydantic models, covering validation, defaults, and properties. -->
 <!-- @mind:todo Refactor the `embeddable_text` methods across models in `nodes.py` to be consistent with the `PATTERNS_Embeddings.md` rules (detail > 20, fallback to name). -->
 
@@ -78,7 +78,7 @@ Confidence in the model definitions themselves is high, as Pydantic handles much
 ## POINTERS
 
 - `docs/mind/models/PATTERNS_Models.md` for the Pydantic design philosophy.
-- `mind/models/` for the Python implementation of the data models.
+- `runtime/models/` for the Python implementation of the data models.
 
 ## Agent Observations
 

@@ -30,7 +30,7 @@ The World Runner is complete. It operates as an adapter between the Python game 
 
 - **What:** Added a paragraph that records the 0.5/min base cadence, 5/min bursts, and how the `background_consistency`/`adapter_resilience` indicator pair derivations feed VALIDATION so the doctor knows what to sample.
 - **Why:** DOC_TEMPLATE_DRIFT highlighted the health doc for missing the explicit flow and indicator language; this extension keeps the ledger explicit before future agents edit the runner flows.
-- **Files:** `docs/agents/world-runner/HEALTH_World_Runner.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/world-runner/HEALTH_World_Runner.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate`
 
 ### 2026-01-10: Reaffirm world runner archive freeze workflow
@@ -83,21 +83,21 @@ The World Runner is complete. It operates as an adapter between the Python game 
 
 - **What:** Verified `HEALTH_World_Runner.md` explicitly documents purpose, WHY THIS PATTERN, HOW TO USE THIS TEMPLATE, FLOWS ANALYSIS, HEALTH INDICATORS, OBJECTIVES COVERAGE, STATUS, DOCK TYPES, CHECKER INDEX, indicator narratives, HOW TO RUN instructions, and gap catalog entries so every template requirement now surfaces for future agents, spelled out the original and interrupted flow cadence (0.5/min expected, 5/min bursts), and called out `background_consistency` plus `adapter_resilience` so the doctor can map them directly to VALIDATION. Also cross-referenced the manual `mind validate` run described in the health doc so operators always know how to re-trigger the signals.
 - **Why:** DOC_TEMPLATE_DRIFT previously flagged the health doc for missing or underspecified blocks; this reaffirmation keeps the ledger explicit before another agent edits the runner flows and notes the indicator list and execution rates so the guardrails stay traceable. It also points to the documented health checklist so future agents can re-run `mind validate` for the same indicators.
-- **Files:** `docs/agents/world-runner/HEALTH_World_Runner.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/world-runner/HEALTH_World_Runner.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate`
 
 ### 2026-01-04: Expand validation template coverage
 
 - **What:** Added BEHAVIORS GUARANTEED, OBJECTIVES COVERED, and HEALTH COVERAGE sections to `docs/agents/world-runner/VALIDATION_World_Runner_Invariants.md`, giving each guarantee narrative 50+ characters while tracing them back to the runner invariants and the health indicators.
 - **Why:** DOC_TEMPLATE_DRIFT flagged these validation template blocks as missing, so the new tables and narrative keep the canonical ledger compliant without touching runtime behavior.
-- **Files:** `docs/agents/world-runner/VALIDATION_World_Runner_Invariants.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/world-runner/VALIDATION_World_Runner_Invariants.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate`
 
 ### 2025-12-21: Expand health template coverage
 
 - **What:** Completely rebuilt `HEALTH_World_Runner.md` so every required template section (purpose, why, flows, objectives, indicators, docks, checkers, instructions, gaps, and ideas) now exists with 50+ character prose.
 - **Why:** DOC_TEMPLATE_DRIFT flagged the health document for missing the new template sections, so the rewrite keeps the health ledger compliant while leaving runtime behavior untouched.
-- **Files:** `docs/agents/world-runner/HEALTH_World_Runner.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind-mcp/state/SYNC_Project_State.md`
+- **Files:** `docs/agents/world-runner/HEALTH_World_Runner.md`, `docs/agents/world-runner/SYNC_World_Runner.md`, `...mind/state/SYNC_Project_State.md`
 - **Verification:** `mind validate`
 
 ### 2025-12-21: Expand implementation doc template coverage

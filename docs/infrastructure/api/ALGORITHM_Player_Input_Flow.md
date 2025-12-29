@@ -198,7 +198,7 @@ curl -s -X POST http://localhost:8000/api/action \
 ```
 PATTERNS:       ./PATTERNS_Api.md
 ALGORITHM:      ./ALGORITHM_Player_Input_Flow.md (this file)
-IMPLEMENTATION: ../../../mind/infrastructure/api/app.py
-                ../../../mind/physics/graph/graph_ops_moments.py
-                ../../../mind/infrastructure/orchestration/orchestrator.py
+IMPLEMENTATION: ../../../runtime/infrastructure/api/app.py
+                ../../../runtime/physics/graph/graph_ops_moments.py
+                ../../../runtime/infrastructure/orchestration/orchestrator.py
 ```

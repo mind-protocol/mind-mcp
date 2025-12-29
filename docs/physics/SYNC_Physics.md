@@ -20,12 +20,12 @@ UPDATED: 2025-12-26
 
 | File | Purpose | Status |
 |------|---------|--------|
-| `mind/physics/tick_v1_2.py` | 8-phase tick orchestrator | v1.2 OK |
-| `mind/physics/phases/*.py` | Phase implementations | v1.2 OK |
-| `mind/physics/flow.py` | Traversal primitives | v1.2 (needs v1.6.1) |
-| `mind/physics/subentity.py` | SubEntity class | **v1.7.2 DONE** |
-| `mind/physics/traversal_logger.py` | Exploration logging | **v1.0 DONE** |
-| `mind/physics/health/checkers/subentity.py` | SubEntity health checkers | **DONE** |
+| `runtime/physics/tick_v1_2.py` | 8-phase tick orchestrator | v1.2 OK |
+| `runtime/physics/phases/*.py` | Phase implementations | v1.2 OK |
+| `runtime/physics/flow.py` | Traversal primitives | v1.2 (needs v1.6.1) |
+| `runtime/physics/subentity.py` | SubEntity class | **v1.7.2 DONE** |
+| `runtime/physics/traversal_logger.py` | Exploration logging | **v1.0 DONE** |
+| `runtime/physics/health/checkers/subentity.py` | SubEntity health checkers | **DONE** |
 | `docs/schema/schema.yaml` | Schema spec | v1.6.1 |
 | `docs/physics/PATTERNS_Physics.md` | Design philosophy | v1.6 |
 | `docs/physics/ALGORITHM_Physics.md` | System overview | v1.6 |
@@ -53,9 +53,9 @@ UPDATED: 2025-12-26
 - crystallized field tracks if SubEntity created a Narrative
 
 **Key files to modify:**
-- `mind/physics/subentity.py` (new)
-- `mind/physics/flow.py` (add forward coloring + link scoring)
-- `mind/models/links.py` (add embedding field)
+- `runtime/physics/subentity.py` (new)
+- `runtime/physics/flow.py` (add forward coloring + link scoring)
+- `runtime/models/links.py` (add embedding field)
 
 
 ---

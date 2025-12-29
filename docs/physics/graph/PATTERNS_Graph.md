@@ -59,8 +59,8 @@ quiet. The graph decides what matters now instead of the agent doing it.
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/physics/graph/**` | Implements GraphOps/GraphQueries to read/write the living graph. |
-| `mind/physics/tick.py` | Runs the propagation loop that updates energy and flips. |
+| `runtime/physics/graph/**` | Implements GraphOps/GraphQueries to read/write the living graph. |
+| `runtime/physics/tick.py` | Runs the propagation loop that updates energy and flips. |
 | `docs/schema/SCHEMA_Moments.md` | Defines node/link fields that energy logic assumes. |
 
 ---

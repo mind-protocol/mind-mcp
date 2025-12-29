@@ -213,7 +213,7 @@ docks:
     method: modules.yaml mapped to tools/**
   output:
     id: execution_fixtures
-    method: fixture execution traces stored in `.mind-mcp/logs/` or `logs/run_stack`
+    method: fixture execution traces stored in `.mind/logs/` or `logs/run_stack`
 ```
 
 ### HEALTH REPRESENTATION
@@ -243,7 +243,7 @@ mechanism:
 ## HEALTH CHECKS
 
 - Run `mind doctor --scope tools --format json` to ensure template drift warnings are resolved and the indicator table stays above 0.8.
-- Execute each fixture-backed script (for example, `tools/run_stack.sh --help` and any other scripts called out here) and capture logs under `.mind-mcp/logs/doctor`.
+- Execute each fixture-backed script (for example, `tools/run_stack.sh --help` and any other scripts called out here) and capture logs under `.mind/logs/doctor`.
 - Review the indicator sections before making further documentation changes so you can point at the exact validation ID that will update the health banner.
 
 ---
@@ -253,7 +253,7 @@ mechanism:
 1. `cd /home/mind-protocol/mind`
 2. `mind validate` (guarantees module mappings still pass after doc edits).
 3. `mind doctor --scope tools --format json` to check for lingering template drift or missing CHAIN links.
-4. Run each script referenced in `docs/tools/` with its fixture and direct output into `.mind-mcp/logs/doctor`.
+4. Run each script referenced in `docs/tools/` with its fixture and direct output into `.mind/logs/doctor`.
 5. Inspect `logs/run_stack` (if populated) to confirm helper scripts still start the expected services and report no errors.
 
 ---

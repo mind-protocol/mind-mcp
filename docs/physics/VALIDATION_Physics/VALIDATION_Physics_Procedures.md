@@ -37,14 +37,14 @@ These should fail validation immediately rather than log and continue.
 
 ## TEST COVERAGE
 
-Physics validation relies on integration tests in `mind/tests/` plus schema
+Physics validation relies on integration tests in `runtime/tests/` plus schema
 checks in the graph-health suite. See `docs/physics/TEST_Physics.md` for
 specific cases, coverage notes, and known gaps.
 Manual verification notes supplement tests when dependencies are missing.
 
 ## VERIFICATION PROCEDURE
 
-1. Run automated physics and schema tests from `mind/tests/`.
+1. Run automated physics and schema tests from `runtime/tests/`.
 2. Execute a short simulated scenario at 1x and 3x to compare canon chains.
 3. Inspect graph queries for invariant violations (status, weights, links).
 4. Review SYNC notes for open gaps before claiming completion.

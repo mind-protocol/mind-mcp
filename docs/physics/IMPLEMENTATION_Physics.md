@@ -32,30 +32,30 @@ The physics implementation ensures graph-first orchestration where all state liv
 
 ### Code Structure Snapshot
 
-- `mind/physics/tick_v1_2.py`: Main entry point, orchestrates the 8-phase loop.
-- `mind/physics/tick_v1_2_types.py`: Dataclasses for tick results.
-- `mind/physics/tick_v1_2_queries.py`: Helper class for complex graph queries.
-- `mind/physics/phases/`: Directory containing implementation of each phase:
-    - `mind/physics/phases/generation.py`: Phase 1 - Energy generation (proximity-gated).
-    - `mind/physics/phases/moment_draw.py`: Phase 2 - Moments draw from actors.
-    - `mind/physics/phases/moment_flow.py`: Phase 3 - Moments radiate to targets.
-    - `mind/physics/phases/moment_interaction.py`: Phase 4 - Support/contradict between moments.
-    - `mind/physics/phases/narrative_backflow.py`: Phase 5 - Narratives radiate to actors.
-    - `mind/physics/phases/link_cooling.py`: Phase 6 - Links drain to nodes.
-    - `mind/physics/phases/completion.py`: Phase 7 - Mark moments as completed.
-    - `mind/physics/phases/rejection.py`: Phase 8 - Handle rejected moments.
-- `mind/physics/flow.py`: Unified traversal primitives (energy, weight, emotions).
-- `mind/physics/constants.py`: Physics constants and emotion math.
-- `mind/physics/graph/graph_query_utils.py`: Path resistance (Dijkstra) and property extraction.
-- `mind/moment_graph/*`: Traversal helpers for interactions.
-- `mind/models/*`: Pydantic models for nodes and links.
+- `runtime/physics/tick_v1_2.py`: Main entry point, orchestrates the 8-phase loop.
+- `runtime/physics/tick_v1_2_types.py`: Dataclasses for tick results.
+- `runtime/physics/tick_v1_2_queries.py`: Helper class for complex graph queries.
+- `runtime/physics/phases/`: Directory containing implementation of each phase:
+    - `runtime/physics/phases/generation.py`: Phase 1 - Energy generation (proximity-gated).
+    - `runtime/physics/phases/moment_draw.py`: Phase 2 - Moments draw from actors.
+    - `runtime/physics/phases/moment_flow.py`: Phase 3 - Moments radiate to targets.
+    - `runtime/physics/phases/moment_interaction.py`: Phase 4 - Support/contradict between moments.
+    - `runtime/physics/phases/narrative_backflow.py`: Phase 5 - Narratives radiate to actors.
+    - `runtime/physics/phases/link_cooling.py`: Phase 6 - Links drain to nodes.
+    - `runtime/physics/phases/completion.py`: Phase 7 - Mark moments as completed.
+    - `runtime/physics/phases/rejection.py`: Phase 8 - Handle rejected moments.
+- `runtime/physics/flow.py`: Unified traversal primitives (energy, weight, emotions).
+- `runtime/physics/constants.py`: Physics constants and emotion math.
+- `runtime/physics/graph/graph_query_utils.py`: Path resistance (Dijkstra) and property extraction.
+- `runtime/moment_graph/*`: Traversal helpers for interactions.
+- `runtime/models/*`: Pydantic models for nodes and links.
 
 The tick is the orchestrator; it does not store state beyond an ephemeral context.
 
 ### v1.6.1 Code Structure (Implemented)
 
 ```
-mind/physics/
+runtime/physics/
 ├── link_scoring.py        # IMPLEMENTED: compute_link_score() with self_novelty, sibling_divergence
 ├── flow.py                # IMPLEMENTED: forward_color_link(), backward_color_path(), compute_query_emotion()
 ├── crystallization.py     # IMPLEMENTED: crystallize(), check_novelty(), SubEntityCrystallizationState
@@ -70,22 +70,22 @@ Key v1.6.1 implementations:
 - `crystallization.py`: Novelty check (cosine > 0.85), SubEntityCrystallizationState
 - `synthesis.py`: Bidirectional grammar (floats ↔ phrases) per GRAMMAR_Link_Synthesis.md
 - `exploration.py`: Async SubEntity runner with tree structure (parent, siblings, children)
-- `mind/models/links.py`: Added `embedding` field and `permanence` property
+- `runtime/models/links.py`: Added `embedding` field and `permanence` property
 
 ### File Responsibilities (Highlight)
 
 | Artifact | Purpose | Owner | Status |
 |----------|---------|-------|--------|
-| `mind/physics/tick_v1_2.py` | 8-phase tick orchestrator | GraphTick | v1.2 OK |
-| `mind/physics/phases/*.py` | Individual phase implementations | Physics | v1.2 OK |
-| `mind/physics/tick_v1_2_queries.py` | Complex graph queries | TickQueries | v1.2 OK |
-| `mind/physics/flow.py` | Unified traversal primitives | Physics | v1.2 OK |
-| `mind/physics/graph/graph_query_utils.py` | Dijkstra & property helpers | Utilities | v1.2 OK |
-| `mind/physics/exploration.py` | SubEntity class + async exploration runner | Physics | **v1.6.1 OK** |
-| `mind/physics/link_scoring.py` | Link score with self_novelty, sibling_divergence | Physics | **v1.6.1 OK** |
-| `mind/physics/flow.py` | Forward/backward coloring, query emotions | Physics | **v1.6.1 OK** |
-| `mind/physics/crystallization.py` | Novelty check, narrative creation | Physics | **v1.6.1 OK** |
-| `mind/physics/synthesis.py` | Bidirectional grammar (floats ↔ phrases) | Physics | **v1.6.1 OK** |
+| `runtime/physics/tick_v1_2.py` | 8-phase tick orchestrator | GraphTick | v1.2 OK |
+| `runtime/physics/phases/*.py` | Individual phase implementations | Physics | v1.2 OK |
+| `runtime/physics/tick_v1_2_queries.py` | Complex graph queries | TickQueries | v1.2 OK |
+| `runtime/physics/flow.py` | Unified traversal primitives | Physics | v1.2 OK |
+| `runtime/physics/graph/graph_query_utils.py` | Dijkstra & property helpers | Utilities | v1.2 OK |
+| `runtime/physics/exploration.py` | SubEntity class + async exploration runner | Physics | **v1.6.1 OK** |
+| `runtime/physics/link_scoring.py` | Link score with self_novelty, sibling_divergence | Physics | **v1.6.1 OK** |
+| `runtime/physics/flow.py` | Forward/backward coloring, query emotions | Physics | **v1.6.1 OK** |
+| `runtime/physics/crystallization.py` | Novelty check, narrative creation | Physics | **v1.6.1 OK** |
+| `runtime/physics/synthesis.py` | Bidirectional grammar (floats ↔ phrases) | Physics | **v1.6.1 OK** |
 
 ### Schema & Entrypoints
 
@@ -93,9 +93,9 @@ Key v1.6.1 implementations:
 - **Links (v1.2):** expresses, about, relates, attached_to, contains, leads_to, sequence, primes, can_become.
 
 **Entry points:**
-- Physics tick: `mind/physics/tick.py:run()` invoked by the orchestrator.
-- Click traversal: `mind/moment_graph/traversal.py:handle_click()`.
-- Player input: `mind/infrastructure/api/moments.py`.
+- Physics tick: `runtime/physics/tick.py:run()` invoked by the orchestrator.
+- Click traversal: `runtime/moment_graph/traversal.py:handle_click()`.
+- Player input: `runtime/infrastructure/api/moments.py`.
 
 ---
 
@@ -168,14 +168,14 @@ Salience is computed (weight × energy); flips surface when thresholds cross.
 
 - Physics tick runs synchronously; energy math is linear.
 - Handlers execute asynchronously (LLM calls) but writing occurs sequentially through graph ops.
-- Configs: `DECAY_RATE`, `BELIEF_FLOW_RATE` stored in `mind/physics/constants.py`.
+- Configs: `DECAY_RATE`, `BELIEF_FLOW_RATE` stored in `runtime/physics/constants.py`.
 
 ### Module Dependencies
 
-- `mind/infrastructure/orchestration/orchestrator.py` → imports `mind/physics/tick.py` and `mind/moment_graph/queries.py`.
-- `mind/physics/tick.py` → reads via `graph_queries.py`, writes via `graph_ops.py`, coordinates `graph_ops_events.py` for listeners.
-- `mind/physics/graph/graph_ops.py` → composes mixins for attention split, PRIMES decay, contradiction pressure.
-- `mind/physics/graph/graph_ops_read_only_interface.py` → consumed by Connectome search + GraphReadOps for seed queries.
+- `runtime/infrastructure/orchestration/orchestrator.py` → imports `runtime/physics/tick.py` and `runtime/moment_graph/queries.py`.
+- `runtime/physics/tick.py` → reads via `graph_queries.py`, writes via `graph_ops.py`, coordinates `graph_ops_events.py` for listeners.
+- `runtime/physics/graph/graph_ops.py` → composes mixins for attention split, PRIMES decay, contradiction pressure.
+- `runtime/physics/graph/graph_ops_read_only_interface.py` → consumed by Connectome search + GraphReadOps for seed queries.
 
 **External packages:**
 - `falkordb` for graph database access.
@@ -299,8 +299,8 @@ Nodes are ordered by energy (activation level), not distance.
 
 | File | Purpose |
 |------|---------|
-| `mind/physics/graph/graph_queries_search.py` | SearchQueryMixin with `search()` method |
-| `mind/physics/graph/graph_query_utils.py` | Property extraction, path utilities |
+| `runtime/physics/graph/graph_queries_search.py` | SearchQueryMixin with `search()` method |
+| `runtime/physics/graph/graph_query_utils.py` | Property extraction, path utilities |
 
 ### Key Functions
 
@@ -584,12 +584,12 @@ crystallization_embedding = weighted_sum([
 
 | File | Responsibility |
 |------|----------------|
-| `mind/physics/subentity.py` | SubEntity dataclass, ExplorationContext, state machine |
-| `mind/physics/exploration.py` | ExplorationRunner (async), ExplorationResult |
-| `mind/physics/link_scoring.py` | score_outgoing_links(), should_branch() |
-| `mind/physics/flow.py` | forward_color_link(), backward_color_path() |
-| `mind/physics/crystallization.py` | check_novelty(), crystallize() |
-| `mind/physics/synthesis.py` | synthesize_from_crystallization() |
+| `runtime/physics/subentity.py` | SubEntity dataclass, ExplorationContext, state machine |
+| `runtime/physics/exploration.py` | ExplorationRunner (async), ExplorationResult |
+| `runtime/physics/link_scoring.py` | score_outgoing_links(), should_branch() |
+| `runtime/physics/flow.py` | forward_color_link(), backward_color_path() |
+| `runtime/physics/crystallization.py` | check_novelty(), crystallize() |
+| `runtime/physics/synthesis.py` | synthesize_from_crystallization() |
 
 ### v1.7.2 Design Decisions
 
@@ -605,7 +605,7 @@ crystallization_embedding = weighted_sum([
 
 Agent-comprehensible logging of every SubEntity traversal step.
 
-**Location:** `mind/physics/traversal_logger.py`
+**Location:** `runtime/physics/traversal_logger.py`
 
 **Features:**
 - Natural language explanations for decisions
@@ -673,16 +673,16 @@ mind explore "What does Edmund believe?" --actor edmund --debug
 ### v1.6.1 → v1.7.2 → v1.8 Implemented
 
 - ✅ SubEntity class with state machine (SEEKING → BRANCHING → RESONATING → REFLECTING → CRYSTALLIZING → MERGING).
-- ✅ Link scoring with self_novelty and sibling_divergence (`mind/physics/link_scoring.py`).
+- ✅ Link scoring with self_novelty and sibling_divergence (`runtime/physics/link_scoring.py`).
 - ✅ Tree structure with lazy refs (parent_id, sibling_ids, children_ids) via ExplorationContext.
 - ✅ found_narratives as dict[str, float] with max(alignment) merge (v1.7.2 D3).
 - ✅ Branch threshold: simple count len(outgoing) >= 2 (v1.7.2 D5).
 - ✅ Timeout errors loudly, crashes exploration (v1.7.2 D4).
-- ✅ Forward/backward coloring in `mind/physics/flow.py`.
-- ✅ Crystallization and narrative creation (`mind/physics/crystallization.py`).
-- ✅ Link embedding field added to `mind/models/links.py` with permanence property.
-- ✅ Synthesis grammar (floats ↔ phrases) in `mind/physics/synthesis.py`.
-- ✅ Async exploration runner in `mind/physics/exploration.py`.
+- ✅ Forward/backward coloring in `runtime/physics/flow.py`.
+- ✅ Crystallization and narrative creation (`runtime/physics/crystallization.py`).
+- ✅ Link embedding field added to `runtime/models/links.py` with permanence property.
+- ✅ Synthesis grammar (floats ↔ phrases) in `runtime/physics/synthesis.py`.
+- ✅ Async exploration runner in `runtime/physics/exploration.py`.
 - ✅ Query emotion computation (`compute_query_emotion`, `compute_path_emotion`).
 - ✅ **v1.8:** Query vs Intention separation (query=WHAT, intention=WHY, intention_type=HOW).
 - ✅ **v1.8:** IntentionType enum (SUMMARIZE, VERIFY, FIND_NEXT, EXPLORE, RETRIEVE).

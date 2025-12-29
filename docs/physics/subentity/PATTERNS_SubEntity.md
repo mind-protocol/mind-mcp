@@ -20,9 +20,9 @@ IMPLEMENTATION: ./IMPLEMENTATION_SubEntity.md
 HEALTH:         ./HEALTH_SubEntity.md
 SYNC:           ./SYNC_SubEntity.md
 
-IMPL:           mind/physics/subentity.py
-                mind/physics/exploration.py
-                mind/physics/traversal_logger.py
+IMPL:           runtime/physics/subentity.py
+                runtime/physics/exploration.py
+                runtime/physics/traversal_logger.py
 ```
 
 ---
@@ -268,8 +268,8 @@ See: `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
 
 | Module | Purpose |
 |--------|---------|
-| `mind/physics/flow.py` | Forward/backward coloring, energy injection |
-| `mind/physics/link_scoring.py` | Link score computation |
-| `mind/physics/crystallization.py` | Embedding computation |
-| `mind/physics/cluster_presentation.py` | Rendering crystallized content |
-| `mind/physics/traversal_logger.py` | Agent-comprehensible logging |
+| `runtime/physics/flow.py` | Forward/backward coloring, energy injection |
+| `runtime/physics/link_scoring.py` | Link score computation |
+| `runtime/physics/crystallization.py` | Embedding computation |
+| `runtime/physics/cluster_presentation.py` | Rendering crystallized content |
+| `runtime/physics/traversal_logger.py` | Agent-comprehensible logging |

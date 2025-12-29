@@ -157,30 +157,30 @@ Original file: SYNC_Api.md
 - **What:** Verified `_count_branches` and `create_scenario_playthrough` implementations; no code changes required.
 - **Why:** Repair task flagged empty implementations; current code already provides real logic.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/playthroughs.py`
   - `docs/infrastructure/api/SYNC_Api.md`
 
 ### 2025-12-19: Align playthrough scenario creation to router implementation
 
-- **What:** Added `/api/playthrough/scenario` alias in `mind/infrastructure/api/playthroughs.py` and removed the duplicate scenario endpoint in `mind/infrastructure/api/app.py`.
+- **What:** Added `/api/playthrough/scenario` alias in `runtime/infrastructure/api/playthroughs.py` and removed the duplicate scenario endpoint in `runtime/infrastructure/api/app.py`.
 - **Why:** The frontend expects a `scene` payload from scenario creation, which the router provides; the app-level endpoint returned a different shape and caused a mismatch.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
-  - `mind/infrastructure/api/app.py`
+  - `runtime/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/app.py`
 
 ### 2025-12-19: Remove unsupported energy argument when creating opening moments
 
 - **What:** Dropped the `energy` argument passed to `GraphOps.add_moment()` when generating opening moments.
 - **Why:** `GraphOps.add_moment()` does not accept `energy`, which raised an exception during playthrough creation and could stall the flow.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/playthroughs.py`
 
 ### 2025-12-19: Finish playthrough helper implementations
 
 - **What:** Expanded discussion branch counting, added per-playthrough GraphQueries caching, and wired player moment embeddings to the embedding service with a safe fallback.
 - **Why:** Repair task flagged incomplete helper implementations; these changes provide full logic without breaking moment creation when embeddings are unavailable.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/playthroughs.py`
   - `docs/infrastructure/api/IMPLEMENTATION_Api.md`
 
 ### 2025-12-19: Fix asyncio queue reference in API implementation doc
@@ -199,11 +199,11 @@ Original file: SYNC_Api.md
 
 ### 2025-12-19: Map infrastructure API module and link DOCS reference
 
-- **What:** Mapped `mind/infrastructure/api/**` to `docs/infrastructure/api/` in `modules.yaml` and added a `# DOCS:` header in `mind/infrastructure/api/app.py` for `mind context`.
+- **What:** Mapped `runtime/infrastructure/api/**` to `docs/infrastructure/api/` in `modules.yaml` and added a `# DOCS:` header in `runtime/infrastructure/api/app.py` for `mind context`.
 - **Why:** The API docs existed but the code path was not mapped, so documentation discovery failed for the API module.
 - **Files:**
   - `modules.yaml`
-  - `mind/infrastructure/api/app.py`
+  - `runtime/infrastructure/api/app.py`
 
 ### 2025-12-19: Consolidate API algorithm documentation
 
@@ -215,24 +215,24 @@ Original file: SYNC_Api.md
 
 ### 2025-12-19: Re-verify playthrough helpers for repair 01-INCOMPLETE_IMPL-api-playthroughs
 
-- **What:** Confirmed `_count_branches` and `_get_playthrough_queries` in `mind/infrastructure/api/playthroughs.py` already contain real logic; no code changes required.
+- **What:** Confirmed `_count_branches` and `_get_playthrough_queries` in `runtime/infrastructure/api/playthroughs.py` already contain real logic; no code changes required.
 - **Why:** Repair task flagged empty implementations, but the functions are implemented.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/playthroughs.py`
   - `docs/infrastructure/api/SYNC_Api.md`
 
 ### 2025-12-19: Add /api/action endpoint and fix scenario path
 
-- **What:** Added `POST /api/action` endpoint for full game loop. Fixed scenario path in playthroughs.py (was looking in `mind/scenarios` instead of project root `scenarios/`).
+- **What:** Added `POST /api/action` endpoint for full game loop. Fixed scenario path in playthroughs.py (was looking in `runtime/scenarios` instead of project root `scenarios/`).
 - **Why:** The action endpoint was missing - frontend click path had no way to trigger the full narrator/tick/flips loop. Scenario path was wrong due to incorrect parent traversal.
 - **Files:**
-  - `mind/infrastructure/api/app.py` — added `/api/action` endpoint
-  - `mind/infrastructure/api/playthroughs.py` — fixed scenarios_dir path
+  - `runtime/infrastructure/api/app.py` — added `/api/action` endpoint
+  - `runtime/infrastructure/api/playthroughs.py` — fixed scenarios_dir path
   - `docs/infrastructure/api/IMPLEMENTATION_Api.md` — documented new endpoints
 
 ### 2025-12-19: Verify playthroughs helper implementations (repair 01-INCOMPLETE_IMPL-api-playthroughs)
 
-- **What:** Rechecked `_count_branches` and `_get_playthrough_queries` in `mind/infrastructure/api/playthroughs.py`; no code changes required.
+- **What:** Rechecked `_count_branches` and `_get_playthrough_queries` in `runtime/infrastructure/api/playthroughs.py`; no code changes required.
 - **Why:** Repair task flagged empty implementations, but the functions already contain logic.
 - **Files:**
   - `docs/infrastructure/api/SYNC_Api.md`
@@ -242,7 +242,7 @@ Original file: SYNC_Api.md
 - **What:** Implemented cached graph helpers, expanded health check, and hardened debug SSE payloads.
 - **Why:** Replace incomplete helper stubs and provide meaningful health validation.
 - **Files:**
-  - `mind/infrastructure/api/app.py`
+  - `runtime/infrastructure/api/app.py`
   - `docs/infrastructure/api/BEHAVIORS_Api.md`
   - `docs/infrastructure/api/IMPLEMENTATION_Api.md`
   - `docs/infrastructure/api/SYNC_Api.md`
@@ -252,7 +252,7 @@ Original file: SYNC_Api.md
 - **What:** Confirmed `_count_branches` and `_get_playthrough_queries` already contain real logic in the playthroughs router.
 - **Why:** Repair task flagged them as incomplete, but the implementations are in place.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/playthroughs.py`
   - `docs/infrastructure/api/SYNC_Api.md`
 
 ### 2025-12-19: Re-validate playthroughs repair task
@@ -271,10 +271,10 @@ Original file: SYNC_Api.md
 
 ### 2025-12-19: Verify playthroughs helpers (repair 01-INCOMPLETE_IMPL-api-playthroughs)
 
-- **What:** Confirmed `_count_branches` and `_get_playthrough_queries` in `mind/infrastructure/api/playthroughs.py` already contain real logic; no code changes required.
+- **What:** Confirmed `_count_branches` and `_get_playthrough_queries` in `runtime/infrastructure/api/playthroughs.py` already contain real logic; no code changes required.
 - **Why:** Repair task flagged empty implementations; verification shows they are implemented.
 - **Files:**
-  - `mind/infrastructure/api/playthroughs.py`
+  - `runtime/infrastructure/api/playthroughs.py`
   - `docs/infrastructure/api/SYNC_Api.md`
 
 ---

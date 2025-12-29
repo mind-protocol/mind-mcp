@@ -83,7 +83,7 @@ Narrator invariants must hold even when the graph is large, sessions persist for
 
 ### V6: Mutation Schema Compliance
 
-- Mutations validate against `mind/models/` schemas so downstream services
+- Mutations validate against `runtime/models/` schemas so downstream services
   can safely apply them without additional defensive coercion.
 
 ---

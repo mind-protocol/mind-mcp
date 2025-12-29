@@ -86,11 +86,11 @@ Agent files live in `.mind/agents/{agent}/CLAUDE.md`
 
 ### 3. Use Procedures for Structured Work
 
-Procedures are YAML-based structured dialogues. Use them via membrane tools:
+Procedures are YAML-based structured dialogues. Use them via procedure tools:
 
 ```
-membrane_start(membrane: "create_doc_chain")
-membrane_continue(session_id: "...", answer: "...")
+procedure_start(procedure: "create_doc_chain")
+procedure_continue(session_id: "...", answer: "...")
 ```
 
 Common procedures:
@@ -169,7 +169,7 @@ After changes, update SYNC files:
 |---------|---------|--------------|
 | `.mind/agents/{name}/` | Cognitive posture files | When adopting a posture |
 | `.mind/skills/SKILL_*.md` | Executable capabilities | When performing that capability |
-| `procedures/*.yaml` | Structured dialogues | Via membrane tools |
+| `procedures/*.yaml` | Structured dialogues | Via procedure tools |
 
 ---
 
@@ -502,14 +502,14 @@ graph_query(queries: ["What characters exist?", "How does physics work?"], top_k
 - Locating issues or tasks
 - Exploring the codebase semantically
 
-### Membrane Dialogue Tools
+### Procedure Dialogue Tools
 
 | Tool | Purpose |
 |------|---------|
-| `membrane_start` | Start structured dialogue (protocol name) |
-| `membrane_continue` | Continue dialogue with answer |
-| `membrane_abort` | Cancel a dialogue session |
-| `membrane_list` | List available dialogue types |
+| `procedure_start` | Start structured dialogue (protocol name) |
+| `procedure_continue` | Continue dialogue with answer |
+| `procedure_abort` | Cancel a dialogue session |
+| `procedure_list` | List available dialogue types |
 
 ### Other Membrane Tools
 

@@ -132,8 +132,8 @@ transition.
 
 ## DEPENDENCIES
 
-- `mind/infrastructure/orchestration/world_runner.py` for the outer orchestration loop, injection assembly, and aligning the runner lifecycle with the engine service contract.
-- `mind/physics/graph/graph_ops.py` and `mind/physics/graph/graph_queries.py` for safely reading pressure, applying mutations, and keeping read-models isolated.
+- `runtime/infrastructure/orchestration/world_runner.py` for the outer orchestration loop, injection assembly, and aligning the runner lifecycle with the engine service contract.
+- `runtime/physics/graph/graph_ops.py` and `runtime/physics/graph/graph_queries.py` for safely reading pressure, applying mutations, and keeping read-models isolated.
 - `agents/world_runner/CLAUDE.md` for the runner instructions, output schema, and the format the narrator expects so the narrated Injection is interpreted without drift.
 
 ---

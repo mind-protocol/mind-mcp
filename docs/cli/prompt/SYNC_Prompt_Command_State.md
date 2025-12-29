@@ -23,7 +23,7 @@ STATUS: DESIGNING
 
 ## CURRENT STATE
 
-Completed the full PATTERNS→BEHAVIORS→ALGORITHM→VALIDATION→IMPLEMENTATION→HEALTH chain for `docs/cli/prompt/`. Each file now embeds canonical references (`@mind:id`), outlines the prompt invariants, and documents how `mind/prompt.py` composes the bootstrap instructions. Implementation notes explicitly list docking points that HEALTH uses, and SYNC now tracks the new prompt health checks (`prompt_doc_reference`, `prompt_view_table`, `prompt_checklist`) along with the doc-link integrity and code-doc delta engines that are exercised by `mind doctor`.
+Completed the full PATTERNS→BEHAVIORS→ALGORITHM→VALIDATION→IMPLEMENTATION→HEALTH chain for `docs/cli/prompt/`. Each file now embeds canonical references (`@mind:id`), outlines the prompt invariants, and documents how `runtime/prompt.py` composes the bootstrap instructions. Implementation notes explicitly list docking points that HEALTH uses, and SYNC now tracks the new prompt health checks (`prompt_doc_reference`, `prompt_view_table`, `prompt_checklist`) along with the doc-link integrity and code-doc delta engines that are exercised by `mind doctor`.
 
 The HEALTH doc now stores the signal-to-dock mapping for each invariant so the `prompt_doc_reference`, `prompt_view_table`, and `prompt_checklist` indicators clearly trace back to `generate_bootstrap_prompt()` outputs. This change also pairs with the Implementation doc’s new docking definitions (`dock_docs`, `dock_view_table`, `dock_checklist`).
 
@@ -49,20 +49,20 @@ The HEALTH doc now stores the signal-to-dock mapping for each invariant so the `
 
 ### 2025-12-21: Created prompt module doc chain stubs
 
-- **What:** Added PATTERNS/BEHAVIORS/ALGORITHM/VALIDATION/IMPLEMENTATION/HEALTH/SYNC files under `docs/cli/prompt/`, each following templates and referencing `mind/prompt.py`.
+- **What:** Added PATTERNS/BEHAVIORS/ALGORITHM/VALIDATION/IMPLEMENTATION/HEALTH/SYNC files under `docs/cli/prompt/`, each following templates and referencing `runtime/prompt.py`.
 - **Why:** Capture canonical workflow for the `mind prompt` command and satisfy the `MIND Documentation Chain Pattern` requirements.
-- **Files:** All files inside `docs/cli/prompt/`; `docs/cli/core/SYNC_CLI_Development_State.md`; `modules.yaml`; `...mind-mcp/state/SYNC_Project_State.md`; `mind/prompt.py` (DOCS pointer added). points.
+- **Files:** All files inside `docs/cli/prompt/`; `docs/cli/core/SYNC_CLI_Development_State.md`; `modules.yaml`; `...mind/state/SYNC_Project_State.md`; `runtime/prompt.py` (DOCS pointer added). points.
 - **Struggles/Insights:** Copying numerous templates is time-consuming but ensures future agents have the full chain.
 
 ### 2025-12-21: Doctoring prompt health + documentation coupling
 
-- **What:** Hooked the prompt health indicators (`prompt_doc_reference_check`, `prompt_view_table_check`, `prompt_checklist_presence_check`) plus the doc-link integrity and code-doc delta coupling checks into `mind doctor` and recorded the output in `...mind-mcp/state/SYNC_Project_Health.md`.
-- **Why:** Turned the CLI prompt into an observable health signal so any drift or unanswered doc-coupling gaps are visible during routine health sweeps (see `docs/protocol/HEALTH_Protocol_Verification.md`).
+- **What:** Hooked the prompt health indicators (`prompt_doc_reference_check`, `prompt_view_table_check`, `prompt_checklist_presence_check`) plus the doc-link integrity and code-doc delta coupling checks into `mind doctor` and recorded the output in `...mind/state/SYNC_Project_Health.md`.
+- **Why:** Turned the CLI prompt into an observable health signal so any drift or unanswered doc-coupling gaps are visible during routine health sweeps (see `docs/mcp-design/HEALTH_Protocol_Verification.md`).
 - **Impact:** `mind doctor` now surfaces the prompt health status while also flagging 27 doc-link issues and 3 code-doc delta warnings; these are new observations captured in this module's TODO list.
 
 ### 2025-12-22: Documented CLI/TUI modules mentioned by `mind doctor`
 
-- **What:** Expanded CLI core and TUI implementation docs to mention every `mind/doctor*`, `mind/repair*`, `mind/repo_overview*`, `mind/solve_escalations`, `mind/core_utils`, and `mind/tui/*` file flagged by the doc-link scan.
+- **What:** Expanded CLI core and TUI implementation docs to mention every `runtime/doctor*`, `runtime/repair*`, `runtime/repo_overview*`, `runtime/solve_escalations`, `runtime/core_utils`, and `runtime/tui/*` file flagged by the doc-link scan.
 - **Why:** The doctor warning list now only contains issues that have explicit bidirectional links in the implementation docs.
 - **Impact:** The Implementation docs now expose the precise code paths referenced by the doctor module and piped into prompt health, which reduces the triage surface for future doc-link integrity runs.
 - **Confirmation:** Reran `mind doctor --format json` (`/tmp/doctor_final.json`) after the updates and confirmed zero `DOC_LINK_INTEGRITY` or `CODE_DOC_DELTA_COUPLING` warnings for this module.
@@ -79,9 +79,9 @@ The HEALTH doc now stores the signal-to-dock mapping for each invariant so the `
 
 **Likely VIEW:** `VIEW_Document_Create_Module_Documentation.md` to fill docs, then `VIEW_Implement_Write_Or_Modify_Code.md` for code adjustments.
 
-**Where I stopped:** Doc chain stubs created; next step is to expand each doc with canonical references and ensure `mind/prompt.py` reads them.
+**Where I stopped:** Doc chain stubs created; next step is to expand each doc with canonical references and ensure `runtime/prompt.py` reads them.
 
-**What you need to understand:** The incantation for base prompt generation is `generate_bootstrap_prompt()`; all doc references anchor to `.mind-mcp/*` files.
+**What you need to understand:** The incantation for base prompt generation is `generate_bootstrap_prompt()`; all doc references anchor to `.mind/*` files.
 
 **Watch out for:** The view table is hand-written; when views change, update the BEHAVIORS + ALGORITHM docs.
 
@@ -103,7 +103,7 @@ The HEALTH doc now stores the signal-to-dock mapping for each invariant so the `
 
 ### Doc/Impl Drift
 
-<!-- @mind:todo DOCS→IMPL: Implement automation that compares `generate_bootstrap_prompt()` output to PATTERNS/BEHAVIORS descriptions (links to `docs/protocol/HEALTH_Protocol_Verification.md` doctor check #1). -->
+<!-- @mind:todo DOCS→IMPL: Implement automation that compares `generate_bootstrap_prompt()` output to PATTERNS/BEHAVIORS descriptions (links to `docs/mcp-design/HEALTH_Protocol_Verification.md` doctor check #1). -->
 <!-- @mind:todo IMPL→DOCS: When the VIEW table evolves, update ALGORITHM/BEHAVIORS and rerun `prompt_view_table_check`. -->
 
 ### Tests to Run
@@ -145,4 +145,4 @@ PY
 |------|-------|
 | Prompt module docs | `docs/cli/prompt/` |
 | CLI module sync | `docs/cli/core/SYNC_CLI_Development_State.md` |
-| Entry point | `mind/prompt.py` |
+| Entry point | `runtime/prompt.py` |

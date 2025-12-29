@@ -19,7 +19,7 @@ HEALTH:          ./core/HEALTH_CLI_Command_Test_Coverage.md
 SYNC:            ./core/SYNC_CLI_Development_State.md
 
 IMPL:            mind/cli.py
-IMPL:            mind/doctor.py
+IMPL:            runtime/doctor.py
 IMPL:            mind/repair.py
 IMPL:            mind/prompt.py
 ```
@@ -64,20 +64,20 @@ This split is described in `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/s
 
 ## DESIGN PATTERNS
 
-- **Command pattern** for `mind/cli.py` routing and ensuring each subcommand implements a `run()` style function.
+- **Command pattern** for `runtime/cli.py` routing and ensuring each subcommand implements a `run()` style function.
 - **Monolith decomposition** documented in `doctor_checks` submodules to keep each health check self-contained (see ideas in the submodule GAPS).
 - **Flow-based docking** described in the subdocs to ensure repair, doctor, and prompt flows expose explicit hooks for health observers.
 
 Anti-pattern guardrails:
 - **God objects** are avoided by splitting `doctor_checks` into `core`, `metadata`, and `reference` helpers as noted in the core doc chain.
-- **Premature optimization**: new limits go into the config file (in `.mind-mcp/`) only when validated by DOC_TEMPLATE_DRIFT insights.
+- **Premature optimization**: new limits go into the config file (in `.mind/`) only when validated by DOC_TEMPLATE_DRIFT insights.
 
 Boundaries:
 | Boundary | Inside | Outside | Interface |
 |----------|--------|---------|-----------|
-| Health checks | `mind/doctor.py` plus `mind/doctor_checks_*` modules | CLI routing logic | `run_doctor()` |
-| Repair agents | `mind/repair.py` plus `mind/repair_core.py` and instruction modules | CLI routing logic | `run_repair()` |
-| Prompt provisioning | `mind/prompt.py` | command parsing | `print_bootstrap_prompt()` |
+| Health checks | `runtime/doctor.py` plus `runtime/doctor_checks_*` modules | CLI routing logic | `run_doctor()` |
+| Repair agents | `runtime/repair.py` plus `runtime/repair_core.py` and instruction modules | CLI routing logic | `run_repair()` |
+| Prompt provisioning | `runtime/prompt.py` | command parsing | `print_bootstrap_prompt()` |
 
 ---
 
@@ -109,13 +109,13 @@ DoctorIssue:
 
 | Entry Point | File:Line | Triggered By |
 |-------------|-----------|--------------|
-| `main()` | `mind/cli.py:42` | `mind` command |
-| `init_protocol()` | `mind/init_cmd.py:10` | `mind init` |
-| `validate_protocol()` | `mind/validate.py:667` | `mind validate` |
-| `run_doctor()` | `mind/doctor.py:127` | `mind doctor` |
-| `run_repair()` | `mind/repair.py:970` | `mind work` |
-| `print_bootstrap_prompt()` | `mind/prompt.py:30` | `mind prompt` |
-| `generate_repo_overview()` | `mind/repo_overview.py:12` | `mind repo-overview` |
+| `main()` | `runtime/cli.py:42` | `mind` command |
+| `init_protocol()` | `runtime/init_cmd.py:10` | `mind init` |
+| `validate_protocol()` | `runtime/validate.py:667` | `mind validate` |
+| `run_doctor()` | `runtime/doctor.py:127` | `mind doctor` |
+| `run_repair()` | `runtime/repair.py:970` | `mind work` |
+| `print_bootstrap_prompt()` | `runtime/prompt.py:30` | `mind prompt` |
+| `generate_repo_overview()` | `runtime/repo_overview.py:12` | `mind repo-overview` |
 
 ---
 
@@ -163,7 +163,7 @@ flow:
       - id: doc_sync
         type: file
         direction: output
-        file: ...mind-mcp/state/SYNC_Project_Health.md
+        file: ...mind/state/SYNC_Project_Health.md
         function: doctor_runner
         trigger: after doctor finishes
         payload: JSON
@@ -184,7 +184,7 @@ flow:
 
 ### Health Check Flow: doctor → checks → reports
 
-Purpose: orchestrate the health analysis pipeline, ensuring each step updates `.mind-mcp/state` and surfaces doc-link integrity.
+Purpose: orchestrate the health analysis pipeline, ensuring each step updates `.mind/state` and surfaces doc-link integrity.
 
 ```yaml
 flow:
@@ -196,13 +196,13 @@ flow:
       description: gather module mappings, sync files, and config to seed the checks
       file: mind/context.py
       function: get_module_context
-      input: modules.yaml, docs/, ...mind-mcp/state/
+      input: modules.yaml, docs/, ...mind/state/
       output: context bundle
       trigger: start of doctor run
       side_effects: none
     - id: run_checks
       description: execute each `doctor_check_*` function to collect issues
-      file: mind/doctor_checks_core.py
+      file: runtime/doctor_checks_core.py
       function: doctor_check_bundle
       input: context bundle
       output: list of DoctorIssue
@@ -210,10 +210,10 @@ flow:
       side_effects: may log intermediate signals
     - id: render_report
       description: aggregate issues into markdown/JSON for CLI output and STATE files
-      file: mind/doctor_report.py
+      file: runtime/doctor_report.py
       function: generate_health_markdown
       input: list of DoctorIssue
-      output: Markdown + JSON + ...mind-mcp/state/SYNC_Project_Health.md
+      output: Markdown + JSON + ...mind/state/SYNC_Project_Health.md
       trigger: after checks complete
       side_effects: writes health state
 ```
@@ -230,7 +230,7 @@ flow:
 sys.argv
   → mind/cli.py.dispatch_command()
     → {doctor.run_doctor() | repair.run_repair() | prompt.print_bootstrap_prompt()}
-      → health artifacts (.mind-mcp/state, docs, reports)
+      → health artifacts (.mind/state, docs, reports)
 ```
 
 **Data transformation:**
@@ -244,8 +244,8 @@ sys.argv
 
 ```
 DoctorIssue list
-  → mind/doctor_report.py.generate_health_markdown()
-    → markdown + JSON + .mind-mcp/state reports
+  → runtime/doctor_report.py.generate_health_markdown()
+    → markdown + JSON + .mind/state reports
 ```
 
 ---
@@ -258,7 +258,7 @@ DoctorIssue list
 mind/cli.py
   └── imports → doctor.py, repair.py, mind/prompt.py, core_utils.py
 doctor.py
-  └── imports → doctor_checks_core.py, mind/doctor_checks_metadata.py, doctor_report.py
+  └── imports → doctor_checks_core.py, runtime/doctor_checks_metadata.py, doctor_report.py
 repair.py
   └── imports → repair_core.py, repair_instructions_docs.py, agent_cli.py
 ```
@@ -267,11 +267,11 @@ repair.py
 
 | Package | Used For | Imported By |
 |---------|----------|-------------|
-| `argparse` | CLI parsing | `mind/cli.py` |
-| `json` | State/output serialization | `mind/core_utils.py` |
-| `yaml` | Template loading/config | `mind/context.py`, `mind/init_cmd.py` |
+| `argparse` | CLI parsing | `runtime/cli.py` |
+| `json` | State/output serialization | `runtime/core_utils.py` |
+| `yaml` | Template loading/config | `runtime/context.py`, `runtime/init_cmd.py` |
 
-Repair agent threading relies on a thread pool inside `mind/repair.py` so subprocess output is serialized while checks continue.
+Repair agent threading relies on a thread pool inside `runtime/repair.py` so subprocess output is serialized while checks continue.
 
 ---
 
@@ -279,10 +279,10 @@ Repair agent threading relies on a thread pool inside `mind/repair.py` so subpro
 
 | State | Location | Scope | Lifecycle |
 |-------|----------|-------|-----------|
-| Health report | `...mind-mcp/state/SYNC_Project_Health.md` | project | overwritten each `mind doctor` |
+| Health report | `...mind/state/SYNC_Project_Health.md` | project | overwritten each `mind doctor` |
 | Doc templates | `docs/` | project | updated when templates change |
 | Module map | `modules.yaml` | project | edited when modules move |
-| Repair results | `...mind-mcp/state/repair_results/` (future) | per run | appended per repair |
+| Repair results | `...mind/state/repair_results/` (future) | per run | appended per repair |
 
 State transitions:
 
@@ -315,7 +315,7 @@ raw CLI args ──> dispatch context ──> command execution ──> issue ar
 
 ```
 1. Flush logs/reports
-2. Save final state (.mind-mcp/state)
+2. Save final state (.mind/state)
 3. Exit with code
 ```
 
@@ -335,10 +335,10 @@ raw CLI args ──> dispatch context ──> command execution ──> issue ar
 
 | Config | Location | Default | Description |
 |--------|----------|---------|-------------|
-| `monolith_lines` | config file (in `.mind-mcp/`) | `500` | When to split files before checking |
-| `stale_sync_days` | config file (in `.mind-mcp/`) | `14` | Stale SYNC threshold before warning |
-| `disabled_checks` | config file (in `.mind-mcp/`) | `[]` | Doctor checks to skip |
-| `svg_namespace` | config file (in `.mind-mcp/`) | `http://www.w3.org/2000/svg` | Namespace for project map exports |
+| `monolith_lines` | config file (in `.mind/`) | `500` | When to split files before checking |
+| `stale_sync_days` | config file (in `.mind/`) | `14` | Stale SYNC threshold before warning |
+| `disabled_checks` | config file (in `.mind/`) | `[]` | Doctor checks to skip |
+| `svg_namespace` | config file (in `.mind/`) | `http://www.w3.org/2000/svg` | Namespace for project map exports |
 
 ---
 
@@ -348,15 +348,15 @@ raw CLI args ──> dispatch context ──> command execution ──> issue ar
 
 | File | Line | Reference |
 |------|------|-----------|
-| `mind/cli.py` | ~40 | `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md` |
-| `mind/doctor.py` | ~120 | `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/overview/IMPLEMENTATION_Overview.md` |
+| `runtime/cli.py` | ~40 | `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md` |
+| `runtime/doctor.py` | ~120 | `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/overview/IMPLEMENTATION_Overview.md` |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| Command dispatch flow | `mind/cli.py::dispatch_command` |
-| Health runner | `mind/doctor.py::run_doctor` |
+| Command dispatch flow | `runtime/cli.py::dispatch_command` |
+| Health runner | `runtime/doctor.py::run_doctor` |
 
 ---
 
@@ -366,13 +366,13 @@ raw CLI args ──> dispatch context ──> command execution ──> issue ar
 
 | File | Current | Target | Extract To | Notes |
 |------|---------|--------|------------|-------|
-| `mind/doctor_checks_core.py` | ~800L | <400L | `mind/doctor_checks_metadata.py` | Completed split but watch for growth |
-| `mind/repair.py` | ~1200L | <700L | `mind/repair_core.py` | Agent orchestration still heavy |
+| `runtime/doctor_checks_core.py` | ~800L | <400L | `runtime/doctor_checks_metadata.py` | Completed split but watch for growth |
+| `runtime/repair.py` | ~1200L | <700L | `runtime/repair_core.py` | Agent orchestration still heavy |
 
 ### Missing Implementation
 
-<!-- @mind:todo Add DOCS pointers to `mind/prompt.py` and `mind/doctor_checks_*` in each submodule. -->
-<!-- @mind:todo Ensure `mind/repair.py` writes to `...mind-mcp/state/repair_results/` (future work). -->
+<!-- @mind:todo Add DOCS pointers to `runtime/prompt.py` and `runtime/doctor_checks_*` in each submodule. -->
+<!-- @mind:todo Ensure `runtime/repair.py` writes to `...mind/state/repair_results/` (future work). -->
 
 ### Ideas
 
@@ -381,5 +381,5 @@ raw CLI args ──> dispatch context ──> command execution ──> issue ar
 
 ### Questions
 
-<!-- @mind:escalation Should `mind/doctor_files.py` be split further or removed once new discovery helpers cover the same ground? -->
+<!-- @mind:escalation Should `runtime/doctor_files.py` be split further or removed once new discovery helpers cover the same ground? -->
 <!-- @mind:escalation How do we keep `modules.yaml` in sync when new CLI commands land? -->

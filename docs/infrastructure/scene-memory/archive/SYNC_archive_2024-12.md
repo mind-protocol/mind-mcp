@@ -45,8 +45,8 @@ tracking legacy intent or reading historical context.
 
 The active system is the Moment Graph architecture. For current behavior and
 implementation, use:
-- `docs/mind/moments/`
-- `docs/mind/moment-graph-mind/`
+- `docs/runtime/moments/`
+- `docs/runtime/moment-graph-mind/`
 - `docs/physics/` (moment graph wiring and graph ops)
 
 ===============================================================================

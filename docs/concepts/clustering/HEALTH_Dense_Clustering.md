@@ -166,22 +166,22 @@ def check_upsert_stability(doc_path):
 
 | Dock | URI | Line | Direction |
 |------|-----|------|-----------|
-| doc_files | `mind/doc_extractor.py::DocExtractor.extract` | — | input |
-| yaml_parser | `mind/doc_extractor.py::_extract_yaml_blocks` | — | input |
-| marker_parser | `mind/doc_extractor.py::_extract_markers` | — | input |
+| doc_files | `runtime/doc_extractor.py::DocExtractor.extract` | — | input |
+| yaml_parser | `runtime/doc_extractor.py::_extract_yaml_blocks` | — | input |
+| marker_parser | `runtime/doc_extractor.py::_extract_markers` | — | input |
 
 ### Output Docks
 
 | Dock | URI | Line | Direction |
 |------|-----|------|-----------|
-| cluster_result | `mind/cluster_builder.py::ClusterBuilder.build_cluster` | — | output |
-| upsert_stats | `mind/cluster_builder.py::ClusterBuilder.upsert` | — | output |
+| cluster_result | `runtime/cluster_builder.py::ClusterBuilder.build_cluster` | — | output |
+| upsert_stats | `runtime/cluster_builder.py::ClusterBuilder.upsert` | — | output |
 
 ## Checkers
 
 | Checker | Status | Priority | Implementation |
 |---------|--------|----------|----------------|
-| cluster_health_check | PENDING | HIGH | `mind/cluster_health.py::check_all` |
+| cluster_health_check | PENDING | HIGH | `runtime/cluster_health.py::check_all` |
 | cluster_coverage_query | PENDING | MED | Graph query in doctor |
 | cluster_stability_test | PENDING | HIGH | `tests/test_cluster_stability.py` |
 

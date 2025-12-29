@@ -17,7 +17,7 @@ IMPLEMENTATION: ./IMPLEMENTATION_Moment_Graph_Stub.md
 TEST:           ./TEST_Moment_Graph_Coverage.md
 SYNC:           ./SYNC_Moments.md
 THIS:           VALIDATION_Moment_Graph_Invariants.md (you are here)
-IMPL:           mind/moments/__init__.py
+IMPL:           runtime/moments/__init__.py
 ```
 
 ---

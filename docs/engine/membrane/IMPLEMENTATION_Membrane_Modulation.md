@@ -20,10 +20,10 @@ THIS:            IMPLEMENTATION_Membrane_Modulation.md (you are here)
 HEALTH:          ./HEALTH_Membrane_Modulation.md
 SYNC:            ./SYNC_Membrane_Modulation.md
 
-IMPL (planned):  mind/membrane/*
-IMPL (planned):  mind/moment_graph/queries.py
-IMPL (planned):  mind/moment_graph/traversal.py
-IMPL (planned):  mind/moment_graph/surface.py
+IMPL (planned):  runtime/membrane/*
+IMPL (planned):  runtime/moment_graph/queries.py
+IMPL (planned):  runtime/moment_graph/traversal.py
+IMPL (planned):  runtime/moment_graph/surface.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -43,10 +43,10 @@ inside traversal/surfacing without canon writes.
 ## CODE STRUCTURE (PLANNED)
 
 ```
-mind/membrane/frame.py      # ModulationFrame dataclass
-mind/membrane/provider.py   # Place-scoped cache + retrieval
-mind/membrane/functions.py  # Dynamic modulation functions (O(1))
-mind/membrane/compute.py    # Aggregate-to-frame computation (no hot path)
+runtime/membrane/frame.py      # ModulationFrame dataclass
+runtime/membrane/provider.py   # Place-scoped cache + retrieval
+runtime/membrane/functions.py  # Dynamic modulation functions (O(1))
+runtime/membrane/compute.py    # Aggregate-to-frame computation (no hot path)
 ```
 
 ---
@@ -55,10 +55,10 @@ mind/membrane/compute.py    # Aggregate-to-frame computation (no hot path)
 
 | Entry Point | File | Triggered By |
 |-------------|------|--------------|
-| Compute frame | `mind/moment_graph/queries.py` | view build / scene query |
-| Read frame | `mind/moment_graph/traversal.py` | click/wait traversal |
-| Read frame | `mind/moment_graph/surface.py` | surfacing + decay |
-| Reset scope | `mind/moment_graph/surface.py` | scene change |
+| Compute frame | `runtime/moment_graph/queries.py` | view build / scene query |
+| Read frame | `runtime/moment_graph/traversal.py` | click/wait traversal |
+| Read frame | `runtime/moment_graph/surface.py` | surfacing + decay |
+| Reset scope | `runtime/moment_graph/surface.py` | scene change |
 
 ---
 

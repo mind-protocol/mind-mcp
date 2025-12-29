@@ -17,7 +17,7 @@ VALIDATION:      ./VALIDATION_Database_Adapter.md (pending)
 IMPLEMENTATION:  ./IMPLEMENTATION_Database_Adapter.md (pending)
 SYNC:            ./SYNC_Database_Adapter.md
 
-IMPL:            mind/physics/graph/adapters/
+IMPL:            runtime/physics/graph/adapters/
 ```
 
 ### Bidirectional Contract
@@ -42,17 +42,17 @@ The codebase is currently tightly coupled to FalkorDB. Every graph operation imp
 3. **Support hybrid deployments** — Some environments may need Neo4j (enterprise), others FalkorDB (lightweight)
 
 ### Current Coupling (14 files with direct FalkorDB imports):
-- `mind/physics/graph/graph_ops.py`
-- `mind/physics/graph/graph_queries.py`
-- `mind/physics/graph/graph_ops_read_only_interface.py`
-- `mind/infrastructure/api/graphs.py`
-- `mind/graph/health/test_schema.py`
-- `mind/graph/health/lint_terminology.py`
-- `mind/migrations/migrate_to_content_field.py`
-- `mind/migrations/migrate_temporal_v171.py`
-- `mind/migrations/migrate_to_v2_schema.py`
-- `mind/migrations/migrate_tick_to_tick_created.py`
-- `mind/migrations/migrate_001_schema_alignment.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/physics/graph/graph_queries.py`
+- `runtime/physics/graph/graph_ops_read_only_interface.py`
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/graph/health/test_schema.py`
+- `runtime/graph/health/lint_terminology.py`
+- `runtime/migrations/migrate_to_content_field.py`
+- `runtime/migrations/migrate_temporal_v171.py`
+- `runtime/migrations/migrate_to_v2_schema.py`
+- `runtime/migrations/migrate_tick_to_tick_created.py`
+- `runtime/migrations/migrate_001_schema_alignment.py`
 - `app/api/connectome/tick/route.ts` (via API calls)
 
 ### Secondary Coupling (82 files with `.graph.` / `self.graph` patterns):
@@ -67,7 +67,7 @@ Files that use the graph instance but don't directly import FalkorDB. These will
 1. **GraphClient Protocol** (already exists in `graph_interface.py`) defines the contract
 2. **Adapter implementations** satisfy the protocol for each backend
 3. **Factory function** creates the appropriate adapter based on configuration
-4. **Configuration** lives in project config (e.g., `mind/data/physics_config.yaml`)
+4. **Configuration** lives in project config (e.g., `runtime/data/physics_config.yaml`)
 
 ```
                     ┌─────────────────────┐
@@ -161,8 +161,8 @@ database:
 
 | Module | Why We Depend On It |
 |--------|---------------------|
-| `mind/physics/graph/graph_interface.py` | GraphClient Protocol definition |
-| `mind/data/physics_config.yaml` | Configuration for backend selection |
+| `runtime/physics/graph/graph_interface.py` | GraphClient Protocol definition |
+| `runtime/data/physics_config.yaml` | Configuration for backend selection |
 
 ---
 
@@ -189,39 +189,39 @@ database:
 
 | File | Change Required |
 |------|-----------------|
-| **NEW** `mind/physics/graph/adapters/__init__.py` | Adapter factory and base classes |
-| **NEW** `mind/physics/graph/adapters/base.py` | `GraphAdapter` abstract base class |
-| **NEW** `mind/physics/graph/adapters/falkordb_adapter.py` | FalkorDB implementation |
-| **NEW** `mind/physics/graph/adapters/neo4j_adapter.py` | Neo4j implementation |
-| **NEW** `mind/physics/graph/adapters/mock_adapter.py` | In-memory mock for testing |
-| `mind/data/physics_config.yaml` | Add `database` section |
+| **NEW** `runtime/physics/graph/adapters/__init__.py` | Adapter factory and base classes |
+| **NEW** `runtime/physics/graph/adapters/base.py` | `GraphAdapter` abstract base class |
+| **NEW** `runtime/physics/graph/adapters/falkordb_adapter.py` | FalkorDB implementation |
+| **NEW** `runtime/physics/graph/adapters/neo4j_adapter.py` | Neo4j implementation |
+| **NEW** `runtime/physics/graph/adapters/mock_adapter.py` | In-memory mock for testing |
+| `runtime/data/physics_config.yaml` | Add `database` section |
 
 ### Phase 2: Core Classes Refactor (Priority: HIGH)
 
 | File | Change Required |
 |------|-----------------|
-| `mind/physics/graph/graph_queries.py` | Accept adapter via injection, remove FalkorDB import |
-| `mind/physics/graph/graph_ops.py` | Accept adapter via injection, remove FalkorDB import |
-| `mind/physics/graph/graph_ops_read_only_interface.py` | Use adapter factory |
+| `runtime/physics/graph/graph_queries.py` | Accept adapter via injection, remove FalkorDB import |
+| `runtime/physics/graph/graph_ops.py` | Accept adapter via injection, remove FalkorDB import |
+| `runtime/physics/graph/graph_ops_read_only_interface.py` | Use adapter factory |
 
 ### Phase 3: Infrastructure Updates (Priority: MEDIUM)
 
 | File | Change Required |
 |------|-----------------|
-| `mind/infrastructure/api/graphs.py` | Use adapter factory |
-| `mind/init_db.py` | Use adapter factory |
-| `mind/graph/health/test_schema.py` | Use adapter factory |
-| `mind/graph/health/lint_terminology.py` | Use adapter factory |
+| `runtime/infrastructure/api/graphs.py` | Use adapter factory |
+| `runtime/init_db.py` | Use adapter factory |
+| `runtime/graph/health/test_schema.py` | Use adapter factory |
+| `runtime/graph/health/lint_terminology.py` | Use adapter factory |
 
 ### Phase 4: Migration Scripts (Priority: LOW)
 
 | File | Change Required |
 |------|-----------------|
-| `mind/migrations/migrate_to_content_field.py` | Use adapter factory |
-| `mind/migrations/migrate_temporal_v171.py` | Use adapter factory |
-| `mind/migrations/migrate_to_v2_schema.py` | Use adapter factory |
-| `mind/migrations/migrate_tick_to_tick_created.py` | Use adapter factory |
-| `mind/migrations/migrate_001_schema_alignment.py` | Use adapter factory |
+| `runtime/migrations/migrate_to_content_field.py` | Use adapter factory |
+| `runtime/migrations/migrate_temporal_v171.py` | Use adapter factory |
+| `runtime/migrations/migrate_to_v2_schema.py` | Use adapter factory |
+| `runtime/migrations/migrate_tick_to_tick_created.py` | Use adapter factory |
+| `runtime/migrations/migrate_001_schema_alignment.py` | Use adapter factory |
 
 ### Phase 5: Result Format Normalization
 
@@ -254,7 +254,7 @@ Both FalkorDB and Neo4j use Cypher, but there are minor differences:
 
 ## MARKERS
 
-<!-- @mind:todo Create mind/physics/graph/adapters/ directory structure -->
+<!-- @mind:todo Create runtime/physics/graph/adapters/ directory structure -->
 <!-- @mind:todo Implement FalkorDBAdapter with current functionality -->
 <!-- @mind:todo Implement Neo4jAdapter with equivalent functionality -->
 <!-- @mind:todo Add database config section to physics_config.yaml -->

@@ -48,14 +48,14 @@ This archive captures the detailed recent changes that were previously embedded 
 
 ### 2025-12-20: Physics tick energy helpers verified
 
-- **What:** Verified `_flow_energy_to_narratives`, `_propagate_energy`, `_decay_energy`, and `_update_narrative_weights` in `mind/physics/tick.py` already contain concrete implementations.
+- **What:** Verified `_flow_energy_to_narratives`, `_propagate_energy`, `_decay_energy`, and `_update_narrative_weights` in `runtime/physics/tick.py` already contain concrete implementations.
 - **Why:** Repair #16 flagged these helpers as empty; confirmed they are implemented and align with the physics algorithm.
 - **Impact:** No code changes required; verification recorded to prevent repeat repairs.
 - **Repair run:** `18-INCOMPLETE_IMPL-physics-tick`.
 
 ### 2025-12-21: Snap display rules + cluster monitor health checks
 
-- **What:** Introduced `mind/physics/display_snap_transition_checker.py` and `mind/physics/cluster_energy_monitor.py` plus targeted tests so the documented Snap phases and large-cluster energy totals are asserted automatically.
+- **What:** Introduced `runtime/physics/display_snap_transition_checker.py` and `runtime/physics/cluster_energy_monitor.py` plus targeted tests so the documented Snap phases and large-cluster energy totals are asserted automatically.
 - **Why:** Lock The Snap transition in the health suite and keep real-time watch over energy spikes inside dense clusters before they destabilize the living graph.
 - **Impact:** Health documentation now lists dedicated checkers, algorithm docs point to the new modules, and the sync reflects the removal of the open gaps.
 - **Verification:** `pytest mind/tests/test_physics_display_snap.py mind/tests/test_cluster_energy_monitor.py`.

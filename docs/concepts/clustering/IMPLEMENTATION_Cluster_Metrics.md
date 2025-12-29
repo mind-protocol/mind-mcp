@@ -12,9 +12,9 @@ The cluster metrics system provides three capabilities for ensuring dense, well-
 
 | Component | File | Purpose |
 |-----------|------|---------|
-| ClusterMetrics | `mind/cluster_metrics.py` | Main metrics class |
-| ClusterValidator | `mind/cluster_metrics.py` | Combined validation |
-| Protocol Integration | `mind/protocol_runner.py` | Auto-validation after create |
+| ClusterMetrics | `runtime/cluster_metrics.py` | Main metrics class |
+| ClusterValidator | `runtime/cluster_metrics.py` | Combined validation |
+| Protocol Integration | `runtime/protocol_runner.py` | Auto-validation after create |
 
 ## Core Classes
 
@@ -309,5 +309,5 @@ Validation rules differ by type. Health indicators need exactly 2 docks. Validat
 ## Related
 
 - `SKILL_Add_Cluster_Dynamic_Creation.md` - Full specification
-- `mind/protocol_validator.py` - Cluster template validation
-- `mind/protocol_runner.py` - Protocol execution with metrics
+- `runtime/protocol_validator.py` - Cluster template validation
+- `runtime/protocol_runner.py` - Protocol execution with metrics

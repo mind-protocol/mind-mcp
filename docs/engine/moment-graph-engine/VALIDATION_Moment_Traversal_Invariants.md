@@ -17,7 +17,7 @@ IMPLEMENTATION:  ./IMPLEMENTATION_Moment_Graph_Runtime_Layout.md
 TEST:            ./TEST_Moment_Graph_Runtime_Coverage.md
 SYNC:            ./SYNC_Moment_Graph_Engine.md
 THIS:            VALIDATION_Moment_Traversal_Invariants.md (you are here)
-IMPL:            ../../../mind/moment_graph/traversal.py
+IMPL:            ../../../runtime/moment_graph/traversal.py
 ```
 
 ===============================================================================

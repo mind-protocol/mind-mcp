@@ -115,7 +115,7 @@ mind-mcp/
 ├── tests/
 ├── pyproject.toml
 ├── README.md
-└── .mind-mcp/                         # Template config
+└── .mind/                             # Template config
 ```
 
 ### mind-protocol (open source — VERIFIABLE)

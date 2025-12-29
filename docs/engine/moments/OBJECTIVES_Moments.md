@@ -62,7 +62,7 @@ Define what the moment graph module optimizes for, ranked by priority. These obj
 
 ### O3: Single Module Owner (Critical)
 
-**What we optimize:** All moment-graph logic lives in mind/moments/.
+**What we optimize:** All moment-graph logic lives in runtime/moments/.
 
 **Why it matters:** Scattered ownership leads to inconsistent behavior, duplicate bugs, and unclear responsibility. Callers integrate with one module.
 
@@ -71,7 +71,7 @@ Define what the moment graph module optimizes for, ranked by priority. These obj
 - Clear APIs required at boundaries
 - Other modules cannot "shortcut" around this one
 
-**Measure:** No moment lifecycle code outside mind/moments/.
+**Measure:** No moment lifecycle code outside runtime/moments/.
 
 ---
 

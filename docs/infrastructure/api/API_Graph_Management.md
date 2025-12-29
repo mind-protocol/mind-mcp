@@ -1,7 +1,7 @@
 # Graph Management API
 
 ```
-DOCS: mind/infrastructure/api/graphs.py
+DOCS: runtime/infrastructure/api/graphs.py
 STATUS: IMPLEMENTED
 UPDATED: 2025-12-22
 ```
@@ -188,7 +188,7 @@ Template graphs:
 
 | Current Location | New Location | Notes |
 |------------------|--------------|-------|
-| `mind/infrastructure/api/playthroughs.py` | blood-ledger | All playthrough logic |
+| `runtime/infrastructure/api/playthroughs.py` | blood-ledger | All playthrough logic |
 | `get_playthrough_graph_name()` | blood-ledger | Naming is game-specific |
 | Scenario loading in orchestrator | blood-ledger | Game content |
 | `opening.json` templates | blood-ledger | Game content |
@@ -203,7 +203,7 @@ Template graphs:
 
 ## Status
 
-All endpoints implemented in `mind/infrastructure/api/graphs.py`:
+All endpoints implemented in `runtime/infrastructure/api/graphs.py`:
 - [x] `POST /api/graph/create` with clone support
 - [x] `DELETE /api/graph/{name}`
 - [x] `GET /api/graph/{name}` (info)

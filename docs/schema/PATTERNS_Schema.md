@@ -75,7 +75,7 @@ contains_space-module-engine_TO_narrative-issue-a7
 - Dashes within sections, underscores between: Clear visual separation
 - Short hash: 2 chars = 256 buckets, sufficient collision safety
 
-**Auto-generation:** Systems creating nodes MUST use this convention. See `mind/doctor_graph.py` for `generate_*_id()` functions.
+**Auto-generation:** Systems creating nodes MUST use this convention. See `runtime/doctor_graph.py` for `generate_*_id()` functions.
 
 ### 4. Two Physics Fields
 
