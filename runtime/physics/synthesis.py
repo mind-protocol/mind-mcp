@@ -619,3 +619,134 @@ def synthesize_from_crystallization(
     content = synthesize_narrative_content(content_tuples, intention_text, path_summary)
 
     return name, content
+
+
+# =============================================================================
+# NODE SYNTHESIS
+# =============================================================================
+
+NODE_ENERGY_STATES = {
+    'actor': {
+        (8.0, float('inf')): 'intensely present',
+        (6.0, 8.0): 'very active',
+        (0.0, 1.0): 'withdrawn',
+    },
+    'space': {
+        (6.0, float('inf')): 'charged',
+        (0.0, 2.0): 'calm',
+    },
+    'thing': {
+        (6.0, float('inf')): 'burning',
+        (0.0, 2.0): 'dormant',
+    },
+    'narrative': {
+        (8.0, float('inf')): 'incandescent',
+        (6.0, 8.0): 'burning',
+        (4.0, 6.0): 'active',
+        (0.0, 2.0): 'latent',
+    },
+    'moment': {
+        (8.0, float('inf')): 'incandescent',
+        (6.0, 8.0): 'burning',
+    },
+}
+
+
+def _get_energy_state(energy: float, node_type: str) -> Optional[str]:
+    """Get energy state modifier for node type."""
+    states = NODE_ENERGY_STATES.get(node_type, {})
+    for (low, high), state in states.items():
+        if low <= energy < high:
+            return state
+    return None
+
+
+def _get_importance(weight: float) -> Optional[str]:
+    """Get importance modifier from weight."""
+    if weight > 5.0:
+        return '(central)'
+    elif weight > 3.0:
+        return '(important)'
+    elif weight < 1.0:
+        return '(minor)'
+    return None
+
+
+def synthesize_node(node: Dict[str, Any]) -> str:
+    """
+    Generate natural language synthesis for a node from its physics state.
+
+    Format: "name, energy_state (importance)"
+    Example: "Edmund, intensely present (central)"
+
+    Args:
+        node: Dict with name, energy, weight, node_type/label
+
+    Returns:
+        Natural language synthesis
+    """
+    name = node.get("name", "")
+    node_id = node.get("id", "")
+    energy = node.get("energy", 0.0)
+    weight = node.get("weight", 1.0)
+
+    # Determine node type
+    node_type = node.get("node_type")
+    if not node_type:
+        node_type = node.get("label", "").lower()
+    if not node_type and node_id and ":" in node_id:
+        node_type = node_id.split(":")[0]
+    node_type = node_type or "thing"
+
+    # Get name from id if not provided
+    if not name and node_id:
+        name = node_id.split(":")[-1].replace("_", " ")
+
+    parts = [name.capitalize() if name and len(name) > 2 else name or node_id]
+
+    # Energy state
+    energy_state = _get_energy_state(energy, node_type)
+    if energy_state:
+        parts.append(energy_state)
+
+    # Importance
+    importance = _get_importance(weight)
+    if importance:
+        parts.append(importance)
+
+    return ", ".join(parts)
+
+
+def synthesize_link_full(link: Dict[str, Any], from_node: Dict[str, Any] = None, to_node: Dict[str, Any] = None) -> str:
+    """
+    Generate full synthesis for a link including node names.
+
+    Format: "from_name verb to_name, with modifiers"
+    Example: "Edmund definitely influences the King, with confidence"
+
+    Args:
+        link: Link dict with physics fields
+        from_node: Optional source node dict (for name)
+        to_node: Optional target node dict (for name)
+
+    Returns:
+        Full natural language synthesis
+    """
+    # Get names
+    from_id = link.get("from", link.get("node_a", ""))
+    to_id = link.get("to", link.get("node_b", ""))
+
+    if from_node:
+        from_name = from_node.get("name", from_id.split(":")[-1] if ":" in from_id else from_id)
+    else:
+        from_name = from_id.split(":")[-1].replace("_", " ") if ":" in from_id else from_id
+
+    if to_node:
+        to_name = to_node.get("name", to_id.split(":")[-1] if ":" in to_id else to_id)
+    else:
+        to_name = to_id.split(":")[-1].replace("_", " ") if ":" in to_id else to_id
+
+    # Get verb synthesis
+    verb_synthesis = synthesize_from_dict(link)
+
+    return f"{from_name} {verb_synthesis} {to_name}"

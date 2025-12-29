@@ -1256,17 +1256,17 @@ class SymbolExtractor:
         return errors
 
     def _upsert_symbol(self, symbol: ExtractedSymbol) -> None:
-        """Upsert a symbol node to the graph."""
-        # Map type to label
-        label = "Thing"  # All symbols are things
+        """Upsert a symbol node to the graph using unified inject()."""
+        from runtime.inject import inject
 
         # Build properties dict
         props = {
             'id': symbol.id,
+            'label': 'Thing',  # All symbols are things
             'node_type': symbol.node_type,
             'type': symbol.type,
             'name': symbol.name,
-            'description': symbol.description,
+            'content': symbol.description,  # description -> content for synthesis
             'uri': symbol.uri,
             'weight': symbol.weight,
             'energy': symbol.energy,
@@ -1304,39 +1304,33 @@ class SymbolExtractor:
                 'value_type': symbol.value_type,
             })
 
-        # Build MERGE query
-        props_str = ", ".join(f"{k}: ${k}" for k in props.keys())
-        query = f"MERGE (n:{label} {{id: $id}}) SET n += {{{props_str}}} RETURN n.id"
-
-        self.graph_ops._query(query, props)
+        # Use canonical inject (no context - bulk extraction operation)
+        adapter = self.graph_ops._adapter
+        inject(adapter, props, with_context=False)
 
     def _upsert_link(self, link: ExtractedLink) -> None:
-        """Upsert a link to the graph."""
-        rel_type = link.type.upper()
+        """Upsert a link to the graph using unified inject()."""
+        from runtime.inject import inject
 
-        props = {
+        # Build link data for inject
+        link_data = {
+            'from': link.node_a,
+            'to': link.node_b,
+            'verb': link.type.lower(),
             'weight': link.weight,
             'energy': link.energy,
         }
 
         if link.direction:
-            props['direction'] = link.direction
+            link_data['direction'] = link.direction
         if link.call_count:
-            props['call_count'] = link.call_count
+            link_data['call_count'] = link.call_count
         if link.import_type:
-            props['import_type'] = link.import_type
+            link_data['import_type'] = link.import_type
 
-        props_str = ", ".join(f"{k}: ${k}" for k in props.keys())
-        query = f"""
-        MATCH (a {{id: $node_a}})
-        MATCH (b {{id: $node_b}})
-        MERGE (a)-[r:{rel_type}]->(b)
-        SET r += {{{props_str}}}
-        RETURN type(r)
-        """
-
-        params = {'node_a': link.node_a, 'node_b': link.node_b, **props}
-        self.graph_ops._query(query, params)
+        # Use canonical inject (no context - bulk extraction operation)
+        adapter = self.graph_ops._adapter
+        inject(adapter, link_data, with_context=False)
 
 
 # =============================================================================

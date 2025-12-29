@@ -919,55 +919,8 @@ class ProtocolRunner:
         except:
             return []
 
-    def _generate_node_embedding(self, props: Dict) -> Optional[List[float]]:
-        """Generate embedding for a node based on its content."""
-        try:
-            from runtime.infrastructure.embeddings.service import get_embedding_service
-            embed_service = get_embedding_service()
-        except ImportError:
-            return None
-
-        # Build embeddable text from node properties
-        parts = []
-        if props.get('name'):
-            parts.append(props['name'])
-        if props.get('description'):
-            parts.append(props['description'])
-        if props.get('content'):
-            parts.append(str(props['content'])[:500])
-        if props.get('uri'):
-            parts.append(f"file: {props['uri']}")
-
-        text = '. '.join(p for p in parts if p)
-        if not text:
-            return None
-
-        return embed_service.embed(text)
-
-    def _generate_link_embedding(self, from_node: Dict, to_node: Dict, props: Dict) -> Optional[List[float]]:
-        """Generate embedding for a link based on connected nodes."""
-        try:
-            from runtime.infrastructure.embeddings.service import get_embedding_service
-            embed_service = get_embedding_service()
-        except ImportError:
-            return None
-
-        # Build embeddable text from link and connected nodes
-        from_name = from_node.get('name', from_node.get('id', ''))
-        to_name = to_node.get('name', to_node.get('id', ''))
-        link_name = props.get('name', props.get('type', 'relates'))
-
-        parts = [f"{from_name} {link_name} {to_name}"]
-        if props.get('description'):
-            parts.append(props['description'])
-        if props.get('role'):
-            parts.append(f"role: {props['role']}")
-
-        text = '. '.join(p for p in parts if p)
-        return embed_service.embed(text)
-
     def _upsert_node(self, props: Dict):
-        """MERGE a node into the graph with embedding generation."""
+        """MERGE a node into the graph using unified inject()."""
         if not self.graph:
             return
 
@@ -975,84 +928,28 @@ class ProtocolRunner:
         if not node_id:
             return
 
-        # Determine label from node_type
-        node_type = props.get('node_type', 'thing')
-        label = node_type.capitalize()
-
-        # Auto-generate description if missing
-        if not props.get('description'):
-            parts = [props.get('name', '')]
-            if props.get('content'):
-                parts.append(str(props['content'])[:200])
-            props['description'] = '. '.join(p for p in parts if p)
-
-        # Generate embedding for semantic search
-        embedding = self._generate_node_embedding(props)
-        if embedding:
-            props['embedding'] = embedding
-
-        props_items = {k: v for k, v in props.items() if v is not None}
-        set_clause = ", ".join(f"n.{k} = ${k}" for k in props_items.keys())
-
-        query = f"""
-        MERGE (n:{label} {{id: $id}})
-        SET {set_clause}
-        RETURN n.id
-        """
-
-        try:
-            self.graph._query(query, props_items)
-        except Exception as e:
-            logger.error(f"Failed to upsert node {node_id}: {e}")
-
-    def _find_node_by_id(self, node_id: str) -> Dict:
-        """Find node in created_nodes_full or return minimal dict with just id."""
-        for node in self.created_nodes_full:
-            if node.get('id') == node_id:
-                return node
-        return {'id': node_id}
+        # Use canonical inject (no context - procedure creates its own moments)
+        from runtime.inject import inject
+        adapter = self.graph._adapter
+        inject(adapter, props, with_context=False)
 
     def _upsert_link(self, from_id: str, to_id: str, rel_type: str, props: Dict):
-        """MERGE a link into the graph with embedding generation."""
+        """MERGE a link into the graph using unified inject()."""
         if not self.graph:
             return
 
-        rel_type_upper = rel_type.upper()
+        # Use canonical inject with verb from rel_type
+        from runtime.inject import inject
+        adapter = self.graph._adapter
 
-        # Generate embedding for the link
-        from_node = self._find_node_by_id(from_id)
-        to_node = self._find_node_by_id(to_id)
-        link_props = {'type': rel_type, **(props or {})}
-        embedding = self._generate_link_embedding(from_node, to_node, link_props)
+        link_data = {
+            "from": from_id,
+            "to": to_id,
+            "verb": rel_type.lower(),
+            **(props or {})
+        }
 
-        # Merge props with embedding
-        props_items = {k: v for k, v in (props or {}).items() if v is not None}
-        if embedding:
-            props_items['embedding'] = embedding
-
-        if props_items:
-            set_clause = ", ".join(f"r.{k} = ${k}" for k in props_items.keys())
-            query = f"""
-            MATCH (a {{id: $from_id}})
-            MATCH (b {{id: $to_id}})
-            MERGE (a)-[r:{rel_type_upper}]->(b)
-            SET {set_clause}
-            RETURN type(r)
-            """
-            params = {'from_id': from_id, 'to_id': to_id, **props_items}
-        else:
-            query = f"""
-            MATCH (a {{id: $from_id}})
-            MATCH (b {{id: $to_id}})
-            MERGE (a)-[r:{rel_type_upper}]->(b)
-            RETURN type(r)
-            """
-            params = {'from_id': from_id, 'to_id': to_id}
-
-        try:
-            self.graph._query(query, params)
-        except Exception as e:
-            logger.error(f"Failed to upsert link {from_id}->{to_id}: {e}")
+        inject(adapter, link_data, with_context=False)
 
     def _node_exists(self, node_id: str) -> bool:
         """Check if a node exists in the graph."""

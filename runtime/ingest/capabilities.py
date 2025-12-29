@@ -15,7 +15,7 @@ DOCS: docs/capabilities/PATTERNS_Capabilities.md
 
 import logging
 from pathlib import Path
-from typing import Dict, Any, List, Tuple, Optional
+from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +44,7 @@ def ingest_capabilities(
         Stats dict: {capabilities, nodes_changed, nodes_unchanged, links_created}
     """
     from ..infrastructure.database import get_database_adapter
+    from ..inject import inject
 
     capabilities_dir = target_dir / ".mind" / "capabilities"
     if not capabilities_dir.exists():
@@ -60,23 +61,30 @@ def ingest_capabilities(
     }
 
     # 1. Create root capabilities space
-    changed = _upsert_node(adapter, {
+    # with_context=False: init-time bulk load, not query-driven
+    # - No moment creation (would flood graph with init moments)
+    # - No actor/space linking (no active task context at init)
+    result = inject(adapter, {
         "id": "space:capabilities",
         "label": "Space",
         "name": "Capabilities",
         "type": "system",
-        "synthesis": "Capabilities — root space for health checks, tasks, skills, and procedures",
+        "content": "Root space for health checks, tasks, skills, and procedures",
         "weight": 10.0,
         "energy": 0.0,
-    })
-    if changed:
+    }, with_context=False)
+    if result in ("created", "updated"):
         stats["nodes_changed"] += 1
     else:
         stats["nodes_unchanged"] += 1
 
     # Link to root space
-    if _upsert_link(adapter, "space:root", "space:capabilities", "contains"):
-        stats["links_created"] += 1
+    inject(adapter, {
+        "from": "space:root",
+        "to": "space:capabilities",
+        "nature": "contains",
+    }, with_context=False)
+    stats["links_created"] += 1
 
     # 2. Process each capability folder
     capabilities = [d for d in capabilities_dir.iterdir() if d.is_dir()]
@@ -93,26 +101,33 @@ def ingest_capabilities(
 
 def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
     """Ingest a single capability folder."""
+    from ..inject import inject
+
     stats = {"changed": 0, "unchanged": 0, "links": 0}
     cap_id = f"space:capability:{cap_name}"
 
     # 1. Create capability space
-    if _upsert_node(adapter, {
+    result = inject(adapter, {
         "id": cap_id,
         "label": "Space",
         "name": cap_name,
         "type": "capability",
-        "synthesis": f"{cap_name} — capability providing health checks, tasks, and skills",
+        "content": f"Capability providing health checks, tasks, and skills for {cap_name}",
         "weight": 8.0,
         "energy": 0.0,
-    }):
+    })
+    if result in ("created", "updated"):
         stats["changed"] += 1
     else:
         stats["unchanged"] += 1
 
     # Link to capabilities root
-    if _upsert_link(adapter, "space:capabilities", cap_id, "contains"):
-        stats["links"] += 1
+    inject(adapter, {
+        "from": "space:capabilities",
+        "to": cap_id,
+        "nature": "contains",
+    })
+    stats["links"] += 1
 
     # 2. Create doc chain narrative nodes
     doc_ids = []
@@ -122,7 +137,7 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
             doc_id = f"narrative:{doc_type.lower()}:{cap_name}"
             synthesis = _generate_synthesis(doc_file, doc_type, cap_name)
 
-            if _upsert_node(adapter, {
+            result = inject(adapter, {
                 "id": doc_id,
                 "label": "Narrative",
                 "name": f"{doc_type} - {cap_name}",
@@ -131,20 +146,29 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
                 "path": str(doc_file),
                 "weight": 5.0,
                 "energy": 0.0,
-            }):
+            })
+            if result in ("created", "updated"):
                 stats["changed"] += 1
             else:
                 stats["unchanged"] += 1
             doc_ids.append(doc_id)
 
             # Link doc to capability
-            if _upsert_link(adapter, cap_id, doc_id, "defines"):
-                stats["links"] += 1
+            inject(adapter, {
+                "from": cap_id,
+                "to": doc_id,
+                "nature": "defines",
+            })
+            stats["links"] += 1
 
     # 3. Create IMPLEMENTS links between consecutive doc chain files
     for i in range(len(doc_ids) - 1):
-        if _upsert_link(adapter, doc_ids[i + 1], doc_ids[i], "implements"):
-            stats["links"] += 1
+        inject(adapter, {
+            "from": doc_ids[i + 1],
+            "to": doc_ids[i],
+            "nature": "implements",
+        })
+        stats["links"] += 1
 
     # 4. Create task narrative nodes
     tasks_dir = cap_dir / "tasks"
@@ -154,7 +178,7 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
             task_id = f"narrative:task:{task_name}"
             synthesis = _generate_synthesis(task_file, "TASK", cap_name)
 
-            if _upsert_node(adapter, {
+            result = inject(adapter, {
                 "id": task_id,
                 "label": "Narrative",
                 "name": task_name,
@@ -164,14 +188,19 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
                 "capability": cap_name,
                 "weight": 6.0,
                 "energy": 0.0,
-            }):
+            })
+            if result in ("created", "updated"):
                 stats["changed"] += 1
             else:
                 stats["unchanged"] += 1
 
             # Link task to capability
-            if _upsert_link(adapter, cap_id, task_id, "provides"):
-                stats["links"] += 1
+            inject(adapter, {
+                "from": cap_id,
+                "to": task_id,
+                "nature": "provides",
+            })
+            stats["links"] += 1
 
     # 5. Create skill narrative nodes
     skills_dir = cap_dir / "skills"
@@ -181,7 +210,7 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
             skill_id = f"narrative:skill:{skill_name}"
             synthesis = _generate_synthesis(skill_file, "SKILL", cap_name)
 
-            if _upsert_node(adapter, {
+            result = inject(adapter, {
                 "id": skill_id,
                 "label": "Narrative",
                 "name": skill_name,
@@ -191,28 +220,41 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
                 "capability": cap_name,
                 "weight": 6.0,
                 "energy": 0.0,
-            }):
+            })
+            if result in ("created", "updated"):
                 stats["changed"] += 1
             else:
                 stats["unchanged"] += 1
 
             # Link skill to capability
-            if _upsert_link(adapter, cap_id, skill_id, "provides"):
-                stats["links"] += 1
+            inject(adapter, {
+                "from": cap_id,
+                "to": skill_id,
+                "nature": "provides",
+            })
+            stats["links"] += 1
 
             # Link skill to procedure if referenced
             proc_ref = _extract_procedure_reference(skill_file)
             if proc_ref:
                 proc_id = f"space:procedure:{proc_ref}"
-                if _upsert_link(adapter, skill_id, proc_id, "executes"):
-                    stats["links"] += 1
+                inject(adapter, {
+                    "from": skill_id,
+                    "to": proc_id,
+                    "nature": "executes",
+                })
+                stats["links"] += 1
 
             # Link tasks to skill if referenced
             task_refs = _extract_task_references(skill_file)
             for task_ref in task_refs:
                 task_id = f"narrative:task:{task_ref}"
-                if _upsert_link(adapter, task_id, skill_id, "uses"):
-                    stats["links"] += 1
+                inject(adapter, {
+                    "from": task_id,
+                    "to": skill_id,
+                    "nature": "uses",
+                })
+                stats["links"] += 1
 
     # 6. Create procedure space nodes
     procedures_dir = cap_dir / "procedures"
@@ -223,96 +265,34 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
             proc_info = _parse_procedure_yaml(proc_file)
 
             purpose = proc_info.get("purpose", "").strip()
-            if purpose:
-                synthesis = f"{proc_name} — {purpose[:150]}"
-            else:
-                synthesis = f"{proc_name} — procedure in {cap_name}"
+            content = purpose if purpose else f"Procedure in {cap_name}"
 
-            if _upsert_node(adapter, {
+            result = inject(adapter, {
                 "id": proc_id,
                 "label": "Space",
                 "name": proc_name,
                 "type": "procedure",
-                "synthesis": synthesis,
+                "content": content,
                 "path": str(proc_file),
                 "capability": cap_name,
                 "status": proc_info.get("status", "active"),
                 "weight": 7.0,
                 "energy": 0.0,
-            }):
+            })
+            if result in ("created", "updated"):
                 stats["changed"] += 1
             else:
                 stats["unchanged"] += 1
 
             # Link procedure to capability
-            if _upsert_link(adapter, cap_id, proc_id, "provides"):
-                stats["links"] += 1
+            inject(adapter, {
+                "from": cap_id,
+                "to": proc_id,
+                "nature": "provides",
+            })
+            stats["links"] += 1
 
     return stats
-
-
-def _upsert_node(adapter, node: Dict[str, Any]) -> bool:
-    """
-    Upsert a node. Returns True if created/updated (needs embedding), False if unchanged.
-
-    Compares synthesis to detect if content changed.
-    """
-    node_id = node["id"]
-    label = node.get("label", "Thing")
-
-    # Check if node exists and get current synthesis
-    try:
-        result = adapter.query(
-            f"MATCH (n:{label} {{id: $id}}) RETURN n.synthesis",
-            {"id": node_id}
-        )
-
-        if result and len(result) > 0:
-            existing_synthesis = result[0][0] if result[0] else None
-            new_synthesis = node.get("synthesis")
-
-            # If synthesis unchanged, skip update
-            if existing_synthesis == new_synthesis:
-                return False
-
-            # Synthesis changed - clear embedding for regeneration
-            node["embedding"] = None
-    except Exception:
-        pass  # Node doesn't exist, will create
-
-    # Build properties (exclude label)
-    props = {k: v for k, v in node.items() if k != "label" and v is not None}
-
-    # Escape strings
-    for key in ["synthesis", "content", "name"]:
-        if key in props and isinstance(props[key], str):
-            props[key] = props[key].replace("\n", " ")
-
-    try:
-        props_str = ", ".join(f"{k}: ${k}" for k in props.keys())
-        query = f"MERGE (n:{label} {{id: $id}}) SET n += {{{props_str}}} RETURN n.id"
-        adapter.execute(query, props)
-        return True
-    except Exception as e:
-        logger.warning(f"Failed to upsert node {node_id}: {e}")
-        return False
-
-
-def _upsert_link(adapter, from_id: str, to_id: str, nature: str) -> bool:
-    """Upsert a link between two nodes."""
-    try:
-        query = """
-        MATCH (a {id: $from_id})
-        MATCH (b {id: $to_id})
-        MERGE (a)-[r:LINK]->(b)
-        SET r.nature = $nature
-        RETURN type(r)
-        """
-        adapter.execute(query, {"from_id": from_id, "to_id": to_id, "nature": nature})
-        return True
-    except Exception as e:
-        logger.debug(f"Failed to upsert link {from_id} -> {to_id}: {e}")
-        return False
 
 
 def _generate_synthesis(md_file: Path, doc_type: str, cap_name: str) -> str:
