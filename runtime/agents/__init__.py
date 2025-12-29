@@ -38,7 +38,7 @@ from .postures import (
 from .cli import build_agent_command, normalize_agent, AgentCommand
 from .spawn import (
     spawn_work_agent,
-    spawn_agent_for_problem,
+    spawn_for_task,
     SpawnResult,
 )
 from .prompts import (
@@ -67,7 +67,7 @@ __all__ = [
     "AgentCommand",
     # Spawn
     "spawn_work_agent",
-    "spawn_agent_for_problem",
+    "spawn_for_task",
     "SpawnResult",
     # Prompts
     "AGENT_SYSTEM_PROMPT",

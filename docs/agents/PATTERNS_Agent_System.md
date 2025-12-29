@@ -313,10 +313,10 @@ result = await spawn_work_agent(
 runtime/
 ├── agents/
 │   ├── __init__.py          # Public API
-│   ├── spawn.py             # spawn_work_agent, spawn_agent_for_issue
+│   ├── spawn.py             # spawn_work_agent, spawn_for_task
 │   ├── graph.py             # AgentGraph, status management
 │   ├── cli.py               # build_agent_command
-│   ├── postures.py          # ISSUE_TO_POSTURE, posture configs
+│   ├── postures.py          # PROBLEM_TO_POSTURE, posture configs
 │   ├── verification.py      # verify_completion
 │   └── prompts.py           # AGENT_SYSTEM_PROMPT, build_agent_prompt
 │
@@ -369,7 +369,7 @@ runtime/
 3. **Add posture mapping** (if new issue type):
    ```python
    # runtime/agents/postures.py
-   ISSUE_TO_POSTURE["MY_ISSUE_TYPE"] = "fixer"
+   PROBLEM_TO_POSTURE["MY_PROBLEM_TYPE"] = "fixer"
    ```
 
 4. **Add instructions** (for work prompt):

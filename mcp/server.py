@@ -49,16 +49,19 @@ from dotenv import load_dotenv
 load_dotenv(project_root / ".env")
 
 from runtime.connectome import ConnectomeRunner
-from runtime.agent_graph import AgentGraph, ISSUE_TO_POSTURE, POSTURE_TO_AGENT_ID
-from runtime.agent_spawn import spawn_work_agent, spawn_agent_for_issue
-from runtime.doctor import run_doctor, DoctorIssue
-from runtime.doctor_types import DoctorConfig
-from runtime.work_core import (
-    spawn_work_agent_with_verification_async,
+from runtime.agents import (
+    AgentGraph,
+    PROBLEM_TO_POSTURE,
+    POSTURE_TO_AGENT_ID,
+    spawn_work_agent,
+    spawn_for_task,
     AGENT_SYSTEM_PROMPT,
     build_agent_prompt,
     get_learnings_content,
 )
+from runtime.doctor import run_doctor, DoctorIssue
+from runtime.doctor_types import DoctorConfig
+from runtime.work_core import spawn_work_agent_with_verification_async
 from runtime.work_instructions import get_issue_instructions
 from runtime.capability_integration import (
     init_capability_manager,
@@ -625,7 +628,7 @@ class MindServer:
             lines = schema_lines + ["", f"Found {len(issues)} doc issues:\n"]
             for idx, issue in enumerate(issues):
                 # Determine assigned agent
-                posture = ISSUE_TO_POSTURE.get(issue.issue_type, "fixer")
+                posture = PROBLEM_TO_POSTURE.get(issue.issue_type, "fixer")
                 agent_id = f"agent_{posture}"
                 agent_status = "ready" if agent_id in available_agents else "busy"
 
@@ -655,13 +658,13 @@ class MindServer:
             lines.append("")
 
         # Show posture mappings
-        lines.append("\nPosture → Issue Types:")
-        posture_issues: Dict[str, List[str]] = {}
-        for issue_type, posture in ISSUE_TO_POSTURE.items():
-            posture_issues.setdefault(posture, []).append(issue_type)
+        lines.append("\nPosture → Problem Types:")
+        posture_problems: Dict[str, List[str]] = {}
+        for problem_type, posture in PROBLEM_TO_POSTURE.items():
+            posture_problems.setdefault(posture, []).append(problem_type)
 
-        for posture, issues in sorted(posture_issues.items()):
-            lines.append(f"  {posture}: {', '.join(issues[:3])}{'...' if len(issues) > 3 else ''}")
+        for posture, problems in sorted(posture_problems.items()):
+            lines.append(f"  {posture}: {', '.join(problems[:3])}{'...' if len(problems) > 3 else ''}")
 
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
@@ -814,7 +817,7 @@ class MindServer:
 
         # Select agent if not specified
         if not agent_id:
-            posture = ISSUE_TO_POSTURE.get(issue_type, "fixer") if issue_type else "fixer"
+            posture = PROBLEM_TO_POSTURE.get(issue_type, "fixer") if issue_type else "fixer"
             agent_id = f"agent_{posture}"
 
         # Check if agent is available
@@ -1313,8 +1316,22 @@ Please investigate and fix this issue. Follow the project's coding standards and
             task_runs = result.get("task_runs", [])
             if task_runs:
                 lines.append(f"\nTask runs created: {len(task_runs)}")
-                for task_id in task_runs[:5]:
-                    lines.append(f"  - {task_id}")
+                # Fetch task details from graph
+                for task_id in task_runs[:10]:
+                    try:
+                        task_result = self.graph_ops._query(
+                            "MATCH (n {id: $id}) RETURN n.name, n.status",
+                            {"id": task_id}
+                        )
+                        if task_result and task_result[0]:
+                            name = task_result[0][0] or "Unknown"
+                            status = task_result[0][1] or "pending"
+                            lines.append(f"  - [{status}] {name}")
+                            lines.append(f"    ID: {task_id}")
+                        else:
+                            lines.append(f"  - {task_id}")
+                    except:
+                        lines.append(f"  - {task_id}")
 
             return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
