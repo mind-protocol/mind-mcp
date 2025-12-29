@@ -471,16 +471,18 @@ class AgentGraph:
         moment_type: str,
         prose: str,
         about_ids: Optional[List[str]] = None,
+        space_id: Optional[str] = None,
         extra_props: Optional[Dict] = None,
     ) -> Optional[str]:
         """
-        Create a moment node linked to actor and chained to previous moment.
+        Create a moment node linked to actor, space, and chained to previous moment.
 
         Args:
             agent_id: Actor creating this moment
             moment_type: Type of moment (e.g., 'task_created', 'issue_detected')
             prose: Human-readable description
             about_ids: Node IDs this moment is about
+            space_id: Space (module/project) where this moment occurs
             extra_props: Additional properties for the moment
 
         Returns:
@@ -546,7 +548,16 @@ class AgentGraph:
                     SET r.created_at_s = $timestamp
                     """, {"moment_id": moment_id, "about_id": about_id, "timestamp": timestamp})
 
-            logger.info(f"[AgentGraph] Created moment: {moment_id} (follows: {prev_moment_id or 'none'})")
+            # Link: moment occurs_in space
+            if space_id:
+                self._graph_ops._query("""
+                MATCH (m:Moment {id: $moment_id})
+                MATCH (s:Space {id: $space_id})
+                MERGE (m)-[r:occurs_in]->(s)
+                SET r.created_at_s = $timestamp
+                """, {"moment_id": moment_id, "space_id": space_id, "timestamp": timestamp})
+
+            logger.info(f"[AgentGraph] Created moment: {moment_id} (follows: {prev_moment_id or 'none'}, space: {space_id or 'none'})")
             return moment_id
 
         except Exception as e:

@@ -864,6 +864,14 @@ class MindServer:
         # Track created moments for output
         moments_created = []
 
+        # Derive space from path (module context)
+        space_id = None
+        if path:
+            # Extract module from path: runtime/agents -> space_runtime_agents
+            path_parts = Path(path).parts[:2]  # Take first 2 parts
+            if path_parts:
+                space_id = f"space_{'_'.join(path_parts)}"
+
         # Upsert issue/task narratives before linking
         issue_ids = None
         if issue_type and path:
@@ -882,6 +890,7 @@ class MindServer:
                     moment_type="issue_detected",
                     prose=f"Detected {issue_type} at {path}",
                     about_ids=[issue_narrative_id],
+                    space_id=space_id,
                     extra_props={"issue_type": issue_type, "path": path},
                 )
                 if issue_moment:
@@ -911,6 +920,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
                     moment_type="task_created",
                     prose=f"Created task to fix {issue_type}",
                     about_ids=[assignment_task_id] + (issue_ids or []),
+                    space_id=space_id,
                     extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{issue_type}"},
                 )
                 if task_moment:
@@ -973,8 +983,10 @@ Please investigate and fix this issue. Follow the project's coding standards and
                     "",
                     "## Moment Chain",
                     f"*Actor: {agent_id}*",
-                    "",
                 ])
+                if space_id:
+                    lines.append(f"*Space: {space_id}*")
+                lines.append("")
                 for i, (moment_type, moment_id, prose) in enumerate(moments_created):
                     prefix = "→ " if i > 0 else "● "
                     lines.append(f"{prefix}**{moment_type}**: {prose}")
@@ -1423,13 +1435,21 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 for task_id in task_runs[:10]:
                     try:
                         task_result = self.graph_ops._query(
-                            "MATCH (n {id: $id}) RETURN n.name, n.status",
+                            "MATCH (n {id: $id}) RETURN n.name, n.status, n.content, n.claimed_by",
                             {"id": task_id}
                         )
                         if task_result and task_result[0]:
                             name = task_result[0][0] or "Unknown"
                             status = task_result[0][1] or "pending"
+                            content = task_result[0][2] or ""
+                            claimed_by = task_result[0][3]
                             lines.append(f"  - [{status}] {name}")
+                            if claimed_by:
+                                lines.append(f"    Assigned: {claimed_by}")
+                            if content:
+                                # Truncate content for display
+                                content_preview = content[:200] + "..." if len(content) > 200 else content
+                                lines.append(f"    Content: {content_preview}")
                             lines.append(f"    ID: {task_id}")
                         else:
                             lines.append(f"  - {task_id}")

@@ -14,7 +14,6 @@ from ..helpers.create_env_example_file import create_env_example
 from ..helpers.create_mcp_config_json import create_mcp_config
 from ..helpers.update_gitignore_with_runtime_entry import update_gitignore
 from ..helpers.ingest_repo_files_to_graph import ingest_repo_files
-from ..helpers.inject_seed_yaml_to_graph import inject_seed_yaml
 from ..helpers.ingest_capabilities_to_graph import ingest_capabilities
 from ..helpers.generate_repo_overview_maps import generate_overview
 from ..helpers.generate_embeddings_for_graph_nodes import generate_embeddings
@@ -72,12 +71,7 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     ingest_repo_files(target_dir, graph_name)
     steps.append("file_ingest")
 
-    # 9. Seed injection (creates Actors, Narratives, links to existing Spaces)
-    print("\n## Seed Injection")
-    inject_seed_yaml(target_dir, graph_name)
-    steps.append("seed_inject")
-
-    # 10. Capability graph injection (creates capability spaces, tasks, skills, procedures)
+    # 9. Capability graph injection (creates capability spaces, tasks, skills, procedures)
     print("\n## Capability Graph")
     ingest_capabilities(target_dir, graph_name)
     steps.append("capabilities_graph")

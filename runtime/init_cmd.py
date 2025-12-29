@@ -6,7 +6,7 @@ Initializes the mind in a project directory by:
 - Creating/updating .mind/CLAUDE.md with inlined content (standalone)
 - Creating/updating root CLAUDE.md with @ references (Claude expands these)
 - Creating/updating root AGENTS.md with protocol bootstrap (inlined content)
-- Creating graph named after repo and injecting seed-injection.yaml files
+- Ingesting repo files and capabilities into the graph
 """
 # DOCS: docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md
 
