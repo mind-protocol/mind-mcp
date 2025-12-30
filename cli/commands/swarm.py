@@ -393,8 +393,10 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool
                                 seen_claims.add(key)
                                 agent_name = (actor_id or "?").replace("AGENT_", "")
                                 color = _get_agent_color(actor_id or "?")
-                                task_short = (synth or task_id or "")[:50]
-                                print(f"{color}{Colors.BOLD}[{agent_name}]{Colors.RESET} {Colors.INFO}▶ started:{Colors.RESET} {task_short}")
+                                # Show synthesis + task ID suffix for uniqueness
+                                synth_short = (synth or "")[:40]
+                                task_suffix = task_id.split(":")[-1][:8] if task_id else ""
+                                print(f"{color}{Colors.BOLD}[{agent_name}]{Colors.RESET} {Colors.INFO}▶ assigned:{Colors.RESET} {synth_short} [{task_suffix}]")
 
                         # Get moments with actor and task info
                         result = adapter.query("""
