@@ -68,7 +68,7 @@ def ingest_capabilities(
         "id": "space:capabilities",
         "label": "Space",
         "name": "Capabilities",
-        "type": "system",
+        "type": "SYSTEM",  # Uppercase type for system containers
         "content": "Root space for health checks, tasks, skills, and procedures",
         "weight": 10.0,
         "energy": 0.0,
@@ -111,7 +111,7 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
         "id": cap_id,
         "label": "Space",
         "name": cap_name,
-        "type": "capability",
+        "type": "CAPABILITY",  # Uppercase type
         "content": f"Capability providing health checks, tasks, and skills for {cap_name}",
         "weight": 8.0,
         "energy": 0.0,
@@ -271,7 +271,7 @@ def _ingest_capability(adapter, cap_dir: Path, cap_name: str) -> Dict[str, int]:
                 "id": proc_id,
                 "label": "Space",
                 "name": proc_name,
-                "type": "procedure",
+                "type": "PROCEDURE",  # Uppercase type
                 "content": content,
                 "path": str(proc_file),
                 "capability": cap_name,

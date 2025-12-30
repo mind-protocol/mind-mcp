@@ -148,8 +148,20 @@ def scan_and_ingest_files(
     # Track created spaces to avoid duplicates
     created_spaces: Set[str] = set()
 
-    def _ensure_space(space_id: str, name: str, space_type: str) -> None:
-        """Create Space node if not exists."""
+    def _ensure_space(space_id: str, name: str, space_type: str, location: str = None) -> None:
+        """Create Space node if not exists.
+
+        Space types (uppercase):
+        - ROOT: Repository root
+        - AREA: Top-level code grouping (first directory level)
+        - MODULE: Sub-area grouping (second directory level)
+
+        Args:
+            space_id: Unique ID for the space
+            name: Display name
+            space_type: Type (ROOT, AREA, MODULE)
+            location: Physical path for folder containers (relative to repo root)
+        """
         if space_id in created_spaces:
             return
 
@@ -162,27 +174,50 @@ def scan_and_ingest_files(
             created_spaces.add(space_id)
             return
 
+        # Normalize type to uppercase
+        type_upper = space_type.upper()
+
+        # Build properties
+        props = {
+            "id": space_id,
+            "name": name,
+            "type": type_upper,
+            "synthesis": f"{type_upper}: {name}",
+        }
+        if location:
+            props["location"] = location
+
         # Create Space node
-        adapter.execute(
-            """
-            CREATE (s:Space {
-                id: $id,
-                name: $name,
-                node_type: 'space',
-                type: $type,
-                synthesis: $synthesis
-            })
-            """,
-            {
-                "id": space_id,
-                "name": name,
-                "type": space_type,
-                "synthesis": f"{space_type}: {name}",
-            }
-        )
+        if location:
+            adapter.execute(
+                """
+                CREATE (s:Space {
+                    id: $id,
+                    name: $name,
+                    node_type: 'space',
+                    type: $type,
+                    synthesis: $synthesis,
+                    location: $location
+                })
+                """,
+                props
+            )
+        else:
+            adapter.execute(
+                """
+                CREATE (s:Space {
+                    id: $id,
+                    name: $name,
+                    node_type: 'space',
+                    type: $type,
+                    synthesis: $synthesis
+                })
+                """,
+                props
+            )
         created_spaces.add(space_id)
         stats["spaces_created"] += 1
-        if space_type == "area":
+        if type_upper == "AREA":
             stats["areas"].add(name)
         else:
             stats["modules"].add(name)
@@ -473,11 +508,11 @@ def scan_and_ingest_files(
                     if not parts:
                         # Root level file
                         parent_id = "space:root"
-                        _ensure_space(parent_id, "root", "module")
+                        _ensure_space(parent_id, "root", "ROOT", location=".")
                     elif len(parts) == 1:
                         # Area level (e.g., engine/file.py)
                         area_id = f"space:area:{parts[0]}"
-                        _ensure_space(area_id, parts[0], "area")
+                        _ensure_space(area_id, parts[0], "AREA", location=parts[0])
                         parent_id = area_id
                     else:
                         # Module level (e.g., engine/physics/file.py)
@@ -485,8 +520,8 @@ def scan_and_ingest_files(
                         module_name = f"{parts[0]}/{parts[1]}"
                         module_id = f"space:module:{module_name}"
 
-                        _ensure_space(area_id, parts[0], "area")
-                        _ensure_space(module_id, module_name, "module")
+                        _ensure_space(area_id, parts[0], "AREA", location=parts[0])
+                        _ensure_space(module_id, module_name, "MODULE", location=module_name)
 
                         # Link area -> module
                         adapter.execute(
