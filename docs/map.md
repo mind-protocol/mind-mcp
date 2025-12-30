@@ -1,17 +1,17 @@
 # Repository Map: mind-mcp
 
-*Generated: 2025-12-30 03:53*
+*Generated: 2025-12-30 04:03*
 
-- **Files:** 469
+- **Files:** 472
 - **Directories:** 104
 - **Total Size:** 5.0M
-- **Doc Files:** 317
+- **Doc Files:** 320
 - **Code Files:** 142
 - **Areas:** 13 (docs/ subfolders)
 - **Modules:** 32 (subfolders in areas)
 - **DOCS Links:** 69 (0.49 avg per code file)
 
-- markdown: 317
+- markdown: 320
 - python: 133
 - typescript: 9
 
@@ -59,7 +59,7 @@
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
 ├── docs/ (2.6M)
-│   ├── agents/ (227.8K)
+│   ├── agents/ (241.1K)
 │   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
 │   │   │   │   └── SYNC_archive_2024-12.md (20.5K)
@@ -88,7 +88,10 @@
 │   │   │   ├── TOOL_REFERENCE.md (3.7K)
 │   │   │   ├── VALIDATION_World_Runner_Invariants.md (6.3K)
 │   │   │   └── (..1 more files)
-│   │   └── PATTERNS_Agent_System.md (11.0K)
+│   │   ├── ALGORITHM_Agent_System.md (5.3K)
+│   │   ├── IMPLEMENTATION_Agent_System.md (4.7K)
+│   │   ├── OBJECTIVES_Agent_System.md (1.4K)
+│   │   └── PATTERNS_Agent_System.md (12.9K)
 │   ├── architecture/ (56.7K)
 │   │   └── cybernetic_studio_architecture/ (56.7K)
 │   │       ├── ALGORITHM_Cybernetic_Studio_Process_Flow.md (4.4K)
@@ -439,7 +442,7 @@
 │   │   ├── SYNC_Tools.md (16.3K)
 │   │   └── VALIDATION_Tools.md (5.1K)
 │   ├── ARCHITECTURE.md (4.4K)
-│   └── map.md (286.7K)
+│   └── map.md (286.9K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -452,10 +455,10 @@
 │               ├── traversal_exp_9eee82be.txt (5.7K)
 │               ├── traversal_exp_a26866c1.jsonl (31.3K)
 │               └── traversal_exp_a26866c1.txt (13.2K)
-├── mcp/ (75.4K)
+├── mcp/ (75.8K)
 │   ├── tools/
 │   │   └── (..1 more files)
-│   ├── server.py (75.4K)
+│   ├── server.py (75.8K)
 │   └── (..2 more files)
 ├── runtime/ (2.1M)
 │   ├── actors/
@@ -609,13 +612,13 @@
 │   ├── cluster_metrics.py (31.4K)
 │   ├── explore_cmd.py (23.0K)
 │   ├── init_cmd.py (24.5K) →
-│   ├── inject.py (31.2K)
+│   ├── inject.py (31.9K)
 │   ├── procedure_runner.py (42.0K)
 │   ├── repo_overview.py (28.5K) →
 │   ├── status_cmd.py (36.3K) →
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── validate.py (29.4K) →
-│   └── (..21 more files)
+│   └── (..22 more files)
 ├── tests/
 │   ├── graph/
 │   │   └── (..3 more files)
@@ -628,7 +631,7 @@
 ├── =0.2.0 (4.2K)
 ├── AGENTS.md (29.9K)
 ├── README.md (2.9K)
-└── map.md (286.9K)
+└── map.md (288.2K)
 ```
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
@@ -1290,6 +1293,41 @@
 - ## SYNC STATUS
 - ## MARKERS
 
+**Sections:**
+- # Agent System — Algorithm
+- ## run_work_agent() Flow
+- # Reads from .mind/actors/{name}/CLAUDE.md
+- # First try with --continue, retry without on failure
+- ## _run_agent() Flow
+- # --verbose added by cli.py for Claude
+- ## _group_turns_into_batches() Algorithm
+- ## _detect_cd_commands() Algorithm
+- # Regex matches: cd /path, cd path, cd "path"
+- # In contexts: cd /tmp, cd /tmp && ls, ls && cd /tmp
+- ## create_moment() Flow
+- # inject() handles: actor link, moment chaining
+
+**Code refs:**
+- `runtime/agents/cli.py`
+- `runtime/agents/prompts.py`
+- `runtime/inject.py`
+
+**Sections:**
+- # Agent System — Implementation
+- ## Module Structure
+- ## Key Classes
+- ## Key Functions
+- ## Session File Location
+- ## Graph Nodes Created
+- ## Dependencies
+
+**Sections:**
+- # Agent System — Objectives
+- ## Primary Objective
+- ## Ranked Goals
+- ## Tradeoffs
+- ## Non-Goals
+
 **Code refs:**
 - `runtime/agents/postures.py`
 
@@ -1304,6 +1342,9 @@
 - # Execute
 - # Success
 - # Retry with feedback (up to 3 times)
+- # Check if any agent is currently running
+- # Detected from Bash tool calls
+- # Extract path, update agent's cwd property
 - ## Data Flow
 - ## Graph Schema
 - ## Entry Points
@@ -7522,6 +7563,9 @@
 - `docs/tools/PATTERNS_Tools.md`
 - `docs/tools/SYNC_Tools.md`
 - `docs/tools/VALIDATION_Tools.md`
+- `docs/tui/ALGORITHM_TUI_Widget_Interaction_Flow.md`
+- `docs/tui/HEALTH_TUI_Coverage.md`
+- `docs/tui/PATTERNS_TUI_Modular_Interface_Design.md`
 - `implementation/IMPLEMENTATION_Physics_Architecture.md`
 - `implementation/IMPLEMENTATION_Physics_Code_Structure.md`
 - `implementation/IMPLEMENTATION_Physics_Dataflow.md`
@@ -9398,6 +9442,7 @@
 - `def _nature_to_physics()`
 - `def inject()`
 - `def _inject_node()`
+- `def _auto_assign_task()`
 - `def _inject_link()`
 - `def inject_batch()`
 - `def inject_node()`
@@ -9757,7 +9802,9 @@
 - `repair_verification.py`
 - `route.ts`
 - `runtime/agent_cli.py`
+- `runtime/agents/cli.py`
 - `runtime/agents/postures.py`
+- `runtime/agents/prompts.py`
 - `runtime/api/app.py`
 - `runtime/cli.py`
 - `runtime/cluster_builder.py`
@@ -9821,6 +9868,7 @@
 - `runtime/infrastructure/tempo/tempo_controller.py`
 - `runtime/init_cmd.py`
 - `runtime/init_db.py`
+- `runtime/inject.py`
 - `runtime/llms/gemini_agent.py`
 - `runtime/llms/tool_helpers.py`
 - `runtime/membrane/functions.py`

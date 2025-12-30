@@ -154,6 +154,15 @@ class MindServer:
                 logger.warning(f"Capability system failed: {e}")
                 self.capability_manager = None
 
+        # Auto-assign pending tasks on startup
+        try:
+            from runtime.task_assignment import startup_assign
+            assigned, skipped = startup_assign(self.target_dir)
+            if assigned > 0:
+                logger.info(f"Task assignment: {assigned} assigned, {skipped} skipped")
+        except Exception as e:
+            logger.debug(f"Task assignment skipped: {e}")
+
         self.runner = ConnectomeRunner(
             graph_ops=self.graph_ops,
             graph_queries=self.graph_queries,

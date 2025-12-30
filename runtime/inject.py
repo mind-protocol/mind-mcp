@@ -716,6 +716,7 @@ def _inject_node(
     - Generates embedding from synthesis
     - Compares synthesis to detect changes
     - Clears embedding on change (triggers regeneration)
+    - Auto-assigns task_run nodes to best agent
     """
     node = dict(node)  # Copy to avoid mutating original
     node_id = node["id"]
@@ -782,7 +783,25 @@ def _inject_node(
     props_str = ", ".join(f"{k}: ${k}" for k in props.keys())
     query = f"MERGE (n:{label} {{id: $id}}) SET n += {{{props_str}}} RETURN n.id"
     adapter.execute(query, props)
-    return "updated" if exists else "created"
+
+    result = "updated" if exists else "created"
+
+    # Auto-assign task_run nodes to best agent on creation
+    if result == "created" and node.get("type") == "task_run":
+        _auto_assign_task(adapter, node_id, node.get("synthesis", ""))
+
+    return result
+
+
+def _auto_assign_task(adapter, task_id: str, synthesis: str) -> None:
+    """Auto-assign a new task to the best available agent."""
+    try:
+        from .task_assignment import assign_single_task
+        agent = assign_single_task(task_id, synthesis, adapter)
+        if agent:
+            logger.info(f"Auto-assigned {task_id} -> {agent}")
+    except Exception as e:
+        logger.debug(f"Auto-assignment skipped for {task_id}: {e}")
 
 
 # =============================================================================
