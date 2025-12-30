@@ -70,10 +70,24 @@ class AgentGraph:
     def __init__(self, graph_name: str = None)
     def set_agent_running(self, actor_id: str) -> bool
     def set_agent_ready(self, actor_id: str) -> bool
-    def create_moment(self, actor_id, moment_type, prose, ...) -> str
+    def create_moment(self, actor_id, moment_type, prose, ..., tools_used) -> str
     def link_moments(self, from_id, to_id, nature="precedes") -> bool
     def update_agent_cwd(self, actor_id, new_cwd) -> bool
     def boost_agent_energy(self, actor_id, amount) -> bool
+```
+
+### Salience Extraction (graph.py)
+
+```python
+def _extract_salient_terms(
+    content: str,
+    graph_name: Optional[str] = None,
+    top_k: int = 4,
+) -> List[str]:
+    """Extract salient terms via embedding similarity against graph vocabulary."""
+
+def _infer_action_verb(tools_used: List[str], content: str) -> str:
+    """Infer action verb from tools used and content signals."""
 ```
 
 ---

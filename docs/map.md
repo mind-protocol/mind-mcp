@@ -1,27 +1,28 @@
 # Repository Map: mind-mcp
 
-*Generated: 2025-12-30 04:03*
+*Generated: 2025-12-30 04:30*
 
-- **Files:** 472
+- **Files:** 477
 - **Directories:** 104
-- **Total Size:** 5.0M
-- **Doc Files:** 320
-- **Code Files:** 142
+- **Total Size:** 5.1M
+- **Doc Files:** 323
+- **Code Files:** 143
 - **Areas:** 13 (docs/ subfolders)
 - **Modules:** 32 (subfolders in areas)
-- **DOCS Links:** 69 (0.49 avg per code file)
+- **DOCS Links:** 69 (0.48 avg per code file)
 
-- markdown: 320
-- python: 133
+- markdown: 323
+- python: 134
 - typescript: 9
 
 ```
-├── cli/ (105.6K)
-│   ├── commands/ (45.8K)
+├── cli/ (120.6K)
+│   ├── commands/ (60.0K)
 │   │   ├── agents.py (12.1K) →
 │   │   ├── events.py (14.9K) →
 │   │   ├── fix_embeddings.py (1.1K)
 │   │   ├── init.py (4.7K)
+│   │   ├── swarm.py (14.1K)
 │   │   ├── tasks.py (11.7K) →
 │   │   ├── upgrade.py (790)
 │   │   └── (..2 more files)
@@ -37,7 +38,7 @@
 │   │   ├── setup_database_and_apply_schema.py (5.0K)
 │   │   ├── validate_embedding_config_matches_stored.py (2.3K)
 │   │   └── (..15 more files)
-│   ├── __main__.py (1.9K)
+│   ├── __main__.py (2.7K)
 │   └── (..2 more files)
 ├── connectome/ (67.0K)
 │   ├── adapters/ (12.3K)
@@ -59,7 +60,7 @@
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
 ├── docs/ (2.6M)
-│   ├── agents/ (241.1K)
+│   ├── agents/ (242.8K)
 │   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
 │   │   │   │   └── SYNC_archive_2024-12.md (20.5K)
@@ -88,10 +89,10 @@
 │   │   │   ├── TOOL_REFERENCE.md (3.7K)
 │   │   │   ├── VALIDATION_World_Runner_Invariants.md (6.3K)
 │   │   │   └── (..1 more files)
-│   │   ├── ALGORITHM_Agent_System.md (5.3K)
-│   │   ├── IMPLEMENTATION_Agent_System.md (4.7K)
+│   │   ├── ALGORITHM_Agent_System.md (5.9K)
+│   │   ├── IMPLEMENTATION_Agent_System.md (5.1K)
 │   │   ├── OBJECTIVES_Agent_System.md (1.4K)
-│   │   └── PATTERNS_Agent_System.md (12.9K)
+│   │   └── PATTERNS_Agent_System.md (13.6K)
 │   ├── architecture/ (56.7K)
 │   │   └── cybernetic_studio_architecture/ (56.7K)
 │   │       ├── ALGORITHM_Cybernetic_Studio_Process_Flow.md (4.4K)
@@ -442,7 +443,9 @@
 │   │   ├── SYNC_Tools.md (16.3K)
 │   │   └── VALIDATION_Tools.md (5.1K)
 │   ├── ARCHITECTURE.md (4.4K)
-│   └── map.md (286.9K)
+│   ├── MAPPING.md (2.7K)
+│   ├── TAXONOMY.md (1.7K)
+│   └── map.md (289.7K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -463,14 +466,14 @@
 ├── runtime/ (2.1M)
 │   ├── actors/
 │   │   └── (..4 more files)
-│   ├── agents/ (127.2K)
+│   ├── agents/ (132.6K)
 │   │   ├── __init__.py (2.5K) →
 │   │   ├── cli.py (3.2K) →
-│   │   ├── graph.py (35.9K)
+│   │   ├── graph.py (41.3K)
 │   │   ├── liveness.py (11.5K)
 │   │   ├── mapping.py (6.5K) →
 │   │   ├── prompts.py (7.9K) →
-│   │   ├── run.py (22.8K) →
+│   │   ├── run.py (22.9K) →
 │   │   └── verification.py (36.8K) →
 │   ├── client/
 │   │   └── (..5 more files)
@@ -608,7 +611,7 @@
 │   │   ├── embedding.py (7.2K) →
 │   │   ├── moment.py (20.0K)
 │   │   └── (..2 more files)
-│   ├── cli.py (35.0K) →
+│   ├── cli.py (36.3K) →
 │   ├── cluster_metrics.py (31.4K)
 │   ├── explore_cmd.py (23.0K)
 │   ├── init_cmd.py (24.5K) →
@@ -627,11 +630,13 @@
 │   ├── traversal/
 │   │   └── (..2 more files)
 │   └── (..1 more files)
-├── .mindignore (838)
+├── .gitignore (559)
+├── .mindignore (839)
 ├── =0.2.0 (4.2K)
-├── AGENTS.md (29.9K)
+├── AGENTS.md (34.4K)
+├── CLAUDE.md (1.4K)
 ├── README.md (2.9K)
-└── map.md (288.2K)
+└── map.md (289.7K)
 ```
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
@@ -673,6 +678,22 @@
 **Definitions:**
 - `def run()`
 - `def _update_sync_file()`
+
+**Definitions:**
+- `def _ensure_dirs()`
+- `def _get_available_agents()`
+- `def _get_pending_tasks()`
+- `def _spawn_agent_process()`
+- `async def main()`
+- `def _save_pids()`
+- `def _load_pids()`
+- `def _is_running()`
+- `def run_swarm()`
+- `def show_status()`
+- `def stop_swarm()`
+- `def stream_moments()`
+- `def tail_logs()`
+- `def run()`
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Tasks_Command.md`
 
@@ -1305,7 +1326,7 @@
 - # Regex matches: cd /path, cd path, cd "path"
 - # In contexts: cd /tmp, cd /tmp && ls, ls && cd /tmp
 - ## create_moment() Flow
-- # inject() handles: actor link, moment chaining
+- # Example: WORK_Witness_Exploring_AgentGraph_Patterns_abc1
 
 **Code refs:**
 - `runtime/agents/cli.py`
@@ -7060,6 +7081,23 @@
 - ## Data Flow
 - ## Related Repos
 
+**Sections:**
+- # {Project} — Mapping: Translation to mind Schema
+- ## PURPOSE
+- ## MIND UNIVERSAL SCHEMA
+- ## NODE MAPPINGS
+- ## LINK MAPPINGS
+- ## COMMON PATTERNS
+- ## MARKERS
+
+**Sections:**
+- # {Project} — Taxonomy: Domain Vocabulary
+- ## PURPOSE
+- ## TERMS
+- ## TERMINOLOGY DECISIONS
+- ## META-ATTRIBUTE DEFINITIONS
+- ## MARKERS
+
 **Code refs:**
 - `Next.js`
 - `Node.js`
@@ -7200,7 +7238,9 @@
 - `repair_verification.py`
 - `route.ts`
 - `runtime/agent_cli.py`
+- `runtime/agents/cli.py`
 - `runtime/agents/postures.py`
+- `runtime/agents/prompts.py`
 - `runtime/api/app.py`
 - `runtime/cli.py`
 - `runtime/cluster_builder.py`
@@ -7264,6 +7304,7 @@
 - `runtime/infrastructure/tempo/tempo_controller.py`
 - `runtime/init_cmd.py`
 - `runtime/init_db.py`
+- `runtime/inject.py`
 - `runtime/llms/gemini_agent.py`
 - `runtime/llms/tool_helpers.py`
 - `runtime/membrane/functions.py`
@@ -7627,6 +7668,8 @@
 - `def build_agent_command()`
 
 **Definitions:**
+- `def _extract_salient_terms()`
+- `def _infer_action_verb()`
 - `def _get_link_physics()`
 - `def _build_link_props()`
 - `def _link_set_clause()`
@@ -9645,6 +9688,25 @@
 - ## MIND UNIVERSAL SCHEMA
 - ## THE PROTOCOL IS A TOOL
 - ## Before Any Task
+- ## After Any Change
+- # {{PROJECT_NAME}}
+- ## Before Any Task
+- ## After Any Change
+- ## Architecture
+- ## Key Files
+- ## MCP Tools
+- ## 4. Protocol-First Reading
+- ## 5. Parallel Work Awareness
+- ## 6. Operational Proactivity
+- ## 5. Communication Principles
+
+**Sections:**
+- # mind-mcp
+- ## Before Any Task
+- ## After Any Change
+- # mind
+- ## Before Any Task
+- ## Choose Your VIEW
 - ## After Any Change
 
 **Sections:**

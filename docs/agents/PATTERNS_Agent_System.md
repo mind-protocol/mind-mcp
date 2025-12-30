@@ -197,15 +197,38 @@ Chain moments with --precedes-->
 Create final COMPLETION moment
 ```
 
+**Moment naming** uses embedding-based salience extraction:
+
+```
+Format: WORK_{Agent}_{Verb}_{SalientTerms}_{hash}
+
+Examples:
+  WORK_Witness_Exploring_AgentGraph_Patterns_abc0
+  WORK_Witness_Debugging_AuthLogin_Config_abc1
+  WORK_Witness_Building_ApiEndpoint_abc2
+```
+
+**Verb inference** from tools and content:
+- Read/Grep heavy → `Exploring`
+- Edit/Write heavy → `Building`
+- "bug"/"error" in content → `Debugging`
+- "found"/"discovered" → `Discovering`
+- "refactor" → `Refactoring`
+
+**Salient terms** extracted by embedding content against graph vocabulary, finding most similar existing node names.
+
 **Moment structure:**
 ```
-moment:conversation:witness_abc0
+WORK_Witness_Exploring_AgentGraph_Patterns_abc0
+  name: "Exploring_AgentGraph_Patterns"
+  type: CONVERSATION
   synthesis: "💭 thinking... 📝 output... 🔧 Read(...) → result..."
   batch_index: 0
   turn_count: 5
-  tools_used: ["Read", "Glob"]
 
-moment:completion:witness_abc1
+WORK_Witness_Working_Completion_abc1
+  name: "Working_Completion"
+  type: COMPLETION
   synthesis: "Agent witness completed after 2 batches"
   status: completed
   duration_seconds: 15.2

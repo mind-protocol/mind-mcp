@@ -87,20 +87,65 @@ async def main():
     try:
         from runtime.infrastructure.database import get_database_adapter
         from runtime.agents import run_work_agent
+        from runtime.task_assignment import assign_single_task
 
         adapter = get_database_adapter()
         logger.info("Agent started")
 
-        # Find a task claimed by this agent
-        result = adapter.query("""
-            MATCH (t:Narrative {{type: 'task_run', status: 'claimed'}})-[:LINK {{verb: 'claimed_by'}}]->(a:Actor {{id: $agent_id}})
-            RETURN t.id, t.synthesis
-            LIMIT 1
-        """, {{"agent_id": "{agent_id}"}})
+        tasks_completed = 0
+        max_tasks = 50  # Safety limit
 
-        if result and result[0]:
+        while tasks_completed < max_tasks:
+            # Find a task claimed by this agent
+            result = adapter.query("""
+                MATCH (t:Narrative {{type: 'task_run', status: 'claimed'}})-[:LINK {{verb: 'claimed_by'}}]->(a:Actor {{id: $agent_id}})
+                RETURN t.id, t.synthesis
+                LIMIT 1
+            """, {{"agent_id": "{agent_id}"}})
+
+            if not result or not result[0]:
+                # No claimed tasks - try to claim a pending one
+                pending = adapter.query("""
+                    MATCH (t:Narrative {{type: 'task_run', status: 'pending'}})
+                    OPTIONAL MATCH (t)-[r:LINK {{verb: 'claimed_by'}}]->(a:Actor)
+                    WITH t, a WHERE a IS NULL
+                    RETURN t.id, t.synthesis
+                    LIMIT 1
+                """)
+
+                if pending and pending[0]:
+                    task_id, synthesis = pending[0]
+                    if synthesis:
+                        assigned = assign_single_task(task_id, synthesis, adapter)
+                        if assigned == "{agent_id}":
+                            logger.info(f"Claimed: {{task_id}}")
+                            continue  # Go back to find the now-claimed task
+
+                # No pending tasks available
+                logger.info(f"No more tasks. Completed {{tasks_completed}} tasks.")
+                break
+
             task_id, synthesis = result[0]
             logger.info(f"Working on: {{task_id}}")
+
+            # Get more task context - linked problems and target
+            context_result = adapter.query("""
+                MATCH (t:Narrative {{id: $task_id}})
+                OPTIONAL MATCH (t)-[:LINK {{verb: 'concerns'}}]->(problem)
+                OPTIONAL MATCH (t)-[:LINK {{verb: 'targets'}}]->(target)
+                RETURN t.content, problem.synthesis, problem.content, target.id
+                LIMIT 1
+            """, {{"task_id": task_id}})
+
+            task_content = ""
+            problem_info = ""
+            target_path = ""
+            if context_result and context_result[0]:
+                ctx = context_result[0]
+                task_content = ctx[0] or ""
+                if ctx[1] or ctx[2]:
+                    problem_info = f"Problem: {{ctx[1] or ctx[2]}}"
+                target_path = ctx[3] or ""
 
             # Mark as running
             adapter.execute(
@@ -110,10 +155,21 @@ async def main():
 
             # Run the agent work
             try:
-                prompt = synthesis or f"Work on task {{task_id}}"
+                # Build meaningful prompt from task context
+                prompt_parts = []
+                if synthesis:
+                    prompt_parts.append(synthesis)
+                if problem_info:
+                    prompt_parts.append(problem_info)
+                if task_content:
+                    prompt_parts.append(f"Details: {{task_content[:500]}}")
+                if target_path:
+                    prompt_parts.append(f"Target: {{target_path}}")
+
+                prompt = "\\n".join(prompt_parts) if prompt_parts else f"Execute task {{task_id}}"
                 target_dir = Path("{target_dir}")
 
-                result = await run_work_agent(
+                run_result = await run_work_agent(
                     actor_id="{agent_id}",
                     prompt=prompt,
                     target_dir=target_dir,
@@ -121,18 +177,20 @@ async def main():
                     timeout=600.0,
                 )
 
-                if result.success:
+                if run_result.success:
                     adapter.execute(
                         "MATCH (t:Narrative {{id: $id}}) SET t.status = 'completed'",
                         {{"id": task_id}}
                     )
                     logger.info(f"Completed: {{task_id}}")
+                    tasks_completed += 1
                 else:
                     adapter.execute(
                         "MATCH (t:Narrative {{id: $id}}) SET t.status = 'failed', t.error = $error",
-                        {{"id": task_id, "error": result.error or "Unknown error"}}
+                        {{"id": task_id, "error": run_result.error or "Unknown error"}}
                     )
-                    logger.error(f"Failed: {{task_id}} - {{result.error}}")
+                    logger.error(f"Failed: {{task_id}} - {{run_result.error}}")
+                    tasks_completed += 1  # Count failures too
 
             except Exception as e:
                 adapter.execute(
@@ -140,8 +198,7 @@ async def main():
                     {{"id": task_id, "error": str(e)}}
                 )
                 logger.error(f"Failed: {{task_id}} - {{e}}")
-        else:
-            logger.info("No tasks assigned, exiting")
+                tasks_completed += 1
 
     except Exception as e:
         logger.error(f"Agent error: {{e}}")
@@ -191,24 +248,26 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None):
     """Start N agents in parallel."""
     _ensure_dirs()
 
-    # Get available agents
-    agents = _get_available_agents()
-    if not agents:
-        print("No available agents found")
-        return
-
-    # Limit to requested number
-    agents = agents[:num_agents]
-    print(f"Starting {len(agents)} agents...")
-
-    # First, assign pending tasks
+    # First, assign pending tasks to agents
     try:
         from runtime.task_assignment import startup_assign
         assigned, skipped = startup_assign()
         if assigned > 0:
             print(f"Assigned {assigned} tasks to agents")
+        elif skipped > 0:
+            print(f"Skipped {skipped} tasks (no synthesis)")
     except Exception as e:
         print(f"Task assignment: {e}")
+
+    # Get available agents (those with claimed tasks)
+    agents = _get_available_agents()
+    if not agents:
+        print("No available agents found in graph")
+        return
+
+    # Limit to requested number
+    agents = agents[:num_agents]
+    print(f"Starting {len(agents)} agents...")
 
     # Spawn agents
     pids = {}

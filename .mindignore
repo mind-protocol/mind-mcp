@@ -59,7 +59,7 @@ __snapshots__/
 *.snap
 
 # Protocol installation
-.mind/
+.ngram/
 
 # Logs
 logs/

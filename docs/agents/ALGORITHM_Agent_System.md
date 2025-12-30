@@ -159,29 +159,45 @@ OUTPUT: directories[]  # Last one is current cwd
 ## create_moment() Flow
 
 ```
-INPUT: actor_id, moment_type, prose, about_ids?, space_id?, extra_props?
+INPUT: actor_id, moment_type, prose, about_ids?, space_id?, extra_props?, tools_used?
 
-1. GENERATE ID
-   ts_hash = sha256(timestamp)[:4]
-   agent_name = actor_id.replace("AGENT_", "").lower()
-   moment_id = f"moment:{moment_type.lower()}:{agent_name}_{ts_hash}"
+1. EXTRACT SALIENT TERMS (embedding-based)
+   embedding = get_embedding(prose[:2000])
+   candidates = query graph for nodes with embeddings
+   for each candidate:
+       similarity = cosine_similarity(embedding, candidate.embedding)
+   top_terms = sort by similarity, take top 4
+   clean_terms = split on separators, capitalize, join
 
-2. SET CONTEXT
+2. INFER ACTION VERB
+   if "bug"/"error" in prose → "Debugging"
+   if "found"/"discovered" in prose → "Discovering"
+   if "refactor" in prose → "Refactoring"
+   if Read/Grep heavy → "Exploring"
+   if Edit/Write heavy → "Building"
+   else → "Working"
+
+3. BUILD MOMENT NAME AND ID
+   agent_name = actor_id[6:]  # "AGENT_Witness" → "Witness"
+   moment_name = f"{verb}_{term1}_{term2}_{...}"
+   moment_id = f"WORK_{agent_name}_{moment_name}_{hash}"
+   # Example: WORK_Witness_Exploring_AgentGraph_Patterns_abc1
+
+4. SET CONTEXT
    set_actor(actor_id)
 
-3. INJECT MOMENT
+5. INJECT MOMENT
    inject(adapter, {
        id: moment_id,
        label: "Moment",
-       name: f"{moment_type}:{agent_name}",
+       name: moment_name,
        type: moment_type,
        synthesis: prose,
        timestamp: now,
        ...extra_props
    }, with_context=True)
-   # inject() handles: actor link, moment chaining
 
-4. LINK TO TARGETS
+6. LINK TO TARGETS
    for about_id in about_ids:
        inject_link(adapter, moment_id, about_id, nature="about")
 
