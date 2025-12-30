@@ -45,6 +45,7 @@ class RunResult:
     duration_seconds: float = 0.0
     retried_without_continue: bool = False
     assignment_moment_id: Optional[str] = None  # ID of the assignment moment created
+    completion_moment_id: Optional[str] = None  # ID of the completion moment with output
 
 
 async def run_work_agent(
@@ -125,6 +126,27 @@ async def run_work_agent(
         if result.success:
             agent_graph.boost_agent_energy(actor_id, 0.1)
 
+        # Create completion moment capturing the output
+        completion_moment_id = None
+        if result.output:
+            # Truncate output for prose (first 500 chars)
+            output_preview = result.output[:500] + "..." if len(result.output) > 500 else result.output
+            status = "completed" if result.success else "failed"
+
+            completion_moment_id = agent_graph.create_moment(
+                actor_id=actor_id,
+                moment_type="COMPLETION",
+                prose=f"Agent {name} {status}: {output_preview}",
+                about_ids=[task_id] if task_id else None,
+                extra_props={
+                    "task_id": task_id,
+                    "status": status,
+                    "duration_seconds": round(duration, 2),
+                    "output_length": len(result.output),
+                    "error": result.error[:200] if result.error else None,
+                },
+            )
+
         return RunResult(
             success=result.success,
             actor_id=actor_id,
@@ -133,6 +155,7 @@ async def run_work_agent(
             duration_seconds=duration,
             retried_without_continue=result.retried,
             assignment_moment_id=assignment_moment_id,
+            completion_moment_id=completion_moment_id,
         )
 
     finally:
