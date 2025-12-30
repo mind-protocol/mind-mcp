@@ -649,7 +649,7 @@ def _get_dashboard_data(project_dir: Path) -> Dict[str, Any]:
         # Count agents by status
         agent_result = graph.query("""
             MATCH (a:Actor)
-            WHERE a.type = 'agent' OR a.id STARTS WITH 'ACTOR_'
+            WHERE a.type = 'AGENT' OR a.id STARTS WITH 'AGENT_'
             RETURN a.status, count(a)
         """)
         for status, count in agent_result:

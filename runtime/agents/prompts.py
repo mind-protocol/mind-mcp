@@ -27,11 +27,11 @@ from typing import Any, Dict, List, Optional
 
 def get_agent_system_prompt(name: str, target_dir: Path) -> str:
     """
-    Load full agent system prompt: CLAUDE.md + ACTOR_{Posture}.md.
+    Load full agent system prompt from .mind/actors/{name}/.
 
     Combines:
-    1. Root system prompt from .mind/CLAUDE.md (shared by all agents)
-    2. Actor-specific prompt from .mind/actors/ACTOR_{Posture}.md
+    1. Root system prompt from CLAUDE.md (shared by all agents)
+    2. Actor-specific prompt from .mind/actors/{name}/CLAUDE.md
 
     Args:
         name: Agent name (e.g., "witness", "fixer")
@@ -58,17 +58,25 @@ def get_agent_system_prompt(name: str, target_dir: Path) -> str:
             logger.warning(f"Root CLAUDE.md not found, using fallback: {fallback_path}")
             parts.append(fallback_path.read_text())
 
-    # 2. Load actor-specific prompt
-    name_cap = name.capitalize()
-    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{name_cap}.md"
+    # 2. Load actor-specific prompt from .mind/actors/{name}/
+    name_lower = name.lower()
+    actor_dir = target_dir / ".mind" / "actors" / name_lower
 
-    if not actor_path.exists():
+    # Try CLAUDE.md, GEMINI.md, AGENTS.md in order
+    actor_path = None
+    for filename in ["CLAUDE.md", "AGENTS.md", "GEMINI.md"]:
+        candidate = actor_dir / filename
+        if candidate.exists():
+            actor_path = candidate
+            break
+
+    if not actor_path:
         raise FileNotFoundError(
-            f"Actor file not found: {actor_path}\n"
-            f"Create .mind/actors/ACTOR_{name_cap}.md to define the {name} agent."
+            f"Actor prompt not found in: {actor_dir}/\n"
+            f"Create .mind/actors/{name_lower}/CLAUDE.md to define the {name} agent."
         )
 
-    parts.append(f"\n\n---\n\n# Agent Posture: {name_cap}\n\n")
+    parts.append(f"\n\n---\n\n# Agent: {name.capitalize()}\n\n")
     parts.append(actor_path.read_text())
 
     return "".join(parts)

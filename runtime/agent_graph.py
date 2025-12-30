@@ -502,8 +502,8 @@ class AgentGraph:
         Create assigned_to link between agent and task narrative.
 
         Args:
-            actor_id: The agent ID (e.g., "ACTOR_witness")
-            task_id: The task narrative ID (e.g., "narrative_TASK_engine-SERVE_a7")
+            actor_id: The agent ID (e.g., "AGENT_Witness")
+            task_id: The task narrative ID (e.g., "NARRATIVE_Task_engine_a7")
 
         Returns:
             True if link created successfully
@@ -539,8 +539,8 @@ class AgentGraph:
         Create working_on link between agent and issue narrative.
 
         Args:
-            actor_id: The agent ID (e.g., "ACTOR_witness")
-            issue_id: The issue narrative ID (e.g., "narrative_PROBLEM_engine-MONOLITH_a7")
+            actor_id: The agent ID (e.g., "AGENT_Witness")
+            issue_id: The issue narrative ID (e.g., "NARRATIVE_Problem_engine_a7")
 
         Returns:
             True if link created successfully
@@ -609,15 +609,15 @@ class AgentGraph:
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
 
             # Extract agent name from ID
-            agent_name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
+            agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
 
-            moment_id = f"moment_ASSIGN-AGENT_{agent_name}_{ts_hash}"
+            moment_id = f"MOMENT_Assign_{agent_name}_{ts_hash}"
 
             # Create the moment node
             create_cypher = """
             MERGE (m:Moment {id: $id})
             SET m.node_type = 'moment',
-                m.type = 'ACTOR_assignment',
+                m.type = 'ASSIGNMENT',
                 m.prose = $prose,
                 m.status = 'completed',
                 m.actor_id = $actor_id,

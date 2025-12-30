@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from .mapping import NAME_TO_ACTOR_ID, DEFAULT_NAME
+from .mapping import NAME_TO_AGENT_ID, DEFAULT_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,9 @@ class AgentGraph:
     Query and manage work agents from the mind graph.
 
     Agents are Actor nodes with:
-    - id: ACTOR_{name} (e.g., ACTOR_witness)
+    - id: AGENT_{Name} (e.g., AGENT_Witness)
     - name: The agent name (e.g., witness)
-    - type: agent
+    - type: AGENT
     - status: ready | running | paused
     """
 
@@ -132,7 +132,7 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
 
-            for name, actor_id in NAME_TO_ACTOR_ID.items():
+            for name, actor_id in NAME_TO_AGENT_ID.items():
                 cypher = f"""
                 MATCH (a:Actor {{id: '{actor_id}'}})
                 RETURN a.id
@@ -205,7 +205,7 @@ class AgentGraph:
         """Return fallback agent list when graph unavailable."""
         return [
             AgentInfo(id=actor_id, name=name, status="ready")
-            for name, actor_id in NAME_TO_ACTOR_ID.items()
+            for name, actor_id in NAME_TO_AGENT_ID.items()
         ]
 
     def get_available_agents(self) -> List[AgentInfo]:
@@ -218,33 +218,80 @@ class AgentGraph:
         all_agents = self.get_all_agents()
         return [a for a in all_agents if a.status == "running"]
 
-    def select_agent_for_task(self, task_type: str) -> Optional[str]:
+    def select_agent_for_task(self, task_synthesis: str) -> Optional[str]:
         """
-        Select the best agent for a problem type.
-        Matches problem type to name, then finds an available agent.
+        Select the best agent for a task using graph physics.
+
+        Score = similarity * weight * energy
+
+        Args:
+            task_synthesis: The task's synthesis text for embedding comparison
+
+        Returns:
+            Actor ID of best matching available agent, or None if all busy
         """
-        from .mapping import TASK_TO_AGENT
-
-        name = TASK_TO_AGENT.get(task_type, DEFAULT_NAME)
-        preferred_actor_id = NAME_TO_ACTOR_ID.get(name)
-
         available = self.get_available_agents()
-
         if not available:
             logger.warning("[AgentGraph] All agents are busy")
             return None
 
-        for agent in available:
-            if agent.id == preferred_actor_id:
-                return agent.id
+        if not self._connect():
+            # Fallback: highest energy agent
+            available.sort(key=lambda a: a.energy, reverse=True)
+            return available[0].id
 
-        available.sort(key=lambda a: a.energy, reverse=True)
-        return available[0].id
+        try:
+            from runtime.infrastructure.embeddings import get_embedding, cosine_similarity
+
+            task_embedding = get_embedding(task_synthesis)
+            if not task_embedding:
+                available.sort(key=lambda a: a.energy, reverse=True)
+                return available[0].id
+
+            # Get agent embeddings and compute scores
+            available_ids = [a.id for a in available]
+            cypher = """
+            MATCH (a:Actor)
+            WHERE a.id IN $ids AND a.embedding IS NOT NULL
+            RETURN a.id, a.embedding, a.weight, a.energy
+            """
+            rows = self._graph_ops._query(cypher, {"ids": available_ids})
+
+            best_agent = None
+            best_score = -1.0
+
+            for row in rows:
+                agent_id = row[0]
+                agent_embedding = row[1]
+                agent_weight = row[2] or 1.0
+                agent_energy = row[3] or 0.0
+
+                if agent_embedding:
+                    similarity = cosine_similarity(task_embedding, agent_embedding)
+                    # Score = similarity * weight * energy
+                    score = similarity * agent_weight * max(agent_energy, 0.1)
+
+                    if score > best_score:
+                        best_score = score
+                        best_agent = agent_id
+
+            if best_agent:
+                logger.info(f"[AgentGraph] Selected {best_agent} (score={best_score:.3f})")
+                return best_agent
+
+            # Fallback: highest energy
+            available.sort(key=lambda a: a.energy, reverse=True)
+            return available[0].id
+
+        except Exception as e:
+            logger.warning(f"[AgentGraph] Embedding selection failed: {e}")
+            available.sort(key=lambda a: a.energy, reverse=True)
+            return available[0].id
 
     def get_agent_name(self, actor_id: str) -> str:
         """Get the name for an agent ID."""
-        if actor_id.startswith("ACTOR_"):
-            return actor_id[6:]
+        if actor_id.startswith("AGENT_"):
+            return actor_id[6:].lower()
         return DEFAULT_NAME
 
     def set_agent_running(self, actor_id: str) -> bool:
@@ -560,13 +607,13 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
-            agent_name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
-            moment_id = f"moment_ASSIGN-AGENT_{agent_name}_{ts_hash}"
+            agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
+            moment_id = f"MOMENT_Assign_{agent_name}_{ts_hash}"
 
             create_cypher = """
             MERGE (m:Moment {id: $id})
             SET m.node_type = 'moment',
-                m.type = 'ACTOR_assignment',
+                m.type = 'ASSIGNMENT',
                 m.prose = $prose,
                 m.status = 'completed',
                 m.actor_id = $actor_id,
@@ -689,8 +736,8 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
-            agent_name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
-            moment_id = f"moment_{moment_type.upper()}_{agent_name}_{ts_hash}"
+            agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
+            moment_id = f"MOMENT_{moment_type.capitalize()}_{agent_name}_{ts_hash}"
 
             # Get previous moment for chaining
             prev_moment_id = self.get_actor_last_moment(actor_id)
@@ -809,7 +856,7 @@ class AgentGraph:
 
         moment_id = self.create_moment(
             actor_id=actor_id,
-            moment_type="ACTOR_assignment",
+            moment_type="ASSIGNMENT",
             prose=f"Agent {actor_id} assigned to task {task_id}",
             about_ids=about_ids,
             extra_props={"task_id": task_id, "status": "completed"},

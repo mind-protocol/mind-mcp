@@ -1,8 +1,8 @@
 """
 Agent Mapping
 
-Maps problem types to agent names for task assignment.
-Agents are discovered dynamically from .mind/actors/ directory.
+Agent discovery and ID generation from .mind/actors/ directory.
+Task→Agent routing uses graph physics (embedding similarity * weight).
 
 ID Pattern: TYPE_Name (e.g., AGENT_Witness, TASK_FixAuth)
 
@@ -11,80 +11,13 @@ DOCS: docs/agents/PATTERNS_Agent_System.md
 
 from pathlib import Path
 from typing import Dict, List, Optional
-import os
 
-# =============================================================================
-# PROBLEM → NAME MAPPING
-# =============================================================================
-
-TASK_TO_AGENT: Dict[str, str] = {
-    # witness: evidence-first (traces, investigations)
-    "STALE_SYNC": "witness",
-    "STALE_IMPL": "witness",
-    "DOC_DELTA": "witness",
-    "NEW_UNDOC_CODE": "witness",
-
-    # groundwork: foundation-first (scaffolding, structure)
-    "UNDOCUMENTED": "groundwork",
-    "INCOMPLETE_CHAIN": "groundwork",
-    "MISSING_TESTS": "groundwork",
-
-    # keeper: verification-first (validation, checks)
-    "INVARIANT_COVERAGE": "keeper",
-    "TEST_VALIDATES": "keeper",
-    "COMPLETION_GATE": "keeper",
-    "VALIDATION_BEHAVIORS_LIST": "keeper",
-
-    # weaver: connection-first (patterns, links)
-    "BROKEN_IMPL_LINK": "weaver",
-    "BROKEN_IMPL_LINKS": "weaver",
-    "DOC_LINK_INTEGRITY": "weaver",
-    "ORPHAN_DOCS": "weaver",
-
-    # voice: naming-first (naming, terminology)
-    "NAMING_CONVENTION": "voice",
-    "NONSTANDARD_DOC_TYPE": "voice",
-
-    # scout: exploration-first (discovery, navigation)
-    "MONOLITH": "scout",
-    "LARGE_DOC_MODULE": "scout",
-
-    # architect: structure-first (design, patterns)
-    "DOC_TEMPLATE_DRIFT": "architect",
-    "YAML_DRIFT": "architect",
-    "PLACEHOLDER_DOCS": "architect",
-    "PLACEHOLDER": "architect",
-
-    # fixer: work-first (fixes, patches)
-    "STUB_IMPL": "fixer",
-    "INCOMPLETE_IMPL": "fixer",
-    "NO_DOCS_REF": "fixer",
-    "UNDOC_IMPL": "fixer",
-    "MAGIC_VALUES": "fixer",
-    "HARDCODED_SECRET": "fixer",
-    "HARDCODED_SECRETS": "fixer",
-    "LONG_STRINGS": "fixer",
-
-    # herald: communication-first (docs, announcements)
-    "DOC_GAPS": "herald",
-    "DOC_DUPLICATION": "herald",
-    "PROMPT_DOC_REFERENCE": "herald",
-    "PROMPT_VIEW_TABLE": "herald",
-    "PROMPT_CHECKLIST": "herald",
-
-    # steward: coordination-first (conflicts, priorities)
-    "ESCALATION": "steward",
-    "SUGGESTION": "steward",
-    "CONFLICTS": "steward",
-    "PROPOSITION": "steward",
-}
-
-# Default when problem type not mapped
+# Default agent when no match found
 DEFAULT_NAME = "fixer"
 
 # Static mapping: name -> actor_id
 # Pattern: id = name = TYPE_Name
-NAME_TO_ACTOR_ID: Dict[str, str] = {
+NAME_TO_AGENT_ID: Dict[str, str] = {
     "witness": "AGENT_Witness",
     "groundwork": "AGENT_Groundwork",
     "keeper": "AGENT_Keeper",
@@ -174,22 +107,6 @@ def list_agents(target_dir: Optional[Path] = None) -> List[str]:
         List of agent names
     """
     return list(discover_agents(target_dir).keys())
-
-
-def select_agent_for_task(task_type: str, target_dir: Optional[Path] = None) -> tuple:
-    """
-    Select best agent for a problem type.
-
-    Args:
-        task_type: Problem type string
-        target_dir: Project root for agent discovery
-
-    Returns:
-        Tuple of (actor_id, name)
-    """
-    name = TASK_TO_AGENT.get(task_type, DEFAULT_NAME)
-    actor_id = get_agent_id(name, target_dir)
-    return actor_id, name
 
 
 def get_name_description(name: str) -> str:

@@ -54,7 +54,7 @@ class CapabilityGraphAdapter:
         """
         try:
             # Map problem types to agent names
-            from runtime.agent_graph import TASK_TO_AGENT, NAME_TO_ACTOR_ID
+            from runtime.agent_graph import TASK_TO_AGENT, NAME_TO_AGENT_ID
 
             # Find matching name for this problem
             name = TASK_TO_AGENT.get(problem)
@@ -63,9 +63,9 @@ class CapabilityGraphAdapter:
                 name = "fixer"
 
             # Get agent ID for this name
-            actor_id = NAME_TO_ACTOR_ID.get(name)
+            actor_id = NAME_TO_AGENT_ID.get(name)
             if not actor_id:
-                actor_id = f"ACTOR_{name}"
+                actor_id = f"AGENT_{name.capitalize()}"
 
             # Check if agent is idle/ready (not already working on max tasks)
             result = self._graph._query(

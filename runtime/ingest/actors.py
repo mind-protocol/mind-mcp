@@ -13,7 +13,7 @@ Structure:
     └── fixer/
         └── ...
 
-DOCS: .mind/docs/ACTOR_TEMPLATE.md
+DOCS: .mind/docs/AGENT_TEMPLATE.md
 """
 
 import logging
@@ -31,7 +31,7 @@ def ingest_actors(
     """
     Ingest actors from .mind/actors/ into the graph.
 
-    Reads ACTOR_*.md files and creates Actor nodes with:
+    Reads .mind/actors/{name}/CLAUDE.md and creates Actor nodes with:
     - id: AGENT_{Name}
     - synthesis: for embedding
     - content: purpose description

@@ -10,7 +10,7 @@ Usage:
     from runtime.agents.run import run_work_agent
 
     result = await run_work_agent(
-        actor_id="ACTOR_witness",
+        actor_id="AGENT_Witness",
         prompt="Fix the stale SYNC file at...",
         target_dir=Path("/path/to/project"),
         agent_provider="claude",
@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Optional, Callable, Awaitable, List
 
 from .graph import AgentGraph
-from .mapping import NAME_TO_ACTOR_ID
+from .mapping import NAME_TO_AGENT_ID
 from .cli import build_agent_command, normalize_agent
 from .prompts import get_agent_system_prompt
 
@@ -71,7 +71,7 @@ async def run_work_agent(
     7. Sets agent status back to 'ready' when done
 
     Args:
-        actor_id: Agent ID (e.g., "ACTOR_witness")
+        actor_id: Agent ID (e.g., "AGENT_Witness")
         prompt: The task prompt for the agent
         target_dir: Project root directory
         agent_provider: Provider (claude, gemini, codex, all)
@@ -89,7 +89,7 @@ async def run_work_agent(
     assignment_moment_id = None
 
     # Extract name from actor_id
-    name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
+    name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
 
     # Initialize graph connection
     agent_graph = AgentGraph(graph_name="mind")
@@ -369,7 +369,7 @@ async def run_for_task(
     if not actor_id:
         # All agents busy, use default fixer
         logger.warning("[run] All agents busy, using default fixer")
-        actor_id = NAME_TO_ACTOR_ID.get("fixer", "ACTOR_fixer")
+        actor_id = NAME_TO_AGENT_ID.get("fixer", "AGENT_Fixer")
 
     return await run_work_agent(
         actor_id=actor_id,

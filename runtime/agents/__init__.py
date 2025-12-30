@@ -30,14 +30,12 @@ Usage:
 # Re-export from submodules for clean API
 from .graph import AgentGraph, AgentInfo
 from .mapping import (
-    TASK_TO_AGENT,
-    NAME_TO_ACTOR_ID,
+    NAME_TO_AGENT_ID,
     DEFAULT_NAME,
     make_id,
     discover_agents,
     get_agent_id,
     list_agents,
-    select_agent_for_task,
 )
 from .cli import build_agent_command, normalize_agent, AgentCommand
 from .run import (
@@ -61,14 +59,12 @@ __all__ = [
     "AgentGraph",
     "AgentInfo",
     # Agent Discovery
-    "TASK_TO_AGENT",
-    "NAME_TO_ACTOR_ID",
+    "NAME_TO_AGENT_ID",
     "DEFAULT_NAME",
     "make_id",
     "discover_agents",
     "get_agent_id",
     "list_agents",
-    "select_agent_for_task",
     # CLI
     "build_agent_command",
     "normalize_agent",

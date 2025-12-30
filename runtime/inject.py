@@ -894,7 +894,7 @@ def inject_node(
 
     Args:
         adapter: Database adapter
-        node_id: Node ID (e.g., "ACTOR_witness")
+        node_id: Node ID (e.g., "AGENT_Witness")
         label: Optional label (inferred from id prefix if not provided)
         name: Optional name
         content: Optional content

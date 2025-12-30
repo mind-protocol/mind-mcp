@@ -52,7 +52,7 @@ from runtime.connectome import ConnectomeRunner
 from runtime.agents import (
     AgentGraph,
     TASK_TO_AGENT,
-    NAME_TO_ACTOR_ID,
+    NAME_TO_AGENT_ID,
     run_work_agent,
     run_for_task,
     build_agent_prompt,
