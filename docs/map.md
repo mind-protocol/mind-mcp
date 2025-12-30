@@ -1,28 +1,28 @@
 # Repository Map: mind-mcp
 
-*Generated: 2025-12-30 04:30*
+*Generated: 2025-12-30 05:26*
 
-- **Files:** 477
-- **Directories:** 104
+- **Files:** 480
+- **Directories:** 107
 - **Total Size:** 5.1M
 - **Doc Files:** 323
-- **Code Files:** 143
+- **Code Files:** 146
 - **Areas:** 13 (docs/ subfolders)
 - **Modules:** 32 (subfolders in areas)
-- **DOCS Links:** 69 (0.48 avg per code file)
+- **DOCS Links:** 69 (0.47 avg per code file)
 
 - markdown: 323
-- python: 134
+- python: 137
 - typescript: 9
 
 ```
-├── cli/ (120.6K)
-│   ├── commands/ (60.0K)
+├── cli/ (134.2K)
+│   ├── commands/ (73.4K)
 │   │   ├── agents.py (12.1K) →
 │   │   ├── events.py (14.9K) →
 │   │   ├── fix_embeddings.py (1.1K)
-│   │   ├── init.py (4.7K)
-│   │   ├── swarm.py (14.1K)
+│   │   ├── init.py (5.9K)
+│   │   ├── swarm.py (26.5K)
 │   │   ├── tasks.py (11.7K) →
 │   │   ├── upgrade.py (790)
 │   │   └── (..2 more files)
@@ -38,12 +38,12 @@
 │   │   ├── setup_database_and_apply_schema.py (5.0K)
 │   │   ├── validate_embedding_config_matches_stored.py (2.3K)
 │   │   └── (..15 more files)
-│   ├── __main__.py (2.7K)
+│   ├── __main__.py (2.9K)
 │   └── (..2 more files)
-├── connectome/ (67.0K)
-│   ├── adapters/ (12.3K)
+├── connectome/ (66.9K)
+│   ├── adapters/ (12.2K)
 │   │   ├── local.ts (7.1K)
-│   │   ├── remote.ts (4.9K)
+│   │   ├── remote.ts (4.8K)
 │   │   └── (..1 more files)
 │   ├── core/ (15.5K)
 │   │   ├── types/ (15.1K)
@@ -445,7 +445,7 @@
 │   ├── ARCHITECTURE.md (4.4K)
 │   ├── MAPPING.md (2.7K)
 │   ├── TAXONOMY.md (1.7K)
-│   └── map.md (289.7K)
+│   └── map.md (293.1K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -463,18 +463,20 @@
 │   │   └── (..1 more files)
 │   ├── server.py (75.8K)
 │   └── (..2 more files)
-├── runtime/ (2.1M)
+├── runtime/ (2.2M)
 │   ├── actors/
 │   │   └── (..4 more files)
-│   ├── agents/ (132.6K)
+│   ├── agents/ (133.7K)
 │   │   ├── __init__.py (2.5K) →
 │   │   ├── cli.py (3.2K) →
-│   │   ├── graph.py (41.3K)
+│   │   ├── graph.py (42.4K)
 │   │   ├── liveness.py (11.5K)
 │   │   ├── mapping.py (6.5K) →
 │   │   ├── prompts.py (7.9K) →
 │   │   ├── run.py (22.9K) →
 │   │   └── verification.py (36.8K) →
+│   ├── capability/ (19.9K)
+│   │   └── __init__.py (19.9K)
 │   ├── client/
 │   │   └── (..5 more files)
 │   ├── connectome/ (103.7K)
@@ -615,20 +617,25 @@
 │   ├── cluster_metrics.py (31.4K)
 │   ├── explore_cmd.py (23.0K)
 │   ├── init_cmd.py (24.5K) →
-│   ├── inject.py (31.9K)
+│   ├── inject.py (32.3K)
 │   ├── procedure_runner.py (42.0K)
 │   ├── repo_overview.py (28.5K) →
 │   ├── status_cmd.py (36.3K) →
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── validate.py (29.4K) →
 │   └── (..22 more files)
-├── tests/
+├── tests/ (10.1K)
 │   ├── graph/
 │   │   └── (..3 more files)
 │   ├── membrane/
 │   │   └── (..2 more files)
+│   ├── schema/ (7.8K)
+│   │   ├── test_schema_invariants.py (7.7K)
+│   │   └── (..1 more files)
 │   ├── traversal/
 │   │   └── (..2 more files)
+│   ├── validation/ (2.3K)
+│   │   └── test_invariants.py (2.3K)
 │   └── (..1 more files)
 ├── .gitignore (559)
 ├── .mindignore (839)
@@ -636,7 +643,7 @@
 ├── AGENTS.md (34.4K)
 ├── CLAUDE.md (1.4K)
 ├── README.md (2.9K)
-└── map.md (289.7K)
+└── map.md (293.1K)
 ```
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
@@ -680,15 +687,24 @@
 - `def _update_sync_file()`
 
 **Definitions:**
+- `class Colors`
+- `def _get_agent_color()`
 - `def _ensure_dirs()`
 - `def _get_available_agents()`
 - `def _get_pending_tasks()`
-- `def _spawn_agent_process()`
+- `def _build_agent_script()`
 - `async def main()`
+- `def _run_agent_silent()`
+- `def _spawn_agent_background()`
 - `def _save_pids()`
 - `def _load_pids()`
 - `def _is_running()`
+- `def _fire_capability_trigger()`
+- `def _get_pending_task_count()`
 - `def run_swarm()`
+- `def stream_new_moments()`
+- `def run_agent_subprocess()`
+- `def cleanup_on_interrupt()`
 - `def show_status()`
 - `def stop_swarm()`
 - `def stream_moments()`
@@ -7781,6 +7797,89 @@
 - `def format_todo_suggestion()`
 - `def should_suggest_todos()`
 
+**Definitions:**
+- `class SignalLevel`
+- `class Signal`
+- `def healthy()`
+- `def degraded()`
+- `def critical()`
+- `def is_problem()`
+- `class Trigger`
+- `class FileTriggers`
+- `def on_create()`
+- `def on_modify()`
+- `def on_delete()`
+- `def on_move()`
+- `class InitTriggers`
+- `def startup()`
+- `def after_scan()`
+- `class CronTriggers`
+- `def daily()`
+- `def hourly()`
+- `def weekly()`
+- `def every()`
+- `class CITriggers`
+- `def on_push()`
+- `def on_pr()`
+- `def pull_request()`
+- `class HookTriggers`
+- `def pre_commit()`
+- `def post_commit()`
+- `class StreamTriggers`
+- `def on_event()`
+- `def on_error()`
+- `class EventTriggers`
+- `def on()`
+- `def after_ingest()`
+- `class GitTriggers`
+- `def on_commit()`
+- `def post_commit()`
+- `def on_push()`
+- `def on_pull()`
+- `class Triggers`
+- `class CheckDefinition`
+- `def check()`
+- `def test_coverage()`
+- `def decorator()`
+- `class CheckContext`
+- `class TriggerRegistry`
+- `def __init__()`
+- `def register_check()`
+- `def get_checks_for_trigger()`
+- `def get_all_checks()`
+- `def get_stats()`
+- `def discover_capabilities()`
+- `def load_checks()`
+- `def dispatch_trigger()`
+- `def run_checks()`
+- `def create_task_runs()`
+- `def claim_task()`
+- `def complete_task()`
+- `def fail_task()`
+- `def release_task()`
+- `def update_actor_heartbeat()`
+- `def set_actor_working()`
+- `def set_actor_idle()`
+- `class Throttler`
+- `def __init__()`
+- `def should_create()`
+- `def reset()`
+- `def get_throttler()`
+- `def reset_throttler()`
+- `class AgentMode`
+- `class AgentRegistry`
+- `def __init__()`
+- `def set_mode()`
+- `def get_mode()`
+- `def reset()`
+- `def get_registry()`
+- `def reset_agents()`
+- `class Controller`
+- `def __init__()`
+- `def pause()`
+- `def resume()`
+- `def get_controller()`
+
 **Docs:** `docs/connectome/PATTERNS_Connectome.m`
 
 **Docs:** `docs/membrane/IMPLEMENTATION_Membrane_System.md`
@@ -9651,6 +9750,42 @@
 - `def check_module_manifest()`
 - `def generate_fix_prompt()`
 - `def validate_protocol()`
+
+**Definitions:**
+- `def test_link_endpoints_exist()`
+- `def test_physics_ranges_nodes()`
+- `def test_physics_ranges_links()`
+- `def test_polarity_range()`
+- `def test_required_fields_present()`
+- `def test_node_type_values()`
+- `def test_single_link_type()`
+- `def test_permanence_range()`
+- `def test_emotion_ranges()`
+- `def test_found_narratives_structure()`
+- `def test_crystallization_embedding_continuous()`
+- `def test_queries_are_read_only()`
+- `def test_no_llm_in_validation()`
+
+**Definitions:**
+- `def test_v1_template_paths()`
+- `def test_v2_streaming_and_exclusions()`
+- `def test_v3_output_and_discovery()`
+- `def test_v4_debug_and_sync()`
+- `def test_v5_tool_calls_and_orphans()`
+- `def test_v6_project_sync_and_fields()`
+- `def test_v7_views_and_relationships()`
+- `def test_v8_link_types()`
+- `def test_v9_reserved()`
+- `def test_v10_reserved()`
+- `def test_v11_reserved()`
+- `def test_v12_reserved()`
+- `def test_v13_reserved()`
+- `def test_v14_reserved()`
+- `def test_v15_reserved()`
+- `def test_v16_reserved()`
+- `def test_v17_reserved()`
+- `def test_v18_reserved()`
+- `def test_v19_reserved()`
 
 **Code refs:**
 - `doctor_cli_parser_and_run_checker.py`
