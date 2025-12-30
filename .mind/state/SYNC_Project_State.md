@@ -7,6 +7,67 @@ UPDATED_BY: agent_claude
 
 ## Recent Changes
 
+### 2025-12-30: Agent Session Tracking and Conversation Capture
+
+**What:** Agents now track their sessions and capture full conversations as graph moments.
+
+**Session-based agent tracking:**
+- Agent writes `session_id` to `.mind/actors/{name}/.sessionId` on start
+- File deleted when agent finishes
+- `get_active_agent_from_session(target_dir)` detects running agent for MCP auto-fill
+- Replaces jsonl-based detection (simpler, more reliable)
+
+**Conversation capture:**
+- Full conversation parsed from Claude's `--output-format stream-json --verbose`
+- Captures: thinking blocks, text output, tool_use calls, tool_result responses
+- Turns grouped into batches of 5 for manageable moment sizes
+- Tool output truncated to 200 chars; thinking/text kept full
+- Creates CONVERSATION moment per batch, chained with `--precedes-->`
+- Final COMPLETION moment summarizes the run
+
+**CD command detection:**
+- Parses Bash tool calls for `cd` commands
+- Updates agent's `cwd` property on actor node
+- Links to existing folder Space nodes if found
+
+**Files modified:**
+- `runtime/agents/run.py` — Session file write, conversation parsing, batching, cd detection
+- `runtime/agents/graph.py` — `create_moment()` uses inject(), added `link_moments()`, `update_agent_cwd()`
+- `runtime/agents/liveness.py` — Added `get_active_agent_from_session()`, `get_all_active_agents_from_sessions()`
+- `runtime/agents/__init__.py` — Exports new functions
+
+**Usage:**
+```python
+from runtime.agents import run_work_agent, get_active_agent_from_session
+
+# Check if any agent is currently running
+active = get_active_agent_from_session(Path("."))  # Returns agent name or None
+
+# Run agent - session tracked automatically
+result = await run_work_agent(
+    actor_id="AGENT_Witness",
+    prompt="Read README.md and cd into docs/",
+    target_dir=Path("."),
+)
+
+# Result includes moment IDs
+print(result.completion_moment_id)  # moment:completion:witness_abc1
+```
+
+**Graph state after run:**
+```
+AGENT_Witness:
+  cwd: /home/user/project/docs
+  status: ready
+
+Moments created:
+  moment:conversation:witness_abc0 (batch 0)
+  moment:conversation:witness_abc1 (batch 1)
+  moment:completion:witness_abc2 (final)
+```
+
+---
+
 ### 2025-12-30: Canonical Unified Injection Function
 
 **What:** Created `runtime/inject.py` as the single entry point for all graph injection operations.

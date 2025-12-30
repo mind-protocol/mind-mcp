@@ -488,7 +488,7 @@ def build_file_tree(
             doc_refs = extract_markdown_doc_refs(current_path)
         elif language in ['python', 'javascript', 'typescript', 'tsx', 'jsx', 'go', 'rust', 'java']:
             functions = extract_code_definitions(current_path)
-            docs_ref = extract_docs_ref(current_path, config.docs_ref_search_chars)
+            docs_ref = extract_docs_ref(current_path, 500)  # Search first 500 chars for DOCS: ref
             raw_imports = parse_imports(current_path)
             # Filter to only local imports (not stdlib/third-party)
             imports = _filter_local_imports(raw_imports, target_dir)

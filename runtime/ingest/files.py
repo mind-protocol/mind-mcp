@@ -121,11 +121,10 @@ def scan_and_ingest_files(
         Stats dict: {files_scanned, things_created, spaces_created, ...}
     """
     from ..infrastructure.database import get_database_adapter
-    from ..doctor_files import should_ignore_path, is_binary_file, load_doctor_config
+    from ..file_utils import should_ignore_path, is_binary_file, load_ignore_patterns
 
-    # Load config for ignore patterns
-    config = load_doctor_config(target_dir)
-    ignore_patterns = config.ignore if hasattr(config, 'ignore') else []
+    # Load ignore patterns
+    ignore_patterns = load_ignore_patterns(target_dir)
 
     # Get database adapter
     adapter = get_database_adapter(graph_name=graph_name)
