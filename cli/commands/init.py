@@ -19,6 +19,7 @@ from ..helpers.inject_agents_to_graph import inject_agents
 from ..helpers.generate_repo_overview_maps import generate_overview
 from ..helpers.generate_embeddings_for_graph_nodes import generate_embeddings
 from ..helpers.get_mcp_version_from_config import get_mcp_version
+from ..helpers.save_version_hash import save_version_hash
 
 
 def run(target_dir: Path, database: str = "falkordb") -> bool:
@@ -45,6 +46,7 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     # 3. Runtime package
     print("\n## Runtime")
     copy_runtime_package(target_dir)
+    save_version_hash(target_dir)
     steps.append("runtime")
 
     # 4. AI config files

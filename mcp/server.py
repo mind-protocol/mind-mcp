@@ -92,6 +92,14 @@ class MindServer:
         self.connectomes_dir = connectomes_dir or (project_root / "procedures")
         self.target_dir = project_root
 
+        # Auto-upgrade check on startup
+        try:
+            from runtime.upgrade import check_and_upgrade
+            if check_and_upgrade(self.target_dir):
+                logger.info("Runtime upgraded, restart may be needed for full effect")
+        except Exception as e:
+            logger.debug(f"Upgrade check skipped: {e}")
+
         # Try to get graph connections if available
         try:
             from runtime.physics.graph import GraphOps, GraphQueries
