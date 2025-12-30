@@ -53,6 +53,14 @@ from .verification import (
     VerificationResult,
     all_passed,
 )
+from .liveness import (
+    ACTIVE_THRESHOLD_SECONDS,
+    check_agent_liveness,
+    get_session_activity,
+    get_all_active_agents,
+    sync_liveness_to_graph,
+    SessionInfo,
+)
 
 __all__ = [
     # Graph
@@ -81,4 +89,11 @@ __all__ = [
     "verify_completion",
     "VerificationResult",
     "all_passed",
+    # Liveness
+    "ACTIVE_THRESHOLD_SECONDS",
+    "check_agent_liveness",
+    "get_session_activity",
+    "get_all_active_agents",
+    "sync_liveness_to_graph",
+    "SessionInfo",
 ]

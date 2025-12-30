@@ -9,7 +9,6 @@ Tools:
   - procedure_continue: Continue with an answer
   - procedure_abort: Abort a session
   - procedure_list: List available procedures
-  - doctor_check: Run health checks
   - agent_list: List work agents
   - agent_run: Run a work agent
   - agent_status: Get/set agent status
@@ -58,8 +57,6 @@ from runtime.agents import (
     build_agent_prompt,
     get_learnings_content,
 )
-from runtime.doctor import run_doctor, DoctorIssue
-from runtime.doctor_types import DoctorConfig
 from runtime.work_instructions import get_problem_instructions
 from runtime.capability_integration import (
     init_capability_manager,
@@ -251,24 +248,6 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "doctor_check",
-                    "description": "Run doctor health checks and return issues with assigned agents.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "depth": {
-                                "type": "string",
-                                "enum": ["links", "docs", "full"],
-                                "description": "Check depth: links (fastest), docs, or full"
-                            },
-                            "path": {
-                                "type": "string",
-                                "description": "Optional path filter"
-                            }
-                        }
-                    }
-                },
-                {
                     "name": "ACTOR_list",
                     "description": "List all work agents and their status (ready/running).",
                     "inputSchema": {
@@ -328,7 +307,7 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "ACTOR_status",
+                    "name": "agent_status",
                     "description": "Get or set the status of a specific agent.",
                     "inputSchema": {
                         "type": "object",
@@ -496,7 +475,7 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "ACTOR_heartbeat",
+                    "name": "agent_heartbeat",
                     "description": "Update agent heartbeat. Call every 60s while working on a task.",
                     "inputSchema": {
                         "type": "object",
@@ -529,15 +508,13 @@ class MindServer:
             return self._tool_abort(arguments)
         elif tool_name == "procedure_list":
             return self._tool_list(arguments)
-        elif tool_name == "doctor_check":
-            return self._tool_doctor_check(arguments)
         elif tool_name == "ACTOR_list":
             return self._tool_agent_list(arguments)
         elif tool_name == "task_list":
             return self._tool_task_list(arguments)
         elif tool_name == "AGENT_run":
             return self._tool_agent_run(arguments)
-        elif tool_name == "ACTOR_status":
+        elif tool_name == "agent_status":
             return self._tool_agent_status(arguments)
         elif tool_name == "graph_query":
             return self._tool_graph_query(arguments)
@@ -557,7 +534,7 @@ class MindServer:
             return self._tool_task_complete(arguments)
         elif tool_name == "task_fail":
             return self._tool_task_fail(arguments)
-        elif tool_name == "ACTOR_heartbeat":
+        elif tool_name == "agent_heartbeat":
             return self._tool_agent_heartbeat(arguments)
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
@@ -607,72 +584,28 @@ class MindServer:
 
         return {"content": [{"type": "text", "text": text}]}
 
-    def _tool_doctor_check(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Run doctor checks and return issues with assigned agents."""
-        depth = args.get("depth", "docs")
-        path_filter = args.get("path")
-
-        try:
-            # Graph schema health check
-            schema_lines = []
-            try:
-                from runtime.physics.graph.graph_schema_cleanup import get_schema_health, cleanup_invalid_nodes
-                health = get_schema_health()
-
-                if health.get("error"):
-                    schema_lines.append(f"Graph: Error - {health['error']}")
-                else:
-                    invalid = health["null_node_type"] + health["invalid_node_type"] + health["null_id"]
-                    if invalid > 0:
-                        schema_lines.append(f"Graph: {invalid} invalid nodes (run cleanup)")
-                        # Auto-fix if small number
-                        if invalid <= 10:
-                            report = cleanup_invalid_nodes(dry_run=False)
-                            schema_lines.append(f"  Auto-fixed: {report.nodes_deleted} deleted")
-                    else:
-                        schema_lines.append(f"Graph: OK ({health['total_nodes']} nodes)")
-            except Exception as e:
-                schema_lines.append(f"Graph: Check failed - {e}")
-
-            config = DoctorConfig()
-            result = run_doctor(self.target_dir, config)
-            # Extract issues from all categories
-            issues = []
-            for category_issues in result.get("issues", {}).values():
-                issues.extend(category_issues)
-
-            # Filter by path if provided
-            if path_filter:
-                issues = [i for i in issues if path_filter in i.path]
-
-            # Filter by depth
-            from runtime.doctor_types import get_depth_types
-            allowed_types = get_depth_types(depth)
-            issues = [i for i in issues if i.task_type in allowed_types]
-
-            if not issues:
-                output = "\n".join(schema_lines) + "\n\nNo doc issues found."
-                return {"content": [{"type": "text", "text": output}]}
-
-            lines = schema_lines + ["", f"Found {len(issues)} doc issues:\n"]
-            for idx, issue in enumerate(issues):
-                lines.append(f"{idx+1}. [{issue.severity.upper()}] {issue.task_type}")
-                lines.append(f"   Path: {issue.path}")
-                lines.append(f"   Message: {issue.message[:80]}...")
-                lines.append("")
-
-            lines.append("\nUse agent_run to fix a problem.")
-            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-        except Exception as e:
-            logger.exception("Doctor check failed")
-            return {"content": [{"type": "text", "text": f"Error running doctor: {e}"}]}
-
     def _tool_agent_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List all agents and their status."""
+        """List all agents with status and session liveness."""
+        from pathlib import Path
+        from runtime.agents.liveness import check_agent_liveness
+
         agents = self.agent_graph.get_all_agents()
 
+        # Check session liveness
+        liveness = check_agent_liveness(Path.cwd())
+        session_alive = liveness.get("alive", False)
+        most_recent_age = liveness.get("most_recent_age")
+        active_count = liveness.get("active_sessions", 0)
+
         lines = ["Work Agents:\n"]
+
+        # Session liveness summary
+        if session_alive:
+            lines.append(f"  Session: ACTIVE ({active_count} sessions, last: {most_recent_age:.1f}s ago)\n")
+        else:
+            age_str = f"{most_recent_age:.0f}s ago" if most_recent_age else "unknown"
+            lines.append(f"  Session: IDLE (last: {age_str})\n")
+
         for agent in agents:
             status_icon = "🟢" if agent.status == "ready" else "🔴"
             lines.append(f"  {status_icon} {agent.id} ({agent.name})")
@@ -1027,7 +960,10 @@ Please investigate and fix this problem. Follow the project's coding standards a
             return {"content": [{"type": "text", "text": f"Error executing agent: {e}"}]}
 
     def _tool_agent_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Get or set agent status."""
+        """Get or set agent status, with session liveness detection."""
+        from pathlib import Path
+        from runtime.agents.liveness import check_agent_liveness
+
         actor_id = args.get("actor_id")
         set_status = args.get("set_status")
 
@@ -1041,19 +977,30 @@ Please investigate and fix this problem. Follow the project's coding standards a
                 self.agent_graph.set_agent_ready(actor_id)
             return {"content": [{"type": "text", "text": f"Agent {actor_id} status set to {set_status}"}]}
 
-        # Get current status
+        # Get current status from graph
         agents = {a.id: a for a in self.agent_graph.get_all_agents()}
         if actor_id not in agents:
             return {"content": [{"type": "text", "text": f"Agent {actor_id} not found"}]}
 
         agent = agents[actor_id]
+
+        # Check session liveness (reads ~/.claude/projects/)
+        liveness = check_agent_liveness(Path.cwd())
+        session_alive = liveness.get("alive", False)
+        most_recent_age = liveness.get("most_recent_age")
+
         lines = [
             f"Agent: {agent.id}",
             f"Posture: {agent.name}",
-            f"Status: {agent.status}",
+            f"Graph Status: {agent.status}",
+            f"Session Alive: {session_alive}",
+        ]
+        if most_recent_age is not None:
+            lines.append(f"Last Activity: {most_recent_age:.1f}s ago")
+        lines.extend([
             f"Energy: {agent.energy:.2f}",
             f"Weight: {agent.weight:.2f}",
-        ]
+        ])
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
     def _tool_graph_query(self, args: Dict[str, Any]) -> Dict[str, Any]:
