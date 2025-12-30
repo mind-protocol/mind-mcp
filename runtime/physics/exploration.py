@@ -2,7 +2,7 @@
 Exploration Runner — v1.8 Async SubEntity Traversal
 
 Manages SubEntity exploration as async coroutines with tree structure.
-Parent SubEntities spawn children at branch points, wait for results, then merge.
+Parent SubEntities run children at branch points, wait for results, then merge.
 
 STATE MACHINE:
     SEEKING → BRANCHING → ABSORBING → RESONATING → REFLECTING → CRYSTALLIZING → MERGING
@@ -20,7 +20,7 @@ v1.7.2 CHANGES:
 
 ASYNC PATTERN:
     - Each SubEntity runs as a coroutine
-    - Branching spawns child coroutines
+    - Branching runs child coroutines
     - Parent awaits all children before proceeding
     - Timeout safety prevents runaway exploration (D4: crash loud on timeout)
 
@@ -282,7 +282,7 @@ class ExplorationRunner:
         """
         # v2.1: Removed IntentionType enum - intention is semantic via embedding
 
-        # Spawn root SubEntity using canonical factory (v2.1)
+        # Run root SubEntity using canonical factory (v2.1)
         # Start at origin_moment if provided, otherwise at actor
         start_pos = origin_moment if origin_moment else actor_id
         root = create_subentity(
@@ -508,7 +508,7 @@ class ExplorationRunner:
         # Continue seeking
 
     async def _step_branching(self, se: SubEntity) -> None:
-        """BRANCHING: Spawn children for parallel exploration (v1.7.2)."""
+        """BRANCHING: Run children for parallel exploration (v1.7.2)."""
         from runtime.physics.link_scoring import select_branch_candidates, get_target_node_id
 
         # Get outgoing links
@@ -547,15 +547,15 @@ class ExplorationRunner:
             se.transition_to(SubEntityState.SEEKING)
             return
 
-        # Spawn children using v1.7.2 spawn_child method
+        # Run children using v1.7.2 run_child method
         children = []
         for link, score, components in candidates:
             target_id = get_target_node_id(link, se.position)
             if not target_id:
                 continue
 
-            # v1.7.2: use spawn_child with context for lazy refs
-            child = se.spawn_child(
+            # v1.7.2: use run_child with context for lazy refs
+            child = se.run_child(
                 target_position=target_id,
                 via_link=link.get('id', ''),
                 context=self._context,
@@ -712,8 +712,8 @@ class ExplorationRunner:
     async def _step_crystallizing(self, se: SubEntity) -> None:
         """CRYSTALLIZING: Create new narrative with links (v1.9).
 
-        1. Create narrative: name="{intention}: {spawn_node.name}"
-        2. Link: spawn_node → new_narrative
+        1. Create narrative: name="{intention}: {run_node.name}"
+        2. Link: run_node → new_narrative
         3. Link: new_narrative → focus_node
         4. Store crystallization_embedding
         5. Return to SEEKING
@@ -722,15 +722,15 @@ class ExplorationRunner:
         from runtime.physics.cluster_presentation import render_cluster
         from runtime.physics.synthesis import synthesize_from_crystallization
 
-        # Get spawn and focus node data
-        spawn_node = await self.graph.get_node(se.spawn_node) if self.graph.get_node else None
+        # Get run and focus node data
+        run_node = await self.graph.get_node(se.run_node) if self.graph.get_node else None
         focus_node = await self.graph.get_node(se.focus_node) if self.graph.get_node else None
 
-        if not spawn_node or not focus_node:
+        if not run_node or not focus_node:
             se.transition_to(SubEntityState.MERGING)
             return
 
-        spawn_name = spawn_node.get('name', se.spawn_node)
+        run_name = run_node.get('name', se.run_node)
         state_mult = STATE_MULTIPLIER.get(SubEntityState.CRYSTALLIZING, 1.5)
 
         # Compute mean hierarchy/permanence from path
@@ -804,13 +804,13 @@ class ExplorationRunner:
                     alignment
                 ))
 
-        path_summary = f"{spawn_name} → {focus_name}" if spawn_name != focus_name else focus_name
+        path_summary = f"{run_name} → {focus_name}" if run_name != focus_name else focus_name
         synth_name, _ = synthesize_from_crystallization(
             intention_text=se.intention or "exploration",
             found_narratives=found_narr_info,
             path_summary=path_summary,
         )
-        narrative_name = synth_name if synth_name else f"{se.intention}: {spawn_name}"
+        narrative_name = synth_name if synth_name else f"{se.intention}: {run_name}"
 
         # Create synthesis (shorter version for embedding search)
         synthesis = f"{narrative_name}. {narrative_content[:200]}" if len(narrative_content) > 200 else narrative_content
@@ -825,10 +825,10 @@ class ExplorationRunner:
                 'embedding': se.crystallization_embedding,
             })
 
-            # 2. Link: spawn_node → new_narrative
+            # 2. Link: run_node → new_narrative
             if self.graph.create_link:
                 await self.graph.create_link({
-                    'node_a': se.spawn_node,
+                    'node_a': se.run_node,
                     'node_b': narr_id,
                     'polarity': [0.8, 0.2],
                     'hierarchy': mean_hierarchy,

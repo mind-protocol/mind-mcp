@@ -5,7 +5,7 @@ This module contains:
 - Data structures (WorkResult, EscalationDecision)
 - Constants (issue symbols, priorities, depth filters)
 - Pure functions for building prompts and parsing output
-- Async agent spawning for TUI integration
+- Async agent running for TUI integration
 
 DOCS: docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md
 """
@@ -24,7 +24,8 @@ from pathlib import Path
 from typing import Any, Awaitable, Callable, Dict, List, Optional
 
 from .agent_cli import build_agent_command, normalize_agent
-from .agent_graph import AgentGraph, load_agent_prompt, ISSUE_TO_POSTURE, DEFAULT_POSTURE
+from .agent_graph import AgentGraph, ISSUE_TO_POSTURE, DEFAULT_POSTURE
+from .agents.prompts import get_agent_system_prompt, get_learnings_content
 from .doctor_types import DoctorConfig
 from .doctor_files import save_doctor_config
 from .work_verification import (
@@ -270,7 +271,7 @@ class WorkResult:
     error: Optional[str] = None
     decisions_made: Optional[List[Dict[str, str]]] = None
     provider_used: Optional[str] = None  # Actual provider used (resolved from "all")
-    # Verification results (when using spawn_work_agent_with_verification_async)
+    # Verification results (when using run_work_agent_with_verification_async)
     verification_results: Optional[List['VerificationResult']] = None
     verification_passed: bool = False
     retry_count: int = 0
@@ -288,86 +289,7 @@ class EscalationDecision:
     passed: bool = False
 
 
-# Agent system prompt template
-AGENT_SYSTEM_PROMPT = """You are an mind work agent. Your job is to fix ONE specific issue in the project.
-
-CRITICAL RULES:
-1. FIRST: Read all documentation listed in "Docs to Read" before making changes
-2. Follow the VIEW instructions exactly
-3. After fixing, update the relevant SYNC file with what you changed
-4. Keep changes minimal and focused on the specific issue
-5. Do NOT make unrelated changes or "improvements"
-6. Report completion status clearly at the end
-7. NEVER create git branches - always work on the current branch
-8. NEVER use git stash - other agents are working in parallel
-
-PIPELINE AWARENESS:
-You are part of a development pipeline. When making changes, keep docs in sync:
-- Code changes → Update ALGORITHM and/or IMPLEMENTATION docs
-- Behavior changes → Update BEHAVIORS doc
-- Design changes → Update PATTERNS doc
-- Test changes → Update TEST doc
-- ANY changes → Update SYNC with what changed and why
-
-The doctor checks for drift (STALE_SYNC, NEW_UNDOC_CODE, STALE_IMPL).
-The manager monitors your work for doc/code alignment.
-Don't leave upstream docs stale when you change downstream artifacts.
-
-CLI COMMANDS (use these!):
-- `mind context {file}` - Get full doc chain for any source file
-- `mind validate` - Check protocol invariants after changes
-- `mind doctor` - Re-check project health
-
-BIDIRECTIONAL LINKS:
-- When creating new docs, add CHAIN section linking to related docs
-- When modifying code, ensure DOCS: reference points to correct docs
-- When creating module docs, add mapping to modules.yaml
-
-AFTER CHANGES:
-- Run `mind validate` to verify links are correct
-- Update SYNC file with what changed
-- Commit with descriptive message using a type prefix (e.g., "fix:", "docs:", "refactor:") and include the issue reference ("Closes #NUMBER" if provided or inferred from recent commits)
-
-IF YOU CAN'T COMPLETE THE FULL FIX:
-- Add a "## GAPS" section to the relevant SYNC file listing:
-  - What was completed
-  - What remains to be done
-  - Why you couldn't finish (missing info, too complex, needs human decision, etc.)
-Do NOT claim completion without a git commit.
-
-IF YOU FIND CONTRADICTIONS (docs vs code, or doc vs doc):
-- Add a "## CONFLICTS" section to the relevant SYNC file
-- **BE DECISIVE** - make the call yourself unless you truly cannot
-
-**Before making a DECISION:**
-- If <70% confident, RE-READ the relevant docs first
-- Check: PATTERNS (why), BEHAVIORS (what), ALGORITHM (how), VALIDATION (constraints)
-
-- For each conflict, categorize as DECISION or ESCALATION:
-  - DECISION: You resolve it (this should be 90%+ of conflicts)
-  - ESCALATION: Only when you truly cannot decide
-
-- **DECISION format** (preferred - be decisive!):
-  ```
-  ### DECISION: {conflict name}
-  - Conflict: {what contradicted what}
-  - Resolution: {what you decided}
-  - Reasoning: {why this choice}
-  - Updated: {what files you changed}
-  ```
-"""
-
-
-def get_learnings_content(target_dir: Path) -> str:
-    """Load learnings from GLOBAL_LEARNINGS.md."""
-    views_dir = target_dir / ".mind" / "views"
-    global_learnings = views_dir / "GLOBAL_LEARNINGS.md"
-
-    if global_learnings.exists():
-        content = global_learnings.read_text()
-        if "## Learnings" in content and content.count("\n") > 10:
-            return "\n\n---\n\n# GLOBAL LEARNINGS (apply to ALL tasks)\n" + content
-    return ""
+# Agent system prompt loaded from .mind/actors/ (see agents.prompts.get_agent_system_prompt)
 
 
 def _get_git_head(target_dir: Path) -> Optional[str]:
@@ -624,7 +546,7 @@ def parse_stream_json_line(line: str) -> Optional[str]:
     return None
 
 
-async def spawn_work_agent_async(
+async def run_work_agent_async(
     issue: Any,  # DoctorIssue
     target_dir: Path,
     on_output: Callable[[str], Awaitable[None]],
@@ -638,7 +560,7 @@ async def spawn_work_agent_async(
     agent_provider: str = "codex",
 ) -> WorkResult:
     """
-    Async version of spawn_work_agent for TUI integration.
+    Async version of run_work_agent for TUI integration.
     """
     # Handle ESCALATION decisions
     if issue.issue_type == "ESCALATION" and escalation_decisions:
@@ -662,7 +584,10 @@ async def spawn_work_agent_async(
         agent_provider = random.choice(["gemini", "claude", "codex"])
 
     prompt = build_agent_prompt(issue, instructions, target_dir, github_issue_number)
-    system_prompt = AGENT_SYSTEM_PROMPT + get_learnings_content(target_dir)
+
+    # Load posture-based system prompt from .mind/actors/
+    posture = agent_id.replace("agent_", "") if agent_id and agent_id.startswith("agent_") else DEFAULT_POSTURE
+    system_prompt = get_agent_system_prompt(posture, target_dir) + get_learnings_content(target_dir)
 
     GEMINI_PRIMARY_MODEL = "gemini-3-flash-preview"
     GEMINI_FALLBACK_MODEL = "gemini-2.5-flash"
@@ -865,7 +790,7 @@ def _select_work_agent(issue_type: str) -> tuple[str, str]:
     return agent_id, posture
 
 
-async def spawn_work_agent_with_verification_async(
+async def run_work_agent_with_verification_async(
     issue: Any,  # DoctorIssue
     target_dir: Path,
     on_output: Callable[[str], Awaitable[None]],
@@ -882,7 +807,7 @@ async def spawn_work_agent_with_verification_async(
     use_graph_agents: bool = True,
 ) -> WorkResult:
     """
-    Spawn work agent with mandatory verification and retry on failure.
+    Run work agent with mandatory verification and retry on failure.
 
     This function:
     1. Selects agent based on posture matching to issue type (if use_graph_agents)
@@ -946,7 +871,7 @@ async def spawn_work_agent_with_verification_async(
             head_before = _get_git_head(target_dir)
 
             # Run agent
-            result = await spawn_work_agent_async(
+            result = await run_work_agent_async(
                 issue=issue,
                 target_dir=target_dir,
                 on_output=on_output,

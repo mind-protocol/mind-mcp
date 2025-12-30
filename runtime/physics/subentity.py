@@ -41,7 +41,7 @@ v1.7.2 DESIGN DECISIONS:
 
 STATE MACHINE:
     SEEKING      -> exploring, choosing next link by score
-    BRANCHING    -> multiple valid paths, spawning children on Moments
+    BRANCHING    -> multiple valid paths, running children on Moments
     ABSORBING    -> processing content at current position (v1.9)
     RESONATING   -> arrived at narrative, measuring alignment
     REFLECTING   -> backpropagating colors through path
@@ -134,7 +134,7 @@ class SubEntityState(str, Enum):
             - else -> advance to best link, stay SEEKING
 
         BRANCHING:
-            - spawn children, each starts SEEKING
+            - run children, each starts SEEKING
             - parent waits for all children
             - when all children done -> MERGING
 
@@ -246,11 +246,11 @@ class SubEntity:
 
     Attributes:
         id: Unique identifier for this SubEntity
-        actor_id: The actor who spawned this exploration
+        actor_id: The actor who runed this exploration
         origin_moment: Moment that triggered this exploration
         parent_id: Parent SubEntity ID (null for root)
         sibling_ids: IDs of other children of same parent
-        children_ids: IDs of spawned SubEntities from branching
+        children_ids: IDs of runed SubEntities from branching
 
         state: Current state in the state machine
         position: Current node ID
@@ -285,7 +285,7 @@ class SubEntity:
     # === State ===
     state: SubEntityState = SubEntityState.SEEKING
     position: str = ""
-    spawn_position: str = ""  # v1.9: where the SubEntity was created
+    run_position: str = ""  # v1.9: where the SubEntity was created
     path: List[Tuple[str, str]] = field(default_factory=list)  # [(link_id, node_id), ...]
     depth: int = 0
 
@@ -398,9 +398,9 @@ class SubEntity:
         }
 
     @property
-    def spawn_node(self) -> str:
+    def run_node(self) -> str:
         """Node ID where this SubEntity was created (v1.9)."""
-        return self.spawn_position or self.position
+        return self.run_position or self.position
 
     @property
     def focus_node(self) -> str:
@@ -678,14 +678,14 @@ class SubEntity:
 
     # === Tree Operations ===
 
-    def spawn_child(
+    def run_child(
         self,
         target_position: str,
         via_link: str,
         context: Optional[ExplorationContext] = None,
     ) -> SubEntity:
         """
-        Spawn a child SubEntity for branching.
+        Run a child SubEntity for branching.
 
         v1.7.2: Uses parent_id and sibling_ids (lazy refs), not object references.
         Must register with context for lazy resolution.
@@ -704,7 +704,7 @@ class SubEntity:
             actor_id=self.actor_id,
             origin_moment=self.origin_moment,
             parent_id=self.id,  # v1.7.2: ID not object
-            sibling_ids=[],  # Will be set after all children spawned
+            sibling_ids=[],  # Will be set after all children runed
             state=SubEntityState.SEEKING,
             position=target_position,
             path=self.path + [(via_link, target_position)],
@@ -732,10 +732,10 @@ class SubEntity:
 
     def set_sibling_references(self) -> None:
         """
-        Set sibling_ids for all children after spawning.
+        Set sibling_ids for all children after running.
 
         v1.7.2: Sets sibling_ids (string array), resolved via context at access time.
-        Must be called after all children are spawned via spawn_child().
+        Must be called after all children are runed via run_child().
         """
         for child in self.children:
             child.sibling_ids = [cid for cid in self.children_ids if cid != child.id]
@@ -1062,7 +1062,7 @@ def create_subentity(
     v1.7.2: Optionally registers with ExplorationContext for lazy ref resolution.
 
     Args:
-        actor_id: The actor spawning this exploration
+        actor_id: The actor running this exploration
         origin_moment: The moment that triggered exploration
         query: Text of what to search for
         query_embedding: Vector embedding of query

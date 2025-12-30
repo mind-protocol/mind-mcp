@@ -9,7 +9,7 @@ Follows canonical schema v1.8.1:
 - Links use single 'linked' type with semantic axes (hierarchy, polarity, permanence)
 
 Flow:
-1. Surface issues from checks → create Narrative nodes (type: issue)
+1. Surface issues from checks → create Narrative nodes (type: problem)
 2. Traverse up from issues → find Narrative nodes (type: objective)
 3. Create Narrative nodes (type: task) grouping issues
 
@@ -41,7 +41,7 @@ class NodeType(Enum):
 
 class NarrativeSubtype(Enum):
     """Narrative type values for doctor system."""
-    ISSUE = "issue"
+    PROBLEM = "problem"
     OBJECTIVE = "objective"
     TASK = "task"
     PATTERN = "pattern"
@@ -177,7 +177,7 @@ class GraphLink:
 @dataclass
 class IssueNarrative(NarrativeNode):
     """
-    Narrative node with type='issue'.
+    Narrative node with type='problem'.
 
     Represents an atomic problem detected by doctor.
     """
@@ -191,7 +191,7 @@ class IssueNarrative(NarrativeNode):
     resolved_at: Optional[str] = None
 
     def __post_init__(self):
-        self.type = NarrativeSubtype.ISSUE.value
+        self.type = NarrativeSubtype.PROBLEM.value
         if not self.detected_at:
             self.detected_at = datetime.now().isoformat()
         super().__post_init__()
@@ -259,7 +259,7 @@ class TraversalResult:
 # - disambiguator: lowercase 2-char hash or index (collision safety)
 #
 # Examples:
-#   narrative_ISSUE_monolith-engine-physics-graph-ops_a7
+#   narrative_PROBLEM_monolith-engine-physics-graph-ops_a7
 #   narrative_TASK_serve-engine-physics-documented_01
 #   narrative_OBJECTIVE_engine-physics-documented
 #   space_MODULE_engine-physics
@@ -323,8 +323,8 @@ def generate_actor_id(name: str, actor_type: str = "AGENT") -> str:
 def generate_issue_id(issue_type: str, module: str, path: str) -> str:
     """Generate issue narrative ID.
 
-    Format: narrative_ISSUE_{issue-type}-{module}-{file}_{hash}
-    Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
+    Format: narrative_PROBLEM_{issue-type}-{module}-{file}_{hash}
+    Example: narrative_PROBLEM_monolith-engine-physics-graph-ops_a7
     """
     file_stem = Path(path).stem if path else "root"
     clean_type = _clean_for_id(issue_type)
@@ -337,7 +337,7 @@ def generate_issue_id(issue_type: str, module: str, path: str) -> str:
     hash_input = f"{issue_type}:{module}:{path}"
     short_hash = hashlib.md5(hash_input.encode()).hexdigest()[:2]
 
-    return f"narrative_ISSUE_{context}_{short_hash}"
+    return f"narrative_PROBLEM_{context}_{short_hash}"
 
 
 def generate_objective_id(objective_type: str, module: str) -> str:
@@ -692,7 +692,7 @@ def fill_missing_node_fields(node: GraphNode) -> bool:
     # Fill synthesis if empty
     if not node.synthesis:
         if node.node_type == NodeType.NARRATIVE.value:
-            if node.type == NarrativeSubtype.ISSUE.value and hasattr(node, 'issue_type'):
+            if node.type == NarrativeSubtype.PROBLEM.value and hasattr(node, 'issue_type'):
                 severity = getattr(node, 'severity', 'warning')
                 node.synthesis = generate_issue_synthesis(node.issue_type, severity)
             elif node.type == NarrativeSubtype.OBJECTIVE.value and hasattr(node, 'objective_type'):
@@ -1132,8 +1132,8 @@ def create_issue_node(
 ) -> IssueNarrative:
     """Create an issue narrative node with full content.
 
-    ID format: narrative_ISSUE_{type}-{module}-{file}_{hash}
-    Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
+    ID format: narrative_PROBLEM_{type}-{module}-{file}_{hash}
+    Example: narrative_PROBLEM_monolith-engine-physics-graph-ops_a7
 
     Physics defaults:
         weight: 2.0 (issues matter)
@@ -1173,7 +1173,7 @@ def create_issue_node(
         id=issue_id,
         name=f"{issue_type} in {module}/{file_stem}",
         node_type=NodeType.NARRATIVE.value,
-        type=NarrativeSubtype.ISSUE.value,
+        type=NarrativeSubtype.PROBLEM.value,
         description=message,
         # Physics
         weight=2.0,
@@ -1857,7 +1857,7 @@ def create_tasks_from_issues(
     4. Create task narrative nodes with proper links
 
     Note: Agent assignment (actor → task links) happens separately via
-    AgentGraph.assign_agent_to_work() when agents are spawned.
+    AgentGraph.assign_agent_to_work() when agents are runed.
     """
     grouped = group_issues_by_outcome(issues, store, modules)
     tasks: List[TaskNarrative] = []

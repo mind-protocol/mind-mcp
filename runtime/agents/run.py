@@ -1,15 +1,15 @@
 """
-Agent Spawn with Status Management
+Agent Run with Status Management
 
-Spawns work agents with:
+Runs work agents with:
 1. Graph status tracking (running/ready)
 2. --continue retry logic (try with --continue, retry without on failure)
 3. Posture-based system prompt loading
 
 Usage:
-    from runtime.agents.spawn import spawn_work_agent
+    from runtime.agents.run import run_work_agent
 
-    result = await spawn_work_agent(
+    result = await run_work_agent(
         agent_id="agent_witness",
         prompt="Fix the stale SYNC file at...",
         target_dir=Path("/path/to/project"),
@@ -27,16 +27,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Callable, Awaitable, List
 
-from .graph import AgentGraph, load_agent_prompt
+from .graph import AgentGraph
 from .postures import POSTURE_TO_AGENT_ID
 from .cli import build_agent_command, normalize_agent
+from .prompts import get_agent_system_prompt
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class SpawnResult:
-    """Result of spawning a work agent."""
+class RunResult:
+    """Result of running a work agent."""
     success: bool
     agent_id: str
     output: str
@@ -46,7 +47,7 @@ class SpawnResult:
     assignment_moment_id: Optional[str] = None  # ID of the assignment moment created
 
 
-async def spawn_work_agent(
+async def run_work_agent(
     agent_id: str,
     prompt: str,
     target_dir: Path,
@@ -55,17 +56,17 @@ async def spawn_work_agent(
     timeout: float = 300.0,
     use_continue: bool = True,
     task_id: Optional[str] = None,
-    issue_ids: Optional[List[str]] = None,
-) -> SpawnResult:
+    problem_ids: Optional[List[str]] = None,
+) -> RunResult:
     """
-    Spawn a work agent with status management and --continue retry.
+    Run a work agent with status management and --continue retry.
 
     This function:
     1. Sets agent status to 'running' in the graph
-    2. Creates graph links for task/issue assignment (if provided)
-    3. Creates an assignment moment recording the spawn
+    2. Creates graph links for task/problem assignment (if provided)
+    3. Creates an assignment moment recording the run
     4. Loads the agent's posture-based system prompt
-    5. Attempts spawn with --continue (if use_continue=True)
+    5. Attempts run with --continue (if use_continue=True)
     6. On failure, retries without --continue
     7. Sets agent status back to 'ready' when done
 
@@ -78,10 +79,10 @@ async def spawn_work_agent(
         timeout: Maximum time in seconds
         use_continue: Whether to try --continue first
         task_id: Optional task narrative ID to link agent to
-        issue_ids: Optional list of issue narrative IDs to link agent to
+        problem_ids: Optional list of problem narrative IDs to link agent to
 
     Returns:
-        SpawnResult with success status and output
+        RunResult with success status and output
     """
     agent_provider = normalize_agent(agent_provider)
     start_time = time.time()
@@ -96,19 +97,19 @@ async def spawn_work_agent(
     # Set agent to running
     agent_graph.set_agent_running(agent_id)
 
-    # Create assignment links and moment if task/issues provided
-    if task_id or issue_ids:
+    # Create assignment links and moment if task/problems provided
+    if task_id or problem_ids:
         # assign_agent_to_work creates links AND moment, returns moment ID
         assignment_moment_id = agent_graph.assign_agent_to_work(
-            agent_id, task_id or "", issue_ids
+            agent_id, task_id or "", problem_ids
         )
 
     try:
-        # Load posture-based system prompt
-        system_prompt = load_agent_prompt(posture, target_dir, agent_provider) or ""
+        # Load posture-based system prompt from .mind/actors/
+        system_prompt = get_agent_system_prompt(posture, target_dir)
 
         # Build and run the agent command
-        result = await _spawn_with_retry(
+        result = await _run_with_retry(
             prompt=prompt,
             system_prompt=system_prompt,
             target_dir=target_dir,
@@ -124,7 +125,7 @@ async def spawn_work_agent(
         if result.success:
             agent_graph.boost_agent_energy(agent_id, 0.1)
 
-        return SpawnResult(
+        return RunResult(
             success=result.success,
             agent_id=agent_id,
             output=result.output,
@@ -141,14 +142,14 @@ async def spawn_work_agent(
 
 @dataclass
 class _InternalResult:
-    """Internal result from spawn attempt."""
+    """Internal result from run attempt."""
     success: bool
     output: str
     error: Optional[str] = None
     retried: bool = False
 
 
-async def _spawn_with_retry(
+async def _run_with_retry(
     prompt: str,
     system_prompt: str,
     target_dir: Path,
@@ -158,7 +159,7 @@ async def _spawn_with_retry(
     use_continue: bool,
 ) -> _InternalResult:
     """
-    Spawn agent with --continue retry logic.
+    Run agent with --continue retry logic.
 
     First attempts with --continue (if enabled).
     On failure, retries without --continue.
@@ -185,7 +186,7 @@ async def _spawn_with_retry(
                     retried=False,
                 )
         except Exception as e:
-            logger.warning(f"[spawn] --continue attempt failed: {e}, retrying without")
+            logger.warning(f"[run] --continue attempt failed: {e}, retrying without")
             retried = True
 
     # Second attempt: without --continue
@@ -325,7 +326,7 @@ async def _run_agent(
     )
 
 
-async def spawn_for_task(
+async def run_for_task(
     task_id: str,
     prompt: str,
     target_dir: Path,
@@ -333,16 +334,16 @@ async def spawn_for_task(
     on_output: Optional[Callable[[str], Awaitable[None]]] = None,
     timeout: float = 300.0,
     problem_type: Optional[str] = None,
-) -> SpawnResult:
+) -> RunResult:
     """
-    Spawn an agent to work on a task.
+    Run an agent to work on a task.
 
     Agents work on tasks - problem detection creates tasks, then agents execute them.
 
     This function:
     1. Looks up task to determine problem type (if not provided)
     2. Selects best agent based on posture mapping
-    3. Spawns the agent with task assignment
+    3. Runs the agent with task assignment
 
     Args:
         task_id: Task narrative ID (e.g., "narrative:task_run:abc123")
@@ -354,7 +355,7 @@ async def spawn_for_task(
         problem_type: Optional problem type hint (saves graph lookup)
 
     Returns:
-        SpawnResult
+        RunResult
     """
     agent_graph = AgentGraph(graph_name="mind")
 
@@ -367,10 +368,10 @@ async def spawn_for_task(
 
     if not agent_id:
         # All agents busy, use default fixer
-        logger.warning("[spawn] All agents busy, using default fixer")
+        logger.warning("[run] All agents busy, using default fixer")
         agent_id = POSTURE_TO_AGENT_ID.get("fixer", "agent_fixer")
 
-    return await spawn_work_agent(
+    return await run_work_agent(
         agent_id=agent_id,
         prompt=prompt,
         target_dir=target_dir,

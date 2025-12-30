@@ -11,7 +11,7 @@ Tools:
   - procedure_list: List available procedures
   - doctor_check: Run health checks
   - agent_list: List work agents
-  - agent_spawn: Spawn a work agent
+  - agent_run: Run a work agent
   - agent_status: Get/set agent status
   - task_list: List available tasks
   - graph_query: Query the graph in natural language
@@ -53,14 +53,14 @@ from runtime.agents import (
     AgentGraph,
     PROBLEM_TO_POSTURE,
     POSTURE_TO_AGENT_ID,
-    spawn_work_agent,
-    spawn_for_task,
+    run_work_agent,
+    run_for_task,
     build_agent_prompt,
     get_learnings_content,
 )
 from runtime.doctor import run_doctor, DoctorIssue
 from runtime.doctor_types import DoctorConfig
-from runtime.work_core import spawn_work_agent_with_verification_async
+from runtime.work_core import run_work_agent_with_verification_async
 from runtime.work_instructions import get_problem_instructions
 from runtime.capability_integration import (
     init_capability_manager,
@@ -299,8 +299,8 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "agent_spawn",
-                    "description": "Spawn a work agent to fix a problem OR work on a task (narrative node).",
+                    "name": "agent_run",
+                    "description": "Run a work agent to fix a problem OR work on a task (narrative node).",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
@@ -536,8 +536,8 @@ class MindServer:
             return self._tool_agent_list(arguments)
         elif tool_name == "task_list":
             return self._tool_task_list(arguments)
-        elif tool_name == "agent_spawn":
-            return self._tool_agent_spawn(arguments)
+        elif tool_name == "agent_run":
+            return self._tool_agent_run(arguments)
         elif tool_name == "agent_status":
             return self._tool_agent_status(arguments)
         elif tool_name == "graph_query":
@@ -671,7 +671,7 @@ class MindServer:
                 lines.append(f"   Message: {issue.message[:80]}...")
                 lines.append("")
 
-            lines.append("\nUse agent_spawn to fix a problem.")
+            lines.append("\nUse agent_run to fix a problem.")
             return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
         except Exception as e:
@@ -753,8 +753,8 @@ class MindServer:
 
             # Query issue count per task
             lines.append(f"\nTotal: {count} task(s)")
-            lines.append("\nTo spawn an agent for a task:")
-            lines.append("  agent_spawn(task_id='<task_id>')")
+            lines.append("\nTo run an agent for a task:")
+            lines.append("  agent_run(task_id='<task_id>')")
 
             return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
@@ -762,8 +762,8 @@ class MindServer:
             logger.exception("Task list failed")
             return {"content": [{"type": "text", "text": f"Error listing tasks: {e}"}]}
 
-    def _tool_agent_spawn(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Spawn a work agent to fix a problem or work on a task. Actually executes the agent."""
+    def _tool_agent_run(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Run a work agent to fix a problem or work on a task. Actually executes the agent."""
         task_id = args.get("task_id")
         problem_type = args.get("problem_type")
         path = args.get("path")
@@ -904,7 +904,7 @@ class MindServer:
                 if problem_moment:
                     moments_created.append(("problem_detected", problem_moment, f"Detected {problem_type} at {path}"))
 
-            # Build prompt for problem-based spawn
+            # Build prompt for problem-based run
             if not prompt:
                 prompt = f"""Fix the problem:
 Problem Type: {problem_type}
@@ -934,9 +934,9 @@ Please investigate and fix this problem. Follow the project's coding standards a
                 if task_moment:
                     moments_created.append(("task_created", task_moment, f"Created task: Fix {problem_type}"))
 
-        # Actually spawn and run the agent
+        # Actually run and run the agent
         try:
-            coro = spawn_work_agent(
+            coro = run_work_agent(
                 agent_id=agent_id,
                 prompt=prompt,
                 target_dir=self.target_dir,
@@ -951,10 +951,10 @@ Please investigate and fix this problem. Follow the project's coding standards a
                 loop = asyncio.get_running_loop()
                 import concurrent.futures
                 with concurrent.futures.ThreadPoolExecutor() as pool:
-                    spawn_result = pool.submit(asyncio.run, coro).result()
+                    run_result = pool.submit(asyncio.run, coro).result()
             except RuntimeError:
                 # No running loop, use asyncio.run directly
-                spawn_result = asyncio.run(coro)
+                run_result = asyncio.run(coro)
 
             # Build response with node details
             lines = [
@@ -964,8 +964,8 @@ Please investigate and fix this problem. Follow the project's coding standards a
                 f"- **ID:** {agent_id}",
                 f"- **Posture:** {posture} ({get_learnings_content.__doc__ or 'work agent'})",
                 f"- **Provider:** {provider}",
-                f"- **Success:** {spawn_result.success}",
-                f"- **Duration:** {spawn_result.duration_seconds:.1f}s",
+                f"- **Success:** {run_result.success}",
+                f"- **Duration:** {run_result.duration_seconds:.1f}s",
             ]
 
             # Show task details
@@ -983,8 +983,8 @@ Please investigate and fix this problem. Follow the project's coding standards a
                     ])
 
             # Show moment chain (chronological)
-            if spawn_result.assignment_moment_id:
-                moments_created.append(("agent_assignment", spawn_result.assignment_moment_id, f"Agent {agent_id} assigned to task"))
+            if run_result.assignment_moment_id:
+                moments_created.append(("agent_assignment", run_result.assignment_moment_id, f"Agent {agent_id} assigned to task"))
 
             if moments_created:
                 lines.extend([
@@ -1021,23 +1021,23 @@ Please investigate and fix this problem. Follow the project's coding standards a
                 f"```",
             ])
 
-            if spawn_result.retried_without_continue:
+            if run_result.retried_without_continue:
                 lines.append(f"  Note: Retried without --continue")
 
-            if spawn_result.error:
-                lines.append(f"  Error: {spawn_result.error[:200]}")
+            if run_result.error:
+                lines.append(f"  Error: {run_result.error[:200]}")
 
-            if spawn_result.output:
+            if run_result.output:
                 lines.extend([
                     "",
                     "Agent Output:",
-                    spawn_result.output[:1000] + ("..." if len(spawn_result.output) > 1000 else ""),
+                    run_result.output[:1000] + ("..." if len(run_result.output) > 1000 else ""),
                 ])
 
             return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
         except Exception as e:
-            logger.exception("Agent spawn failed")
+            logger.exception("Agent run failed")
             return {"content": [{"type": "text", "text": f"Error executing agent: {e}"}]}
 
     def _tool_agent_status(self, args: Dict[str, Any]) -> Dict[str, Any]:

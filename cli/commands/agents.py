@@ -206,8 +206,8 @@ def list_agents(target_dir: Path, format_output: str = "text") -> int:
     if not agents:
         print(f"  {C.DIM}No agents configured.{C.RESET}")
         print()
-        print(f"  {C.DIM}Agents are spawned by:{C.RESET}")
-        print(f"  {C.DIM}  - mind work (auto-spawns agents for issues){C.RESET}")
+        print(f"  {C.DIM}Agents are runed by:{C.RESET}")
+        print(f"  {C.DIM}  - mind work (auto-runs agents for issues){C.RESET}")
         print(f"  {C.DIM}  - Capability triggers (health checks){C.RESET}")
         print()
         return 0

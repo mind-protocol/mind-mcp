@@ -3,7 +3,7 @@ Interactive work functions for CLI.
 
 Extracted from work.py to reduce monolith size.
 Contains:
-- Manager agent functionality (input listener, spawn, check)
+- Manager agent functionality (input listener, run, check)
 - Interactive conflict resolution (ESCALATION)
 - CLI progress display utilities
 
@@ -96,13 +96,13 @@ def input_listener_thread():
             break
 
 
-def spawn_manager_agent(
+def run_manager_agent(
     user_input: str,
     recent_logs: List[str],
     target_dir: Path,
     agent_provider: str = "codex",
 ) -> Optional[str]:
-    """Spawn the mind manager with user input and recent logs."""
+    """Run the mind manager with user input and recent logs."""
     agent_provider = normalize_agent(agent_provider)
 
     manager_dir = target_dir / ".mind" / "work" / "manager"
@@ -219,7 +219,7 @@ def check_for_manager_input(
     target_dir: Path,
     agent_provider: str = "codex",
 ) -> Optional[str]:
-    """Check if user has provided input, spawn manager if so."""
+    """Check if user has provided input, run manager if so."""
     global manager_input_queue
 
     with manager_input_lock:
@@ -227,7 +227,7 @@ def check_for_manager_input(
             user_input = manager_input_queue.pop(0)
             # Echo user input in violet
             print(f"\n{Colors.VIOLET}💬 You: {user_input}{Colors.RESET}")
-            return spawn_manager_agent(user_input, recent_logs, target_dir, agent_provider)
+            return run_manager_agent(user_input, recent_logs, target_dir, agent_provider)
 
     return None
 

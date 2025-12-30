@@ -1,7 +1,7 @@
 """
 Agent Posture Configuration
 
-Maps issue types to agent postures for optimal task assignment.
+Maps problem types to agent postures for optimal task assignment.
 
 The 10 postures (cognitive stances, not roles):
 - witness: evidence-first, traces what actually happened
@@ -100,7 +100,7 @@ POSTURE_TO_AGENT_ID: Dict[str, str] = {
     "steward": "agent_steward",
 }
 
-# Default when issue type not mapped
+# Default when problem type not mapped
 DEFAULT_POSTURE = "fixer"
 
 

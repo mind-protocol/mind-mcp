@@ -9,7 +9,7 @@ Verifies agent work before marking complete:
 On failure: restarts agent with --continue and detailed feedback.
 
 LOOP PROTECTION:
-- Max retries per issue (default: 3)
+- Max retries per problem (default: 3)
 - Max total retries per session (default: 10)
 - Automatic escalation on max retries
 - Session state tracking to detect oscillation
@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional, Callable, Set
 
 
 # Loop protection constants
-MAX_RETRIES_PER_ISSUE = 3
+MAX_RETRIES_PER_PROBLEM = 3
 MAX_TOTAL_SESSION_RETRIES = 10
 OSCILLATION_DETECTION_WINDOW = 5  # Check last N results for oscillation
 
@@ -34,8 +34,8 @@ OSCILLATION_DETECTION_WINDOW = 5  # Check last N results for oscillation
 @dataclass
 class VerificationSession:
     """Tracks verification session state to prevent infinite loops."""
-    issue_path: str
-    issue_type: str
+    problem_path: str
+    problem_type: str
     start_time: float = field(default_factory=time.time)
     retry_count: int = 0
     total_session_retries: int = 0
@@ -54,8 +54,8 @@ class VerificationSession:
         if self.escalated:
             return False  # Already escalated
 
-        # Hit per-issue retry limit
-        if self.retry_count >= MAX_RETRIES_PER_ISSUE:
+        # Hit per-problem retry limit
+        if self.retry_count >= MAX_RETRIES_PER_PROBLEM:
             return True
 
         # Hit session retry limit
@@ -73,8 +73,8 @@ class VerificationSession:
 
     def get_escalation_reason(self) -> str:
         """Get reason for escalation."""
-        if self.retry_count >= MAX_RETRIES_PER_ISSUE:
-            return f"Max retries ({MAX_RETRIES_PER_ISSUE}) exceeded for this issue"
+        if self.retry_count >= MAX_RETRIES_PER_PROBLEM:
+            return f"Max retries ({MAX_RETRIES_PER_PROBLEM}) exceeded for this problem"
         if self.total_session_retries >= MAX_TOTAL_SESSION_RETRIES:
             return f"Max session retries ({MAX_TOTAL_SESSION_RETRIES}) exceeded"
         if len(self.failed_checks_history) >= OSCILLATION_DETECTION_WINDOW:
@@ -119,7 +119,7 @@ class VerificationResult:
     details: Dict[str, Any] = field(default_factory=dict)
 
 
-# Verification checks by issue type
+# Verification checks by problem type
 VERIFICATION_CHECKS: Dict[str, List[VerificationCheck]] = {
     "UNDOCUMENTED": [
         VerificationCheck(
@@ -386,7 +386,7 @@ VERIFICATION_CHECKS: Dict[str, List[VerificationCheck]] = {
     ],
 }
 
-# Global checks that apply to ALL issue types
+# Global checks that apply to ALL problem types
 GLOBAL_CHECKS = [
     VerificationCheck(
         name="git_commit_exists",
@@ -406,11 +406,11 @@ GLOBAL_CHECKS = [
 
 def _run_file_check(
     check: VerificationCheck,
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     target_dir: Path,
 ) -> VerificationResult:
     """Run a file-based verification check."""
-    target_path = target_dir / issue.path
+    target_path = target_dir / problem.path
     passed = True
     message = ""
     details = {}
@@ -421,7 +421,7 @@ def _run_file_check(
         found = any(p in content for p in check.patterns_present)
         if not found:
             passed = False
-            message = f"Missing required pattern in {issue.path}"
+            message = f"Missing required pattern in {problem.path}"
             details["missing_patterns"] = check.patterns_present
 
     # Check patterns_absent
@@ -430,14 +430,14 @@ def _run_file_check(
         found_patterns = [p for p in check.patterns_absent if p in content]
         if found_patterns:
             passed = False
-            message = f"Found forbidden patterns in {issue.path}"
+            message = f"Found forbidden patterns in {problem.path}"
             details["found_patterns"] = found_patterns
 
     # Default file existence check
     if not check.patterns_present and not check.patterns_absent:
         if not target_path.exists():
             passed = False
-            message = f"File does not exist: {issue.path}"
+            message = f"File does not exist: {problem.path}"
 
     if passed:
         message = f"PASS: {check.description}"
@@ -455,7 +455,7 @@ def _run_file_check(
 
 def _run_command_check(
     check: VerificationCheck,
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     target_dir: Path,
 ) -> VerificationResult:
     """Run a command-based verification check."""
@@ -469,9 +469,9 @@ def _run_command_check(
 
     # Substitute variables in command
     command = check.command.format(
-        path=issue.path,
-        test_path=_find_test_path(issue.path, target_dir),
-        module=_path_to_module(issue.path),
+        path=problem.path,
+        test_path=_find_test_path(problem.path, target_dir),
+        module=_path_to_module(problem.path),
     )
 
     try:
@@ -522,7 +522,7 @@ def _run_command_check(
 
 def _run_membrane_check(
     check: VerificationCheck,
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     target_dir: Path,
     membrane_query: Optional[Callable] = None,
 ) -> VerificationResult:
@@ -551,7 +551,7 @@ def _run_membrane_check(
 
     try:
         # Build query based on check name
-        query_result = _execute_membrane_query(check, issue, membrane_query)
+        query_result = _execute_membrane_query(check, problem, membrane_query)
 
         if query_result.get("error"):
             return VerificationResult(
@@ -593,7 +593,7 @@ def _run_membrane_check(
 
 def _execute_membrane_query(
     check: VerificationCheck,
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     membrane_query: Callable,
 ) -> Dict[str, Any]:
     """
@@ -601,8 +601,8 @@ def _execute_membrane_query(
 
     Maps check names to specific graph queries.
     """
-    # Extract module/space ID from issue path
-    path = Path(issue.path)
+    # Extract module/space ID from problem path
+    path = Path(problem.path)
     module_name = path.stem
     area_name = path.parent.name if path.parent.name not in [".", ""] else None
 
@@ -830,17 +830,17 @@ def _path_to_module(path: str) -> str:
 
 
 def verify_completion(
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     target_dir: Path,
     head_before: Optional[str] = None,
     head_after: Optional[str] = None,
     membrane_query: Optional[Callable] = None,
 ) -> List[VerificationResult]:
     """
-    Run all verification checks for an issue type.
+    Run all verification checks for a problem type.
 
     Args:
-        issue: The doctor issue being verified
+        problem: The detected problem being verified
         target_dir: Project root directory
         head_before: Git HEAD before work
         head_after: Git HEAD after work
@@ -851,19 +851,19 @@ def verify_completion(
     """
     results = []
 
-    # Get issue-specific checks
-    checks = VERIFICATION_CHECKS.get(issue.issue_type, [])
+    # Get problem-specific checks
+    checks = VERIFICATION_CHECKS.get(problem.problem_type, [])
 
     # Add global checks
     all_checks = checks + GLOBAL_CHECKS
 
     for check in all_checks:
         if check.check_type == "file":
-            result = _run_file_check(check, issue, target_dir)
+            result = _run_file_check(check, problem, target_dir)
         elif check.check_type == "command":
-            result = _run_command_check(check, issue, target_dir)
+            result = _run_command_check(check, problem, target_dir)
         elif check.check_type == "membrane":
-            result = _run_membrane_check(check, issue, target_dir, membrane_query)
+            result = _run_membrane_check(check, problem, target_dir, membrane_query)
         else:
             result = VerificationResult(
                 check_name=check.name,
@@ -889,7 +889,7 @@ def verify_completion(
 
 def format_verification_feedback(
     results: List[VerificationResult],
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     attempt: int = 1,
     max_attempts: int = 3,
 ) -> str:
@@ -898,7 +898,7 @@ def format_verification_feedback(
 
     Args:
         results: List of verification results
-        issue: The issue being worked
+        problem: The problem being worked
         attempt: Current attempt number
         max_attempts: Maximum retry attempts
 
@@ -915,7 +915,7 @@ def format_verification_feedback(
         "=" * 60,
         f"## VERIFICATION FAILED (Attempt {attempt}/{max_attempts})",
         "",
-        f"**Issue:** {issue.issue_type} in {issue.path}",
+        f"**Problem:** {problem.problem_type} in {problem.path}",
         "",
         f"**Passed:** {len(passed)}/{len(results)} checks",
         "",
@@ -971,7 +971,7 @@ def get_failed_membrane_protocols(results: List[VerificationResult]) -> List[str
 def format_escalation_feedback(
     session: VerificationSession,
     results: List[VerificationResult],
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
 ) -> str:
     """
     Format feedback for escalation when max retries exceeded.
@@ -984,7 +984,7 @@ def format_escalation_feedback(
     Args:
         session: Verification session state
         results: Final verification results
-        issue: The issue that couldn't be resolved
+        problem: The problem that couldn't be resolved
 
     Returns:
         Formatted escalation instructions for agent
@@ -997,7 +997,7 @@ def format_escalation_feedback(
         "## ESCALATION REQUIRED - MAX RETRIES EXCEEDED",
         "",
         f"**Reason:** {session.get_escalation_reason()}",
-        f"**Issue:** {issue.issue_type} in {issue.path}",
+        f"**Problem:** {problem.problem_type} in {problem.path}",
         f"**Attempts:** {session.retry_count}",
         "",
         "You have exhausted retry attempts. DO NOT RETRY.",
@@ -1009,7 +1009,7 @@ def format_escalation_feedback(
         "```",
         "",
         "Include in escalation:",
-        f"- Issue: {issue.issue_type} in {issue.path}",
+        f"- Problem: {problem.problem_type} in {problem.path}",
         f"- Failed checks: {', '.join(r.check_name for r in failed)}",
         "- What you tried and why it didn't work",
         "- Options for resolution",
@@ -1054,7 +1054,7 @@ def format_escalation_feedback(
 
 def format_todo_suggestion(
     results: List[VerificationResult],
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
 ) -> str:
     """
     Format suggestion to create TODOs for deferred work.
@@ -1064,7 +1064,7 @@ def format_todo_suggestion(
 
     Args:
         results: Verification results
-        issue: Current issue
+        problem: Current problem
 
     Returns:
         Formatted TODO suggestion
@@ -1084,7 +1084,7 @@ def format_todo_suggestion(
     ]
 
     for r in failed:
-        todo_text = f"Complete {r.check_name} for {issue.path}"
+        todo_text = f"Complete {r.check_name} for {problem.path}"
         lines.append(f"- TODO: {todo_text}")
 
     lines.extend([

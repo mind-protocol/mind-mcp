@@ -518,7 +518,7 @@ class ExplanationGenerator:
         """Explain why branching occurred."""
         return (
             f"Branching at {position} because it's a Moment with {children_count} "
-            f"viable outgoing paths. Spawning {children_count} children to explore "
+            f"viable outgoing paths. Runing {children_count} children to explore "
             f"{', '.join(children_targets)} in parallel. This maximizes exploration "
             f"coverage while avoiding sequential bias."
         )
@@ -747,7 +747,7 @@ class LearningSignalExtractor:
             if children_count > 0:
                 signals.append(LearningSignal(
                     signal="branching_initiated",
-                    observation=f"Spawned {children_count} children at depth {step.depth}",
+                    observation=f"Runed {children_count} children at depth {step.depth}",
                     implication="Parallel exploration started",
                 ))
 
@@ -1280,7 +1280,7 @@ class TraversalLogger:
                 "trigger": trigger,
                 "parent_id": parent_id,
                 "position": position,
-                "children_spawned": len(children),
+                "children_runed": len(children),
                 "child_intents": child_intents or [c.get("intent", "explore") for c in children],
                 "children": children,
             },

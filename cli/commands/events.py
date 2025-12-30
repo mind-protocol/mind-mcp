@@ -112,7 +112,7 @@ def _get_events_from_logs(
     event_patterns = [
         (re.compile(r'trigger\s+fired', re.IGNORECASE), "trigger", "info"),
         (re.compile(r'task\s+(started|completed|failed)', re.IGNORECASE), "task", "info"),
-        (re.compile(r'agent\s+(spawned|stopped|killed)', re.IGNORECASE), "agent", "info"),
+        (re.compile(r'agent\s+(runed|stopped|killed)', re.IGNORECASE), "agent", "info"),
         (re.compile(r'health\s+check', re.IGNORECASE), "health", "info"),
     ]
 

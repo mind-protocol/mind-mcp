@@ -1,31 +1,40 @@
-"""Inject agent actors into the graph during init."""
+"""Inject agent actors into the graph during init.
+
+Wrapper around runtime/ingest/actors.py for CLI use.
+"""
 
 from pathlib import Path
 
 
 def inject_agents(target_dir: Path, graph_name: str) -> None:
     """
-    Ensure all work agents exist in the graph.
+    Inject agents from .mind/actors/ into the graph.
 
-    Creates 10 agent actors (one per posture) if they don't exist:
-    - agent_witness, agent_groundwork, agent_architect
-    - agent_fixer, agent_scout, agent_keeper
-    - agent_weaver, agent_voice, agent_herald, agent_steward
+    Uses the runtime ingest module which handles:
+    - Synthesis generation for embedding
+    - Change detection (only updates if synthesis differs)
+    - Proper graph structure with Actor nodes
     """
     try:
-        from runtime.agents.graph import AgentGraph
+        from runtime.ingest import ingest_actors
 
-        agent_graph = AgentGraph(graph_name=graph_name)
-        success = agent_graph.ensure_agents_exist()
+        stats = ingest_actors(target_dir, graph_name=graph_name)
 
-        if success:
-            # Count created agents
-            agents = agent_graph.get_all_agents()
-            print(f"✓ Agents: {len(agents)} agents ready")
+        actors = stats.get("actors", 0)
+        created = stats.get("created", 0)
+        updated = stats.get("updated", 0)
+        unchanged = stats.get("unchanged", 0)
+
+        if created > 0 and updated > 0:
+            print(f"✓ Agents: {actors} agents ({created} created, {updated} updated)")
+        elif created > 0:
+            print(f"✓ Agents: {created} agents created")
+        elif updated > 0:
+            print(f"✓ Agents: {updated} agents updated")
+        elif unchanged > 0:
+            print(f"○ Agents: {actors} agents unchanged (no re-embedding needed)")
         else:
-            print("○ Agents: skipped (no graph connection)")
+            print("○ Agents: no .mind/actors/ found")
 
-    except ImportError as e:
-        print(f"⚠ Agent injection skipped: {e}")
     except Exception as e:
-        print(f"⚠ Agent injection failed: {e}")
+        print(f"⚠ Agent injection skipped: {e}")

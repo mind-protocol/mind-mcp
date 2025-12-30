@@ -31,10 +31,10 @@ Usage:
     # Select best agent for an issue type
     agent_id = ag.select_agent_for_issue("STALE_SYNC")
 
-    # Mark agent as running (before spawn)
+    # Mark agent as running (before run)
     ag.set_agent_running(agent_id)
 
-    # Mark agent as ready (after spawn completes)
+    # Mark agent as ready (after run completes)
     ag.set_agent_ready(agent_id)
 
 DOCS: docs/membrane/PATTERNS_Membrane.md
@@ -360,7 +360,7 @@ class AgentGraph:
         """
         Mark an agent as running.
 
-        Call this BEFORE spawning the agent process.
+        Call this BEFORE running the agent process.
 
         Args:
             agent_id: The agent to mark as running

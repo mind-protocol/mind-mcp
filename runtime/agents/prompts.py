@@ -9,7 +9,7 @@ Contains:
 - build_agent_prompt: Constructs full task prompt with context
 - get_learnings_content: Loads global learnings for injection
 - split_docs_to_read: Separates existing from missing docs
-- _detect_recent_issue_number: Finds GitHub issue from git history
+- _detect_github_issue_number: Finds GitHub issue from git history
 
 DOCS: docs/agents/PATTERNS_Agent_System.md
 """
@@ -24,73 +24,54 @@ from typing import Any, Dict, List, Optional
 # AGENT SYSTEM PROMPT
 # =============================================================================
 
-AGENT_SYSTEM_PROMPT = """You are an mind work agent. Your job is to fix ONE specific issue in the project.
 
-CRITICAL RULES:
-1. FIRST: Read all documentation listed in "Docs to Read" before making changes
-2. Follow the VIEW instructions exactly
-3. After fixing, update the relevant SYNC file with what you changed
-4. Keep changes minimal and focused on the specific issue
-5. Do NOT make unrelated changes or "improvements"
-6. Report completion status clearly at the end
-7. NEVER create git branches - always work on the current branch
-8. NEVER use git stash - other agents are working in parallel
+def get_agent_system_prompt(posture: str, target_dir: Path) -> str:
+    """
+    Load full agent system prompt: CLAUDE.md + ACTOR_{Posture}.md.
 
-PIPELINE AWARENESS:
-You are part of a development pipeline. When making changes, keep docs in sync:
-- Code changes → Update ALGORITHM and/or IMPLEMENTATION docs
-- Behavior changes → Update BEHAVIORS doc
-- Design changes → Update PATTERNS doc
-- Test changes → Update TEST doc
-- ANY changes → Update SYNC with what changed and why
+    Combines:
+    1. Root system prompt from .mind/CLAUDE.md (shared by all agents)
+    2. Actor-specific prompt from .mind/actors/ACTOR_{Posture}.md
 
-The doctor checks for drift (STALE_SYNC, NEW_UNDOC_CODE, STALE_IMPL).
-The manager monitors your work for doc/code alignment.
-Don't leave upstream docs stale when you change downstream artifacts.
+    Args:
+        posture: Agent posture (e.g., "witness", "fixer")
+        target_dir: Project root directory
 
-CLI COMMANDS (use these!):
-- `mind context {file}` - Get full doc chain for any source file
-- `mind validate` - Check protocol invariants after changes
-- `mind doctor` - Re-check project health
+    Returns:
+        Combined system prompt content
 
-BIDIRECTIONAL LINKS:
-- When creating new docs, add CHAIN section linking to related docs
-- When modifying code, ensure DOCS: reference points to correct docs
-- When creating module docs, add mapping to modules.yaml
+    Raises:
+        FileNotFoundError: If actor file doesn't exist (fail loud)
+    """
+    import logging
+    logger = logging.getLogger(__name__)
 
-AFTER CHANGES:
-- Run `mind validate` to verify links are correct
-- Update SYNC file with what changed
-- Commit with descriptive message using a type prefix (e.g., "fix:", "docs:", "refactor:") and include the issue reference ("Closes #NUMBER" if provided or inferred from recent commits)
+    parts = []
 
-IF YOU CAN'T COMPLETE THE FULL FIX:
-- Add a "## GAPS" section to the relevant SYNC file listing:
-  - What was completed
-  - What remains to be done
-  - Why you couldn't finish (missing info, too complex, needs human decision, etc.)
-Do NOT claim completion without a git commit.
+    # 1. Load root CLAUDE.md system prompt (fallback to .mind/CLAUDE.md)
+    claude_path = target_dir / "CLAUDE.md"
+    if claude_path.exists():
+        parts.append(claude_path.read_text())
+    else:
+        fallback_path = target_dir / ".mind" / "CLAUDE.md"
+        if fallback_path.exists():
+            logger.warning(f"Root CLAUDE.md not found, using fallback: {fallback_path}")
+            parts.append(fallback_path.read_text())
 
-IF YOU FIND CONTRADICTIONS (docs vs code, or doc vs doc):
-- Add a "## CONFLICTS" section to the relevant SYNC file
-- **BE DECISIVE** - make the call yourself unless you truly cannot
+    # 2. Load actor-specific prompt
+    posture_cap = posture.capitalize()
+    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{posture_cap}.md"
 
-**Before making a DECISION:**
-- If <70% confident, RE-READ the relevant docs first
-- Check: PATTERNS (why), BEHAVIORS (what), ALGORITHM (how), VALIDATION (constraints)
+    if not actor_path.exists():
+        raise FileNotFoundError(
+            f"Actor file not found: {actor_path}\n"
+            f"Create .mind/actors/ACTOR_{posture_cap}.md to define the {posture} agent."
+        )
 
-- For each conflict, categorize as DECISION or ESCALATION:
-  - DECISION: You resolve it (this should be 90%+ of conflicts)
-  - ESCALATION: Only when you truly cannot decide
+    parts.append(f"\n\n---\n\n# Agent Posture: {posture_cap}\n\n")
+    parts.append(actor_path.read_text())
 
-- **DECISION format** (preferred - be decisive!):
-  ```
-  ### DECISION: {conflict name}
-  - Conflict: {what contradicted what}
-  - Resolution: {what you decided}
-  - Reasoning: {why this choice}
-  - Updated: {what files you changed}
-  ```
-"""
+    return "".join(parts)
 
 
 # =============================================================================
@@ -148,12 +129,12 @@ def split_docs_to_read(docs_to_read: List[str], target_dir: Path) -> tuple:
 
 
 # =============================================================================
-# GIT ISSUE DETECTION
+# GITHUB ISSUE DETECTION
 # =============================================================================
 
-def _detect_recent_issue_number(target_dir: Path, max_commits: int = 5) -> Optional[int]:
+def _detect_github_issue_number(target_dir: Path, max_commits: int = 5) -> Optional[int]:
     """
-    Detect a recent issue number from the last few commit messages.
+    Detect a GitHub issue number from the last few commit messages.
 
     Scans recent git commits for #N patterns to find an associated
     GitHub issue number for commit message references.
@@ -163,7 +144,7 @@ def _detect_recent_issue_number(target_dir: Path, max_commits: int = 5) -> Optio
         max_commits: How many recent commits to scan (default: 5)
 
     Returns:
-        Issue number if found, None otherwise
+        GitHub issue number if found, None otherwise
     """
     try:
         result = subprocess.run(
@@ -189,7 +170,7 @@ def _detect_recent_issue_number(target_dir: Path, max_commits: int = 5) -> Optio
 # =============================================================================
 
 def build_agent_prompt(
-    issue: Any,  # DoctorIssue
+    problem: Any,  # DoctorIssue - detected problem
     instructions: Dict[str, Any],
     target_dir: Path,
     github_issue_number: Optional[int] = None,
@@ -198,14 +179,14 @@ def build_agent_prompt(
     Build the full prompt for the work agent.
 
     Combines:
-    - Issue metadata (type, severity)
+    - Problem metadata (type, severity)
     - View instructions
     - Docs to read (existing and missing)
     - GitHub issue reference (if any)
     - Completion instructions
 
     Args:
-        issue: DoctorIssue with issue_type, severity, path
+        problem: DoctorIssue with problem_type, severity, path
         instructions: Dict with 'view', 'docs_to_read', 'prompt' keys
         target_dir: Project root directory
         github_issue_number: Optional GitHub issue to reference in commits
@@ -226,7 +207,7 @@ If any missing docs should exist, locate the correct paths before proceeding.
 """
 
     if github_issue_number is None:
-        github_issue_number = _detect_recent_issue_number(target_dir)
+        github_issue_number = _detect_github_issue_number(target_dir)
 
     github_section = ""
     if github_issue_number:
@@ -238,8 +219,8 @@ When committing, include "Closes #{github_issue_number}" in your commit message.
 
     return f"""# mind Work Task
 
-## Issue Type: {issue.issue_type}
-## Severity: {issue.severity}
+## Problem Type: {problem.problem_type}
+## Severity: {problem.severity}
 {github_section}
 ## VIEW to Follow
 Load and follow: `.mind/views/{instructions['view']}`

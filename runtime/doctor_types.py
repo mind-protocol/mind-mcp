@@ -32,13 +32,13 @@ class DoctorIssue:
     details: Dict[str, Any] = field(default_factory=dict)
     suggestion: str = ""
     protocol: str = ""   # Protocol to auto-fix (e.g., "define_space", "add_invariant")
-    id: str = ""         # Graph node ID (narrative_ISSUE_*)
+    id: str = ""         # Graph node ID (narrative_PROBLEM_*)
 
     def generate_id(self, module: str) -> str:
         """Generate graph node ID for this issue.
 
-        Format: narrative_ISSUE_{module}-{issue_type}_{hash}
-        Example: narrative_ISSUE_engine-physics-MONOLITH_a7c2
+        Format: narrative_PROBLEM_{module}-{issue_type}_{hash}
+        Example: narrative_PROBLEM_engine-physics-MONOLITH_a7c2
         """
         if self.id:
             return self.id
@@ -52,7 +52,7 @@ class DoctorIssue:
         # Clean issue type
         clean_type = self.issue_type.upper().replace("_", "-")
 
-        self.id = f"narrative_ISSUE_{clean_module}-{clean_type}_{path_hash}"
+        self.id = f"narrative_PROBLEM_{clean_module}-{clean_type}_{path_hash}"
         return self.id
 
 

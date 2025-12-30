@@ -1,6 +1,6 @@
 # DOCS: docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md
 """
-Issue instructions for mind work agents.
+Problem instructions for mind work agents.
 
 This module contains code/test/config work instructions.
 Documentation-related instructions are in work_instructions_docs.py.
@@ -9,13 +9,13 @@ Documentation-related instructions are in work_instructions_docs.py.
 from pathlib import Path
 from typing import Any, Dict
 
-# Import DoctorIssue type for type hints
+# Import DoctorIssue type for type hints (represents detected problems)
 from .doctor import DoctorIssue
 from .work_instructions_docs import get_doc_instructions
 
 
-def get_issue_instructions(issue: DoctorIssue, target_dir: Path) -> Dict[str, Any]:
-    """Generate specific instructions for each issue type."""
+def get_problem_instructions(problem: DoctorIssue, target_dir: Path) -> Dict[str, Any]:
+    """Generate specific instructions for each problem type."""
 
     instructions = {
         "MONOLITH": {
@@ -28,9 +28,9 @@ def get_issue_instructions(issue: DoctorIssue, target_dir: Path) -> Dict[str, An
             ],
             "prompt": f"""## Task: Split Monolith File
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-{f"**Suggestion:** {issue.suggestion}" if issue.suggestion else ""}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+{f"**Suggestion:** {problem.suggestion}" if problem.suggestion else ""}
 
 ## Steps:
 
@@ -38,7 +38,7 @@ def get_issue_instructions(issue: DoctorIssue, target_dir: Path) -> Dict[str, An
 2. Read the target file to understand its structure
 3. Find the IMPLEMENTATION doc for this module (check modules.yaml for docs path)
 4. Identify the largest function/class mentioned in the suggestion
-5. Create a new file for the extracted code (e.g., `{Path(issue.path).stem}_utils.py`)
+5. Create a new file for the extracted code (e.g., `{Path(problem.path).stem}_utils.py`)
 6. Move the function/class to the new file
 7. Update imports in the original file
 8. Run any existing tests to verify nothing broke
@@ -88,12 +88,12 @@ MANDATORY FINAL LINE:
             "description": "Update stale SYNC file",
             "docs_to_read": [
                 ".mind/views/VIEW_Implement_Write_Or_Modify_Code.md",
-                issue.path,  # The stale SYNC file itself
+                problem.path,  # The stale SYNC file itself
             ],
             "prompt": f"""## Task: Update Stale SYNC File
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
 
 ## Steps:
 
@@ -120,7 +120,7 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.path],
+            "docs_to_update": [problem.path],
         },
 
         "BROKEN_IMPL_LINK": {
@@ -128,13 +128,13 @@ MANDATORY FINAL LINE:
             "description": "Fix broken file references in IMPLEMENTATION doc",
             "docs_to_read": [
                 ".mind/views/VIEW_Document_Create_Module_Documentation.md",
-                issue.path,
+                problem.path,
             ],
             "prompt": f"""## Task: Fix Broken Implementation Links
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Missing files:** {issue.details.get('missing_files', [])}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Missing files:** {problem.details.get('missing_files', [])}
 
 ## Steps:
 
@@ -159,7 +159,7 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.path],
+            "docs_to_update": [problem.path],
         },
 
         "STUB_IMPL": {
@@ -171,9 +171,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Implement Stub Functions
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Stub indicators:** {issue.details.get('stubs', [])}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Stub indicators:** {problem.details.get('stubs', [])}
 
 ## Steps:
 
@@ -209,9 +209,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Complete Empty Functions
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Empty functions:** {[f['name'] for f in issue.details.get('empty_functions', [])]}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Empty functions:** {[f['name'] for f in problem.details.get('empty_functions', [])]}
 
 ## Steps:
 
@@ -246,9 +246,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Fix YAML Drift
 
-**Target:** `{issue.path}`
-**Module:** {issue.details.get('module', 'unknown')}
-**Issues:** {issue.details.get('issues', [])}
+**Target:** `{problem.path}`
+**Module:** {problem.details.get('module', 'unknown')}
+**Issues:** {problem.details.get('issues', [])}
 
 ## Steps:
 
@@ -284,8 +284,8 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Add Tests for Module
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
 
 ## Steps:
 
@@ -321,13 +321,13 @@ MANDATORY FINAL LINE:
             "description": "Resolve conflict with human decision",
             "docs_to_read": [
                 ".mind/views/VIEW_Specify_Design_Vision_And_Architecture.md",
-                issue.path,
+                problem.path,
             ],
             "prompt": f"""## Task: Implement Conflict Resolution
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Conflicts:** {issue.details.get('conflicts', [])}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Conflicts:** {problem.details.get('conflicts', [])}
 
 The human has made decisions about these conflicts. Implement them.
 
@@ -357,7 +357,7 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.path],
+            "docs_to_update": [problem.path],
         },
 
         "SUGGESTION": {
@@ -365,12 +365,12 @@ MANDATORY FINAL LINE:
             "description": "Implement agent suggestion",
             "docs_to_read": [
                 ".mind/views/VIEW_Implement_Write_Or_Modify_Code.md",
-                issue.path,
+                problem.path,
             ],
             "prompt": f"""## Task: Implement Agent Suggestion
 
-**Source:** `{issue.path}`
-**Suggestion:** {issue.details.get('suggestion', issue.message)}
+**Source:** `{problem.path}`
+**Suggestion:** {problem.details.get('suggestion', problem.message)}
 
 A previous agent made this suggestion for improvement. The user has accepted it.
 
@@ -400,7 +400,7 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.path],
+            "docs_to_update": [problem.path],
         },
 
         "NEW_UNDOC_CODE": {
@@ -408,20 +408,20 @@ MANDATORY FINAL LINE:
             "description": "Update documentation for changed code",
             "docs_to_read": [
                 ".mind/views/VIEW_Document_Create_Module_Documentation.md",
-                issue.details.get('impl_doc', issue.path),
+                problem.details.get('impl_doc', problem.path),
             ],
             "prompt": f"""## Task: Update Documentation for Changed Code
 
-**Source file:** `{issue.path}`
-**Problem:** {issue.message}
-**IMPLEMENTATION doc:** `{issue.details.get('impl_doc', 'unknown')}`
+**Source file:** `{problem.path}`
+**Problem:** {problem.message}
+**IMPLEMENTATION doc:** `{problem.details.get('impl_doc', 'unknown')}`
 
 The source code has been modified more recently than its documentation.
 
 ## Steps:
 
 1. Read the source file to understand what changed
-2. Count lines: `wc -l {issue.path}` - check if size status changed
+2. Count lines: `wc -l {problem.path}` - check if size status changed
 3. Read the IMPLEMENTATION doc to see what's documented
 4. Compare and identify gaps:
    - New functions/classes not documented
@@ -451,7 +451,7 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.details.get('impl_doc', '')],
+            "docs_to_update": [problem.details.get('impl_doc', '')],
         },
 
         "COMPONENT_NO_STORIES": {
@@ -462,8 +462,8 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Add Storybook Stories for Component
 
-**Component:** `{issue.path}`
-**Problem:** {issue.message}
+**Component:** `{problem.path}`
+**Problem:** {problem.message}
 
 Frontend components should have Storybook stories for visual documentation and testing.
 
@@ -473,7 +473,7 @@ Frontend components should have Storybook stories for visual documentation and t
    - What props it accepts
    - What variants/states it has
    - What it renders
-2. Create a stories file (e.g., `{Path(issue.path).stem}.stories.tsx`)
+2. Create a stories file (e.g., `{Path(problem.path).stem}.stories.tsx`)
 3. Add stories covering:
    - Default state
    - Key prop variations
@@ -485,15 +485,15 @@ Frontend components should have Storybook stories for visual documentation and t
 ## Story Template:
 ```tsx
 import type {{ Meta, StoryObj }} from '@storybook/react';
-import {{ {Path(issue.path).stem} }} from './{Path(issue.path).stem}';
+import {{ {Path(problem.path).stem} }} from './{Path(problem.path).stem}';
 
-const meta: Meta<typeof {Path(issue.path).stem}> = {{
-  component: {Path(issue.path).stem},
-  title: 'Components/{Path(issue.path).stem}',
+const meta: Meta<typeof {Path(problem.path).stem}> = {{
+  component: {Path(problem.path).stem},
+  title: 'Components/{Path(problem.path).stem}',
 }};
 export default meta;
 
-type Story = StoryObj<typeof {Path(issue.path).stem}>;
+type Story = StoryObj<typeof {Path(problem.path).stem}>;
 
 export const Default: Story = {{
   args: {{}},
@@ -524,8 +524,8 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Document Custom Hook
 
-**Hook:** `{issue.path}`
-**Problem:** {issue.message}
+**Hook:** `{problem.path}`
+**Problem:** {problem.message}
 
 Custom React hooks should have JSDoc documentation explaining their purpose and usage.
 
@@ -580,9 +580,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Remove Hardcoded Secret (SECURITY CRITICAL)
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Details:** {issue.details}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Details:** {problem.details}
 
 This is a CRITICAL security issue. Secrets must never be in source code.
 
@@ -626,9 +626,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Externalize Hardcoded Configuration
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Details:** {issue.details}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Details:** {problem.details}
 
 Configuration values like URLs, ports, and IPs should not be hardcoded.
 
@@ -669,9 +669,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Extract Magic Numbers to Constants
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Examples:** {issue.details.get('examples', [])}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Examples:** {problem.details.get('examples', [])}
 
 Magic numbers make code hard to understand and maintain.
 
@@ -725,9 +725,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Externalize Long Prompts
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Details:** {issue.details}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Details:** {problem.details}
 
 Long prompt strings embedded in code are hard to edit and review.
 
@@ -775,9 +775,9 @@ MANDATORY FINAL LINE:
             ],
             "prompt": f"""## Task: Externalize Long SQL Queries
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Details:** {issue.details}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Details:** {problem.details}
 
 Long SQL queries embedded in code are hard to maintain and test.
 
@@ -830,13 +830,13 @@ MANDATORY FINAL LINE:
             "description": "Convert legacy marker to new format",
             "docs_to_read": [
                 ".mind/PRINCIPLES.md",
-                issue.path,
+                problem.path,
             ],
             "prompt": f"""## Task: Convert Legacy Marker Format
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Details:** {issue.details}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Details:** {problem.details}
 
 The file contains legacy marker formats that should be converted to the new @mind: format.
 
@@ -870,7 +870,7 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.path],
+            "docs_to_update": [problem.path],
         },
 
         "UNRESOLVED_QUESTION": {
@@ -878,13 +878,13 @@ MANDATORY FINAL LINE:
             "description": "Investigate and resolve unresolved question",
             "docs_to_read": [
                 ".mind/PRINCIPLES.md",
-                issue.path,
+                problem.path,
             ],
             "prompt": f"""## Task: Investigate and Resolve Unresolved Question
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Questions found:** {issue.details.get('questions', [])}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Questions found:** {problem.details.get('questions', [])}
 
 The file contains questions that haven't been resolved or properly tracked.
 
@@ -926,27 +926,27 @@ MANDATORY FINAL LINE:
 - If you fail, end with: `WORK FAILED: <reason>`
 
 """,
-            "docs_to_update": [issue.path],
+            "docs_to_update": [problem.path],
         },
     }
 
     # First check for doc-related instructions
-    doc_instructions = get_doc_instructions(issue, target_dir)
+    doc_instructions = get_doc_instructions(problem, target_dir)
     if doc_instructions:
         return doc_instructions
 
     # Then check local code/test/config instructions
-    return instructions.get(issue.issue_type, {
+    return instructions.get(problem.problem_type, {
         "view": "VIEW_Implement_Write_Or_Modify_Code.md",
-        "description": f"Fix {issue.issue_type} issue",
+        "description": f"Fix {problem.problem_type} problem",
         "docs_to_read": [".mind/PROTOCOL.md"],
-        "prompt": f"""## Task: Fix Issue
+        "prompt": f"""## Task: Fix Problem
 
-**Target:** `{issue.path}`
-**Problem:** {issue.message}
-**Suggestion:** {issue.suggestion}
+**Target:** `{problem.path}`
+**Problem:** {problem.message}
+**Suggestion:** {problem.suggestion}
 
-Review and fix this issue following the mind.
+Review and fix this problem following the mind.
 
 Report "WORK COMPLETE" when done, or "WORK FAILED: <reason>" if you cannot complete.
 

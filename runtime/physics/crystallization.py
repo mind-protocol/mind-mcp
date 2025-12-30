@@ -293,7 +293,7 @@ def crystallize(
         crystallization_embedding: Computed from SubEntity exploration
         synthesis: Generated text for narrative (from synthesis.py)
         found_narratives: List of (narrative_id, alignment) tuples
-        origin_moment: Moment that spawned the SubEntity
+        origin_moment: Moment that runed the SubEntity
         existing_narratives: List of (id, embedding) for existing narratives
         threshold: Novelty threshold
 
@@ -477,7 +477,7 @@ class SubEntityCrystallizationState:
 
         Args:
             synthesis: Generated text for narrative
-            origin_moment: Moment that spawned the SubEntity
+            origin_moment: Moment that runed the SubEntity
             existing_narratives: List of (id, embedding) for existing narratives
             threshold: Novelty threshold
 

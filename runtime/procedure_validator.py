@@ -125,10 +125,10 @@ CLUSTER_TEMPLATES = {
         ],
     ),
 
-    'issue': ClusterTemplate(
-        cluster_type='issue',
+    'problem': ClusterTemplate(
+        cluster_type='problem',
         required_nodes=[
-            {'type': 'narrative.issue', 'fields': ['name', 'severity', 'evidence']},
+            {'type': 'narrative.problem', 'fields': ['name', 'severity', 'evidence']},
         ],
         required_links=[
             {'pattern': 'space -[contains]-> issue'},

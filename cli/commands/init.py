@@ -77,6 +77,11 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     ingest_capabilities(target_dir, graph_name)
     steps.append("capabilities_graph")
 
+    # 10. Agent injection (creates 10 work agents)
+    print("\n## Agents")
+    inject_agents(target_dir, graph_name)
+    steps.append("agents")
+
     # 11. Env example
     print("\n## Environment")
     create_env_example(target_dir, database)

@@ -1,8 +1,8 @@
 """
-Agent orchestration for autonomous issue fixing.
+Agent orchestration for autonomous problem fixing.
 
 This module provides:
-- Agent spawning and execution
+- Agent running and execution
 - Graph-based status tracking
 - Posture-based agent selection
 - Verification and retry logic
@@ -10,18 +10,18 @@ This module provides:
 DOCS: docs/agents/PATTERNS_Agent_System.md
 
 Usage:
-    from runtime.agents import spawn_work_agent, AgentGraph
+    from runtime.agents import run_work_agent, AgentGraph
 
-    # Spawn agent for issue
-    result = await spawn_work_agent(
-        issue_type="STALE_SYNC",
+    # Run agent for problem
+    result = await run_work_agent(
+        problem_type="STALE_SYNC",
         path="docs/physics/SYNC.md",
         target_dir=Path("."),
         agent_provider="claude",
     )
 
-    # Or spawn for task
-    result = await spawn_for_task(
+    # Or run for task
+    result = await run_for_task(
         task_id="narrative:task:TASK_create_doc",
         target_dir=Path("."),
     )
@@ -36,13 +36,13 @@ from .postures import (
     select_agent_for_problem,
 )
 from .cli import build_agent_command, normalize_agent, AgentCommand
-from .spawn import (
-    spawn_work_agent,
-    spawn_for_task,
-    SpawnResult,
+from .run import (
+    run_work_agent,
+    run_for_task,
+    RunResult,
 )
 from .prompts import (
-    AGENT_SYSTEM_PROMPT,
+    get_agent_system_prompt,
     build_agent_prompt,
     get_learnings_content,
 )
@@ -65,12 +65,12 @@ __all__ = [
     "build_agent_command",
     "normalize_agent",
     "AgentCommand",
-    # Spawn
-    "spawn_work_agent",
-    "spawn_for_task",
-    "SpawnResult",
+    # Run
+    "run_work_agent",
+    "run_for_task",
+    "RunResult",
     # Prompts
-    "AGENT_SYSTEM_PROMPT",
+    "get_agent_system_prompt",
     "build_agent_prompt",
     "get_learnings_content",
     # Verification
