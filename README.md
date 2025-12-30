@@ -35,22 +35,9 @@ Creates `.mind/` with:
 
 ## Agents
 
-10 work agents with specialized approaches:
+Agents are discovered dynamically from `.mind/actors/{name}/CLAUDE.md`.
 
-| Agent | Approach | Tasks |
-|-------|----------|-------|
-| witness | evidence-first | STALE_SYNC, DOC_DELTA |
-| groundwork | foundation-first | UNDOCUMENTED, MISSING_TESTS |
-| keeper | verification-first | INVARIANT_COVERAGE, TEST_VALIDATES |
-| weaver | connection-first | BROKEN_IMPL_LINK, ORPHAN_DOCS |
-| fixer | work-first | STUB_IMPL, INCOMPLETE_IMPL |
-| architect | structure-first | YAML_DRIFT, PLACEHOLDER |
-| scout | exploration-first | MONOLITH, LARGE_DOC_MODULE |
-| voice | naming-first | NAMING_CONVENTION |
-| herald | communication-first | DOC_GAPS, DOC_DUPLICATION |
-| steward | coordination-first | ESCALATION, CONFLICTS |
-
-Agent selection uses graph physics: `score = similarity * weight * energy`
+Selection uses graph physics: `score = similarity * weight * energy`
 
 ## ID Convention
 
