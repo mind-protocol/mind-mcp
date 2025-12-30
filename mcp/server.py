@@ -55,14 +55,13 @@ from runtime.agents import (
     POSTURE_TO_AGENT_ID,
     spawn_work_agent,
     spawn_for_task,
-    AGENT_SYSTEM_PROMPT,
     build_agent_prompt,
     get_learnings_content,
 )
 from runtime.doctor import run_doctor, DoctorIssue
 from runtime.doctor_types import DoctorConfig
 from runtime.work_core import spawn_work_agent_with_verification_async
-from runtime.work_instructions import get_issue_instructions
+from runtime.work_instructions import get_problem_instructions
 from runtime.capability_integration import (
     init_capability_manager,
     get_capability_manager,
@@ -301,21 +300,21 @@ class MindServer:
                 },
                 {
                     "name": "agent_spawn",
-                    "description": "Spawn a work agent to fix an issue OR work on a task (narrative node).",
+                    "description": "Spawn a work agent to fix a problem OR work on a task (narrative node).",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
                             "task_id": {
                                 "type": "string",
-                                "description": "Narrative node ID for the task (e.g., 'task_fix_physics_sync'). If provided, issue_type/path are ignored."
+                                "description": "Narrative node ID for the task (e.g., 'task_fix_physics_sync'). If provided, problem_type/path are ignored."
                             },
-                            "issue_type": {
+                            "problem_type": {
                                 "type": "string",
-                                "description": "Issue type (e.g., STALE_SYNC, UNDOCUMENTED). Used if task_id not provided."
+                                "description": "Problem type (e.g., STALE_SYNC, UNDOCUMENTED). Used if task_id not provided."
                             },
                             "path": {
                                 "type": "string",
-                                "description": "Path of the issue to fix. Used if task_id not provided."
+                                "description": "Path of the problem to fix. Used if task_id not provided."
                             },
                             "agent_id": {
                                 "type": "string",
@@ -650,7 +649,7 @@ class MindServer:
             # Filter by depth
             from runtime.work_core import get_depth_types
             allowed_types = get_depth_types(depth)
-            issues = [i for i in issues if i.issue_type in allowed_types]
+            issues = [i for i in issues if i.problem_type in allowed_types]
 
             if not issues:
                 output = "\n".join(schema_lines) + "\n\nNo doc issues found."
@@ -662,17 +661,17 @@ class MindServer:
             lines = schema_lines + ["", f"Found {len(issues)} doc issues:\n"]
             for idx, issue in enumerate(issues):
                 # Determine assigned agent
-                posture = PROBLEM_TO_POSTURE.get(issue.issue_type, "fixer")
+                posture = PROBLEM_TO_POSTURE.get(issue.problem_type, "fixer")
                 agent_id = f"agent_{posture}"
                 agent_status = "ready" if agent_id in available_agents else "busy"
 
-                lines.append(f"{idx+1}. [{issue.severity.upper()}] {issue.issue_type}")
+                lines.append(f"{idx+1}. [{issue.severity.upper()}] {issue.problem_type}")
                 lines.append(f"   Path: {issue.path}")
                 lines.append(f"   Agent: {agent_id} ({agent_status})")
                 lines.append(f"   Message: {issue.message[:80]}...")
                 lines.append("")
 
-            lines.append("\nUse agent_spawn to fix an issue.")
+            lines.append("\nUse agent_spawn to fix a problem.")
             return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
         except Exception as e:
@@ -703,7 +702,7 @@ class MindServer:
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
     def _tool_task_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List available tasks with linked issues."""
+        """List available tasks with linked problems."""
         module_filter = args.get("module")
         objective_filter = args.get("objective")
         limit = args.get("limit", 20)
@@ -764,9 +763,9 @@ class MindServer:
             return {"content": [{"type": "text", "text": f"Error listing tasks: {e}"}]}
 
     def _tool_agent_spawn(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Spawn a work agent to fix an issue or work on a task. Actually executes the agent."""
+        """Spawn a work agent to fix a problem or work on a task. Actually executes the agent."""
         task_id = args.get("task_id")
-        issue_type = args.get("issue_type")
+        problem_type = args.get("problem_type")
         path = args.get("path")
         agent_id = args.get("agent_id")
         provider = args.get("provider", "claude")
@@ -779,14 +778,14 @@ class MindServer:
         if task_id:
             if self.graph_queries:
                 try:
-                    # Query task with linked issues and objectives
+                    # Query task with linked problems and objectives
                     cypher = """
                     MATCH (t:Narrative {id: $task_id})
                     OPTIONAL MATCH (t)-[:relates]->(o:Narrative {type: 'objective'})
-                    OPTIONAL MATCH (i:Narrative {type: 'issue'})-[:relates]->(t)
+                    OPTIONAL MATCH (p:Narrative {type: 'problem'})-[:relates]->(t)
                     RETURN t.id, t.name, t.content, t.type, t.module, t.skill, t.task_type,
                            collect(DISTINCT {id: o.id, name: o.name, type: o.objective_type}) as objectives,
-                           collect(DISTINCT {id: i.id, type: i.issue_type, path: i.path, message: i.message, severity: i.severity}) as issues
+                           collect(DISTINCT {id: p.id, type: p.problem_type, path: p.path, message: p.message, severity: p.severity}) as problems
                     """
                     result = self.graph_queries._query(cypher, {"task_id": task_id})
                     if result and len(result) > 0:
@@ -798,14 +797,14 @@ class MindServer:
                         task_skill = row[5] if len(row) > 5 else ""
                         task_subtype = row[6] if len(row) > 6 else ""
                         objectives = row[7] if len(row) > 7 else []
-                        issues = row[8] if len(row) > 8 else []
+                        problems = row[8] if len(row) > 8 else []
 
-                        # Derive issue_type from first issue or task_type
-                        if not issue_type and issues:
-                            first_issue = issues[0] if isinstance(issues[0], dict) else {}
-                            issue_type = first_issue.get("type", "TASK")
-                        elif not issue_type:
-                            issue_type = task_subtype.upper() if task_subtype else "TASK"
+                        # Derive problem_type from first problem or task_type
+                        if not problem_type and problems:
+                            first_problem = problems[0] if isinstance(problems[0], dict) else {}
+                            problem_type = first_problem.get("type", "TASK")
+                        elif not problem_type:
+                            problem_type = task_subtype.upper() if task_subtype else "TASK"
 
                         # Build rich prompt with full context
                         prompt_lines = [
@@ -822,13 +821,13 @@ class MindServer:
                                     prompt_lines.append(f"- {obj.get('name')}")
                             prompt_lines.append("")
 
-                        if issues:
-                            prompt_lines.append("## Issues to fix:")
-                            for issue in issues[:10]:  # Limit to 10 issues
-                                if isinstance(issue, dict) and issue.get("path"):
-                                    prompt_lines.append(f"- [{issue.get('severity', 'warning')}] {issue.get('type')}: {issue.get('path')}")
-                                    if issue.get("message"):
-                                        prompt_lines.append(f"  {issue.get('message')[:200]}")
+                        if problems:
+                            prompt_lines.append("## Problems to fix:")
+                            for prob in problems[:10]:  # Limit to 10 problems
+                                if isinstance(prob, dict) and prob.get("path"):
+                                    prompt_lines.append(f"- [{prob.get('severity', 'warning')}] {prob.get('type')}: {prob.get('path')}")
+                                    if prob.get("message"):
+                                        prompt_lines.append(f"  {prob.get('message')[:200]}")
                             prompt_lines.append("")
 
                         if task_content:
@@ -836,7 +835,7 @@ class MindServer:
                             prompt_lines.append(task_content)
 
                         prompt_lines.append("\n## Instructions:")
-                        prompt_lines.append("Fix all the issues listed above. Follow project conventions.")
+                        prompt_lines.append("Fix all the problems listed above. Follow project conventions.")
 
                         prompt = "\n".join(prompt_lines)
                     else:
@@ -846,12 +845,12 @@ class MindServer:
                     return {"content": [{"type": "text", "text": f"Error fetching task: {e}"}]}
             else:
                 return {"content": [{"type": "text", "text": "Error: No graph connection for task lookup"}]}
-        elif not issue_type or not path:
-            return {"content": [{"type": "text", "text": "Error: Either task_id OR (issue_type + path) required"}]}
+        elif not problem_type or not path:
+            return {"content": [{"type": "text", "text": "Error: Either task_id OR (problem_type + path) required"}]}
 
         # Select agent if not specified
         if not agent_id:
-            posture = PROBLEM_TO_POSTURE.get(issue_type, "fixer") if issue_type else "fixer"
+            posture = PROBLEM_TO_POSTURE.get(problem_type, "fixer") if problem_type else "fixer"
             agent_id = f"agent_{posture}"
 
         # Check if agent is available
@@ -875,63 +874,65 @@ class MindServer:
             # Get space from task
             space_id = self.agent_graph.get_task_space(task_id)
 
-        # Set agent's active space
+        # Link space to agent and task
         if space_id:
             self.agent_graph.set_agent_space(agent_id, space_id)
+            if task_id:
+                self.agent_graph.link_task_to_space(task_id, space_id)
 
-        # Upsert issue/task narratives before linking
-        issue_ids = None
-        if issue_type and path:
-            # Create/update issue narrative in graph
-            issue_narrative_id = self.agent_graph.upsert_issue_narrative(
-                issue_type=issue_type,
+        # Upsert problem/task narratives before linking
+        problem_ids = None
+        if problem_type and path:
+            # Create/update problem narrative in graph
+            problem_narrative_id = self.agent_graph.upsert_problem_narrative(
+                problem_type=problem_type,
                 path=path,
-                message=f"Problem detected: {issue_type} at {path}",
+                message=f"Problem detected: {problem_type} at {path}",
                 severity="warning",
             )
-            if issue_narrative_id:
-                issue_ids = [issue_narrative_id]
-                # Create moment for issue detection
-                issue_moment = self.agent_graph.create_moment(
+            if problem_narrative_id:
+                problem_ids = [problem_narrative_id]
+                # Create moment for problem detection
+                problem_moment = self.agent_graph.create_moment(
                     agent_id=agent_id,
-                    moment_type="issue_detected",
-                    prose=f"Detected {issue_type} at {path}",
-                    about_ids=[issue_narrative_id],
+                    moment_type="problem_detected",
+                    prose=f"Detected {problem_type} at {path}",
+                    about_ids=[problem_narrative_id],
                     space_id=space_id,
-                    extra_props={"issue_type": issue_type, "path": path},
+                    extra_props={"problem_type": problem_type, "path": path},
                 )
-                if issue_moment:
-                    moments_created.append(("issue_detected", issue_moment, f"Detected {issue_type} at {path}"))
+                if problem_moment:
+                    moments_created.append(("problem_detected", problem_moment, f"Detected {problem_type} at {path}"))
 
-            # Build prompt for issue-based spawn
+            # Build prompt for problem-based spawn
             if not prompt:
                 prompt = f"""Fix the problem:
-Problem Type: {issue_type}
+Problem Type: {problem_type}
 Path: {path}
 
-Please investigate and fix this issue. Follow the project's coding standards and documentation patterns."""
+Please investigate and fix this problem. Follow the project's coding standards and documentation patterns."""
 
-        # Use task_id for assignment, or create from issue
+        # Use task_id for assignment, or create from problem
         assignment_task_id = task_id
-        if not assignment_task_id and issue_type:
+        if not assignment_task_id and problem_type:
             # Create task narrative for this fix
             assignment_task_id = self.agent_graph.upsert_task_narrative(
-                task_type=f"FIX_{issue_type}",
-                content=f"Fix {issue_type} at {path}",
-                name=f"Fix {issue_type}",
+                task_type=f"FIX_{problem_type}",
+                content=f"Fix {problem_type} at {path}",
+                name=f"Fix {problem_type}",
             )
             if assignment_task_id:
                 # Create moment for task creation
                 task_moment = self.agent_graph.create_moment(
                     agent_id=agent_id,
                     moment_type="task_created",
-                    prose=f"Created task to fix {issue_type}",
-                    about_ids=[assignment_task_id] + (issue_ids or []),
+                    prose=f"Created task to fix {problem_type}",
+                    about_ids=[assignment_task_id] + (problem_ids or []),
                     space_id=space_id,
-                    extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{issue_type}"},
+                    extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{problem_type}"},
                 )
                 if task_moment:
-                    moments_created.append(("task_created", task_moment, f"Created task: Fix {issue_type}"))
+                    moments_created.append(("task_created", task_moment, f"Created task: Fix {problem_type}"))
 
         # Actually spawn and run the agent
         try:
@@ -943,7 +944,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 timeout=300.0,
                 use_continue=True,
                 task_id=assignment_task_id,
-                issue_ids=issue_ids,
+                problem_ids=problem_ids,
             )
             # Handle both sync and async contexts
             try:
@@ -974,11 +975,11 @@ Please investigate and fix this issue. Follow the project's coding standards and
                     "## Task",
                     f"- **ID:** {task_id or assignment_task_id}",
                 ])
-                if not task_id and issue_type:
+                if not task_id and problem_type:
                     lines.extend([
-                        f"- **Type:** FIX_{issue_type}",
-                        f"- **Name:** Fix {issue_type}",
-                        f"- **Content:** Fix {issue_type} at {path}",
+                        f"- **Type:** FIX_{problem_type}",
+                        f"- **Name:** Fix {problem_type}",
+                        f"- **Content:** Fix {problem_type} at {path}",
                     ])
 
             # Show moment chain (chronological)
@@ -1454,9 +1455,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
                             if claimed_by:
                                 lines.append(f"    Assigned: {claimed_by}")
                             if content:
-                                # Truncate content for display
-                                content_preview = content[:200] + "..." if len(content) > 200 else content
-                                lines.append(f"    Content: {content_preview}")
+                                lines.append(f"    Content: {content}")
                             lines.append(f"    ID: {task_id}")
                         else:
                             lines.append(f"  - {task_id}")
@@ -1560,7 +1559,7 @@ Please investigate and fix this issue. Follow the project's coding standards and
             return {"content": [{"type": "text", "text": f"Error: {e}"}]}
 
     def _tool_task_claim(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Atomically claim a task."""
+        """Atomically claim a task (throttler check happens at promotion to running)."""
         task_id = args.get("task_id")
         actor_id = args.get("actor_id")
 
@@ -1571,16 +1570,8 @@ Please investigate and fix this issue. Follow the project's coding standards and
             return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
 
         try:
-            # Check throttler allows claiming (if it knows about this task)
-            throttler = get_throttler()
-            if throttler:
-                # Only check throttler if task is registered (from current session)
-                # Tasks from previous sessions won't be in throttler
-                if task_id in throttler.active and not throttler.can_claim(task_id, actor_id):
-                    return {"content": [{"type": "text", "text": f"Throttler blocked claim: max agents reached or paused"}]}
-
-            # Claim in graph - use node-level status field
-            # Check task exists and is pending
+            # Claim in graph - pending → claimed
+            # Throttler check happens later when promoting claimed → running (in inject)
             from datetime import datetime
             timestamp = datetime.now().isoformat()
             result = self.graph_ops._query(
@@ -1598,10 +1589,6 @@ Please investigate and fix this issue. Follow the project's coding standards and
                 "MERGE (t)-[:LINK {verb: 'claimed_by'}]->(a)",
                 {"task_id": task_id, "actor_id": actor_id}
             )
-
-            # Register with throttler
-            if throttler:
-                throttler.register_claim(task_id, actor_id)
 
             return {"content": [{"type": "text", "text": f"Task {task_id} claimed by {actor_id}"}]}
 

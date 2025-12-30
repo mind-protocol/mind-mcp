@@ -94,7 +94,7 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
 
     Resolution order:
     1. Tasks linked to actor with status='running' (pick highest weight × energy)
-    2. Tasks linked to actor with status='claimed' → promote to 'running'
+    2. Tasks linked to actor with status='claimed' → check throttler → promote to 'running'
 
     Returns:
         Task ID or None if no active task
@@ -116,7 +116,7 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
     except Exception as e:
         logger.debug(f"Running task detection failed for {actor_id}: {e}")
 
-    # 2. No running tasks - look for claimed, promote highest w×e to running
+    # 2. No running tasks - look for claimed, check throttler, promote to running
     try:
         result = adapter.query(
             """
@@ -130,6 +130,12 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
         )
         if result and result[0]:
             task_id = result[0][0]
+
+            # Check throttler before promoting
+            if not _throttler_allows_running(task_id, actor_id):
+                logger.warning(f"Throttler blocked promotion of {task_id} to running")
+                return None
+
             # Promote claimed → running
             adapter.execute(
                 "MATCH (t {id: $task_id}) SET t.status = 'running'",
@@ -141,6 +147,49 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
         logger.debug(f"Claimed task detection failed for {actor_id}: {e}")
 
     return None
+
+
+def _throttler_allows_running(task_id: str, actor_id: str) -> bool:
+    """Check if throttler allows promoting task to running.
+
+    Checks:
+    1. Agent mode not paused/stopped
+    2. Running count < max_concurrent_agents
+    """
+    try:
+        from .capability_integration import (
+            get_throttler, get_controller,
+            AgentMode, CAPABILITY_RUNTIME_AVAILABLE
+        )
+        if not CAPABILITY_RUNTIME_AVAILABLE:
+            return True  # No capability runtime = allow
+
+        # 1. Check agent mode
+        controller = get_controller()
+        if controller and controller.mode in (AgentMode.PAUSED, AgentMode.STOPPED):
+            logger.info(f"Agent mode is {controller.mode.value}, blocking promotion")
+            return False
+
+        # 2. Check throttler limits
+        throttler = get_throttler()
+        if not throttler:
+            return True
+
+        # Count currently running tasks
+        running_count = sum(
+            1 for slot in throttler.active.values()
+            if getattr(slot, 'status', None) == 'running'
+        )
+        max_concurrent = getattr(throttler, 'max_concurrent_agents', 5)
+
+        if running_count >= max_concurrent:
+            logger.info(f"Max concurrent ({max_concurrent}) reached, blocking promotion")
+            return False
+
+        return True
+    except Exception as e:
+        logger.debug(f"Throttler check failed: {e}")
+        return True  # Fail open
 
 
 def _resolve_active_space(adapter) -> Optional[str]:
