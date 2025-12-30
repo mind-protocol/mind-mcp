@@ -6,7 +6,7 @@ MIND Engine - Graph physics, traversal, membrane client.
 pip install mind-mcp
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 # Core exports (lazy import to avoid circular deps)
 def get_graph_ops(graph_name: str = "blood_ledger"):
