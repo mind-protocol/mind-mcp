@@ -2,7 +2,7 @@
 
 ```
 STATUS: CANONICAL
-UPDATED: 2025-12-29
+UPDATED: 2025-12-30
 ```
 
 ---
@@ -148,6 +148,88 @@ if all_passed(verification_results):
     # Success
 else:
     # Retry with feedback (up to 3 times)
+```
+
+### 7. Session Tracking
+
+Agents track their sessions via files for status detection:
+
+```
+.mind/actors/{name}/.sessionId    # Written on start, deleted on finish
+```
+
+**Detection:**
+```python
+from runtime.agents import get_active_agent_from_session
+
+# Check if any agent is currently running
+active = get_active_agent_from_session(Path("."))  # Returns agent name or None
+```
+
+**Use cases:**
+- MCP auto-fills actor_id from active session
+- Status dashboard shows running agents
+- Prevents duplicate agent spawns
+
+### 8. Conversation Capture
+
+Agent conversations are captured as graph moments:
+
+```
+Agent Run
+    │
+    ▼
+Parse stream-json output
+    │
+    ▼
+Capture turns: thinking, text, tool_use, tool_result
+    │
+    ▼
+Group into batches of 5
+    │
+    ▼
+Create CONVERSATION moment per batch
+    │
+    ▼
+Chain moments with --precedes-->
+    │
+    ▼
+Create final COMPLETION moment
+```
+
+**Moment structure:**
+```
+moment:conversation:witness_abc0
+  synthesis: "💭 thinking... 📝 output... 🔧 Read(...) → result..."
+  batch_index: 0
+  turn_count: 5
+  tools_used: ["Read", "Glob"]
+
+moment:completion:witness_abc1
+  synthesis: "Agent witness completed after 2 batches"
+  status: completed
+  duration_seconds: 15.2
+  total_turns: 8
+```
+
+### 9. CWD Tracking
+
+Agent's current working directory is tracked from `cd` commands:
+
+```python
+# Detected from Bash tool calls
+if turn.tool_name == "Bash" and "cd" in command:
+    # Extract path, update agent's cwd property
+    agent_graph.update_agent_cwd(actor_id, new_path)
+```
+
+**Graph state:**
+```
+(:Actor {
+  id: "AGENT_Witness",
+  cwd: "/home/user/project/docs",  # Updated after cd
+  status: "ready"
+})
 ```
 
 ---
@@ -313,12 +395,15 @@ result = await spawn_work_agent(
 runtime/
 ├── agents/
 │   ├── __init__.py          # Public API
+│   ├── run.py               # run_work_agent, conversation capture
 │   ├── spawn.py             # spawn_work_agent, spawn_for_task
-│   ├── graph.py             # AgentGraph, status management
+│   ├── graph.py             # AgentGraph, status, moments, cwd
 │   ├── cli.py               # build_agent_command
 │   ├── postures.py          # PROBLEM_TO_POSTURE, posture configs
 │   ├── verification.py      # verify_completion
-│   └── prompts.py           # AGENT_SYSTEM_PROMPT, build_agent_prompt
+│   ├── prompts.py           # AGENT_SYSTEM_PROMPT, build_agent_prompt
+│   ├── liveness.py          # Session detection, get_active_agent_from_session
+│   └── mapping.py           # Agent name normalization
 │
 ├── capability/
 │   ├── decorators.py        # @check, Signal, triggers
