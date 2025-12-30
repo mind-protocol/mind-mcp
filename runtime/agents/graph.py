@@ -883,7 +883,7 @@ class AgentGraph:
                 agent_name = actor_id.capitalize()
 
             # Extract salient terms from prose using embedding similarity
-            salient_terms = _extract_salient_terms(prose, self.graph_name, top_k=2)
+            salient_terms = _extract_salient_terms(prose, self.graph_name, top_k=4)
 
             # Infer action verb from tools and content
             verb = _infer_action_verb(tools_used or [], prose)

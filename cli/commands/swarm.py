@@ -63,9 +63,12 @@ def _get_pending_tasks() -> List[dict]:
 
 def _spawn_agent_process(agent_id: str, log_file: Path) -> Optional[int]:
     """Spawn a background agent process. Returns PID."""
+    # Get target directory (current working directory)
+    target_dir = Path.cwd()
+
     script = f'''
 import sys
-import time
+import asyncio
 import logging
 from pathlib import Path
 
@@ -80,50 +83,70 @@ logging.basicConfig(
 )
 logger = logging.getLogger()
 
-try:
-    from runtime.infrastructure.database import get_database_adapter
-    from runtime.task_assignment import assign_pending_tasks
-    from runtime.agents import run_for_task
+async def main():
+    try:
+        from runtime.infrastructure.database import get_database_adapter
+        from runtime.agents import run_work_agent
 
-    adapter = get_database_adapter()
-    logger.info("Agent started")
+        adapter = get_database_adapter()
+        logger.info("Agent started")
 
-    # Find a task claimed by this agent
-    result = adapter.query("""
-        MATCH (t:Narrative {{type: 'task_run', status: 'claimed'}})-[:LINK {{verb: 'claimed_by'}}]->(a:Actor {{id: $agent_id}})
-        RETURN t.id, t.synthesis
-        LIMIT 1
-    """, {{"agent_id": "{agent_id}"}})
+        # Find a task claimed by this agent
+        result = adapter.query("""
+            MATCH (t:Narrative {{type: 'task_run', status: 'claimed'}})-[:LINK {{verb: 'claimed_by'}}]->(a:Actor {{id: $agent_id}})
+            RETURN t.id, t.synthesis
+            LIMIT 1
+        """, {{"agent_id": "{agent_id}"}})
 
-    if result and result[0]:
-        task_id, synthesis = result[0]
-        logger.info(f"Working on: {{task_id}}")
+        if result and result[0]:
+            task_id, synthesis = result[0]
+            logger.info(f"Working on: {{task_id}}")
 
-        # Mark as running
-        adapter.execute(
-            "MATCH (t:Narrative {{id: $id}}) SET t.status = 'running'",
-            {{"id": task_id}}
-        )
-
-        # Run the agent work
-        try:
-            run_for_task(task_id, "{agent_id}")
+            # Mark as running
             adapter.execute(
-                "MATCH (t:Narrative {{id: $id}}) SET t.status = 'completed'",
+                "MATCH (t:Narrative {{id: $id}}) SET t.status = 'running'",
                 {{"id": task_id}}
             )
-            logger.info(f"Completed: {{task_id}}")
-        except Exception as e:
-            adapter.execute(
-                "MATCH (t:Narrative {{id: $id}}) SET t.status = 'failed', t.error = $error",
-                {{"id": task_id, "error": str(e)}}
-            )
-            logger.error(f"Failed: {{task_id}} - {{e}}")
-    else:
-        logger.info("No tasks assigned, exiting")
 
-except Exception as e:
-    logger.error(f"Agent error: {{e}}")
+            # Run the agent work
+            try:
+                prompt = synthesis or f"Work on task {{task_id}}"
+                target_dir = Path("{target_dir}")
+
+                result = await run_work_agent(
+                    actor_id="{agent_id}",
+                    prompt=prompt,
+                    target_dir=target_dir,
+                    task_id=task_id,
+                    timeout=600.0,
+                )
+
+                if result.success:
+                    adapter.execute(
+                        "MATCH (t:Narrative {{id: $id}}) SET t.status = 'completed'",
+                        {{"id": task_id}}
+                    )
+                    logger.info(f"Completed: {{task_id}}")
+                else:
+                    adapter.execute(
+                        "MATCH (t:Narrative {{id: $id}}) SET t.status = 'failed', t.error = $error",
+                        {{"id": task_id, "error": result.error or "Unknown error"}}
+                    )
+                    logger.error(f"Failed: {{task_id}} - {{result.error}}")
+
+            except Exception as e:
+                adapter.execute(
+                    "MATCH (t:Narrative {{id: $id}}) SET t.status = 'failed', t.error = $error",
+                    {{"id": task_id, "error": str(e)}}
+                )
+                logger.error(f"Failed: {{task_id}} - {{e}}")
+        else:
+            logger.info("No tasks assigned, exiting")
+
+    except Exception as e:
+        logger.error(f"Agent error: {{e}}")
+
+asyncio.run(main())
 '''
 
     try:
