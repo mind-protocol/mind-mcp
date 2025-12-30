@@ -156,8 +156,8 @@ async def run_work_agent(
                         "task_id": task_id,
                         "batch_index": i,
                         "turn_count": batch.turn_count,
-                        "tools_used": batch.tools_used,
                     },
+                    tools_used=batch.tools_used,
                 )
                 # Chain moments: prev --precedes--> current
                 if prev_moment_id:
@@ -167,6 +167,7 @@ async def run_work_agent(
 
             # Add final status moment
             if completion_moment_id:
+                all_tools = [t for b in batches for t in b.tools_used]
                 final_moment_id = agent_graph.create_moment(
                     actor_id=actor_id,
                     moment_type="COMPLETION",
@@ -179,6 +180,7 @@ async def run_work_agent(
                         "total_turns": sum(b.turn_count for b in batches),
                         "error": result.error[:200] if result.error else None,
                     },
+                    tools_used=all_tools,
                 )
                 agent_graph.link_moments(completion_moment_id, final_moment_id, "precedes")
                 completion_moment_id = final_moment_id

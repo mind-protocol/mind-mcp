@@ -58,6 +58,7 @@ try:
     from cli.commands.agents import agents_command
     from cli.commands.tasks import tasks_command
     from cli.commands.events import events_command, errors_command
+    from cli.commands.swarm import run as swarm_run
     HAS_NEW_COMMANDS = True
 except ImportError:
     HAS_NEW_COMMANDS = False
@@ -786,6 +787,44 @@ def main():
         help="Output format (default: text)"
     )
 
+    # swarm command
+    swarm_parser = subparsers.add_parser(
+        "swarm",
+        help="Run multiple agents in parallel with live streaming"
+    )
+    swarm_parser.add_argument(
+        "--agents", "-n",
+        type=int,
+        default=0,
+        help="Number of agents to spawn"
+    )
+    swarm_parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Show swarm status"
+    )
+    swarm_parser.add_argument(
+        "--stop",
+        action="store_true",
+        help="Stop all agents"
+    )
+    swarm_parser.add_argument(
+        "--stream",
+        action="store_true",
+        help="Stream moments live"
+    )
+    swarm_parser.add_argument(
+        "--logs",
+        action="store_true",
+        help="Tail log files"
+    )
+    swarm_parser.add_argument(
+        "--log-file",
+        type=str,
+        default=None,
+        help="Custom log file path"
+    )
+
     # cluster command
     cluster_parser = subparsers.add_parser(
         "cluster",
@@ -1136,6 +1175,21 @@ def main():
             format_output=args.format,
         )
         sys.exit(exit_code)
+
+    elif args.command == "swarm":
+        if not HAS_NEW_COMMANDS:
+            print("Error: CLI commands module not found")
+            sys.exit(1)
+
+        swarm_run(
+            agents=args.agents,
+            status=args.status,
+            stop=args.stop,
+            stream=args.stream,
+            logs=args.logs,
+            log_file=args.log_file,
+        )
+        sys.exit(0)
 
     else:
         parser.print_help()

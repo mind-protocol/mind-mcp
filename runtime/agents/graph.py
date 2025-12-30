@@ -24,15 +24,148 @@ DOCS: docs/agents/PATTERNS_Agent_System.md
 """
 
 import logging
+import re
 import time
 import hashlib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 
 from .mapping import NAME_TO_AGENT_ID, DEFAULT_NAME
 
 logger = logging.getLogger(__name__)
+
+
+def _extract_salient_terms(
+    content: str,
+    graph_name: Optional[str] = None,
+    top_k: int = 3,
+) -> List[str]:
+    """
+    Extract salient terms from content using embedding similarity against graph vocabulary.
+
+    Args:
+        content: Text to extract salient terms from
+        graph_name: Graph to search in
+        top_k: Number of terms to extract
+
+    Returns:
+        List of salient term strings (CamelCase)
+    """
+    if not content or len(content.strip()) < 10:
+        return []
+
+    try:
+        from runtime.infrastructure.embeddings import get_embedding
+        from runtime.infrastructure.database import get_database_adapter
+
+        # Embed the content
+        embedding = get_embedding(content[:2000])  # Truncate for embedding
+        if not embedding:
+            return []
+
+        adapter = get_database_adapter(graph_name=graph_name)
+
+        # Vector search against all nodes with embeddings
+        # Look for Space, Narrative, Thing nodes that have names
+        results = adapter.query("""
+            MATCH (n)
+            WHERE n.embedding IS NOT NULL
+            AND n.name IS NOT NULL
+            AND n.name <> ''
+            RETURN n.name, n.type, n.id
+            LIMIT 500
+        """)
+
+        if not results:
+            return []
+
+        # Compute similarities
+        from runtime.infrastructure.embeddings import cosine_similarity
+
+        scored: List[Tuple[float, str]] = []
+        seen_names = set()
+
+        for row in results:
+            name = row[0]
+            if not name or name in seen_names:
+                continue
+            seen_names.add(name)
+
+            # Get node embedding for comparison
+            node_result = adapter.query(f"""
+                MATCH (n {{name: $name}})
+                WHERE n.embedding IS NOT NULL
+                RETURN n.embedding
+                LIMIT 1
+            """, {"name": name})
+
+            if node_result and node_result[0][0]:
+                node_embedding = node_result[0][0]
+                sim = cosine_similarity(embedding, node_embedding)
+                scored.append((sim, name))
+
+        # Sort by similarity, take top_k
+        scored.sort(reverse=True, key=lambda x: x[0])
+        top_terms = [name for _, name in scored[:top_k]]
+
+        # Clean terms: split on separators, capitalize each part
+        clean_terms = []
+        for term in top_terms:
+            # Split on common separators: space, underscore, dot, slash, hyphen
+            parts = re.split(r'[\s_./\-]+', term)
+            # Take meaningful parts, capitalize
+            meaningful = [p.capitalize() for p in parts if p and len(p) > 1]
+            if meaningful:
+                # Join with nothing for CamelCase, take first 2 parts max
+                clean = ''.join(meaningful[:2])
+                if clean and len(clean) <= 15:
+                    clean_terms.append(clean)
+
+        return clean_terms[:top_k]
+
+    except Exception as e:
+        logger.warning(f"[AgentGraph] Failed to extract salient terms: {e}")
+        return []
+
+
+def _infer_action_verb(tools_used: List[str], content: str) -> str:
+    """
+    Infer action verb from tools used and content.
+
+    Returns a verb like "Exploring", "Fixing", "Debugging", etc.
+    """
+    content_lower = content.lower() if content else ""
+
+    # Check content for emotion/intent signals
+    if any(w in content_lower for w in ["bug", "error", "fix", "broken"]):
+        return "Debugging"
+    if any(w in content_lower for w in ["confused", "unclear", "struggling"]):
+        return "Struggling"
+    if any(w in content_lower for w in ["found", "discovered", "located"]):
+        return "Discovering"
+    if any(w in content_lower for w in ["refactor", "clean", "reorganize"]):
+        return "Refactoring"
+
+    # Infer from tool patterns
+    if not tools_used:
+        return "Working"
+
+    tool_counts = {}
+    for t in tools_used:
+        tool_counts[t] = tool_counts.get(t, 0) + 1
+
+    read_heavy = tool_counts.get("Read", 0) + tool_counts.get("Glob", 0) + tool_counts.get("Grep", 0)
+    write_heavy = tool_counts.get("Edit", 0) + tool_counts.get("Write", 0)
+
+    if read_heavy > write_heavy * 2:
+        return "Exploring"
+    if write_heavy > read_heavy:
+        return "Building"
+    if "Grep" in tool_counts and tool_counts["Grep"] >= 2:
+        return "Searching"
+
+    return "Working"
 
 
 def _get_link_physics(nature: str) -> Dict[str, Any]:
@@ -715,9 +848,14 @@ class AgentGraph:
         about_ids: Optional[List[str]] = None,
         space_id: Optional[str] = None,
         extra_props: Optional[Dict] = None,
+        tools_used: Optional[List[str]] = None,
     ) -> Optional[str]:
         """
         Create a moment node using inject().
+
+        Moment naming uses embedding-based salience extraction:
+        - ID: WORK_{Agent}_{Verb}{SalientTerms}_{hash}
+        - Example: WORK_Witness_ExploringAuthPatterns_aa4c
 
         Args:
             actor_id: Actor creating this moment
@@ -726,6 +864,7 @@ class AgentGraph:
             about_ids: Node IDs this moment is about
             space_id: Space (module/project) where this moment occurs
             extra_props: Additional properties for the moment
+            tools_used: List of tools used (for verb inference)
 
         Returns:
             Moment ID if created, None on failure
@@ -736,8 +875,28 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
-            agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
-            moment_id = f"moment:{moment_type.lower()}:{agent_name}_{ts_hash}"
+
+            # Extract agent name
+            if actor_id.startswith("AGENT_"):
+                agent_name = actor_id[6:]  # Keep original case: "Witness"
+            else:
+                agent_name = actor_id.capitalize()
+
+            # Extract salient terms from prose using embedding similarity
+            salient_terms = _extract_salient_terms(prose, self.graph_name, top_k=2)
+
+            # Infer action verb from tools and content
+            verb = _infer_action_verb(tools_used or [], prose)
+
+            # Build name: Verb_Term1_Term2
+            if salient_terms:
+                terms_part = '_'.join(salient_terms)
+                moment_name = f"{verb}_{terms_part}"
+            else:
+                moment_name = f"{verb}_{moment_type.capitalize()}"
+
+            # Build ID: WORK_{Agent}_{Name}_{hash}
+            moment_id = f"WORK_{agent_name}_{moment_name}_{ts_hash}"
 
             # Set actor for inject context
             set_actor(actor_id)
@@ -746,7 +905,7 @@ class AgentGraph:
             moment_data = {
                 "id": moment_id,
                 "label": "Moment",
-                "name": f"{moment_type}:{agent_name}",
+                "name": moment_name,
                 "type": moment_type,
                 "synthesis": prose,
                 "timestamp": timestamp,
