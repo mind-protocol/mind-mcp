@@ -183,6 +183,66 @@ async def main():
                     problem_info = f"Problem: {{ctx[1] or ctx[2]}}"
                 target_path = ctx[3] or ""
 
+            # Get implements chain: task_run --serves--> TASK --uses--> SKILL --executes--> PROCEDURE
+            chain_parts = []
+            chain_result = adapter.query("""
+                MATCH (run:Narrative {{id: $task_id}})
+                OPTIONAL MATCH (run)-[:LINK {{verb: 'serves'}}]->(template:Narrative)
+                OPTIONAL MATCH (template)-[:LINK {{verb: 'uses'}}]->(skill:Narrative)
+                OPTIONAL MATCH (skill)-[:LINK {{verb: 'executes'}}]->(proc)
+                RETURN template.id, template.path, template.synthesis,
+                       skill.id, skill.path, skill.synthesis,
+                       proc.id, proc.path, proc.content
+            """, {{"task_id": task_id}})
+
+            if chain_result:
+                seen_templates = set()
+                seen_skills = set()
+                seen_procs = set()
+                for row in chain_result:
+                    tmpl_id, tmpl_path, tmpl_synth = row[0], row[1], row[2]
+                    skill_id, skill_path, skill_synth = row[3], row[4], row[5]
+                    proc_id, proc_path, proc_content = row[6], row[7], row[8]
+
+                    # Load task template content from file
+                    if tmpl_id and tmpl_id not in seen_templates:
+                        seen_templates.add(tmpl_id)
+                        if tmpl_path:
+                            try:
+                                tmpl_content = Path(tmpl_path).read_text()[:2000]
+                                chain_parts.append(f"## Task Template: {{tmpl_id}}\\n{{tmpl_content}}")
+                            except Exception:
+                                if tmpl_synth:
+                                    chain_parts.append(f"## Task Template: {{tmpl_id}}\\n{{tmpl_synth}}")
+                        elif tmpl_synth:
+                            chain_parts.append(f"## Task Template: {{tmpl_id}}\\n{{tmpl_synth}}")
+
+                    # Load skill content from file
+                    if skill_id and skill_id not in seen_skills:
+                        seen_skills.add(skill_id)
+                        if skill_path:
+                            try:
+                                skill_content = Path(skill_path).read_text()[:3000]
+                                chain_parts.append(f"## Skill: {{skill_id}}\\n{{skill_content}}")
+                            except Exception:
+                                if skill_synth:
+                                    chain_parts.append(f"## Skill: {{skill_id}}\\n{{skill_synth}}")
+                        elif skill_synth:
+                            chain_parts.append(f"## Skill: {{skill_id}}\\n{{skill_synth}}")
+
+                    # Load procedure content from file
+                    if proc_id and proc_id not in seen_procs:
+                        seen_procs.add(proc_id)
+                        if proc_path:
+                            try:
+                                proc_file_content = Path(proc_path).read_text()[:1500]
+                                chain_parts.append(f"## Procedure: {{proc_id}}\\n{{proc_file_content}}")
+                            except Exception:
+                                if proc_content:
+                                    chain_parts.append(f"## Procedure: {{proc_id}}\\n{{proc_content}}")
+                        elif proc_content:
+                            chain_parts.append(f"## Procedure: {{proc_id}}\\n{{proc_content}}")
+
             # Mark as running
             adapter.execute(
                 "MATCH (t:Narrative {{id: $id}}) SET t.status = 'running'",
@@ -201,6 +261,11 @@ async def main():
                     prompt_parts.append(f"Details: {{task_content[:500]}}")
                 if target_path:
                     prompt_parts.append(f"Target: {{target_path}}")
+
+                # Add implements chain (skills, procedures, templates)
+                if chain_parts:
+                    prompt_parts.append("\\n# Implements Chain\\n")
+                    prompt_parts.extend(chain_parts)
 
                 prompt = "\\n".join(prompt_parts) if prompt_parts else f"Execute task {{task_id}}"
                 target_dir = Path("{target_dir}")
