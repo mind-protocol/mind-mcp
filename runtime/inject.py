@@ -379,13 +379,33 @@ def inject(
         # Apply context if injection succeeded
         if with_context and result in ("created", "updated"):
             node_id = data["id"]
-            synthesis = data.get("synthesis", data.get("name", node_id))
 
-            # Create moment and chain
-            moment_id = _create_moment(adapter, node_id, f"Injected {synthesis}")
+            # Skip moment creation if injected node IS a moment (avoid duplication)
+            is_moment = (
+                data.get("label") == "Moment" or
+                node_id.startswith("moment:")
+            )
 
-            # Link node to actor, space, moment
-            _apply_context_links(adapter, node_id, moment_id)
+            if is_moment:
+                # Moment nodes: link to actor and chain to previous moment
+                actor_id = get_actor()
+                _inject_link_raw(adapter, actor_id, node_id, "creates")
+
+                # Chain to actor's previous moment
+                prev_moment_id = _context["last_moment_id"].get(actor_id)
+                if prev_moment_id:
+                    _inject_link_raw(adapter, node_id, prev_moment_id, "follows")
+
+                # Update last moment for this actor
+                _context["last_moment_id"][actor_id] = node_id
+            else:
+                synthesis = data.get("synthesis", data.get("name", node_id))
+
+                # Create moment and chain
+                moment_id = _create_moment(adapter, node_id, f"Injected {synthesis}")
+
+                # Link node to actor, space, moment
+                _apply_context_links(adapter, node_id, moment_id)
 
         return result
     else:
