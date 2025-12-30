@@ -140,7 +140,7 @@ async def main():
             """, {{"agent_id": "{agent_id}"}})
 
             if not result or not result[0]:
-                # No claimed tasks - try to claim a pending one
+                # No claimed tasks - try to claim a pending one via physics
                 pending = adapter.query("""
                     MATCH (t:Narrative {{type: 'task_run', status: 'pending'}})
                     OPTIONAL MATCH (t)-[r:LINK {{verb: 'claimed_by'}}]->(a:Actor)
@@ -155,9 +155,9 @@ async def main():
                         assigned = assign_single_task(task_id, synthesis, adapter)
                         if assigned == "{agent_id}":
                             logger.info(f"Claimed: {{task_id}}")
-                            continue  # Go back to find the now-claimed task
+                            continue  # Go work on it
 
-                # No pending tasks available
+                # No pending tasks for this agent
                 logger.info(f"No more tasks. Completed {{tasks_completed}} tasks.")
                 break
 
@@ -313,26 +313,36 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool
     _ensure_dirs()
     target_dir = Path.cwd()
 
-    # First, assign pending tasks to agents
+    # First, assign pending tasks to agents using physics scoring
     try:
         from runtime.task_assignment import startup_assign
         assigned, skipped = startup_assign()
         if assigned > 0:
             print(f"Assigned {assigned} tasks to agents")
-        elif skipped > 0:
-            print(f"Skipped {skipped} tasks (no synthesis)")
     except Exception as e:
         print(f"Task assignment: {e}")
 
-    # Get available agents
-    agents = _get_available_agents()
+    # Get agents that have claimed tasks, ordered by weight × energy (best first)
+    try:
+        from runtime.infrastructure.database import get_database_adapter
+        adapter = get_database_adapter()
+        result = adapter.query("""
+            MATCH (t:Narrative {type: 'task_run'})-[:LINK {verb: 'claimed_by'}]->(a:Actor)
+            WHERE t.status IN ['claimed', 'pending']
+            RETURN DISTINCT a.id, COALESCE(a.weight, 1.0) * COALESCE(a.energy, 1.0) AS score
+            ORDER BY score DESC
+        """)
+        agents = [r[0] for r in result] if result else []
+    except Exception:
+        agents = []
+
     if not agents:
-        print("No available agents found in graph")
+        print("No agents have claimed tasks")
         return
 
     # Limit to requested number
     agents = agents[:num_agents]
-    print(f"Starting {len(agents)} agents...")
+    print(f"Starting {len(agents)} agents: {', '.join(a.replace('AGENT_', '') for a in agents)}")
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
@@ -370,9 +380,9 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool
 
                 while not stop_streaming.is_set():
                     try:
-                        # Check for newly claimed tasks
+                        # Check for newly claimed tasks (claimed_by: task -> agent)
                         claims = adapter.query("""
-                            MATCH (a:Actor)-[r:LINK {verb: 'claims'}]->(t:Narrative {type: 'task_run'})
+                            MATCH (t:Narrative {type: 'task_run'})-[r:LINK {verb: 'claimed_by'}]->(a:Actor)
                             WHERE t.status IN ['claimed', 'running']
                             RETURN a.id, t.id, t.synthesis, t.status
                         """)
