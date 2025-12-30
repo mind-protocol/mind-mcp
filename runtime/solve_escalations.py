@@ -89,10 +89,10 @@ def _count_unresolved_markers(content: str, marker_tags: Tuple[str, ...]) -> int
     return count
 
 
-def _find_markers_in_files(target_dir: Path, marker_tags: Tuple[str, ...], issue_type: str) -> List[Tuple[int, int, str, str, str]]:
+def _find_markers_in_files(target_dir: Path, marker_tags: Tuple[str, ...], task_type: str) -> List[Tuple[int, int, str, str, str]]:
     """Return file paths with given markers, ordered by priority (highest first).
 
-    Returns: List of (priority_sort, occurrences, path, issue_type, title)
+    Returns: List of (priority_sort, occurrences, path, task_type, title)
     """
     config = load_doctor_config(target_dir)
     matches: List[Tuple[int, int, str, str, str]] = []
@@ -144,7 +144,7 @@ def _find_markers_in_files(target_dir: Path, marker_tags: Tuple[str, ...], issue
         title = _extract_title_from_content(content, marker_tags)
 
         # Sort key: -priority (so higher priority comes first), then by occurrences
-        matches.append((-priority, -occurrences, rel_path, issue_type, title))
+        matches.append((-priority, -occurrences, rel_path, task_type, title))
 
     matches.sort()
     return matches
@@ -171,27 +171,27 @@ def solve_special_markers_command(target_dir: Path) -> int:
 
     if critical:
         print("## CRITICAL (priority 7-10) — blocking\n")
-        for idx, ((neg_prio, occ, path, issue_type, title), prio) in enumerate(critical, 1):
+        for idx, ((neg_prio, occ, path, task_type, title), prio) in enumerate(critical, 1):
             display = f"{title}" if title else path
-            print(f"  {idx}. [{issue_type}] p{prio}: {display}")
+            print(f"  {idx}. [{task_type}] p{prio}: {display}")
             if title:
                 print(f"      {path}")
         print()
 
     if important:
         print("## IMPORTANT (priority 4-6) — needs attention\n")
-        for idx, ((neg_prio, occ, path, issue_type, title), prio) in enumerate(important, 1):
+        for idx, ((neg_prio, occ, path, task_type, title), prio) in enumerate(important, 1):
             display = f"{title}" if title else path
-            print(f"  {idx}. [{issue_type}] p{prio}: {display}")
+            print(f"  {idx}. [{task_type}] p{prio}: {display}")
             if title:
                 print(f"      {path}")
         print()
 
     if normal:
         print("## NORMAL (priority 1-3) — when time permits\n")
-        for idx, ((neg_prio, occ, path, issue_type, title), prio) in enumerate(normal, 1):
+        for idx, ((neg_prio, occ, path, task_type, title), prio) in enumerate(normal, 1):
             display = f"{title}" if title else path
-            print(f"  {idx}. [{issue_type}] p{prio}: {display}")
+            print(f"  {idx}. [{task_type}] p{prio}: {display}")
             if title:
                 print(f"      {path}")
         print()

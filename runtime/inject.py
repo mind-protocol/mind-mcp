@@ -28,7 +28,7 @@ Usage:
     from runtime.inject import inject, set_actor
 
     # Set active actor (task is auto-detected from graph)
-    set_actor("actor:agent_witness")
+    set_actor("AGENT_Witness")
 
     # Inject - automatically creates moment and links
     inject(adapter, {
@@ -95,6 +95,7 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
     Resolution order:
     1. Tasks linked to actor with status='running' (pick highest weight × energy)
     2. Tasks linked to actor with status='claimed' → check throttler → promote to 'running'
+    3. Tasks linked to actor with status='pending' → auto-claim → check throttler → promote to 'running'
 
     Returns:
         Task ID or None if no active task
@@ -145,6 +146,41 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
             return task_id
     except Exception as e:
         logger.debug(f"Claimed task detection failed for {actor_id}: {e}")
+
+    # 3. No claimed tasks - look for pending, auto-claim and promote
+    try:
+        result = adapter.query(
+            """
+            MATCH (a {id: $actor_id})-[r:LINK]-(t)
+            WHERE t.status = 'pending'
+            RETURN t.id, COALESCE(r.weight, 1.0) * COALESCE(r.energy, 0.1) as score
+            ORDER BY score DESC
+            LIMIT 1
+            """,
+            {"actor_id": actor_id}
+        )
+        if result and result[0]:
+            task_id = result[0][0]
+
+            # Check throttler before claiming
+            if not _throttler_allows_running(adapter, task_id, actor_id):
+                logger.warning(f"Throttler blocked claim of {task_id}")
+                return None
+
+            # Claim and promote: pending → running
+            adapter.execute(
+                """
+                MATCH (t {id: $task_id})
+                SET t.status = 'running',
+                    t.claimed_by = $actor_id,
+                    t.claimed_at = datetime()
+                """,
+                {"task_id": task_id, "actor_id": actor_id}
+            )
+            logger.info(f"Auto-claimed and activated task {task_id} for {actor_id}")
+            return task_id
+    except Exception as e:
+        logger.debug(f"Pending task detection failed for {actor_id}: {e}")
 
     return None
 
@@ -360,11 +396,121 @@ def _inject_link_raw(adapter, from_id: str, to_id: str, verb: str) -> None:
 
 LABEL_MAP = {
     "actor": "Actor",
+    "human": "Actor",  # Humans are actors too
     "space": "Space",
     "thing": "Thing",
     "narrative": "Narrative",
     "moment": "Moment",
 }
+
+# Valid node types (graph labels) - only these 5 exist
+VALID_NODE_TYPES = {"ACTOR", "SPACE", "THING", "NARRATIVE", "MOMENT"}
+
+
+# =============================================================================
+# ID NAMING CONVENTION
+# =============================================================================
+#
+# Format: {TYPE}_{Name}
+# - TYPE: uppercase semantic type (free string, e.g., AGENT, HUMAN, TASK)
+# - Name: capitalized identifier
+#
+# Examples:
+#   AGENT_Witness
+#   HUMAN_Nicolas
+#   TASK_Fix_Auth_Bug
+#   MOMENT_Assignment_abc123
+
+
+def normalize_id(node_id: str) -> str:
+    """
+    Normalize node ID to {TYPE}_{Name} convention.
+
+    Handles:
+    - "actor:agent_witness" -> "AGENT_Witness"
+    - "AGENT_Witness" -> "AGENT_Witness" (unchanged)
+    - "agent_witness" -> "AGENT_Witness"
+
+    Args:
+        node_id: Raw node ID
+
+    Returns:
+        Normalized ID in {TYPE}_{Name} format
+
+    Raises:
+        ValueError: If ID format is invalid
+    """
+    if not node_id:
+        raise ValueError("Node ID cannot be empty")
+
+    # Handle legacy colon format: "actor:agent_witness" -> "AGENT_Witness"
+    if ":" in node_id:
+        parts = node_id.split(":", 1)
+        type_part = parts[0].upper()
+        name_part = parts[1]
+        # Convert "actor:agent_witness" -> type=AGENT, name=Witness
+        if type_part == "ACTOR" and name_part.startswith("agent_"):
+            type_part = "AGENT"
+            name_part = name_part[6:]
+        # Capitalize name parts
+        name_part = "_".join(p.capitalize() for p in name_part.split("_"))
+        return f"{type_part}_{name_part}"
+
+    # Handle underscore format
+    if "_" not in node_id:
+        raise ValueError(
+            f"Invalid ID format '{node_id}': must be {{TYPE}}_{{Name}} "
+            f"(e.g., AGENT_Witness, HUMAN_Nicolas)"
+        )
+
+    # Split on first underscore
+    parts = node_id.split("_", 1)
+    type_part = parts[0].upper()
+    name_part = parts[1] if len(parts) > 1 else ""
+
+    if not name_part:
+        raise ValueError(f"Invalid ID format '{node_id}': name part cannot be empty")
+
+    # Capitalize each part of the name
+    name_part = "_".join(p.capitalize() for p in name_part.split("_"))
+
+    return f"{type_part}_{name_part}"
+
+
+def validate_id(node_id: str) -> bool:
+    """
+    Check if node ID follows {TYPE}_{Name} convention.
+
+    Args:
+        node_id: Node ID to validate
+
+    Returns:
+        True if valid, False otherwise
+    """
+    try:
+        normalized = normalize_id(node_id)
+        return normalized == node_id
+    except ValueError:
+        return False
+
+
+def parse_id(node_id: str) -> tuple:
+    """
+    Parse node ID into (type, name) tuple.
+
+    Args:
+        node_id: Node ID in {TYPE}_{Name} format
+
+    Returns:
+        Tuple of (type, name)
+
+    Example:
+        parse_id("AGENT_Witness") -> ("AGENT", "Witness")
+        parse_id("TASK_Fix_Auth_Bug") -> ("TASK", "Fix_Auth_Bug")
+    """
+    normalized = normalize_id(node_id)
+    parts = normalized.split("_", 1)
+    return (parts[0], parts[1])
 
 
 # =============================================================================
@@ -472,7 +618,7 @@ def inject(
 
     Node format:
         {
-            "id": "actor:agent_witness",      # Required
+            "id": "AGENT_Witness",             # Required
             "label": "Actor",                  # Optional, inferred from id prefix
             "name": "witness",                 # Optional
             "content": "...",                  # Optional
@@ -559,8 +705,13 @@ def _inject_node(
         if node_type:
             label = LABEL_MAP.get(node_type, "Thing")
         else:
-            # Infer from id prefix: "actor:foo" -> "Actor"
-            prefix = node_id.split(":")[0] if ":" in node_id else "thing"
+            # Infer from id prefix: "actor:foo" or "AGENT_Foo" -> "Actor"
+            if ":" in node_id:
+                prefix = node_id.split(":")[0]
+            elif "_" in node_id:
+                prefix = node_id.split("_")[0].lower()
+            else:
+                prefix = "thing"
             label = LABEL_MAP.get(prefix, "Thing")
 
     # Generate synthesis if missing
@@ -743,7 +894,7 @@ def inject_node(
 
     Args:
         adapter: Database adapter
-        node_id: Node ID (e.g., "actor:agent_witness")
+        node_id: Node ID (e.g., "ACTOR_witness")
         label: Optional label (inferred from id prefix if not provided)
         name: Optional name
         content: Optional content

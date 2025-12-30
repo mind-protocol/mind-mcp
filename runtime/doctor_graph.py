@@ -181,7 +181,7 @@ class IssueNarrative(NarrativeNode):
 
     Represents an atomic problem detected by doctor.
     """
-    issue_type: str = ""          # MONOLITH, STALE_SYNC, etc.
+    task_type: str = ""          # MONOLITH, STALE_SYNC, etc.
     severity: str = "warning"     # critical, warning, info
     status: str = "open"          # open, resolved, in_progress
     module: str = ""              # Module ID (Space it belongs to)
@@ -320,21 +320,21 @@ def generate_actor_id(name: str, actor_type: str = "AGENT") -> str:
     return f"actor_{actor_type.upper()}_{clean_name}"
 
 
-def generate_issue_id(issue_type: str, module: str, path: str) -> str:
+def generate_issue_id(task_type: str, module: str, path: str) -> str:
     """Generate issue narrative ID.
 
     Format: narrative_PROBLEM_{issue-type}-{module}-{file}_{hash}
     Example: narrative_PROBLEM_monolith-engine-physics-graph-ops_a7
     """
     file_stem = Path(path).stem if path else "root"
-    clean_type = _clean_for_id(issue_type)
+    clean_type = _clean_for_id(task_type)
     clean_module = _clean_for_id(module)
     clean_file = _clean_for_id(file_stem)
 
     # Build context: type-module-file
     context = f"{clean_type}-{clean_module}-{clean_file}"
 
-    hash_input = f"{issue_type}:{module}:{path}"
+    hash_input = f"{task_type}:{module}:{path}"
     short_hash = hashlib.md5(hash_input.encode()).hexdigest()[:2]
 
     return f"narrative_PROBLEM_{context}_{short_hash}"
@@ -476,8 +476,8 @@ def synthesize_node_content(node: "GraphNode") -> str:
 
     # Add type-specific context
     if node.node_type == NodeType.NARRATIVE.value:
-        if hasattr(node, 'issue_type'):
-            parts.append(f"issue: {node.issue_type}")
+        if hasattr(node, 'task_type'):
+            parts.append(f"issue: {node.task_type}")
         elif hasattr(node, 'objective_type'):
             parts.append(f"objective: {node.objective_type}")
         elif hasattr(node, 'task_type'):
@@ -498,7 +498,7 @@ def synthesize_node_content(node: "GraphNode") -> str:
 # NODE SYNTHESIS GENERATORS (English)
 # =============================================================================
 
-def generate_issue_synthesis(issue_type: str, severity: str) -> str:
+def generate_issue_synthesis(task_type: str, severity: str) -> str:
     """Generate synthesis for an issue narrative node."""
     severity_prefix = {
         "critical": "critical",
@@ -516,7 +516,7 @@ def generate_issue_synthesis(issue_type: str, severity: str) -> str:
         "HEALTH_FAILED": "has health failure",
         "PLACEHOLDER": "contains placeholders",
         "BROKEN_IMPL_LINK": "has broken link",
-    }.get(issue_type, f"has {issue_type.lower().replace('_', ' ')} issue")
+    }.get(task_type, f"has {task_type.lower().replace('_', ' ')} issue")
 
     return f"{severity_prefix} issue: {issue_verb}"
 
@@ -621,8 +621,8 @@ def _generate_node_embedding(node: GraphNode) -> Optional[List[float]]:
     # Add type-specific fields
     if hasattr(node, 'uri'):
         node_dict["uri"] = node.uri
-    if hasattr(node, 'issue_type'):
-        node_dict["issue_type"] = node.issue_type
+    if hasattr(node, 'task_type'):
+        node_dict["task_type"] = node.task_type
     if hasattr(node, 'objective_type'):
         node_dict["objective_type"] = node.objective_type
 
@@ -692,9 +692,9 @@ def fill_missing_node_fields(node: GraphNode) -> bool:
     # Fill synthesis if empty
     if not node.synthesis:
         if node.node_type == NodeType.NARRATIVE.value:
-            if node.type == NarrativeSubtype.PROBLEM.value and hasattr(node, 'issue_type'):
+            if node.type == NarrativeSubtype.PROBLEM.value and hasattr(node, 'task_type'):
                 severity = getattr(node, 'severity', 'warning')
-                node.synthesis = generate_issue_synthesis(node.issue_type, severity)
+                node.synthesis = generate_issue_synthesis(node.task_type, severity)
             elif node.type == NarrativeSubtype.OBJECTIVE.value and hasattr(node, 'objective_type'):
                 node.synthesis = generate_objective_synthesis(node.objective_type)
             elif node.type == NarrativeSubtype.TASK.value and hasattr(node, 'task_type'):
@@ -1123,7 +1123,7 @@ class DoctorGraphStore:
 # =============================================================================
 
 def create_issue_node(
-    issue_type: str,
+    task_type: str,
     severity: str,
     path: str,
     message: str,
@@ -1139,12 +1139,12 @@ def create_issue_node(
         weight: 2.0 (issues matter)
         energy: 3.0 (active problems)
     """
-    issue_id = generate_issue_id(issue_type, module, path)
+    issue_id = generate_issue_id(task_type, module, path)
     file_stem = Path(path).stem if path else "root"
 
     # Build rich content
     content_lines = [
-        f"## {issue_type}",
+        f"## {task_type}",
         f"",
         f"**Module:** {module}",
         f"**File:** {path}" if path else "**Scope:** module-level",
@@ -1171,7 +1171,7 @@ def create_issue_node(
 
     return IssueNarrative(
         id=issue_id,
-        name=f"{issue_type} in {module}/{file_stem}",
+        name=f"{task_type} in {module}/{file_stem}",
         node_type=NodeType.NARRATIVE.value,
         type=NarrativeSubtype.PROBLEM.value,
         description=message,
@@ -1179,10 +1179,10 @@ def create_issue_node(
         weight=2.0,
         energy=energy,
         # Semantics
-        synthesis=generate_issue_synthesis(issue_type, severity),
+        synthesis=generate_issue_synthesis(task_type, severity),
         content=content,
         # Issue-specific
-        issue_type=issue_type,
+        task_type=task_type,
         severity=severity,
         module=module,
         path=path,
@@ -1612,7 +1612,7 @@ def link_issue_about_thing(issue_id: str, thing_id: str) -> GraphLink:
 # =============================================================================
 
 def upsert_issue(
-    issue_type: str,
+    task_type: str,
     severity: str,
     path: str,
     message: str,
@@ -1629,7 +1629,7 @@ def upsert_issue(
     Physics fields (weight, energy, synthesis, embedding) are only set if null/0.
     Use fill_missing_node_fields() to regenerate if needed.
     """
-    issue_id = generate_issue_id(issue_type, module, path)
+    issue_id = generate_issue_id(task_type, module, path)
     existing = store.get_node(issue_id)
 
     if existing and isinstance(existing, IssueNarrative):
@@ -1642,7 +1642,7 @@ def upsert_issue(
 
         # Rebuild rich content
         content_lines = [
-            f"## {issue_type}",
+            f"## {task_type}",
             "",
             f"**Module:** {module}",
             f"**File:** {path}" if path else "**Scope:** module-level",
@@ -1663,7 +1663,7 @@ def upsert_issue(
         return existing
 
     # Create new
-    issue = create_issue_node(issue_type, severity, path, message, module, details)
+    issue = create_issue_node(task_type, severity, path, message, module, details)
     store.upsert_node(issue)
 
     # Ensure space exists
@@ -1779,7 +1779,7 @@ def traverse_to_objective(
                 missing_nodes.append(f"{doc_type.upper()}:{issue.module}")
 
     # Step 3: Find objective
-    objective_types = ISSUE_BLOCKS_OBJECTIVE.get(issue.issue_type, ["documented"])
+    objective_types = ISSUE_BLOCKS_OBJECTIVE.get(issue.task_type, ["documented"])
 
     objective = None
     for obj_type in objective_types:
@@ -2431,7 +2431,7 @@ def sync_file_things_to_graph(
                     n.content = $content,
                     n.description = $description,
                     n.synthesis = $synthesis,
-                    n.issue_type = $issue_type,
+                    n.task_type = $task_type,
                     n.severity = $severity,
                     n.status = $status,
                     n.module = $module,
@@ -2451,7 +2451,7 @@ def sync_file_things_to_graph(
                     "content": node.content,
                     "description": node.description,
                     "synthesis": node.synthesis or "",
-                    "issue_type": node.issue_type,
+                    "task_type": node.task_type,
                     "severity": node.severity,
                     "status": node.status,
                     "module": node.module,

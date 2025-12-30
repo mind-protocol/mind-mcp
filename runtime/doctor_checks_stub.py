@@ -86,7 +86,7 @@ def doctor_check_stub_impl(target_dir: Path, config: DoctorConfig) -> List[Docto
         stub_summary = ", ".join(f"{s['pattern']} ({s['count']})" for s in stubs[:3])
 
         issues.append(DoctorIssue(
-            issue_type="STUB_IMPL",
+            task_type="STUB_IMPL",
             severity="warning",
             path=rel_path,
             message=f"Contains {total_stubs} stub indicators",
@@ -195,7 +195,7 @@ def doctor_check_incomplete_impl(target_dir: Path, config: DoctorConfig) -> List
         func_names = [f["name"] for f in empty_funcs[:5]]
 
         issues.append(DoctorIssue(
-            issue_type="INCOMPLETE_IMPL",
+            task_type="INCOMPLETE_IMPL",
             severity="warning",
             path=rel_path,
             message=f"Contains {len(empty_funcs)} empty/incomplete function(s)",
@@ -243,7 +243,7 @@ def doctor_check_undoc_impl(target_dir: Path, config: DoctorConfig) -> List[Doct
             continue
 
         issues.append(DoctorIssue(
-            issue_type="UNDOC_IMPL",
+            task_type="UNDOC_IMPL",
             severity="info",
             path=rel_path,
             message="Not referenced in any IMPLEMENTATION doc",

@@ -76,7 +76,7 @@ def doctor_check_conflicts(target_dir: Path, config: DoctorConfig) -> List[Docto
                 if escalation_items:
                     rel_path = str(sync_file.relative_to(target_dir))
                     issues.append(DoctorIssue(
-                        issue_type="ESCALATION",
+                        task_type="ESCALATION",
                         severity="critical",  # Needs human decision
                         path=rel_path,
                         message=f"{len(escalation_items)} conflict(s) need human decision",
@@ -144,7 +144,7 @@ def doctor_check_doc_gaps(target_dir: Path, config: DoctorConfig) -> List[Doctor
                 if uncompleted:
                     rel_path = str(sync_file.relative_to(target_dir))
                     issues.append(DoctorIssue(
-                        issue_type="DOC_GAPS",
+                        task_type="DOC_GAPS",
                         severity="warning",
                         path=rel_path,
                         message=f"{len(uncompleted)} incomplete task(s) from previous session",
@@ -216,7 +216,7 @@ def doctor_check_suggestions(target_dir: Path, config: DoctorConfig) -> List[Doc
                     rel_path = str(sync_file.relative_to(target_dir))
                     for suggestion in suggestions:
                         issues.append(DoctorIssue(
-                            issue_type="SUGGESTION",
+                            task_type="SUGGESTION",
                             severity="info",
                             path=rel_path,
                             message=f"Agent suggestion: {suggestion[:60]}{'...' if len(suggestion) > 60 else ''}",

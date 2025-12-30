@@ -193,7 +193,7 @@ def doctor_check_naming_conventions(target_dir: Path, config: DoctorConfig) -> L
         message = group[0].get("message", f"Naming convention violations task ({i//10 + 1}): {len(group)} items")
 
         issues.append(DoctorIssue(
-            issue_type="NAMING_CONVENTION",
+            task_type="NAMING_CONVENTION",
             severity=group_severity,
             path=primary_path,
             message=message,

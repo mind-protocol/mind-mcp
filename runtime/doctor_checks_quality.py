@@ -83,7 +83,7 @@ def doctor_check_magic_values(target_dir: Path, config: DoctorConfig) -> List[Do
                 # Report if significant magic values found
                 if len(magic_numbers) > 5:
                     issues.append(DoctorIssue(
-                        issue_type="MAGIC_VALUES",
+                        task_type="MAGIC_VALUES",
                         severity="info",
                         path=rel_path,
                         message=f"Contains {len(magic_numbers)} potential magic numbers",
@@ -93,7 +93,7 @@ def doctor_check_magic_values(target_dir: Path, config: DoctorConfig) -> List[Do
 
                 if hardcoded_values:
                     issues.append(DoctorIssue(
-                        issue_type="HARDCODED_CONFIG",
+                        task_type="HARDCODED_CONFIG",
                         severity="warning",
                         path=rel_path,
                         message=f"Contains hardcoded configuration values",
@@ -157,7 +157,7 @@ def doctor_check_hardcoded_secrets(target_dir: Path, config: DoctorConfig) -> Li
                         # Check if it's a placeholder or example
                         if not any(x in content.lower() for x in ["example", "placeholder", "xxx", "your_", "changeme"]):
                             issues.append(DoctorIssue(
-                                issue_type="HARDCODED_SECRET",
+                                task_type="HARDCODED_SECRET",
                                 severity=severity,
                                 path=rel_path,
                                 message=f"{desc} detected",

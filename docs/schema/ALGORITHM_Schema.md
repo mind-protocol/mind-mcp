@@ -77,7 +77,7 @@ LinkBase:
 class Issue:
     node_type: str      # "Character", "BELIEVES", etc.
     node_id: str        # The failing node/link ID
-    issue_type: str     # missing_required, invalid_enum, type_error
+    task_type: str     # missing_required, invalid_enum, type_error
     field: str          # Which field failed
     message: str        # Human-readable error
     severity: str       # error, warning, info
@@ -145,12 +145,12 @@ def validate_node(node, node_type, schema, report):
     # Check required fields
     for field in node_schema.get('required', []):
         if field not in node or node[field] is None:
-            report.add_issue(Issue(..., issue_type="missing_required"))
+            report.add_issue(Issue(..., task_type="missing_required"))
 
     # Check enum values
     for field, valid_values in node_schema.get('enums', {}).items():
         if node.get(field) not in valid_values:
-            report.add_issue(Issue(..., issue_type="invalid_enum"))
+            report.add_issue(Issue(..., task_type="invalid_enum"))
 ```
 
 ### Step 3: Count Links by Type

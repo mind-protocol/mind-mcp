@@ -25,7 +25,7 @@ from typing import Any, Dict, List, Optional
 # =============================================================================
 
 
-def get_agent_system_prompt(posture: str, target_dir: Path) -> str:
+def get_agent_system_prompt(name: str, target_dir: Path) -> str:
     """
     Load full agent system prompt: CLAUDE.md + ACTOR_{Posture}.md.
 
@@ -34,7 +34,7 @@ def get_agent_system_prompt(posture: str, target_dir: Path) -> str:
     2. Actor-specific prompt from .mind/actors/ACTOR_{Posture}.md
 
     Args:
-        posture: Agent posture (e.g., "witness", "fixer")
+        name: Agent name (e.g., "witness", "fixer")
         target_dir: Project root directory
 
     Returns:
@@ -59,16 +59,16 @@ def get_agent_system_prompt(posture: str, target_dir: Path) -> str:
             parts.append(fallback_path.read_text())
 
     # 2. Load actor-specific prompt
-    posture_cap = posture.capitalize()
-    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{posture_cap}.md"
+    name_cap = name.capitalize()
+    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{name_cap}.md"
 
     if not actor_path.exists():
         raise FileNotFoundError(
             f"Actor file not found: {actor_path}\n"
-            f"Create .mind/actors/ACTOR_{posture_cap}.md to define the {posture} agent."
+            f"Create .mind/actors/ACTOR_{name_cap}.md to define the {name} agent."
         )
 
-    parts.append(f"\n\n---\n\n# Agent Posture: {posture_cap}\n\n")
+    parts.append(f"\n\n---\n\n# Agent Posture: {name_cap}\n\n")
     parts.append(actor_path.read_text())
 
     return "".join(parts)
@@ -186,7 +186,7 @@ def build_agent_prompt(
     - Completion instructions
 
     Args:
-        problem: DoctorIssue with problem_type, severity, path
+        problem: DoctorIssue with task_type, severity, path
         instructions: Dict with 'view', 'docs_to_read', 'prompt' keys
         target_dir: Project root directory
         github_issue_number: Optional GitHub issue to reference in commits
@@ -219,7 +219,7 @@ When committing, include "Closes #{github_issue_number}" in your commit message.
 
     return f"""# mind Work Task
 
-## Problem Type: {problem.problem_type}
+## Problem Type: {problem.task_type}
 ## Severity: {problem.severity}
 {github_section}
 ## VIEW to Follow

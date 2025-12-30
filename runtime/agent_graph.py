@@ -2,9 +2,9 @@
 Agent Graph Operations
 
 Query and select work agents from the mind graph.
-Agents are Actor nodes with posture-based selection.
+Agents are Actor nodes with name-based selection.
 
-The 10 agents (by posture, not role):
+The 10 agents (by name, not role):
 - witness: evidence-first, traces what actually happened
 - groundwork: foundation-first, builds scaffolding
 - keeper: verification-first, checks before declaring done
@@ -29,13 +29,13 @@ Usage:
     agents = ag.get_available_agents()
 
     # Select best agent for an issue type
-    agent_id = ag.select_agent_for_issue("STALE_SYNC")
+    actor_id = ag.select_agent_for_issue("STALE_SYNC")
 
     # Mark agent as running (before run)
-    ag.set_agent_running(agent_id)
+    ag.set_agent_running(actor_id)
 
     # Mark agent as ready (after run completes)
-    ag.set_agent_ready(agent_id)
+    ag.set_agent_ready(actor_id)
 
 DOCS: docs/membrane/PATTERNS_Membrane.md
 """
@@ -48,16 +48,16 @@ from typing import Dict, Any, List, Optional
 logger = logging.getLogger(__name__)
 
 # =============================================================================
-# POSTURE → ISSUE TYPE MAPPING
+# NAME → ISSUE TYPE MAPPING
 # =============================================================================
 #
-# Each issue type maps to a preferred posture. The posture shapes HOW the
+# Each issue type maps to a preferred name. The name shapes HOW the
 # agent approaches the work, not WHAT it can do.
 #
-# Key insight: All agents can do all tasks. But matching posture to issue
+# Key insight: All agents can do all tasks. But matching name to issue
 # type leads to better outcomes.
 
-ISSUE_TO_POSTURE: Dict[str, str] = {
+TASK_TO_AGENT: Dict[str, str] = {
     # witness: evidence-first (traces, investigations)
     "STALE_SYNC": "witness",
     "STALE_IMPL": "witness",
@@ -115,30 +115,21 @@ ISSUE_TO_POSTURE: Dict[str, str] = {
     "CONFLICTS": "steward",
 }
 
-# Posture to agent ID mapping (convention: agent_{posture})
-POSTURE_TO_AGENT_ID = {
-    "witness": "agent_witness",
-    "groundwork": "agent_groundwork",
-    "keeper": "agent_keeper",
-    "weaver": "agent_weaver",
-    "voice": "agent_voice",
-    "scout": "agent_scout",
-    "architect": "agent_architect",
-    "fixer": "agent_fixer",
-    "herald": "agent_herald",
-    "steward": "agent_steward",
-}
+# Default name when issue type not mapped
+DEFAULT_NAME = "fixer"
 
-# Default posture when issue type not mapped
-DEFAULT_POSTURE = "fixer"
+
+def get_agent_id(name: str, target_dir: Path = None) -> str:
+    """Get agent ID from name, discovering from .mind/actors/."""
+    from runtime.agents.mapping import get_agent_id as _get_agent_id
+    return _get_agent_id(name, target_dir)
 
 
 @dataclass
 class AgentInfo:
     """Information about an agent from the graph."""
     id: str
-    name: str
-    posture: str  # The agent's posture type
+    name: str  # The agent's name (e.g., "witness")
     status: str   # ready, running, or paused
     energy: float = 0.0
     weight: float = 1.0
@@ -149,9 +140,9 @@ class AgentGraph:
     Query and manage work agents from the mind graph.
 
     Agents are Actor nodes with:
-    - id: agent_{posture} (e.g., agent_witness)
-    - name: The posture name (e.g., witness)
-    - type: agent
+    - id: AGENT_{Name} (e.g., AGENT_Witness)
+    - name: The agent name (e.g., witness)
+    - type: AGENT
     - status: ready | running | paused
     """
 
@@ -188,10 +179,13 @@ class AgentGraph:
             logger.warning(f"[AgentGraph] No graph connection: {e}")
             return False
 
-    def ensure_agents_exist(self) -> bool:
+    def ensure_agents_exist(self, target_dir: Path = None) -> bool:
         """
-        Ensure all 10 agents exist in the graph.
+        Ensure all discovered agents exist in the graph.
         Creates them if they don't exist.
+
+        Args:
+            target_dir: Project root for agent discovery
 
         Returns:
             True if agents exist or were created, False on failure
@@ -201,12 +195,14 @@ class AgentGraph:
 
         try:
             import time
+            from runtime.agents.mapping import discover_agents
             timestamp = int(time.time())
 
-            for posture, agent_id in POSTURE_TO_AGENT_ID.items():
+            agents = discover_agents(target_dir)
+            for name, actor_id in agents.items():
                 # Check if agent exists
                 cypher = f"""
-                MATCH (a:Actor {{id: '{agent_id}'}})
+                MATCH (a:Actor {{id: '{actor_id}'}})
                 RETURN a.id
                 """
                 result = self._graph_ops._query(cypher)
@@ -214,12 +210,12 @@ class AgentGraph:
                 if not result:
                     # Create agent node
                     props = {
-                        "id": agent_id,
-                        "name": posture,
+                        "id": actor_id,
+                        "name": name,
                         "node_type": "actor",
-                        "type": "agent",
+                        "type": "AGENT",
                         "status": "ready",
-                        "description": f"Work agent with {posture} posture",
+                        "content": f"Work agent: {name}",
                         "weight": 1.0,
                         "energy": 0.0,
                         "created_at_s": timestamp,
@@ -230,8 +226,8 @@ class AgentGraph:
                     MERGE (a:Actor {id: $id})
                     SET a += $props
                     """
-                    self._graph_ops._query(create_cypher, {"id": agent_id, "props": props})
-                    logger.info(f"[AgentGraph] Created agent: {agent_id}")
+                    self._graph_ops._query(create_cypher, {"id": actor_id, "props": props})
+                    logger.info(f"[AgentGraph] Created agent: {actor_id}")
 
             return True
         except Exception as e:
@@ -251,7 +247,7 @@ class AgentGraph:
         try:
             cypher = """
             MATCH (a:Actor)
-            WHERE a.type = 'agent'
+            WHERE a.type = 'AGENT'
             RETURN a.id, a.name, a.status, a.energy, a.weight
             ORDER BY a.name
             """
@@ -260,16 +256,15 @@ class AgentGraph:
             agents = []
             for row in rows:
                 if len(row) >= 3:
-                    agent_id = row[0]
+                    actor_id = row[0]
                     name = row[1]
                     status = row[2] or "ready"
                     energy = row[3] if len(row) > 3 else 0.0
                     weight = row[4] if len(row) > 4 else 1.0
 
                     agents.append(AgentInfo(
-                        id=agent_id,
+                        id=actor_id,
                         name=name,
-                        posture=name,  # name IS the posture
                         status=status,
                         energy=energy or 0.0,
                         weight=weight or 1.0,
@@ -280,11 +275,13 @@ class AgentGraph:
             logger.warning(f"[AgentGraph] Failed to get agents: {e}")
             return self._get_fallback_agents()
 
-    def _get_fallback_agents(self) -> List[AgentInfo]:
+    def _get_fallback_agents(self, target_dir: Path = None) -> List[AgentInfo]:
         """Return fallback agent list when graph unavailable."""
+        from runtime.agents.mapping import discover_agents
+        agents = discover_agents(target_dir)
         return [
-            AgentInfo(id=agent_id, name=posture, posture=posture, status="ready")
-            for posture, agent_id in POSTURE_TO_AGENT_ID.items()
+            AgentInfo(id=actor_id, name=name, status="ready")
+            for name, actor_id in agents.items()
         ]
 
     def get_available_agents(self) -> List[AgentInfo]:
@@ -307,22 +304,23 @@ class AgentGraph:
         all_agents = self.get_all_agents()
         return [a for a in all_agents if a.status == "running"]
 
-    def select_agent_for_issue(self, issue_type: str) -> Optional[str]:
+    def select_agent_for_issue(self, task_type: str, target_dir: Path = None) -> Optional[str]:
         """
         Select the best agent for an issue type.
 
-        Matches issue type to posture, then finds an available agent
-        with that posture. Falls back to default posture if no match.
+        Matches issue type to name, then finds an available agent
+        with that name. Falls back to default name if no match.
 
         Args:
-            issue_type: The doctor issue type (e.g., "STALE_SYNC")
+            task_type: The doctor issue type (e.g., "STALE_SYNC")
+            target_dir: Project root for agent discovery
 
         Returns:
-            Agent ID (e.g., "agent_witness") or None if all agents busy
+            Agent ID (e.g., "AGENT_Witness") or None if all agents busy
         """
-        # Get preferred posture for this issue type
-        posture = ISSUE_TO_POSTURE.get(issue_type, DEFAULT_POSTURE)
-        preferred_agent_id = POSTURE_TO_AGENT_ID.get(posture)
+        # Get preferred name for this issue type
+        name = TASK_TO_AGENT.get(task_type, DEFAULT_NAME)
+        preferred_actor_id = get_agent_id(name, target_dir)
 
         # Get available agents
         available = self.get_available_agents()
@@ -333,7 +331,7 @@ class AgentGraph:
 
         # Check if preferred agent is available
         for agent in available:
-            if agent.id == preferred_agent_id:
+            if agent.id == preferred_actor_id:
                 return agent.id
 
         # Fall back to any available agent
@@ -341,35 +339,35 @@ class AgentGraph:
         available.sort(key=lambda a: a.energy, reverse=True)
         return available[0].id
 
-    def get_agent_posture(self, agent_id: str) -> str:
+    def get_agent_name(self, actor_id: str) -> str:
         """
-        Get the posture for an agent ID.
+        Get the name for an agent ID.
 
         Args:
-            agent_id: e.g., "agent_witness"
+            actor_id: e.g., "AGENT_Witness"
 
         Returns:
-            Posture name (e.g., "witness")
+            Agent name (e.g., "witness")
         """
-        # Extract from ID (agent_{posture})
-        if agent_id.startswith("agent_"):
-            return agent_id[6:]  # Remove "agent_" prefix
-        return DEFAULT_POSTURE
+        # Extract from ID (AGENT_{Name})
+        if actor_id.startswith("AGENT_"):
+            return actor_id[6:].lower()  # Remove "AGENT_" prefix and lowercase
+        return DEFAULT_NAME
 
-    def set_agent_running(self, agent_id: str) -> bool:
+    def set_agent_running(self, actor_id: str) -> bool:
         """
         Mark an agent as running.
 
         Call this BEFORE running the agent process.
 
         Args:
-            agent_id: The agent to mark as running
+            actor_id: The agent to mark as running
 
         Returns:
             True if successful, False on failure
         """
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot set {agent_id} running")
+            logger.warning(f"[AgentGraph] No graph connection, cannot set {actor_id} running")
             return False
 
         try:
@@ -380,34 +378,34 @@ class AgentGraph:
             RETURN a.id
             """
             result = self._graph_ops._query(cypher, {
-                "id": agent_id,
+                "id": actor_id,
                 "timestamp": int(time.time()),
             })
 
             if result:
-                logger.info(f"[AgentGraph] Agent {agent_id} now running")
+                logger.info(f"[AgentGraph] Agent {actor_id} now running")
                 return True
             else:
-                logger.warning(f"[AgentGraph] Agent {agent_id} not found")
+                logger.warning(f"[AgentGraph] Agent {actor_id} not found")
                 return False
         except Exception as e:
-            logger.error(f"[AgentGraph] Failed to set {agent_id} running: {e}")
+            logger.error(f"[AgentGraph] Failed to set {actor_id} running: {e}")
             return False
 
-    def set_agent_ready(self, agent_id: str) -> bool:
+    def set_agent_ready(self, actor_id: str) -> bool:
         """
         Mark an agent as ready (available).
 
         Call this AFTER the agent process completes.
 
         Args:
-            agent_id: The agent to mark as ready
+            actor_id: The agent to mark as ready
 
         Returns:
             True if successful, False on failure
         """
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot set {agent_id} ready")
+            logger.warning(f"[AgentGraph] No graph connection, cannot set {actor_id} ready")
             return False
 
         try:
@@ -418,34 +416,34 @@ class AgentGraph:
             RETURN a.id
             """
             result = self._graph_ops._query(cypher, {
-                "id": agent_id,
+                "id": actor_id,
                 "timestamp": int(time.time()),
             })
 
             if result:
-                logger.info(f"[AgentGraph] Agent {agent_id} now ready")
+                logger.info(f"[AgentGraph] Agent {actor_id} now ready")
                 return True
             else:
-                logger.warning(f"[AgentGraph] Agent {agent_id} not found")
+                logger.warning(f"[AgentGraph] Agent {actor_id} not found")
                 return False
         except Exception as e:
-            logger.error(f"[AgentGraph] Failed to set {agent_id} ready: {e}")
+            logger.error(f"[AgentGraph] Failed to set {actor_id} ready: {e}")
             return False
 
-    def set_agent_paused(self, agent_id: str) -> bool:
+    def set_agent_paused(self, actor_id: str) -> bool:
         """
         Mark an agent as paused.
 
         Paused agents won't have their claimed tasks promoted to running.
 
         Args:
-            agent_id: The agent to pause
+            actor_id: The agent to pause
 
         Returns:
             True if successful, False on failure
         """
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot pause {agent_id}")
+            logger.warning(f"[AgentGraph] No graph connection, cannot pause {actor_id}")
             return False
 
         try:
@@ -456,28 +454,28 @@ class AgentGraph:
             RETURN a.id
             """
             result = self._graph_ops._query(cypher, {
-                "id": agent_id,
+                "id": actor_id,
                 "timestamp": int(time.time()),
             })
 
             if result:
-                logger.info(f"[AgentGraph] Agent {agent_id} now paused")
+                logger.info(f"[AgentGraph] Agent {actor_id} now paused")
                 return True
             else:
-                logger.warning(f"[AgentGraph] Agent {agent_id} not found")
+                logger.warning(f"[AgentGraph] Agent {actor_id} not found")
                 return False
         except Exception as e:
-            logger.error(f"[AgentGraph] Failed to pause {agent_id}: {e}")
+            logger.error(f"[AgentGraph] Failed to pause {actor_id}: {e}")
             return False
 
-    def boost_agent_energy(self, agent_id: str, amount: float = 0.1) -> bool:
+    def boost_agent_energy(self, actor_id: str, amount: float = 0.1) -> bool:
         """
         Boost an agent's energy (used for prioritization).
 
         More recently active agents have higher energy.
 
         Args:
-            agent_id: The agent to boost
+            actor_id: The agent to boost
             amount: Energy to add
 
         Returns:
@@ -492,81 +490,81 @@ class AgentGraph:
             SET a.energy = coalesce(a.energy, 0) + $amount
             RETURN a.id
             """
-            self._graph_ops._query(cypher, {"id": agent_id, "amount": amount})
+            self._graph_ops._query(cypher, {"id": actor_id, "amount": amount})
             return True
         except Exception as e:
-            logger.warning(f"[AgentGraph] Failed to boost {agent_id} energy: {e}")
+            logger.warning(f"[AgentGraph] Failed to boost {actor_id} energy: {e}")
             return False
 
 
-    def link_agent_to_task(self, agent_id: str, task_id: str) -> bool:
+    def link_agent_to_task(self, actor_id: str, task_id: str) -> bool:
         """
         Create assigned_to link between agent and task narrative.
 
         Args:
-            agent_id: The agent ID (e.g., "agent_witness")
+            actor_id: The agent ID (e.g., "ACTOR_witness")
             task_id: The task narrative ID (e.g., "narrative_TASK_engine-SERVE_a7")
 
         Returns:
             True if link created successfully
         """
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot link {agent_id} to {task_id}")
+            logger.warning(f"[AgentGraph] No graph connection, cannot link {actor_id} to {task_id}")
             return False
 
         try:
             import time
             cypher = """
-            MATCH (a:Actor {id: $agent_id})
+            MATCH (a:Actor {id: $actor_id})
             MATCH (t:Narrative {id: $task_id})
             MERGE (a)-[r:assigned_to]->(t)
             SET r.created_at_s = $timestamp
             RETURN type(r)
             """
             result = self._graph_ops._query(cypher, {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "task_id": task_id,
                 "timestamp": int(time.time()),
             })
             if result:
-                logger.info(f"[AgentGraph] Linked {agent_id} assigned_to {task_id}")
+                logger.info(f"[AgentGraph] Linked {actor_id} assigned_to {task_id}")
                 return True
             return False
         except Exception as e:
             logger.error(f"[AgentGraph] Failed to link agent to task: {e}")
             return False
 
-    def link_agent_to_issue(self, agent_id: str, issue_id: str) -> bool:
+    def link_agent_to_issue(self, actor_id: str, issue_id: str) -> bool:
         """
         Create working_on link between agent and issue narrative.
 
         Args:
-            agent_id: The agent ID (e.g., "agent_witness")
+            actor_id: The agent ID (e.g., "ACTOR_witness")
             issue_id: The issue narrative ID (e.g., "narrative_PROBLEM_engine-MONOLITH_a7")
 
         Returns:
             True if link created successfully
         """
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot link {agent_id} to {issue_id}")
+            logger.warning(f"[AgentGraph] No graph connection, cannot link {actor_id} to {issue_id}")
             return False
 
         try:
             import time
             cypher = """
-            MATCH (a:Actor {id: $agent_id})
+            MATCH (a:Actor {id: $actor_id})
             MATCH (i:Narrative {id: $issue_id})
             MERGE (a)-[r:working_on]->(i)
             SET r.created_at_s = $timestamp
             RETURN type(r)
             """
             result = self._graph_ops._query(cypher, {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "issue_id": issue_id,
                 "timestamp": int(time.time()),
             })
             if result:
-                logger.info(f"[AgentGraph] Linked {agent_id} working_on {issue_id}")
+                logger.info(f"[AgentGraph] Linked {actor_id} working_on {issue_id}")
                 return True
             return False
         except Exception as e:
@@ -575,7 +573,7 @@ class AgentGraph:
 
     def create_assignment_moment(
         self,
-        agent_id: str,
+        actor_id: str,
         task_id: str,
         issue_ids: Optional[List[str]] = None,
     ) -> Optional[str]:
@@ -591,7 +589,7 @@ class AgentGraph:
         - about links from moment to each issue
 
         Args:
-            agent_id: The agent being assigned
+            actor_id: The agent being assigned
             task_id: The task narrative ID
             issue_ids: Optional list of issue narrative IDs
 
@@ -611,7 +609,7 @@ class AgentGraph:
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
 
             # Extract agent name from ID
-            agent_name = agent_id.replace("agent_", "") if agent_id.startswith("agent_") else agent_id
+            agent_name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
 
             moment_id = f"moment_ASSIGN-AGENT_{agent_name}_{ts_hash}"
 
@@ -619,10 +617,10 @@ class AgentGraph:
             create_cypher = """
             MERGE (m:Moment {id: $id})
             SET m.node_type = 'moment',
-                m.type = 'agent_assignment',
+                m.type = 'ACTOR_assignment',
                 m.prose = $prose,
                 m.status = 'completed',
-                m.agent_id = $agent_id,
+                m.actor_id = $actor_id,
                 m.task_id = $task_id,
                 m.created_at_s = $timestamp,
                 m.updated_at_s = $timestamp
@@ -631,20 +629,20 @@ class AgentGraph:
             self._graph_ops._query(create_cypher, {
                 "id": moment_id,
                 "prose": f"Agent {agent_name} assigned to task {task_id}",
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "task_id": task_id,
                 "timestamp": timestamp,
             })
 
             # Link: agent expresses moment
             expresses_cypher = """
-            MATCH (a:Actor {id: $agent_id})
+            MATCH (a:Actor {id: $actor_id})
             MATCH (m:Moment {id: $moment_id})
             MERGE (a)-[r:expresses]->(m)
             SET r.created_at_s = $timestamp
             """
             self._graph_ops._query(expresses_cypher, {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "moment_id": moment_id,
                 "timestamp": timestamp,
             })
@@ -686,7 +684,7 @@ class AgentGraph:
 
     def assign_agent_to_work(
         self,
-        agent_id: str,
+        actor_id: str,
         task_id: str,
         issue_ids: Optional[List[str]] = None,
     ) -> Optional[str]:
@@ -699,7 +697,7 @@ class AgentGraph:
         3. Creates an assignment moment with all links
 
         Args:
-            agent_id: The agent being assigned
+            actor_id: The agent being assigned
             task_id: The task narrative ID
             issue_ids: Optional list of issue narrative IDs
 
@@ -708,20 +706,20 @@ class AgentGraph:
         """
         # Link agent to task
         if task_id:
-            self.link_agent_to_task(agent_id, task_id)
+            self.link_agent_to_task(actor_id, task_id)
 
         # Link agent to each issue
         if issue_ids:
             for issue_id in issue_ids:
-                self.link_agent_to_issue(agent_id, issue_id)
+                self.link_agent_to_issue(actor_id, issue_id)
 
         # Create assignment moment and return its ID
-        moment_id = self.create_assignment_moment(agent_id, task_id, issue_ids)
+        moment_id = self.create_assignment_moment(actor_id, task_id, issue_ids)
         return moment_id
 
     def upsert_issue_narrative(
         self,
-        issue_type: str,
+        task_type: str,
         path: str,
         message: str,
         severity: str = "warning",
@@ -732,10 +730,10 @@ class AgentGraph:
         Issue narratives track doctor issues as graph nodes so agents
         can be linked to them via working_on edges.
 
-        ID format: narrative_PROBLEM_{issue_type}_{path_hash_6}
+        ID format: narrative_PROBLEM_{task_type}_{path_hash_6}
 
         Args:
-            issue_type: Doctor issue type (e.g., "STALE_SYNC")
+            task_type: Doctor issue type (e.g., "STALE_SYNC")
             path: File path of the issue
             message: Issue message/description
             severity: Issue severity (warning, error, info)
@@ -752,15 +750,15 @@ class AgentGraph:
             import hashlib
 
             timestamp = int(time.time())
-            # Create deterministic ID from issue_type + path
+            # Create deterministic ID from task_type + path
             path_hash = hashlib.sha256(path.encode()).hexdigest()[:6]
-            narrative_id = f"narrative_PROBLEM_{issue_type}_{path_hash}"
+            narrative_id = f"narrative_PROBLEM_{task_type}_{path_hash}"
 
             cypher = """
             MERGE (n:Narrative {id: $id})
             SET n.node_type = 'narrative',
                 n.type = 'problem',
-                n.issue_type = $issue_type,
+                n.task_type = $task_type,
                 n.path = $path,
                 n.message = $message,
                 n.severity = $severity,
@@ -771,7 +769,7 @@ class AgentGraph:
             """
             result = self._graph_ops._query(cypher, {
                 "id": narrative_id,
-                "issue_type": issue_type,
+                "task_type": task_type,
                 "path": path,
                 "message": message[:500],  # Truncate long messages
                 "severity": severity,
@@ -850,43 +848,59 @@ class AgentGraph:
             return None
 
 
-def get_agent_template_path(posture: str, target_dir: Path, provider: str = "claude") -> Optional[Path]:
+def get_agent_template_path(name: str, target_dir: Path, provider: str = "claude") -> Optional[Path]:
     """
     Get the path to an agent's template file.
 
-    Checks:
-    1. .mind/actors/ACTOR_{Posture}.md (flat structure)
+    Structure: .mind/actors/{name}/{PROVIDER}.md
+    - CLAUDE.md for Claude
+    - GEMINI.md for Gemini
+    - AGENTS.md as fallback
 
     Args:
-        posture: Agent posture (e.g., "witness")
+        name: Agent name (e.g., "witness")
         target_dir: Project root directory
-        provider: Provider name (ignored - all providers use same template now)
+        provider: Provider name (claude, gemini)
 
     Returns:
         Path to template file, or None if not found
     """
-    # New flat structure: .mind/actors/ACTOR_{Posture}.md
-    posture_capitalized = posture.capitalize()
-    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{posture_capitalized}.md"
+    provider_files = {
+        "claude": "CLAUDE.md",
+        "gemini": "GEMINI.md",
+    }
+
+    actor_dir = target_dir / ".mind" / "actors" / name.lower()
+    if not actor_dir.exists():
+        return None
+
+    # Try provider-specific file first
+    provider_file = provider_files.get(provider.lower(), "AGENTS.md")
+    actor_path = actor_dir / provider_file
     if actor_path.exists():
         return actor_path
+
+    # Fallback to AGENTS.md
+    fallback_path = actor_dir / "AGENTS.md"
+    if fallback_path.exists():
+        return fallback_path
 
     return None
 
 
-def load_agent_prompt(posture: str, target_dir: Path, provider: str = "claude") -> Optional[str]:
+def load_agent_prompt(name: str, target_dir: Path, provider: str = "claude") -> Optional[str]:
     """
     Load the agent's base prompt/system prompt from template.
 
     Args:
-        posture: Agent posture (e.g., "witness")
+        name: Agent name (e.g., "witness")
         target_dir: Project root directory
         provider: Provider name
 
     Returns:
         Agent prompt content, or None if not found
     """
-    template_path = get_agent_template_path(posture, target_dir, provider)
+    template_path = get_agent_template_path(name, target_dir, provider)
 
     if template_path and template_path.exists():
         return template_path.read_text()

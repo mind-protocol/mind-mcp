@@ -74,7 +74,7 @@ archived_files:
 query:
   type: "doctor_issues"
   filter:
-    issue_type: "DOCS_NOT_INGESTED"
+    task_type: "DOCS_NOT_INGESTED"
     module: "{module}"
   sort_by: "chain_priority"
 ```

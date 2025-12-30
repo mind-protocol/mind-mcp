@@ -168,7 +168,7 @@ class DocChainStatus:
 @dataclass
 class HealthIssue:
     """A single health issue from doctor."""
-    issue_type: str
+    task_type: str
     severity: str
     path: str
     message: str
@@ -346,7 +346,7 @@ def get_all_health_issues(project_dir: Path) -> List[HealthIssue]:
         for severity in ["critical", "warning", "info"]:
             for issue in result["issues"].get(severity, []):
                 all_issues.append(HealthIssue(
-                    issue_type=issue.issue_type,
+                    task_type=issue.task_type,
                     severity=issue.severity,
                     path=issue.path,
                     message=issue.message,
@@ -356,7 +356,7 @@ def get_all_health_issues(project_dir: Path) -> List[HealthIssue]:
     except Exception as e:
         # Return error as a single issue so user knows something went wrong
         return [HealthIssue(
-            issue_type="DOCTOR_ERROR",
+            task_type="DOCTOR_ERROR",
             severity="warning",
             path="",
             message=f"Could not run health checks: {str(e)[:80]}",
@@ -568,15 +568,15 @@ def format_module_status(status: ModuleStatus, verbose: bool = False) -> str:
         # Group by type
         by_type: Dict[str, List[HealthIssue]] = {}
         for issue in status.health_issues:
-            by_type.setdefault(issue.issue_type, []).append(issue)
+            by_type.setdefault(issue.task_type, []).append(issue)
 
         # Show issues
-        for issue_type, issues in sorted(by_type.items()):
+        for task_type, issues in sorted(by_type.items()):
             severity = issues[0].severity
             sev_color = C.severity_color(severity)
             icon = "⚠" if severity == "critical" else "●" if severity == "warning" else "○"
 
-            lines.append(f"    {sev_color}{icon} {issue_type}{C.RESET} ({len(issues)})")
+            lines.append(f"    {sev_color}{icon} {task_type}{C.RESET} ({len(issues)})")
 
             if verbose:
                 for issue in issues[:5]:
@@ -649,7 +649,7 @@ def _get_dashboard_data(project_dir: Path) -> Dict[str, Any]:
         # Count agents by status
         agent_result = graph.query("""
             MATCH (a:Actor)
-            WHERE a.type = 'agent' OR a.id STARTS WITH 'agent_'
+            WHERE a.type = 'agent' OR a.id STARTS WITH 'ACTOR_'
             RETURN a.status, count(a)
         """)
         for status, count in agent_result:
@@ -909,7 +909,7 @@ def format_global_status(statuses: List[ModuleStatus], all_issues: List[HealthIs
         # Group by type
         by_type: Dict[str, List[HealthIssue]] = {}
         for issue in all_issues:
-            by_type.setdefault(issue.issue_type, []).append(issue)
+            by_type.setdefault(issue.task_type, []).append(issue)
 
         # Sort by count (most common first), then by severity
         sorted_types = sorted(
@@ -920,11 +920,11 @@ def format_global_status(statuses: List[ModuleStatus], all_issues: List[HealthIs
             )
         )
 
-        for issue_type, issues in sorted_types[:10]:
+        for task_type, issues in sorted_types[:10]:
             severity = issues[0].severity
             sev_color = C.severity_color(severity)
             icon = "⚠" if severity == "critical" else "●" if severity == "warning" else "○"
-            lines.append(f"    {sev_color}{icon} {issue_type:<30}{C.RESET} {len(issues):>3} occurrences")
+            lines.append(f"    {sev_color}{icon} {task_type:<30}{C.RESET} {len(issues):>3} occurrences")
 
     # ==========================================================================
     # FOOTER

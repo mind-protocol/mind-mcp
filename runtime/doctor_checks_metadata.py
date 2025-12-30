@@ -69,7 +69,7 @@ def doctor_check_yaml_drift(target_dir: Path, config: DoctorConfig) -> List[Doct
 
         if drift_issues:
             issues.append(DoctorIssue(
-                issue_type="YAML_DRIFT",
+                task_type="YAML_DRIFT",
                 severity="critical",
                 path=f"modules.yaml#{module_name}",
                 message=f"Module '{module_name}' has {len(drift_issues)} drift issue(s)",
@@ -115,7 +115,7 @@ def doctor_check_missing_tests(target_dir: Path, config: DoctorConfig) -> List[D
                 continue
 
         issues.append(DoctorIssue(
-            issue_type="MISSING_TESTS",
+            task_type="MISSING_TESTS",
             severity="info",
             path=module_name,
             message="No tests for module",

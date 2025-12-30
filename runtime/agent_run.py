@@ -10,7 +10,7 @@ Usage:
     from runtime.agent_run import run_work_agent
 
     result = await run_work_agent(
-        agent_id="agent_witness",
+        actor_id="ACTOR_witness",
         prompt="Fix the stale SYNC file at...",
         target_dir=Path("/path/to/project"),
         agent_provider="claude",
@@ -30,7 +30,7 @@ from typing import Optional, Callable, Awaitable, List
 from .agent_graph import (
     AgentGraph,
     load_agent_prompt,
-    POSTURE_TO_AGENT_ID,
+    NAME_TO_ACTOR_ID,
 )
 from .agent_cli import build_agent_command, normalize_agent
 
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 class RunResult:
     """Result of running a work agent."""
     success: bool
-    agent_id: str
+    actor_id: str
     output: str
     error: Optional[str] = None
     duration_seconds: float = 0.0
@@ -50,7 +50,7 @@ class RunResult:
 
 
 async def run_work_agent(
-    agent_id: str,
+    actor_id: str,
     prompt: str,
     target_dir: Path,
     agent_provider: str = "claude",
@@ -67,13 +67,13 @@ async def run_work_agent(
     1. Sets agent status to 'running' in the graph
     2. Creates graph links for task/issue assignment (if provided)
     3. Creates an assignment moment recording the run
-    4. Loads the agent's posture-based system prompt
+    4. Loads the agent's name-based system prompt
     5. Attempts run with --continue (if use_continue=True)
     6. On failure, retries without --continue
     7. Sets agent status back to 'ready' when done
 
     Args:
-        agent_id: Agent ID (e.g., "agent_witness")
+        actor_id: Agent ID (e.g., "ACTOR_witness")
         prompt: The task prompt for the agent
         target_dir: Project root directory
         agent_provider: Provider (claude, gemini, codex, all)
@@ -90,25 +90,25 @@ async def run_work_agent(
     start_time = time.time()
     assignment_moment_id = None
 
-    # Extract posture from agent_id
-    posture = agent_id.replace("agent_", "") if agent_id.startswith("agent_") else agent_id
+    # Extract name from actor_id
+    name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
 
     # Initialize graph connection
     agent_graph = AgentGraph(graph_name="mind")
 
     # Set agent to running
-    agent_graph.set_agent_running(agent_id)
+    agent_graph.set_agent_running(actor_id)
 
     # Create assignment links and moment if task/issues provided
     if task_id or issue_ids:
         # assign_agent_to_work creates links AND moment, returns moment ID
         assignment_moment_id = agent_graph.assign_agent_to_work(
-            agent_id, task_id or "", issue_ids
+            actor_id, task_id or "", issue_ids
         )
 
     try:
-        # Load posture-based system prompt
-        system_prompt = load_agent_prompt(posture, target_dir, agent_provider) or ""
+        # Load name-based system prompt
+        system_prompt = load_agent_prompt(name, target_dir, agent_provider) or ""
 
         # Build and run the agent command
         result = await _run_with_retry(
@@ -119,18 +119,18 @@ async def run_work_agent(
             on_output=on_output,
             timeout=timeout,
             use_continue=use_continue,
-            actor_name=posture,  # Run from .mind/actors/{posture}/ for session tracking
+            actor_name=name,  # Run from .mind/actors/{name}/ for session tracking
         )
 
         duration = time.time() - start_time
 
         # Boost energy on successful completion
         if result.success:
-            agent_graph.boost_agent_energy(agent_id, 0.1)
+            agent_graph.boost_agent_energy(actor_id, 0.1)
 
         return RunResult(
             success=result.success,
-            agent_id=agent_id,
+            actor_id=actor_id,
             output=result.output,
             error=result.error,
             duration_seconds=duration,
@@ -140,7 +140,7 @@ async def run_work_agent(
 
     finally:
         # Always set agent back to ready
-        agent_graph.set_agent_ready(agent_id)
+        agent_graph.set_agent_ready(actor_id)
 
 
 @dataclass
@@ -344,7 +344,7 @@ async def _run_agent(
 
 
 async def run_agent_for_issue(
-    issue_type: str,
+    task_type: str,
     prompt: str,
     target_dir: Path,
     agent_provider: str = "claude",
@@ -357,12 +357,12 @@ async def run_agent_for_issue(
     Select and run the best agent for an issue type.
 
     This is a convenience function that:
-    1. Selects the best agent based on posture mapping
+    1. Selects the best agent based on name mapping
     2. Runs it with status management
     3. Creates graph links for task/issue assignment (if provided)
 
     Args:
-        issue_type: Doctor issue type (e.g., "STALE_SYNC")
+        task_type: Doctor issue type (e.g., "STALE_SYNC")
         prompt: The task prompt
         target_dir: Project root
         agent_provider: Provider name
@@ -377,15 +377,15 @@ async def run_agent_for_issue(
     agent_graph = AgentGraph(graph_name="mind")
 
     # Select best agent for this issue type
-    agent_id = agent_graph.select_agent_for_issue(issue_type)
+    actor_id = agent_graph.select_agent_for_issue(task_type)
 
-    if not agent_id:
+    if not actor_id:
         # All agents busy, wait and try default
         logger.warning("[run] All agents busy, using default fixer")
-        agent_id = POSTURE_TO_AGENT_ID.get("fixer", "agent_fixer")
+        actor_id = NAME_TO_ACTOR_ID.get("fixer", "ACTOR_fixer")
 
     return await run_work_agent(
-        agent_id=agent_id,
+        actor_id=actor_id,
         prompt=prompt,
         target_dir=target_dir,
         agent_provider=agent_provider,

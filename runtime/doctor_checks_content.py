@@ -97,7 +97,7 @@ def doctor_check_new_undoc_code(target_dir: Path, config: DoctorConfig) -> List[
                 if source_mtime > impl_mtime + 86400:  # More than 1 day newer
                     days_newer = int((source_mtime - impl_mtime) / 86400)
                     issues.append(DoctorIssue(
-                        issue_type="NEW_UNDOC_CODE",
+                        task_type="NEW_UNDOC_CODE",
                         severity="warning",
                         path=rel_path,
                         message=f"Modified {days_newer}d after IMPLEMENTATION doc",
@@ -129,7 +129,7 @@ def doctor_check_new_undoc_code(target_dir: Path, config: DoctorConfig) -> List[
 
                 if not has_stories and line_count > 50:
                     issues.append(DoctorIssue(
-                        issue_type="COMPONENT_NO_STORIES",
+                        task_type="COMPONENT_NO_STORIES",
                         severity="info",
                         path=rel_path,
                         message="Component without Storybook stories",
@@ -146,7 +146,7 @@ def doctor_check_new_undoc_code(target_dir: Path, config: DoctorConfig) -> List[
                 has_docs_ref = 'DOCS:' in content
                 if not has_jsdoc and not has_docs_ref and line_count > 30:
                     issues.append(DoctorIssue(
-                        issue_type="HOOK_UNDOC",
+                        task_type="HOOK_UNDOC",
                         severity="info",
                         path=rel_path,
                         message="Custom hook without documentation",
@@ -250,7 +250,7 @@ def doctor_check_doc_duplication(target_dir: Path, config: DoctorConfig) -> List
         if len(docs_set) > 1:
             docs_list = sorted(docs_set)  # Convert set to sorted list for consistent output
             issues.append(DoctorIssue(
-                issue_type="DOC_DUPLICATION",
+                task_type="DOC_DUPLICATION",
                 severity="warning",
                 path=docs_list[0],  # First doc that references it
                 message=f"`{file_ref}` documented in {len(docs_list)} places",
@@ -266,7 +266,7 @@ def doctor_check_doc_duplication(target_dir: Path, config: DoctorConfig) -> List
         if len(docs) > 1:
             folder, doc_type = topic.split(':')
             issues.append(DoctorIssue(
-                issue_type="DOC_DUPLICATION",
+                task_type="DOC_DUPLICATION",
                 severity="warning",
                 path=docs[0],
                 message=f"Multiple {doc_type} docs in `{folder}/`",
@@ -304,7 +304,7 @@ def doctor_check_doc_duplication(target_dir: Path, config: DoctorConfig) -> List
             # Flag if >60% similar content or >3 matching headings
             if similarity > 0.6 or (heading_match >= 3 and similarity > 0.4):
                 issues.append(DoctorIssue(
-                    issue_type="DOC_DUPLICATION",
+                    task_type="DOC_DUPLICATION",
                     severity="info",
                     path=path1,
                     message=f"{int(similarity*100)}% similar to `{path2}`",
@@ -368,7 +368,7 @@ def doctor_check_recent_log_errors(target_dir: Path, config: DoctorConfig) -> Li
             if per_file_counts[rel_path] > 10:
                 continue
             issues.append(DoctorIssue(
-                issue_type="LOG_ERROR",
+                task_type="LOG_ERROR",
                 severity="warning",
                 path=rel_path,
                 message=f"Log error: {snippet[:200]}",
@@ -451,7 +451,7 @@ def doctor_check_long_strings(target_dir: Path, config: DoctorConfig) -> List[Do
 
                     if prompts:
                         issues.append(DoctorIssue(
-                            issue_type="LONG_PROMPT",
+                            task_type="LONG_PROMPT",
                             severity="info",
                             path=rel_path,
                             message=f"Contains {len(prompts)} long prompt string(s)",
@@ -460,7 +460,7 @@ def doctor_check_long_strings(target_dir: Path, config: DoctorConfig) -> List[Do
                         ))
                     if sqls:
                         issues.append(DoctorIssue(
-                            issue_type="LONG_SQL",
+                            task_type="LONG_SQL",
                             severity="info",
                             path=rel_path,
                             message=f"Contains {len(sqls)} long SQL query/queries",
@@ -559,7 +559,7 @@ def doctor_check_legacy_markers(target_dir: Path, config: DoctorConfig) -> List[
                 for marker_type, (pattern, message) in legacy_patterns.items():
                     if re.search(pattern, content, re.MULTILINE):
                         issues.append(DoctorIssue(
-                            issue_type="LEGACY_MARKER",
+                            task_type="LEGACY_MARKER",
                             severity="warning",
                             path=rel_path,
                             message=message,
@@ -607,7 +607,7 @@ def doctor_check_legacy_markers(target_dir: Path, config: DoctorConfig) -> List[
 
                 if actionable_questions:
                     issues.append(DoctorIssue(
-                        issue_type="UNRESOLVED_QUESTION",
+                        task_type="UNRESOLVED_QUESTION",
                         severity="info",
                         path=rel_path,
                         message=f"{len(actionable_questions)} unresolved question(s)",
@@ -647,7 +647,7 @@ def doctor_check_legacy_markers(target_dir: Path, config: DoctorConfig) -> List[
 
                 if actionable_questions:
                     issues.append(DoctorIssue(
-                        issue_type="UNRESOLVED_QUESTION",
+                        task_type="UNRESOLVED_QUESTION",
                         severity="info",
                         path=rel_path,
                         message=f"{len(actionable_questions)} question(s) in comments",
@@ -705,7 +705,7 @@ def doctor_check_special_markers(target_dir: Path, config: DoctorConfig) -> List
         "TODO": "info",
     }
 
-    for issue_type, marker_tags, message_template in all_marker_info:
+    for task_type, marker_tags, message_template in all_marker_info:
         for path in target_dir.rglob("*"):
             if not path.is_file():
                 continue
@@ -731,7 +731,7 @@ def doctor_check_special_markers(target_dir: Path, config: DoctorConfig) -> List
             priority = _extract_marker_priority(content, marker_tags)
 
             # High priority markers (7+) get elevated severity
-            severity = severity_by_type.get(issue_type, "info")
+            severity = severity_by_type.get(task_type, "info")
             if priority >= 7:
                 severity = "warning" if severity == "info" else "critical"
 
@@ -744,7 +744,7 @@ def doctor_check_special_markers(target_dir: Path, config: DoctorConfig) -> List
                 message = f"{title[:60]} (priority: {priority})"
 
             issues.append(DoctorIssue(
-                issue_type=issue_type,
+                task_type=task_type,
                 severity=severity,
                 path=rel_path,
                 message=message,
@@ -754,9 +754,9 @@ def doctor_check_special_markers(target_dir: Path, config: DoctorConfig) -> List
                     "title": title,
                     "content_snippet": content[content.find(next(tag for tag in marker_tags if tag in content)):][:200] + "..." if any(tag in content for tag in marker_tags) else ""
                 },
-                suggestion=f"Review and resolve {issue_type.lower()} in this file"
+                suggestion=f"Review and resolve {task_type.lower()} in this file"
             ))
 
     # Sort by priority (highest first) within each issue type
-    issues.sort(key=lambda x: (-x.details.get("priority", 5), x.issue_type))
+    issues.sort(key=lambda x: (-x.details.get("priority", 5), x.task_type))
     return issues

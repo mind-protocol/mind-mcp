@@ -7,7 +7,7 @@ purpose: |
 
 inputs:
   target: doc_path
-  problem_type: BROKEN_IMPL_LINK | ORPHAN_DOCS
+  task_type: BROKEN_IMPL_LINK | ORPHAN_DOCS
   broken_markers: string[]  # For BROKEN_IMPL_LINK
   reason: string            # For ORPHAN_DOCS
 
@@ -41,7 +41,7 @@ steps:
   # Branch: BROKEN_IMPL_LINK
   - id: fix_broken_links
     name: Fix Broken IMPL Links
-    condition: "problem_type == 'BROKEN_IMPL_LINK'"
+    condition: "task_type == 'BROKEN_IMPL_LINK'"
     action: loop
     loop: "{broken_markers}"
     steps:
@@ -121,7 +121,7 @@ steps:
   # Branch: ORPHAN_DOCS
   - id: resolve_orphan
     name: Resolve Orphan Doc
-    condition: "problem_type == 'ORPHAN_DOCS'"
+    condition: "task_type == 'ORPHAN_DOCS'"
     steps:
       - id: extract_module
         name: Extract Module Name

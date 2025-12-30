@@ -274,7 +274,7 @@ def doctor_check_invariant_coverage(target_dir: Path, config: DoctorConfig) -> L
         if inv.priority == "HIGH":
             if not inv.verified_by_test and not inv.verified_by_health:
                 issues.append(DoctorIssue(
-                    issue_type="INVARIANT_NO_TEST",
+                    task_type="INVARIANT_NO_TEST",
                     severity="warning",
                     path=inv.file_path,
                     message=f"HIGH priority invariant {inv.id} has no verified_by",
@@ -289,7 +289,7 @@ def doctor_check_invariant_coverage(target_dir: Path, config: DoctorConfig) -> L
 
         if inv.confidence == "untested":
             issues.append(DoctorIssue(
-                issue_type="INVARIANT_UNTESTED",
+                task_type="INVARIANT_UNTESTED",
                 severity="info",
                 path=inv.file_path,
                 message=f"Invariant {inv.id} marked as untested",
@@ -332,7 +332,7 @@ def doctor_check_test_validates_markers(target_dir: Path, config: DoctorConfig) 
 
         if test_funcs and not mappings:
             issues.append(DoctorIssue(
-                issue_type="TEST_NO_VALIDATES",
+                task_type="TEST_NO_VALIDATES",
                 severity="info",
                 path=str(tf),
                 message=f"Test file has {len(test_funcs)} tests but no @validates markers",
@@ -384,7 +384,7 @@ def doctor_check_completion_gate(target_dir: Path, config: DoctorConfig) -> List
         if status == "incomplete":
             blocking = gate.get("blocking", [])
             issues.append(DoctorIssue(
-                issue_type="MODULE_INCOMPLETE",
+                task_type="MODULE_INCOMPLETE",
                 severity="critical",
                 path=str(gate_file),
                 message=f"Module {module} has {len(blocking)} failing test(s)",
@@ -398,7 +398,7 @@ def doctor_check_completion_gate(target_dir: Path, config: DoctorConfig) -> List
             ))
         elif status == "blocked":
             issues.append(DoctorIssue(
-                issue_type="MODULE_BLOCKED",
+                task_type="MODULE_BLOCKED",
                 severity="warning",
                 path=str(gate_file),
                 message=f"Module {module} is blocked",

@@ -100,7 +100,7 @@ AND synthesis is embeddable text
 |----|-----------|--------------|----------|
 | V-A-1 | Only one agent running at a time | Resource conflict | MED |
 | V-A-2 | Agent status transitions: ready → running → ready | State corruption | HIGH |
-| V-A-3 | Spawn requires task_id OR (issue_type + path) | Incomplete context | HIGH |
+| V-A-3 | Spawn requires task_id OR (task_type + path) | Incomplete context | HIGH |
 | V-A-4 | Running agent returns result | Orphaned process | MED |
 
 ### Validation Tests
@@ -109,8 +109,8 @@ AND synthesis is embeddable text
 GIVEN agent_spawn when agent running
 THEN error: "Agent X is already running"
 
-GIVEN agent_spawn(task_id=None, issue_type=None)
-THEN error: "Either task_id or (issue_type + path) required"
+GIVEN agent_spawn(task_id=None, task_type=None)
+THEN error: "Either task_id or (task_type + path) required"
 
 GIVEN agent completes
 THEN status = "ready"

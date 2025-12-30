@@ -376,7 +376,7 @@ def agent_resolve(problem, agent):
 
     session = start_procedure("PROCEDURE_refactor", {
         "target": problem["target"],
-        "problem_type": problem["type"],
+        "task_type": problem["type"],
         "details": problem
     })
 

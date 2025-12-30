@@ -42,7 +42,7 @@ class TaskInfo:
     agent: Optional[str] = None
     created: Optional[datetime] = None
     started: Optional[datetime] = None
-    issue_type: Optional[str] = None
+    task_type: Optional[str] = None
     path: Optional[str] = None
     priority: str = "normal"  # low, normal, high, urgent
 
@@ -102,7 +102,7 @@ def _get_tasks_from_graph(
             WHERE {where}
             OPTIONAL MATCH (t)-[:LINK]->(agent:Actor)
             RETURN t.id, t.name, t.status, t.capability, t.module,
-                   t.issue_type, t.path, t.priority, agent.name, t.created
+                   t.task_type, t.path, t.priority, agent.name, t.created
             ORDER BY
                 CASE t.status
                     WHEN 'stuck' THEN 0
@@ -121,7 +121,7 @@ def _get_tasks_from_graph(
         """)
 
         for row in result:
-            (task_id, name, status, cap, mod, issue_type,
+            (task_id, name, status, cap, mod, task_type,
              path, priority, agent_name, created) = row
 
             # Parse created datetime if present
@@ -140,7 +140,7 @@ def _get_tasks_from_graph(
                 module=mod,
                 agent=agent_name,
                 created=created_dt,
-                issue_type=issue_type,
+                task_type=task_type,
                 path=path,
                 priority=priority or "normal",
             ))
@@ -262,7 +262,7 @@ def list_tasks(
                 "capability": t.capability,
                 "module": t.module,
                 "agent": t.agent,
-                "issue_type": t.issue_type,
+                "task_type": t.task_type,
                 "path": t.path,
                 "priority": t.priority,
             })

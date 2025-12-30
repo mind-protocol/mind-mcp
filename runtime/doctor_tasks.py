@@ -109,7 +109,7 @@ def surface_issues_from_checks(
         module = get_module_for_path(issue.path, modules, target_dir)
 
         node = upsert_issue_from_check(
-            issue_type=issue.issue_type,
+            task_type=issue.task_type,
             severity=issue.severity,
             path=issue.path,
             message=issue.message,
@@ -224,9 +224,9 @@ def surface_issues_from_tests(
 
         module = get_module_for_path(result.file, modules, target_dir)
 
-        issue_type = f"TEST_{result.status.upper()}"
+        task_type = f"TEST_{result.status.upper()}"
         node = upsert_issue_from_check(
-            issue_type=issue_type,
+            task_type=task_type,
             severity="critical" if result.status == "failed" else "warning",
             path=result.file,
             message=f"Test {result.name}: {result.message}",
@@ -357,12 +357,12 @@ def surface_issues_from_health(
             resolve_issue(issue_id, store)
             continue
 
-        issue_type = "HEALTH_FAILED" if result.status == "failed" else "HEALTH_ERROR"
+        task_type = "HEALTH_FAILED" if result.status == "failed" else "HEALTH_ERROR"
         if result.signal.check_type == "invariant":
-            issue_type = "INVARIANT_VIOLATED"
+            task_type = "INVARIANT_VIOLATED"
 
         node = upsert_issue_from_check(
-            issue_type=issue_type,
+            task_type=task_type,
             severity="critical",
             path=result.signal.id,
             message=result.message or f"Health check failed: {result.signal.name}",

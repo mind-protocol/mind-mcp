@@ -57,7 +57,7 @@ def doctor_check_prompt_doc_reference(target_dir: Path, config: DoctorConfig) ->
         prompt = generate_bootstrap_prompt(target_dir)
     except Exception as exc:
         issues.append(DoctorIssue(
-            issue_type="PROMPT_DOC_REFERENCE",
+            task_type="PROMPT_DOC_REFERENCE",
             severity="critical",
             path="mind/prompt.py",
             message="Failed to render bootstrap prompt",
@@ -70,7 +70,7 @@ def doctor_check_prompt_doc_reference(target_dir: Path, config: DoctorConfig) ->
 
     if missing:
         issues.append(DoctorIssue(
-            issue_type="PROMPT_DOC_REFERENCE",
+            task_type="PROMPT_DOC_REFERENCE",
             severity="critical",
             path="mind/prompt.py",
             message="Bootstrap prompt missing required doc references",
@@ -94,7 +94,7 @@ def doctor_check_prompt_view_table(target_dir: Path, config: DoctorConfig) -> Li
     missing = [view for _, view in PROMPT_VIEW_ENTRIES if view not in prompt]
     if missing:
         issues.append(DoctorIssue(
-            issue_type="PROMPT_VIEW_TABLE",
+            task_type="PROMPT_VIEW_TABLE",
             severity="warning",
             path="mind/prompt.py",
             message="Prompt VIEW table is missing rows",
@@ -124,7 +124,7 @@ def doctor_check_prompt_checklist(target_dir: Path, config: DoctorConfig) -> Lis
     missing = [desc for desc, phrase in required_phrases.items() if phrase not in prompt]
     if missing:
         issues.append(DoctorIssue(
-            issue_type="PROMPT_CHECKLIST",
+            task_type="PROMPT_CHECKLIST",
             severity="warning",
             path="mind/prompt.py",
             message="Checklist block is incomplete or missing",
@@ -186,7 +186,7 @@ def doctor_check_doc_link_integrity(target_dir: Path, config: DoctorConfig) -> L
                 issue_path = str(source_file)
 
             issues.append(DoctorIssue(
-                issue_type="DOC_LINK_INTEGRITY",
+                task_type="DOC_LINK_INTEGRITY",
                 severity="warning",
                 path=issue_path,
                 message="Code file references docs but the bidirectional link is broken",
@@ -259,7 +259,7 @@ def doctor_check_code_doc_delta_coupling(target_dir: Path, config: DoctorConfig)
                 issue_path = str(source_file)
 
             issues.append(DoctorIssue(
-                issue_type="CODE_DOC_DELTA_COUPLING",
+                task_type="CODE_DOC_DELTA_COUPLING",
                 severity="warning",
                 path=issue_path,
                 message="Code changed without corresponding doc or SYNC updates",

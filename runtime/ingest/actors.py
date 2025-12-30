@@ -2,7 +2,7 @@
 Actor ingestion for the mind graph.
 
 Creates Actor nodes from .mind/actors/{name}/CLAUDE.md files.
-Each actor represents a work agent with a specific posture.
+Each actor represents a work agent with a specific name.
 
 Structure:
     .mind/actors/
@@ -32,7 +32,7 @@ def ingest_actors(
     Ingest actors from .mind/actors/ into the graph.
 
     Reads ACTOR_*.md files and creates Actor nodes with:
-    - id: actor:agent_{name}
+    - id: AGENT_{Name}
     - synthesis: for embedding
     - content: purpose description
 
@@ -66,8 +66,8 @@ def ingest_actors(
         "label": "Space",
         "name": "actors",
         "type": "system",
-        "synthesis": "space:actors — Work agents that execute tasks with specific cognitive postures",
-        "content": "Work agents that execute tasks with specific cognitive postures",
+        "synthesis": "space:actors — Work agents that execute tasks with specific cognitive names",
+        "content": "Work agents that execute tasks with specific cognitive names",
         "weight": 8.0,
         "energy": 0.0,
     }, with_context=False)
@@ -102,7 +102,7 @@ def _ingest_actor(adapter, actor_dir: Path) -> str:
     from ..inject import inject
 
     name = actor_dir.name
-    actor_id = f"actor:agent_{name.lower()}"
+    actor_id = f"AGENT_{name.capitalize()}"
 
     # Find prompt file (prefer CLAUDE.md, fallback to AGENTS.md)
     prompt_file = actor_dir / "CLAUDE.md"
@@ -128,7 +128,7 @@ def _ingest_actor(adapter, actor_dir: Path) -> str:
     move = move_match.group(1).strip() if move_match else ""
 
     # Build synthesis for embedding
-    synthesis = f"agent:{name.lower()} — {purpose[:150]}"
+    synthesis = f"AGENT_{name.capitalize()} — {purpose[:150]}"
     if move:
         synthesis += f" ({move})"
 
@@ -136,8 +136,8 @@ def _ingest_actor(adapter, actor_dir: Path) -> str:
     result = inject(adapter, {
         "id": actor_id,
         "label": "Actor",
-        "name": name.lower(),
-        "type": "agent",
+        "name": name.capitalize(),
+        "type": "AGENT",
         "synthesis": synthesis,
         "content": purpose,
         "status": "ready",

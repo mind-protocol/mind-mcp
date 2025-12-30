@@ -181,7 +181,7 @@ task_run status: "pending"
 ### 2. Task → Agent Assignment
 
 ```
-agent_spawn(issue_type="X", path="...")
+agent_spawn(task_type="X", path="...")
     │
     ▼
 Select agent by posture mapping
@@ -249,7 +249,7 @@ task_run status: "completed" or "failed"
   id: "task_run_abc123",
   type: "task_run",
   status: "pending" | "claimed" | "running" | "completed" | "failed",
-  issue_type: "STALE_SYNC",
+  task_type: "STALE_SYNC",
   path: "docs/physics/SYNC.md",
   created: timestamp,
   claimed_at: timestamp,
@@ -286,7 +286,7 @@ mind work --type UNDOCUMENTED --max 5
 task_list(limit=10)
 
 # Spawn agent for specific issue
-agent_spawn(issue_type="STALE_SYNC", path="docs/physics/SYNC.md")
+agent_spawn(task_type="STALE_SYNC", path="docs/physics/SYNC.md")
 
 # Spawn agent for task node
 agent_spawn(task_id="narrative:task:TASK_create_doc")
@@ -298,7 +298,7 @@ agent_spawn(task_id="narrative:task:TASK_create_doc")
 from runtime.agents import spawn_work_agent
 
 result = await spawn_work_agent(
-    issue_type="UNDOCUMENTED",
+    task_type="UNDOCUMENTED",
     path="runtime/schema",
     target_dir=Path("."),
     agent_provider="claude",
@@ -354,7 +354,7 @@ runtime/
    @check(
        id="my_check",
        triggers=[triggers.cron.daily()],
-       on_problem="MY_ISSUE_TYPE",
+       on_problem="MY_TASK_TYPE",
        task="TASK_fix_my_issue",
    )
    def my_check(ctx) -> dict:
@@ -369,13 +369,13 @@ runtime/
 3. **Add posture mapping** (if new issue type):
    ```python
    # runtime/agents/postures.py
-   PROBLEM_TO_POSTURE["MY_PROBLEM_TYPE"] = "fixer"
+   PROBLEM_TO_POSTURE["MY_TASK_TYPE"] = "fixer"
    ```
 
 4. **Add instructions** (for work prompt):
    ```python
    # runtime/agents/instructions.py
-   ISSUE_INSTRUCTIONS["MY_ISSUE_TYPE"] = {
+   ISSUE_INSTRUCTIONS["MY_TASK_TYPE"] = {
        "view": "VIEW_Fix_My_Issue.md",
        "docs_to_read": ["docs/relevant/PATTERNS.md"],
        "prompt": "Fix the issue at {path}...",

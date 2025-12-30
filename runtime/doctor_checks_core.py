@@ -53,7 +53,7 @@ def doctor_check_monolith(target_dir: Path, config: DoctorConfig) -> List[Doctor
             suggestion = "Consider splitting into smaller modules"
 
         issues.append(DoctorIssue(
-            issue_type="MONOLITH",
+            task_type="MONOLITH",
             severity="critical",
             path=rel_path,
             message=f"{line_count} lines (threshold: {effective_threshold})",
@@ -116,7 +116,7 @@ def doctor_check_undocumented(target_dir: Path, config: DoctorConfig) -> List[Do
         )
 
         issues.append(DoctorIssue(
-            issue_type="UNDOCUMENTED",
+            task_type="UNDOCUMENTED",
             severity="critical",
             path=rel_path,
             message=f"No documentation mapping ({file_count} files)",
@@ -177,7 +177,7 @@ def doctor_check_stale_sync(target_dir: Path, config: DoctorConfig) -> List[Doct
             rel_path = str(sync_file)
 
         issues.append(DoctorIssue(
-            issue_type="STALE_SYNC",
+            task_type="STALE_SYNC",
             severity="warning",
             path=rel_path,
             message=f"Last updated {days_old} days ago",

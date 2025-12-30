@@ -171,7 +171,7 @@ When adding a new doctor check:
 
 ```python
 Issue(
-    type="NEW_ISSUE_TYPE",
+    type="NEW_TASK_TYPE",
     severity="warning",
     path=str(path),
     message="Description",

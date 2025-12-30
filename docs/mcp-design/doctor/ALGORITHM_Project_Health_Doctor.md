@@ -214,9 +214,9 @@ node:
   # Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
   node_type: narrative
   type: issue
-  name: "{ISSUE_TYPE} in {module}/{file}"
+  name: "{TASK_TYPE} in {module}/{file}"
   content: |
-    ## {ISSUE_TYPE}
+    ## {TASK_TYPE}
 
     **Module:** {module}
     **File:** {path}
@@ -228,7 +228,7 @@ node:
   energy: 1.0 | 0.5 | 0.2  # critical | warning | info
 
   # Issue-specific fields
-  issue_type: "MONOLITH"
+  task_type: "MONOLITH"
   severity: critical | warning | info
   status: open | resolved | in_progress
   module: "{module_id}"
@@ -260,9 +260,9 @@ links:
 ### Upsert Logic
 
 ```python
-def upsert_issue(issue_type, severity, path, message, module, store):
+def upsert_issue(task_type, severity, path, message, module, store):
     """Create or update issue node."""
-    issue_id = generate_issue_id(issue_type, module, path)
+    issue_id = generate_issue_id(task_type, module, path)
     existing = store.get_node(issue_id)
 
     if existing:
@@ -319,7 +319,7 @@ def traverse_to_objective(issue: IssueNarrative, store, modules) -> TraversalRes
 
     # Step 3: Find objective
     # ID: narrative_OBJECTIVE_{module}-{type}
-    objective_types = ISSUE_BLOCKS_OBJECTIVE[issue.issue_type]
+    objective_types = ISSUE_BLOCKS_OBJECTIVE[issue.task_type]
     objective = None
     for obj_type in objective_types:
         obj_id = generate_objective_id(obj_type, issue.module)

@@ -298,7 +298,7 @@ def validate_physics_ranges(entity, entity_type, report):
                 report.add_issue(Issue(
                     node_type=entity_type,
                     node_id=entity.get('id', 'unknown'),
-                    issue_type="out_of_range",
+                    task_type="out_of_range",
                     field=field,
                     message=f"{field}={val} outside [{min_val}, {max_val}]",
                     severity="error"
@@ -329,7 +329,7 @@ def validate_polarity_range(link, link_type, report):
             report.add_issue(Issue(
                 node_type=link_type,
                 node_id=f"{link.get('from_id', '?')}->{link.get('to_id', '?')}",
-                issue_type="out_of_range",
+                task_type="out_of_range",
                 field="polarity",
                 message=f"polarity={val} outside [-1, +1]",
                 severity="error"
@@ -372,7 +372,7 @@ def validate_link_endpoints(graph, link, link_type, schema, report):
             report.add_issue(Issue(
                 node_type=link_type,
                 node_id=f"{link['from_id']}->{link['to_id']}",
-                issue_type="invalid_link_source",
+                task_type="invalid_link_source",
                 field="from_id",
                 message=f"Source type '{from_type}' not in {valid_from}",
                 severity="error"
@@ -386,7 +386,7 @@ def validate_link_endpoints(graph, link, link_type, schema, report):
             report.add_issue(Issue(
                 node_type=link_type,
                 node_id=f"{link['from_id']}->{link['to_id']}",
-                issue_type="invalid_link_target",
+                task_type="invalid_link_target",
                 field="to_id",
                 message=f"Target type '{to_type}' not in {valid_to}",
                 severity="error"

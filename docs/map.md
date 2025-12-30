@@ -3977,7 +3977,7 @@
 - # Each failure becomes an issue
 - # HEALTH_FAILED, INVARIANT_VIOLATED
 - # Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
-- ## {ISSUE_TYPE}
+- ## {TASK_TYPE}
 - # Issue-specific fields
 - # Space contains Issue
 - # Issue relates to Thing (file)
@@ -9324,14 +9324,14 @@
 
 **Definitions:**
 - `def get_symbol_name()`
-- `def get_issue_folder_name()`
+- `def get_problem_folder_name()`
 - `class WorkResult`
 - `class EscalationDecision`
 - `def get_learnings_content()`
 - `def _get_git_head()`
-- `def get_issue_symbol()`
-- `def get_issue_action_parts()`
-- `def get_issue_action()`
+- `def get_problem_symbol()`
+- `def get_problem_action_parts()`
+- `def get_problem_action()`
 - `def get_depth_types()`
 - `def split_docs_to_read()`
 - `def _detect_recent_issue_number()`

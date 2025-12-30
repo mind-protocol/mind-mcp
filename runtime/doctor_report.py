@@ -18,7 +18,7 @@ from typing import Dict, Any, List
 from .doctor_types import DoctorIssue
 
 
-def get_issue_guidance(issue_type: str) -> Dict[str, str]:
+def get_issue_guidance(task_type: str) -> Dict[str, str]:
     """Get VIEW and file guidance for each issue type."""
     guidance = {
         "MONOLITH": {
@@ -132,10 +132,10 @@ def get_issue_guidance(issue_type: str) -> Dict[str, str]:
             "tip": "Ingest into graph following chain order (OBJECTIVES first), then archive to data/archive/docs/"
         },
     }
-    return guidance.get(issue_type, {"view": "VIEW_Implement_Write_Or_Modify_Code.md", "file": "", "tip": ""})
+    return guidance.get(task_type, {"view": "VIEW_Implement_Write_Or_Modify_Code.md", "file": "", "tip": ""})
 
 
-def get_issue_explanation(issue_type: str) -> Dict[str, str]:
+def get_issue_explanation(task_type: str) -> Dict[str, str]:
     """Get natural language explanation for each issue type."""
     explanations = {
         "MONOLITH": {
@@ -227,7 +227,7 @@ def get_issue_explanation(issue_type: str) -> Dict[str, str]:
             "action": "Ingest docs into graph module-by-module, following chain order (OBJECTIVES first, then BEHAVIORS, PATTERNS, etc.). After ingestion, archive original files to data/archive/docs/."
         },
     }
-    return explanations.get(issue_type, {"risk": "This issue may cause problems.", "action": "Review and fix."})
+    return explanations.get(task_type, {"risk": "This issue may cause problems.", "action": "Review and fix."})
 
 
 def generate_health_markdown(results: Dict[str, Any], github_issues: List = None) -> str:
@@ -294,15 +294,15 @@ def generate_health_markdown(results: Dict[str, Any], github_issues: List = None
     if critical:
         issues_by_type = {}
         for issue in critical:
-            if issue.issue_type not in issues_by_type:
-                issues_by_type[issue.issue_type] = []
-            issues_by_type[issue.issue_type].append(issue)
+            if issue.task_type not in issues_by_type:
+                issues_by_type[issue.task_type] = []
+            issues_by_type[issue.task_type].append(issue)
 
-        for issue_type, issues in issues_by_type.items():
-            guidance = get_issue_guidance(issue_type)
-            explanation = get_issue_explanation(issue_type)
+        for task_type, issues in issues_by_type.items():
+            guidance = get_issue_guidance(task_type)
+            explanation = get_issue_explanation(task_type)
 
-            lines.append(f"### {issue_type} ({len(issues)} files)")
+            lines.append(f"### {task_type} ({len(issues)} files)")
             lines.append("")
             lines.append(f"**What's wrong:** {explanation['risk']}")
             lines.append("")
@@ -331,15 +331,15 @@ def generate_health_markdown(results: Dict[str, Any], github_issues: List = None
     if warnings:
         issues_by_type = {}
         for issue in warnings:
-            if issue.issue_type not in issues_by_type:
-                issues_by_type[issue.issue_type] = []
-            issues_by_type[issue.issue_type].append(issue)
+            if issue.task_type not in issues_by_type:
+                issues_by_type[issue.task_type] = []
+            issues_by_type[issue.task_type].append(issue)
 
-        for issue_type, issues in issues_by_type.items():
-            guidance = get_issue_guidance(issue_type)
-            explanation = get_issue_explanation(issue_type)
+        for task_type, issues in issues_by_type.items():
+            guidance = get_issue_guidance(task_type)
+            explanation = get_issue_explanation(task_type)
 
-            lines.append(f"### {issue_type} ({len(issues)} files)")
+            lines.append(f"### {task_type} ({len(issues)} files)")
             lines.append("")
             lines.append(f"**What's wrong:** {explanation['risk']}")
             lines.append("")
@@ -416,7 +416,7 @@ def print_doctor_report(results: Dict[str, Any], output_format: str = "text"):
                 severity: [
                     {
                         "id": issue.id,
-                        "type": issue.issue_type,
+                        "type": issue.task_type,
                         "path": issue.path,
                         "message": issue.message,
                         "details": issue.details,
@@ -443,9 +443,9 @@ def print_doctor_report(results: Dict[str, Any], output_format: str = "text"):
         print(f"## Critical ({len(critical)} issues)")
         print()
         for issue in critical:
-            guidance = get_issue_guidance(issue.issue_type)
+            guidance = get_issue_guidance(issue.task_type)
             id_suffix = f" [{issue.id}]" if issue.id else ""
-            print(f"  X {issue.issue_type}: {issue.path}{id_suffix}")
+            print(f"  X {issue.task_type}: {issue.path}{id_suffix}")
             print(f"    {issue.message}")
             if issue.suggestion:
                 print(f"    -> {issue.suggestion}")
@@ -458,9 +458,9 @@ def print_doctor_report(results: Dict[str, Any], output_format: str = "text"):
         print(f"## Warnings ({len(warnings)} issues)")
         print()
         for issue in warnings:
-            guidance = get_issue_guidance(issue.issue_type)
+            guidance = get_issue_guidance(issue.task_type)
             id_suffix = f" [{issue.id}]" if issue.id else ""
-            print(f"  ! {issue.issue_type}: {issue.path}{id_suffix}")
+            print(f"  ! {issue.task_type}: {issue.path}{id_suffix}")
             print(f"    {issue.message}")
             if issue.suggestion:
                 print(f"    -> {issue.suggestion}")
@@ -474,7 +474,7 @@ def print_doctor_report(results: Dict[str, Any], output_format: str = "text"):
         print()
         for issue in info[:5]:  # Limit info display
             id_suffix = f" [{issue.id}]" if issue.id else ""
-            print(f"  i {issue.issue_type}: {issue.path}{id_suffix}")
+            print(f"  i {issue.task_type}: {issue.path}{id_suffix}")
             print(f"    {issue.message}")
         if len(info) > 5:
             print(f"  ... and {len(info) - 5} more")
@@ -500,10 +500,10 @@ def print_doctor_report(results: Dict[str, Any], output_format: str = "text"):
         print()
         action_num = 1
         for issue in critical[:3]:
-            print(f"{action_num}. [ ] Fix {issue.issue_type.lower()}: {issue.path}")
+            print(f"{action_num}. [ ] Fix {issue.task_type.lower()}: {issue.path}")
             action_num += 1
         for issue in warnings[:2]:
-            print(f"{action_num}. [ ] Address {issue.issue_type.lower()}: {issue.path}")
+            print(f"{action_num}. [ ] Address {issue.task_type.lower()}: {issue.path}")
             action_num += 1
         print()
 

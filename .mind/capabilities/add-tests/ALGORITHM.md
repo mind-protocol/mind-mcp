@@ -237,7 +237,7 @@ def execute_add_tests(task_run, agent):
     # 2. Start procedure
     session = start_procedure("PROCEDURE_add_tests", {
         "target": task_run.target,
-        "problem_type": task_run.problem_type
+        "task_type": task_run.task_type
     })
 
     # 3. Execute steps

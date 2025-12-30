@@ -37,7 +37,7 @@ OSCILLATION_DETECTION_WINDOW = 5  # Check last N results for oscillation
 class VerificationSession:
     """Tracks verification session state to prevent infinite loops."""
     issue_path: str
-    issue_type: str
+    task_type: str
     start_time: float = field(default_factory=time.time)
     retry_count: int = 0
     total_session_retries: int = 0
@@ -854,7 +854,7 @@ def verify_completion(
     results = []
 
     # Get issue-specific checks
-    checks = VERIFICATION_CHECKS.get(issue.issue_type, [])
+    checks = VERIFICATION_CHECKS.get(issue.task_type, [])
 
     # Add global checks
     all_checks = checks + GLOBAL_CHECKS
@@ -917,7 +917,7 @@ def format_verification_feedback(
         "=" * 60,
         f"## VERIFICATION FAILED (Attempt {attempt}/{max_attempts})",
         "",
-        f"**Issue:** {issue.issue_type} in {issue.path}",
+        f"**Issue:** {issue.task_type} in {issue.path}",
         "",
         f"**Passed:** {len(passed)}/{len(results)} checks",
         "",
@@ -999,7 +999,7 @@ def format_escalation_feedback(
         "## ESCALATION REQUIRED - MAX RETRIES EXCEEDED",
         "",
         f"**Reason:** {session.get_escalation_reason()}",
-        f"**Issue:** {issue.issue_type} in {issue.path}",
+        f"**Issue:** {issue.task_type} in {issue.path}",
         f"**Attempts:** {session.retry_count}",
         "",
         "You have exhausted retry attempts. DO NOT RETRY.",
@@ -1011,7 +1011,7 @@ def format_escalation_feedback(
         "```",
         "",
         "Include in escalation:",
-        f"- Issue: {issue.issue_type} in {issue.path}",
+        f"- Issue: {issue.task_type} in {issue.path}",
         f"- Failed checks: {', '.join(r.check_name for r in failed)}",
         "- What you tried and why it didn't work",
         "- Options for resolution",

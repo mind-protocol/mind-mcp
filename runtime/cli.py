@@ -114,7 +114,7 @@ def main():
         "--model",
         choices=AGENT_CHOICES,
         default="all",
-        help="Agent model for work and TUI (default: all, randomly picks a provider per task)",
+        help="Agent model for work (default: all, randomly picks a provider per task)",
     )
     parser.add_argument(
         "--agents",
@@ -744,25 +744,25 @@ def main():
         "pause",
         help="Pause an agent (keeps state)"
     )
-    agents_pause_parser.add_argument("agent_id", type=str, help="Agent ID to pause")
+    agents_pause_parser.add_argument("actor_id", type=str, help="Agent ID to pause")
 
     agents_stop_parser = agents_subparsers.add_parser(
         "stop",
         help="Stop an agent gracefully"
     )
-    agents_stop_parser.add_argument("agent_id", type=str, help="Agent ID to stop")
+    agents_stop_parser.add_argument("actor_id", type=str, help="Agent ID to stop")
 
     agents_kill_parser = agents_subparsers.add_parser(
         "kill",
         help="Force kill an agent"
     )
-    agents_kill_parser.add_argument("agent_id", type=str, help="Agent ID to kill")
+    agents_kill_parser.add_argument("actor_id", type=str, help="Agent ID to kill")
 
     agents_enable_parser = agents_subparsers.add_parser(
         "enable",
         help="Enable a paused agent"
     )
-    agents_enable_parser.add_argument("agent_id", type=str, help="Agent ID to enable")
+    agents_enable_parser.add_argument("actor_id", type=str, help="Agent ID to enable")
 
     # tasks command
     tasks_parser = subparsers.add_parser(
@@ -1038,7 +1038,7 @@ def main():
                 print(f"Doctor Ignores ({len(ignores)} entries):")
                 print("-" * 50)
                 for ig in ignores:
-                    print(f"  {ig.issue_type}: {ig.path}")
+                    print(f"  {ig.task_type}: {ig.path}")
                     if ig.reason:
                         print(f"    Reason: {ig.reason}")
                     if ig.added_by or ig.added_date:
@@ -1049,7 +1049,7 @@ def main():
             # Add new ignore
             success = add_doctor_ignore(
                 args.dir,
-                issue_type=args.type.upper(),
+                task_type=args.type.upper(),
                 path=args.path,
                 reason=args.reason,
                 added_by="human"
@@ -1240,13 +1240,13 @@ def main():
             sys.exit(1)
 
         action = args.agents_action or "list"
-        agent_id = getattr(args, 'agent_id', None)
+        actor_id = getattr(args, 'actor_id', None)
         format_output = getattr(args, 'format', 'text')
 
         exit_code = agents_command(
             target_dir=args.dir,
             action=action,
-            agent_id=agent_id,
+            actor_id=actor_id,
             format_output=format_output,
         )
         sys.exit(exit_code)
@@ -1294,21 +1294,6 @@ def main():
         )
         sys.exit(exit_code)
 
-    elif args.command is None:
-        # Launch TUI when no subcommand is given (similar to agent CLIs)
-        try:
-            from .tui import MindApp
-            app = MindApp(target_dir=Path.cwd(), agent_provider=args.model)
-            app.run()
-            sys.exit(0)
-        except ImportError as e:
-            if "textual" in str(e).lower():
-                print("TUI requires textual. Install with: pip install mind[tui]")
-                print()
-                parser.print_help()
-                sys.exit(1)
-            else:
-                raise
     else:
         parser.print_help()
         sys.exit(1)

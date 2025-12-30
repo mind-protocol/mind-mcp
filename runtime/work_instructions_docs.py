@@ -540,4 +540,4 @@ MANDATORY FINAL LINE:
         },
     }
 
-    return instructions.get(issue.issue_type, {})
+    return instructions.get(issue.task_type, {})

@@ -655,7 +655,7 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     print("Next steps:")
     print("  1. Read .mind/PROTOCOL.md")
     print("  2. Update .mind/state/SYNC_Project_State.md")
-    print("  3. Choose an agent posture and use protocols for your task")
+    print("  3. Choose an agent name and use protocols for your task")
     print()
     print("To bootstrap an LLM, run:")
     print(f"  mind prompt --dir {target_dir}")

@@ -9,7 +9,7 @@ Verifies agent work before marking complete:
 On failure: restarts agent with --continue and detailed feedback.
 
 LOOP PROTECTION:
-- Max retries per problem (default: 3)
+- Max retries per task (default: 3)
 - Max total retries per session (default: 10)
 - Automatic escalation on max retries
 - Session state tracking to detect oscillation
@@ -26,7 +26,7 @@ from typing import Any, Dict, List, Optional, Callable, Set
 
 
 # Loop protection constants
-MAX_RETRIES_PER_PROBLEM = 3
+MAX_RETRIES_PER_TASK = 3
 MAX_TOTAL_SESSION_RETRIES = 10
 OSCILLATION_DETECTION_WINDOW = 5  # Check last N results for oscillation
 
@@ -34,8 +34,8 @@ OSCILLATION_DETECTION_WINDOW = 5  # Check last N results for oscillation
 @dataclass
 class VerificationSession:
     """Tracks verification session state to prevent infinite loops."""
-    problem_path: str
-    problem_type: str
+    task_path: str
+    task_type: str
     start_time: float = field(default_factory=time.time)
     retry_count: int = 0
     total_session_retries: int = 0
@@ -55,7 +55,7 @@ class VerificationSession:
             return False  # Already escalated
 
         # Hit per-problem retry limit
-        if self.retry_count >= MAX_RETRIES_PER_PROBLEM:
+        if self.retry_count >= MAX_RETRIES_PER_TASK:
             return True
 
         # Hit session retry limit
@@ -73,8 +73,8 @@ class VerificationSession:
 
     def get_escalation_reason(self) -> str:
         """Get reason for escalation."""
-        if self.retry_count >= MAX_RETRIES_PER_PROBLEM:
-            return f"Max retries ({MAX_RETRIES_PER_PROBLEM}) exceeded for this problem"
+        if self.retry_count >= MAX_RETRIES_PER_TASK:
+            return f"Max retries ({MAX_RETRIES_PER_TASK}) exceeded for this task"
         if self.total_session_retries >= MAX_TOTAL_SESSION_RETRIES:
             return f"Max session retries ({MAX_TOTAL_SESSION_RETRIES}) exceeded"
         if len(self.failed_checks_history) >= OSCILLATION_DETECTION_WINDOW:
@@ -406,11 +406,11 @@ GLOBAL_CHECKS = [
 
 def _run_file_check(
     check: VerificationCheck,
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
     target_dir: Path,
 ) -> VerificationResult:
     """Run a file-based verification check."""
-    target_path = target_dir / problem.path
+    target_path = target_dir / task.path
     passed = True
     message = ""
     details = {}
@@ -421,7 +421,7 @@ def _run_file_check(
         found = any(p in content for p in check.patterns_present)
         if not found:
             passed = False
-            message = f"Missing required pattern in {problem.path}"
+            message = f"Missing required pattern in {task.path}"
             details["missing_patterns"] = check.patterns_present
 
     # Check patterns_absent
@@ -430,14 +430,14 @@ def _run_file_check(
         found_patterns = [p for p in check.patterns_absent if p in content]
         if found_patterns:
             passed = False
-            message = f"Found forbidden patterns in {problem.path}"
+            message = f"Found forbidden patterns in {task.path}"
             details["found_patterns"] = found_patterns
 
     # Default file existence check
     if not check.patterns_present and not check.patterns_absent:
         if not target_path.exists():
             passed = False
-            message = f"File does not exist: {problem.path}"
+            message = f"File does not exist: {task.path}"
 
     if passed:
         message = f"PASS: {check.description}"
@@ -455,7 +455,7 @@ def _run_file_check(
 
 def _run_command_check(
     check: VerificationCheck,
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
     target_dir: Path,
 ) -> VerificationResult:
     """Run a command-based verification check."""
@@ -469,9 +469,9 @@ def _run_command_check(
 
     # Substitute variables in command
     command = check.command.format(
-        path=problem.path,
-        test_path=_find_test_path(problem.path, target_dir),
-        module=_path_to_module(problem.path),
+        path=task.path,
+        test_path=_find_test_path(task.path, target_dir),
+        module=_path_to_module(task.path),
     )
 
     try:
@@ -522,7 +522,7 @@ def _run_command_check(
 
 def _run_membrane_check(
     check: VerificationCheck,
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
     target_dir: Path,
     membrane_query: Optional[Callable] = None,
 ) -> VerificationResult:
@@ -593,7 +593,7 @@ def _run_membrane_check(
 
 def _execute_membrane_query(
     check: VerificationCheck,
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
     membrane_query: Callable,
 ) -> Dict[str, Any]:
     """
@@ -602,7 +602,7 @@ def _execute_membrane_query(
     Maps check names to specific graph queries.
     """
     # Extract module/space ID from problem path
-    path = Path(problem.path)
+    path = Path(task.path)
     module_name = path.stem
     area_name = path.parent.name if path.parent.name not in [".", ""] else None
 
@@ -830,17 +830,17 @@ def _path_to_module(path: str) -> str:
 
 
 def verify_completion(
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
     target_dir: Path,
     head_before: Optional[str] = None,
     head_after: Optional[str] = None,
     membrane_query: Optional[Callable] = None,
 ) -> List[VerificationResult]:
     """
-    Run all verification checks for a problem type.
+    Run all verification checks for a task type.
 
     Args:
-        problem: The detected problem being verified
+        problem: The detected task being verified
         target_dir: Project root directory
         head_before: Git HEAD before work
         head_after: Git HEAD after work
@@ -852,7 +852,7 @@ def verify_completion(
     results = []
 
     # Get problem-specific checks
-    checks = VERIFICATION_CHECKS.get(problem.problem_type, [])
+    checks = VERIFICATION_CHECKS.get(task.task_type, [])
 
     # Add global checks
     all_checks = checks + GLOBAL_CHECKS
@@ -889,7 +889,7 @@ def verify_completion(
 
 def format_verification_feedback(
     results: List[VerificationResult],
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
     attempt: int = 1,
     max_attempts: int = 3,
 ) -> str:
@@ -898,7 +898,7 @@ def format_verification_feedback(
 
     Args:
         results: List of verification results
-        problem: The problem being worked
+        problem: The task being worked
         attempt: Current attempt number
         max_attempts: Maximum retry attempts
 
@@ -915,7 +915,7 @@ def format_verification_feedback(
         "=" * 60,
         f"## VERIFICATION FAILED (Attempt {attempt}/{max_attempts})",
         "",
-        f"**Problem:** {problem.problem_type} in {problem.path}",
+        f"**Problem:** {task.task_type} in {task.path}",
         "",
         f"**Passed:** {len(passed)}/{len(results)} checks",
         "",
@@ -971,7 +971,7 @@ def get_failed_membrane_protocols(results: List[VerificationResult]) -> List[str
 def format_escalation_feedback(
     session: VerificationSession,
     results: List[VerificationResult],
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
 ) -> str:
     """
     Format feedback for escalation when max retries exceeded.
@@ -984,7 +984,7 @@ def format_escalation_feedback(
     Args:
         session: Verification session state
         results: Final verification results
-        problem: The problem that couldn't be resolved
+        problem: The task that couldn't be resolved
 
     Returns:
         Formatted escalation instructions for agent
@@ -997,7 +997,7 @@ def format_escalation_feedback(
         "## ESCALATION REQUIRED - MAX RETRIES EXCEEDED",
         "",
         f"**Reason:** {session.get_escalation_reason()}",
-        f"**Problem:** {problem.problem_type} in {problem.path}",
+        f"**Problem:** {task.task_type} in {task.path}",
         f"**Attempts:** {session.retry_count}",
         "",
         "You have exhausted retry attempts. DO NOT RETRY.",
@@ -1009,7 +1009,7 @@ def format_escalation_feedback(
         "```",
         "",
         "Include in escalation:",
-        f"- Problem: {problem.problem_type} in {problem.path}",
+        f"- Problem: {task.task_type} in {task.path}",
         f"- Failed checks: {', '.join(r.check_name for r in failed)}",
         "- What you tried and why it didn't work",
         "- Options for resolution",
@@ -1054,7 +1054,7 @@ def format_escalation_feedback(
 
 def format_todo_suggestion(
     results: List[VerificationResult],
-    problem: Any,  # DoctorIssue - detected problem
+    problem: Any,  # DoctorIssue - detected task
 ) -> str:
     """
     Format suggestion to create TODOs for deferred work.
@@ -1084,7 +1084,7 @@ def format_todo_suggestion(
     ]
 
     for r in failed:
-        todo_text = f"Complete {r.check_name} for {problem.path}"
+        todo_text = f"Complete {r.check_name} for {task.path}"
         lines.append(f"- TODO: {todo_text}")
 
     lines.extend([

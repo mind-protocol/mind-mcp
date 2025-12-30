@@ -15,7 +15,7 @@ class DoctorIssue:
     """A health issue found by the doctor command.
 
     Fields:
-        issue_type: Category (MONOLITH, UNDOCUMENTED, STALE_SYNC, etc.)
+        task_type: Category (MONOLITH, UNDOCUMENTED, STALE_SYNC, etc.)
         severity: critical, warning, info
         path: Affected file/directory
         message: Human description
@@ -25,7 +25,7 @@ class DoctorIssue:
                   If set, membrane can auto-trigger this protocol to fix the issue.
         id: Graph node ID (auto-generated if not provided)
     """
-    issue_type: str      # MONOLITH, UNDOCUMENTED, STALE_SYNC, etc.
+    task_type: str      # MONOLITH, UNDOCUMENTED, STALE_SYNC, etc.
     severity: str        # critical, warning, info
     path: str            # Affected file/directory
     message: str         # Human description
@@ -37,7 +37,7 @@ class DoctorIssue:
     def generate_id(self, module: str) -> str:
         """Generate graph node ID for this issue.
 
-        Format: narrative_PROBLEM_{module}-{issue_type}_{hash}
+        Format: narrative_PROBLEM_{module}-{task_type}_{hash}
         Example: narrative_PROBLEM_engine-physics-MONOLITH_a7c2
         """
         if self.id:
@@ -50,7 +50,7 @@ class DoctorIssue:
         path_hash = hashlib.sha256(self.path.encode()).hexdigest()[:4]
 
         # Clean issue type
-        clean_type = self.issue_type.upper().replace("_", "-")
+        clean_type = self.task_type.upper().replace("_", "-")
 
         self.id = f"narrative_PROBLEM_{clean_module}-{clean_type}_{path_hash}"
         return self.id
@@ -85,12 +85,59 @@ class IgnoreEntry:
     """A suppressed issue in doctor-ignore.yaml.
 
     Issues can be ignored by:
-    - issue_type + path: Exact match (e.g., MONOLITH on src/big_file.py)
-    - issue_type + path pattern: Glob match (e.g., MAGIC_VALUES on tests/**)
-    - issue_type only: Suppress all issues of that type (rarely used)
+    - task_type + path: Exact match (e.g., MONOLITH on src/big_file.py)
+    - task_type + path pattern: Glob match (e.g., MAGIC_VALUES on tests/**)
+    - task_type only: Suppress all issues of that type (rarely used)
     """
-    issue_type: str       # MONOLITH, HARDCODED_SECRET, etc.
+    task_type: str       # MONOLITH, HARDCODED_SECRET, etc.
     path: str             # File/dir path or glob pattern
     reason: str = ""      # Why this is being ignored (required for audit)
     added_by: str = ""    # Who/what added this ignore
     added_date: str = ""  # When added (YYYY-MM-DD)
+
+
+# =============================================================================
+# DEPTH FILTERS
+# =============================================================================
+
+DEPTH_LINKS = {
+    "NO_DOCS_REF",
+    "BROKEN_IMPL_LINK",
+    "YAML_DRIFT",
+    "UNDOC_IMPL",
+    "ORPHAN_DOCS",
+}
+
+DEPTH_DOCS = DEPTH_LINKS | {
+    "UNDOCUMENTED",
+    "STALE_SYNC",
+    "PLACEHOLDER",
+    "INCOMPLETE_CHAIN",
+    "LARGE_DOC_MODULE",
+    "STALE_IMPL",
+    "DOC_GAPS",
+    "ESCALATION",
+    "DOC_DUPLICATION",
+}
+
+DEPTH_FULL = DEPTH_DOCS | {
+    "MONOLITH",
+    "STUB_IMPL",
+    "INCOMPLETE_IMPL",
+    "MISSING_TESTS",
+    "HARDCODED_SECRET",
+    "HARDCODED_CONFIG",
+    "MAGIC_VALUES",
+    "LONG_PROMPT",
+    "LONG_SQL",
+}
+
+
+def get_depth_types(depth: str) -> set:
+    """Get the set of task types for a given depth level."""
+    if depth == "links":
+        return DEPTH_LINKS
+    elif depth == "docs":
+        return DEPTH_DOCS
+    else:
+        return DEPTH_FULL

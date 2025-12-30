@@ -51,8 +51,8 @@ load_dotenv(project_root / ".env")
 from runtime.connectome import ConnectomeRunner
 from runtime.agents import (
     AgentGraph,
-    PROBLEM_TO_POSTURE,
-    POSTURE_TO_AGENT_ID,
+    TASK_TO_AGENT,
+    NAME_TO_ACTOR_ID,
     run_work_agent,
     run_for_task,
     build_agent_prompt,
@@ -60,7 +60,6 @@ from runtime.agents import (
 )
 from runtime.doctor import run_doctor, DoctorIssue
 from runtime.doctor_types import DoctorConfig
-from runtime.work_core import run_work_agent_with_verification_async
 from runtime.work_instructions import get_problem_instructions
 from runtime.capability_integration import (
     init_capability_manager,
@@ -270,7 +269,7 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "agent_list",
+                    "name": "ACTOR_list",
                     "description": "List all work agents and their status (ready/running).",
                     "inputSchema": {
                         "type": "object",
@@ -299,16 +298,16 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "agent_run",
+                    "name": "AGENT_run",
                     "description": "Run a work agent to fix a problem OR work on a task (narrative node).",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
                             "task_id": {
                                 "type": "string",
-                                "description": "Narrative node ID for the task (e.g., 'task_fix_physics_sync'). If provided, problem_type/path are ignored."
+                                "description": "Narrative node ID for the task (e.g., 'task_fix_physics_sync'). If provided, task_type/path are ignored."
                             },
-                            "problem_type": {
+                            "task_type": {
                                 "type": "string",
                                 "description": "Problem type (e.g., STALE_SYNC, UNDOCUMENTED). Used if task_id not provided."
                             },
@@ -316,7 +315,7 @@ class MindServer:
                                 "type": "string",
                                 "description": "Path of the problem to fix. Used if task_id not provided."
                             },
-                            "agent_id": {
+                            "actor_id": {
                                 "type": "string",
                                 "description": "Optional: specific agent to use (e.g., agent_witness). Auto-selected if not provided."
                             },
@@ -329,12 +328,12 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "agent_status",
+                    "name": "ACTOR_status",
                     "description": "Get or set the status of a specific agent.",
                     "inputSchema": {
                         "type": "object",
                         "properties": {
-                            "agent_id": {
+                            "actor_id": {
                                 "type": "string",
                                 "description": "Agent ID (e.g., agent_witness)"
                             },
@@ -344,7 +343,7 @@ class MindServer:
                                 "description": "Optional: set the agent status"
                             }
                         },
-                        "required": ["agent_id"]
+                        "required": ["actor_id"]
                     }
                 },
                 {
@@ -497,7 +496,7 @@ class MindServer:
                     }
                 },
                 {
-                    "name": "agent_heartbeat",
+                    "name": "ACTOR_heartbeat",
                     "description": "Update agent heartbeat. Call every 60s while working on a task.",
                     "inputSchema": {
                         "type": "object",
@@ -532,13 +531,13 @@ class MindServer:
             return self._tool_list(arguments)
         elif tool_name == "doctor_check":
             return self._tool_doctor_check(arguments)
-        elif tool_name == "agent_list":
+        elif tool_name == "ACTOR_list":
             return self._tool_agent_list(arguments)
         elif tool_name == "task_list":
             return self._tool_task_list(arguments)
-        elif tool_name == "agent_run":
+        elif tool_name == "AGENT_run":
             return self._tool_agent_run(arguments)
-        elif tool_name == "agent_status":
+        elif tool_name == "ACTOR_status":
             return self._tool_agent_status(arguments)
         elif tool_name == "graph_query":
             return self._tool_graph_query(arguments)
@@ -558,7 +557,7 @@ class MindServer:
             return self._tool_task_complete(arguments)
         elif tool_name == "task_fail":
             return self._tool_task_fail(arguments)
-        elif tool_name == "agent_heartbeat":
+        elif tool_name == "ACTOR_heartbeat":
             return self._tool_agent_heartbeat(arguments)
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
@@ -647,9 +646,9 @@ class MindServer:
                 issues = [i for i in issues if path_filter in i.path]
 
             # Filter by depth
-            from runtime.work_core import get_depth_types
+            from runtime.doctor_types import get_depth_types
             allowed_types = get_depth_types(depth)
-            issues = [i for i in issues if i.problem_type in allowed_types]
+            issues = [i for i in issues if i.task_type in allowed_types]
 
             if not issues:
                 output = "\n".join(schema_lines) + "\n\nNo doc issues found."
@@ -661,13 +660,13 @@ class MindServer:
             lines = schema_lines + ["", f"Found {len(issues)} doc issues:\n"]
             for idx, issue in enumerate(issues):
                 # Determine assigned agent
-                posture = PROBLEM_TO_POSTURE.get(issue.problem_type, "fixer")
-                agent_id = f"agent_{posture}"
-                agent_status = "ready" if agent_id in available_agents else "busy"
+                name = TASK_TO_AGENT.get(issue.task_type, "fixer")
+                actor_id = f"ACTOR_{name}"
+                agent_status = "ready" if actor_id in available_agents else "busy"
 
-                lines.append(f"{idx+1}. [{issue.severity.upper()}] {issue.problem_type}")
+                lines.append(f"{idx+1}. [{issue.severity.upper()}] {issue.task_type}")
                 lines.append(f"   Path: {issue.path}")
-                lines.append(f"   Agent: {agent_id} ({agent_status})")
+                lines.append(f"   Agent: {actor_id} ({agent_status})")
                 lines.append(f"   Message: {issue.message[:80]}...")
                 lines.append("")
 
@@ -685,19 +684,19 @@ class MindServer:
         lines = ["Work Agents:\n"]
         for agent in agents:
             status_icon = "🟢" if agent.status == "ready" else "🔴"
-            lines.append(f"  {status_icon} {agent.id} ({agent.posture})")
+            lines.append(f"  {status_icon} {agent.id} ({agent.name})")
             lines.append(f"     Status: {agent.status}")
             lines.append(f"     Energy: {agent.energy:.2f}")
             lines.append("")
 
-        # Show posture mappings
+        # Show name mappings
         lines.append("\nPosture → Problem Types:")
-        posture_problems: Dict[str, List[str]] = {}
-        for problem_type, posture in PROBLEM_TO_POSTURE.items():
-            posture_problems.setdefault(posture, []).append(problem_type)
+        name_problems: Dict[str, List[str]] = {}
+        for task_type, name in TASK_TO_AGENT.items():
+            name_problems.setdefault(name, []).append(task_type)
 
-        for posture, problems in sorted(posture_problems.items()):
-            lines.append(f"  {posture}: {', '.join(problems[:3])}{'...' if len(problems) > 3 else ''}")
+        for name, problems in sorted(name_problems.items()):
+            lines.append(f"  {name}: {', '.join(problems[:3])}{'...' if len(problems) > 3 else ''}")
 
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
@@ -765,9 +764,9 @@ class MindServer:
     def _tool_agent_run(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Run a work agent to fix a problem or work on a task. Actually executes the agent."""
         task_id = args.get("task_id")
-        problem_type = args.get("problem_type")
+        task_type = args.get("task_type")
         path = args.get("path")
-        agent_id = args.get("agent_id")
+        actor_id = args.get("actor_id")
         provider = args.get("provider", "claude")
 
         task_content = None
@@ -785,7 +784,7 @@ class MindServer:
                     OPTIONAL MATCH (p:Narrative {type: 'problem'})-[:relates]->(t)
                     RETURN t.id, t.name, t.content, t.type, t.module, t.skill, t.task_type,
                            collect(DISTINCT {id: o.id, name: o.name, type: o.objective_type}) as objectives,
-                           collect(DISTINCT {id: p.id, type: p.problem_type, path: p.path, message: p.message, severity: p.severity}) as problems
+                           collect(DISTINCT {id: p.id, type: p.task_type, path: p.path, message: p.message, severity: p.severity}) as problems
                     """
                     result = self.graph_queries._query(cypher, {"task_id": task_id})
                     if result and len(result) > 0:
@@ -799,12 +798,12 @@ class MindServer:
                         objectives = row[7] if len(row) > 7 else []
                         problems = row[8] if len(row) > 8 else []
 
-                        # Derive problem_type from first problem or task_type
-                        if not problem_type and problems:
+                        # Derive task_type from first problem or task_type
+                        if not task_type and problems:
                             first_problem = problems[0] if isinstance(problems[0], dict) else {}
-                            problem_type = first_problem.get("type", "TASK")
-                        elif not problem_type:
-                            problem_type = task_subtype.upper() if task_subtype else "TASK"
+                            task_type = first_problem.get("type", "TASK")
+                        elif not task_type:
+                            task_type = task_subtype.upper() if task_subtype else "TASK"
 
                         # Build rich prompt with full context
                         prompt_lines = [
@@ -845,20 +844,20 @@ class MindServer:
                     return {"content": [{"type": "text", "text": f"Error fetching task: {e}"}]}
             else:
                 return {"content": [{"type": "text", "text": "Error: No graph connection for task lookup"}]}
-        elif not problem_type or not path:
-            return {"content": [{"type": "text", "text": "Error: Either task_id OR (problem_type + path) required"}]}
+        elif not task_type or not path:
+            return {"content": [{"type": "text", "text": "Error: Either task_id OR (task_type + path) required"}]}
 
         # Select agent if not specified
-        if not agent_id:
-            posture = PROBLEM_TO_POSTURE.get(problem_type, "fixer") if problem_type else "fixer"
-            agent_id = f"agent_{posture}"
+        if not actor_id:
+            name = TASK_TO_AGENT.get(task_type, "fixer") if task_type else "fixer"
+            actor_id = f"ACTOR_{name}"
 
         # Check if agent is available
         agents = {a.id: a for a in self.agent_graph.get_all_agents()}
-        if agent_id in agents and agents[agent_id].status == "running":
-            return {"content": [{"type": "text", "text": f"Error: {agent_id} is already running. Choose another agent or wait."}]}
+        if actor_id in agents and agents[actor_id].status == "running":
+            return {"content": [{"type": "text", "text": f"Error: {actor_id} is already running. Choose another agent or wait."}]}
 
-        posture = agent_id.replace("agent_", "")
+        name = actor_id.replace("ACTOR_", "")
 
         # Track created moments for output
         moments_created = []
@@ -876,68 +875,68 @@ class MindServer:
 
         # Link space to agent and task
         if space_id:
-            self.agent_graph.set_agent_space(agent_id, space_id)
+            self.agent_graph.set_agent_space(actor_id, space_id)
             if task_id:
                 self.agent_graph.link_task_to_space(task_id, space_id)
 
         # Upsert problem/task narratives before linking
         problem_ids = None
-        if problem_type and path:
+        if task_type and path:
             # Create/update problem narrative in graph
             problem_narrative_id = self.agent_graph.upsert_problem_narrative(
-                problem_type=problem_type,
+                task_type=task_type,
                 path=path,
-                message=f"Problem detected: {problem_type} at {path}",
+                message=f"Problem detected: {task_type} at {path}",
                 severity="warning",
             )
             if problem_narrative_id:
                 problem_ids = [problem_narrative_id]
                 # Create moment for problem detection
                 problem_moment = self.agent_graph.create_moment(
-                    agent_id=agent_id,
+                    actor_id=actor_id,
                     moment_type="problem_detected",
-                    prose=f"Detected {problem_type} at {path}",
+                    prose=f"Detected {task_type} at {path}",
                     about_ids=[problem_narrative_id],
                     space_id=space_id,
-                    extra_props={"problem_type": problem_type, "path": path},
+                    extra_props={"task_type": task_type, "path": path},
                 )
                 if problem_moment:
-                    moments_created.append(("problem_detected", problem_moment, f"Detected {problem_type} at {path}"))
+                    moments_created.append(("problem_detected", problem_moment, f"Detected {task_type} at {path}"))
 
             # Build prompt for problem-based run
             if not prompt:
                 prompt = f"""Fix the problem:
-Problem Type: {problem_type}
+Problem Type: {task_type}
 Path: {path}
 
 Please investigate and fix this problem. Follow the project's coding standards and documentation patterns."""
 
         # Use task_id for assignment, or create from problem
         assignment_task_id = task_id
-        if not assignment_task_id and problem_type:
+        if not assignment_task_id and task_type:
             # Create task narrative for this fix
             assignment_task_id = self.agent_graph.upsert_task_narrative(
-                task_type=f"FIX_{problem_type}",
-                content=f"Fix {problem_type} at {path}",
-                name=f"Fix {problem_type}",
+                task_type=f"FIX_{task_type}",
+                content=f"Fix {task_type} at {path}",
+                name=f"Fix {task_type}",
             )
             if assignment_task_id:
                 # Create moment for task creation
                 task_moment = self.agent_graph.create_moment(
-                    agent_id=agent_id,
+                    actor_id=actor_id,
                     moment_type="task_created",
-                    prose=f"Created task to fix {problem_type}",
+                    prose=f"Created task to fix {task_type}",
                     about_ids=[assignment_task_id] + (problem_ids or []),
                     space_id=space_id,
-                    extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{problem_type}"},
+                    extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{task_type}"},
                 )
                 if task_moment:
-                    moments_created.append(("task_created", task_moment, f"Created task: Fix {problem_type}"))
+                    moments_created.append(("task_created", task_moment, f"Created task: Fix {task_type}"))
 
         # Actually run and run the agent
         try:
             coro = run_work_agent(
-                agent_id=agent_id,
+                actor_id=actor_id,
                 prompt=prompt,
                 target_dir=self.target_dir,
                 agent_provider=provider,
@@ -961,8 +960,8 @@ Please investigate and fix this problem. Follow the project's coding standards a
                 "# Agent Execution Complete",
                 "",
                 "## Agent",
-                f"- **ID:** {agent_id}",
-                f"- **Posture:** {posture} ({get_learnings_content.__doc__ or 'work agent'})",
+                f"- **ID:** {actor_id}",
+                f"- **Posture:** {name} ({get_learnings_content.__doc__ or 'work agent'})",
                 f"- **Provider:** {provider}",
                 f"- **Success:** {run_result.success}",
                 f"- **Duration:** {run_result.duration_seconds:.1f}s",
@@ -975,22 +974,22 @@ Please investigate and fix this problem. Follow the project's coding standards a
                     "## Task",
                     f"- **ID:** {task_id or assignment_task_id}",
                 ])
-                if not task_id and problem_type:
+                if not task_id and task_type:
                     lines.extend([
-                        f"- **Type:** FIX_{problem_type}",
-                        f"- **Name:** Fix {problem_type}",
-                        f"- **Content:** Fix {problem_type} at {path}",
+                        f"- **Type:** FIX_{task_type}",
+                        f"- **Name:** Fix {task_type}",
+                        f"- **Content:** Fix {task_type} at {path}",
                     ])
 
             # Show moment chain (chronological)
             if run_result.assignment_moment_id:
-                moments_created.append(("agent_assignment", run_result.assignment_moment_id, f"Agent {agent_id} assigned to task"))
+                moments_created.append(("ACTOR_assignment", run_result.assignment_moment_id, f"Agent {actor_id} assigned to task"))
 
             if moments_created:
                 lines.extend([
                     "",
                     "## Moment Chain",
-                    f"*Actor: {agent_id}*",
+                    f"*Actor: {actor_id}*",
                 ])
                 if space_id:
                     lines.append(f"*Space: {space_id}*")
@@ -1042,28 +1041,28 @@ Please investigate and fix this problem. Follow the project's coding standards a
 
     def _tool_agent_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Get or set agent status."""
-        agent_id = args.get("agent_id")
+        actor_id = args.get("actor_id")
         set_status = args.get("set_status")
 
-        if not agent_id:
-            return {"content": [{"type": "text", "text": "Error: agent_id is required"}]}
+        if not actor_id:
+            return {"content": [{"type": "text", "text": "Error: actor_id is required"}]}
 
         if set_status:
             if set_status == "running":
-                self.agent_graph.set_agent_running(agent_id)
+                self.agent_graph.set_agent_running(actor_id)
             else:
-                self.agent_graph.set_agent_ready(agent_id)
-            return {"content": [{"type": "text", "text": f"Agent {agent_id} status set to {set_status}"}]}
+                self.agent_graph.set_agent_ready(actor_id)
+            return {"content": [{"type": "text", "text": f"Agent {actor_id} status set to {set_status}"}]}
 
         # Get current status
         agents = {a.id: a for a in self.agent_graph.get_all_agents()}
-        if agent_id not in agents:
-            return {"content": [{"type": "text", "text": f"Agent {agent_id} not found"}]}
+        if actor_id not in agents:
+            return {"content": [{"type": "text", "text": f"Agent {actor_id} not found"}]}
 
-        agent = agents[agent_id]
+        agent = agents[actor_id]
         lines = [
             f"Agent: {agent.id}",
-            f"Posture: {agent.posture}",
+            f"Posture: {agent.name}",
             f"Status: {agent.status}",
             f"Energy: {agent.energy:.2f}",
             f"Weight: {agent.weight:.2f}",
@@ -1611,13 +1610,13 @@ Please investigate and fix this problem. Follow the project's coding standards a
             from datetime import datetime
             timestamp = datetime.now().isoformat()
             result = self.graph_ops._query(
-                "MATCH (n {id: $id}) WHERE n.status = 'claimed' "
+                "MATCH (n {id: $id}) WHERE n.status IN ['claimed', 'running'] "
                 "SET n.status = 'completed', n.completed_at = $ts "
                 "RETURN n.id",
                 {"id": task_id, "ts": timestamp}
             )
             if not result or not result[0]:
-                return {"content": [{"type": "text", "text": f"Failed to complete: task not found or not claimed"}]}
+                return {"content": [{"type": "text", "text": f"Failed to complete: task not found or not active"}]}
 
             # Release throttler slot
             throttler = get_throttler()
@@ -1646,7 +1645,7 @@ Please investigate and fix this problem. Follow the project's coding standards a
             from datetime import datetime
             timestamp = datetime.now().isoformat()
             result = self.graph_ops._query(
-                "MATCH (n {id: $id}) WHERE n.status IN ['pending', 'claimed'] "
+                "MATCH (n {id: $id}) WHERE n.status IN ['pending', 'claimed', 'running'] "
                 "SET n.status = 'failed', n.failed_at = $ts, n.failure_reason = $reason "
                 "RETURN n.id",
                 {"id": task_id, "ts": timestamp, "reason": reason}

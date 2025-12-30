@@ -716,22 +716,26 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
         area_space_id = f"space:mind/{area_name}"
         ensure_space(area_space_id, area_name, "area", "space:mind")
 
-        # Special handling for actors (flat ACTOR_*.md files)
+        # Special handling for actors (folder structure: actors/{name}/CLAUDE.md)
         if area_name == "actors":
-            for file_path in area_dir.iterdir():
-                if not file_path.is_file() or file_path.suffix != ".md":
+            for actor_dir in area_dir.iterdir():
+                if not actor_dir.is_dir():
                     continue
-                if not file_path.stem.startswith("ACTOR_"):
+
+                actor_name = actor_dir.name.lower()
+                actor_id = f"AGENT_{actor_name.capitalize()}"
+
+                # Find the prompt file (prefer CLAUDE.md, fallback to AGENTS.md)
+                prompt_file = actor_dir / "CLAUDE.md"
+                if not prompt_file.exists():
+                    prompt_file = actor_dir / "AGENTS.md"
+                if not prompt_file.exists():
                     continue
 
                 try:
-                    # Extract actor name from ACTOR_Witness.md -> witness
-                    actor_name = file_path.stem.replace("ACTOR_", "").lower()
-                    actor_id = f"actor:agent_{actor_name}"
-
-                    rel_path = file_path.relative_to(target_dir)
+                    rel_path = prompt_file.relative_to(target_dir)
                     template_id = f"narrative:{rel_path}"
-                    content = file_path.read_text(encoding='utf-8', errors='ignore')
+                    content = prompt_file.read_text(encoding='utf-8', errors='ignore')
 
                     # Extract synthesis from first # heading
                     synthesis = actor_name
@@ -755,7 +759,7 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                         """,
                         {
                             "id": template_id,
-                            "name": file_path.stem,
+                            "name": actor_name,
                             "synthesis": synthesis,
                             "content": escaped_content,
                         }
@@ -816,7 +820,7 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                     stats["links_created"] += 1
 
                 except Exception as e:
-                    logger.warning(f"Error ingesting actor {file_path}: {e}")
+                    logger.warning(f"Error ingesting actor {actor_dir}: {e}")
                     stats["errors"] += 1
 
         # Special handling for capabilities (full doc chain + tasks/skills/procedures)

@@ -64,7 +64,7 @@ SPEC:  specs/verification.yaml
 ### UNDOCUMENTED
 
 ```yaml
-issue_type: UNDOCUMENTED
+task_type: UNDOCUMENTED
 membrane_protocols:
   - define_space
   - update_sync
@@ -104,7 +104,7 @@ feedback_template: |
 ### STALE_SYNC
 
 ```yaml
-issue_type: STALE_SYNC
+task_type: STALE_SYNC
 membrane_protocols:
   - update_sync
 checks:
@@ -142,7 +142,7 @@ feedback_template: |
 ### INCOMPLETE_CHAIN
 
 ```yaml
-issue_type: INCOMPLETE_CHAIN
+task_type: INCOMPLETE_CHAIN
 membrane_protocols:
   - create_doc_chain
 checks:
@@ -181,7 +181,7 @@ feedback_template: |
 ### NO_DOCS_REF
 
 ```yaml
-issue_type: NO_DOCS_REF
+task_type: NO_DOCS_REF
 membrane_protocols:
   - add_implementation
 checks:
@@ -219,7 +219,7 @@ feedback_template: |
 ### STUB_IMPL
 
 ```yaml
-issue_type: STUB_IMPL
+task_type: STUB_IMPL
 membrane_protocols:
   - add_implementation
 checks:
@@ -268,7 +268,7 @@ feedback_template: |
 ### INCOMPLETE_IMPL
 
 ```yaml
-issue_type: INCOMPLETE_IMPL
+task_type: INCOMPLETE_IMPL
 membrane_protocols:
   - add_implementation
 checks:
@@ -306,7 +306,7 @@ feedback_template: |
 ### MONOLITH
 
 ```yaml
-issue_type: MONOLITH
+task_type: MONOLITH
 membrane_protocols:
   - add_cluster
 checks:
@@ -357,7 +357,7 @@ feedback_template: |
 ### MISSING_TESTS
 
 ```yaml
-issue_type: MISSING_TESTS
+task_type: MISSING_TESTS
 membrane_protocols:
   - add_health_coverage
 checks:
@@ -403,7 +403,7 @@ feedback_template: |
 ### ESCALATION
 
 ```yaml
-issue_type: ESCALATION
+task_type: ESCALATION
 membrane_protocols:
   - capture_decision
 checks:
@@ -435,7 +435,7 @@ feedback_template: |
 ### YAML_DRIFT
 
 ```yaml
-issue_type: YAML_DRIFT
+task_type: YAML_DRIFT
 membrane_protocols:
   - update_sync
 checks:
@@ -460,7 +460,7 @@ feedback_template: |
 ### PLACEHOLDER
 
 ```yaml
-issue_type: PLACEHOLDER
+task_type: PLACEHOLDER
 membrane_protocols:
   - update_sync
 checks:
@@ -483,7 +483,7 @@ feedback_template: |
 ### DOC_GAPS
 
 ```yaml
-issue_type: DOC_GAPS
+task_type: DOC_GAPS
 membrane_protocols:
   - update_sync
 checks:
@@ -502,7 +502,7 @@ feedback_template: |
 ### HARDCODED_SECRET
 
 ```yaml
-issue_type: HARDCODED_SECRET
+task_type: HARDCODED_SECRET
 membrane_protocols: []  # No graph operation needed
 checks:
   - name: no_secrets_in_code
@@ -532,7 +532,7 @@ feedback_template: |
 ### NEW_UNDOC_CODE
 
 ```yaml
-issue_type: NEW_UNDOC_CODE
+task_type: NEW_UNDOC_CODE
 membrane_protocols:
   - add_implementation
 checks:

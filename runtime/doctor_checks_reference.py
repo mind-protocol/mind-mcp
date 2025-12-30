@@ -39,7 +39,7 @@ def doctor_check_no_docs_ref(target_dir: Path, config: DoctorConfig) -> List[Doc
                 rel_path = str(source_file)
 
             issues.append(DoctorIssue(
-                issue_type="NO_DOCS_REF",
+                task_type="NO_DOCS_REF",
                 severity="info",
                 path=rel_path,
                 message="No DOCS: reference in file header",
@@ -120,7 +120,7 @@ def doctor_check_broken_impl_links(target_dir: Path, config: DoctorConfig) -> Li
             rel_path = str(impl_file)
 
         issues.append(DoctorIssue(
-            issue_type="BROKEN_IMPL_LINK",
+            task_type="BROKEN_IMPL_LINK",
             severity="critical",
             path=rel_path,
             message=f"References {len(missing_files)} non-existent file(s)",

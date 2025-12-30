@@ -44,7 +44,7 @@ steps:
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
       # QUESTION: Issue Type
       # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-      - name: issue_type
+      - name: task_type
         ask: "What type of issue? (bug / stuck_module / escalation / decision_needed / unclear_behavior)"
         why: "Guides the investigative approach and categorization."
         expects:
@@ -114,7 +114,7 @@ steps:
     context: |
       {contextual_knowledge.domain}
 
-      Issue: {issue_type} - {issue_description}
+      Issue: {task_type} - {issue_description}
       Affected space: {affected_space}
       Open escalations: {open_escalations | list}
       Recent activity: {recent_activity | summarize}
@@ -252,7 +252,7 @@ steps:
       - id: "escalation_{affected_space}_{timestamp}"
         node_type: escalation
         status: open
-        issue_type: "{issue_type}"
+        task_type: "{task_type}"
         description: "{issue_description}"
         evidence: "{evidence_gathered}"
         root_cause: "{root_cause}"
@@ -275,7 +275,7 @@ steps:
         #   WHY: Tracks whether blocker is resolved
         #   OPTIONS: open, in_review, resolved, dismissed
         #
-        # issue_type: "{issue_type}"
+        # task_type: "{task_type}"
         #   WHAT: Category of the blocking issue
         #   WHY: Helps route escalations to appropriate handlers
         #   OPTIONS: bug, stuck_module, escalation, decision_needed, unclear_behavior
@@ -308,7 +308,7 @@ steps:
         prose: |
           ## Investigation: {affected_space}
 
-          **Issue:** {issue_type} - {issue_description}
+          **Issue:** {task_type} - {issue_description}
 
           **Evidence:**
           {evidence_gathered}
@@ -479,7 +479,7 @@ steps:
         prose: |
           ## Investigation: {affected_space}
 
-          **Issue:** {issue_type} - {issue_description}
+          **Issue:** {task_type} - {issue_description}
 
           **Evidence:**
           {evidence_gathered}
@@ -590,7 +590,7 @@ steps:
         prose: |
           ## Investigation: {affected_space}
 
-          **Issue:** {issue_type} - {issue_description}
+          **Issue:** {task_type} - {issue_description}
 
           **Evidence:**
           {evidence_gathered}
@@ -688,7 +688,7 @@ output:
   cluster:
     nodes: [moment_investigate, escalation (conditional), decision (conditional)]
     links: [about, expresses, references, triggers, proposes]
-  summary: "Investigated {issue_type} in {affected_space}: {outcome_type}"
+  summary: "Investigated {task_type} in {affected_space}: {outcome_type}"
   returns:
     outcome_type: "{outcome_type}"
     recommendation: "{recommendation}"

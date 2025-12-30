@@ -301,7 +301,7 @@ def verify_completion(
     membrane_client: MembraneClient,
 ) -> List[VerificationResult]:
     """Run all verification checks for an issue type."""
-    checks = VERIFICATION_CHECKS[issue.issue_type]
+    checks = VERIFICATION_CHECKS[issue.task_type]
     results = []
 
     for check in checks:

@@ -227,23 +227,23 @@ name: fill_gaps
 steps:
   - id: identify_problem
     action: read_task
-    outputs: { problem_type, target }
+    outputs: { task_type, target }
 
   - id: fill_gap
-    condition: "problem_type == 'DOC_GAPS'"
+    condition: "task_type == 'DOC_GAPS'"
     action: fill_gap_content
     params:
       doc_path: "{target}"
 
   - id: dedupe
-    condition: "problem_type == 'DOC_DUPLICATION'"
+    condition: "task_type == 'DOC_DUPLICATION'"
     action: consolidate_content
     params:
       primary: "{target}"
       secondary: "{duplicate}"
 
   - id: split
-    condition: "problem_type == 'LARGE_DOC_MODULE'"
+    condition: "task_type == 'LARGE_DOC_MODULE'"
     action: split_doc
     params:
       doc_path: "{target}"

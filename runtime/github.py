@@ -21,7 +21,7 @@ class GitHubIssue:
     number: int
     url: str
     title: str
-    issue_type: str
+    task_type: str
     path: str
 
 
@@ -91,23 +91,23 @@ def create_issue_title(issue: DoctorIssue) -> str:
         "LARGE_DOC_MODULE": "Reduce",
         "YAML_DRIFT": "Fix",
     }
-    prefix = type_labels.get(issue.issue_type, issue.issue_type)
+    prefix = type_labels.get(issue.task_type, issue.task_type)
     # Truncate path if too long
     path = issue.path
     if len(path) > 50:
         path = "..." + path[-47:]
-    return f"[{issue.issue_type}] {prefix}: {path}"
+    return f"[{issue.task_type}] {prefix}: {path}"
 
 
 def create_issue_body(issue: DoctorIssue) -> str:
     """Generate issue body with details."""
     from .doctor import get_issue_explanation, get_issue_guidance
 
-    explanation = get_issue_explanation(issue.issue_type)
-    guidance = get_issue_guidance(issue.issue_type)
+    explanation = get_issue_explanation(issue.task_type)
+    guidance = get_issue_guidance(issue.task_type)
 
     lines = []
-    lines.append(f"## {issue.issue_type}")
+    lines.append(f"## {issue.task_type}")
     lines.append("")
     lines.append(f"**File:** `{issue.path}`")
     lines.append(f"**Severity:** {issue.severity}")
@@ -172,7 +172,7 @@ def create_github_issue(
                 number=number,
                 url=url,
                 title=title,
-                issue_type=issue.issue_type,
+                task_type=issue.task_type,
                 path=issue.path,
             )
     except Exception as e:
@@ -201,7 +201,7 @@ def create_issues_for_findings(
     issues_to_create = issues[:max_issues] if max_issues else issues
 
     for i, issue in enumerate(issues_to_create, 1):
-        print(f"  [{i}/{len(issues_to_create)}] Creating issue for {issue.issue_type}: {issue.path[:40]}...")
+        print(f"  [{i}/{len(issues_to_create)}] Creating issue for {issue.task_type}: {issue.path[:40]}...")
         gh_issue = create_github_issue(issue, target_dir, labels)
         if gh_issue:
             created.append(gh_issue)

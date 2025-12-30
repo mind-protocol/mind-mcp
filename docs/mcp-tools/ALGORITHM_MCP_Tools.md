@@ -199,7 +199,7 @@ FUNCTION doctor_check(depth, path):
 ## agent_spawn Algorithm
 
 ```
-FUNCTION agent_spawn(task_id, issue_type, path, agent_id, provider):
+FUNCTION agent_spawn(task_id, task_type, path, agent_id, provider):
   # Determine agent
   IF task_id:
     task = graph_query(["Find task " + task_id])
@@ -207,9 +207,9 @@ FUNCTION agent_spawn(task_id, issue_type, path, agent_id, provider):
       RETURN error("Task not found")
     agent = select_agent_for_task(task)
   ELSE:
-    IF NOT issue_type OR NOT path:
-      RETURN error("Either task_id or (issue_type + path) required")
-    agent = agent_id OR posture_mapping[issue_type]
+    IF NOT task_type OR NOT path:
+      RETURN error("Either task_id or (task_type + path) required")
+    agent = agent_id OR posture_mapping[task_type]
 
   # Check availability
   IF agent.status == "running":
@@ -219,7 +219,7 @@ FUNCTION agent_spawn(task_id, issue_type, path, agent_id, provider):
   set_agent_status(agent.id, "running")
 
   # Execute
-  result = execute_agent(agent, task OR {issue_type, path}, provider)
+  result = execute_agent(agent, task OR {task_type, path}, provider)
 
   # Set ready
   set_agent_status(agent.id, "ready")

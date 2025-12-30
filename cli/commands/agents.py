@@ -36,7 +36,7 @@ class C:
 @dataclass
 class AgentInfo:
     """Information about a running agent."""
-    agent_id: str
+    actor_id: str
     name: str
     status: str  # ready, running, paused, stopped
     current_task: Optional[str] = None
@@ -83,16 +83,16 @@ def _get_agents_from_graph(target_dir: Path) -> List[AgentInfo]:
         # Query for actor nodes of type 'agent'
         result = graph.query("""
             MATCH (a:Actor)
-            WHERE a.type = 'agent' OR a.id STARTS WITH 'agent_'
+            WHERE a.type = 'agent' OR a.id STARTS WITH 'ACTOR_'
             RETURN a.id, a.name, a.status, a.provider, a.current_task
             ORDER BY a.name
         """)
 
         for row in result:
-            agent_id, name, status, provider, current_task = row
+            actor_id, name, status, provider, current_task = row
             agents.append(AgentInfo(
-                agent_id=agent_id or "",
-                name=name or agent_id or "unknown",
+                actor_id=actor_id or "",
+                name=name or actor_id or "unknown",
                 status=status or "ready",
                 provider=provider or "unknown",
                 current_task=current_task,
@@ -115,10 +115,10 @@ def _get_agents_from_runtime() -> List[AgentInfo]:
     try:
         registry = runtime["registry"]()
         if registry:
-            for agent_id, agent_state in registry.get_all_agents().items():
+            for actor_id, agent_state in registry.get_all_agents().items():
                 agents.append(AgentInfo(
-                    agent_id=agent_id,
-                    name=agent_state.get("name", agent_id),
+                    actor_id=actor_id,
+                    name=agent_state.get("name", actor_id),
                     status=agent_state.get("status", "unknown"),
                     current_task=agent_state.get("current_task"),
                     task_started=agent_state.get("task_started"),
@@ -176,16 +176,16 @@ def list_agents(target_dir: Path, format_output: str = "text") -> int:
     graph_agents = _get_agents_from_graph(target_dir)
 
     # Merge: runtime agents take precedence
-    runtime_ids = {a.agent_id for a in agents}
+    runtime_ids = {a.actor_id for a in agents}
     for ga in graph_agents:
-        if ga.agent_id not in runtime_ids:
+        if ga.actor_id not in runtime_ids:
             agents.append(ga)
 
     if format_output == "json":
         output = []
         for a in agents:
             output.append({
-                "agent_id": a.agent_id,
+                "actor_id": a.actor_id,
                 "name": a.name,
                 "status": a.status,
                 "provider": a.provider,
@@ -267,7 +267,7 @@ def list_agents(target_dir: Path, format_output: str = "text") -> int:
     return 0
 
 
-def pause_agent(agent_id: str) -> int:
+def pause_agent(actor_id: str) -> int:
     """Pause an agent (keeps state)."""
     runtime = _get_capability_runtime()
     if not runtime:
@@ -277,8 +277,8 @@ def pause_agent(agent_id: str) -> int:
     try:
         registry = runtime["registry"]()
         if registry and hasattr(registry, 'pause_agent'):
-            registry.pause_agent(agent_id)
-            print(f"{C.GREEN}Agent {agent_id} paused{C.RESET}")
+            registry.pause_agent(actor_id)
+            print(f"{C.GREEN}Agent {actor_id} paused{C.RESET}")
             return 0
     except Exception as e:
         print(f"{C.RED}Failed to pause agent: {e}{C.RESET}")
@@ -288,7 +288,7 @@ def pause_agent(agent_id: str) -> int:
     return 1
 
 
-def stop_agent(agent_id: str) -> int:
+def stop_agent(actor_id: str) -> int:
     """Stop an agent gracefully."""
     runtime = _get_capability_runtime()
     if not runtime:
@@ -298,8 +298,8 @@ def stop_agent(agent_id: str) -> int:
     try:
         registry = runtime["registry"]()
         if registry and hasattr(registry, 'stop_agent'):
-            registry.stop_agent(agent_id)
-            print(f"{C.GREEN}Agent {agent_id} stopped{C.RESET}")
+            registry.stop_agent(actor_id)
+            print(f"{C.GREEN}Agent {actor_id} stopped{C.RESET}")
             return 0
     except Exception as e:
         print(f"{C.RED}Failed to stop agent: {e}{C.RESET}")
@@ -309,7 +309,7 @@ def stop_agent(agent_id: str) -> int:
     return 1
 
 
-def kill_agent(agent_id: str) -> int:
+def kill_agent(actor_id: str) -> int:
     """Force kill an agent."""
     runtime = _get_capability_runtime()
     if not runtime:
@@ -319,8 +319,8 @@ def kill_agent(agent_id: str) -> int:
     try:
         registry = runtime["registry"]()
         if registry and hasattr(registry, 'kill_agent'):
-            registry.kill_agent(agent_id)
-            print(f"{C.BRIGHT_RED}Agent {agent_id} killed{C.RESET}")
+            registry.kill_agent(actor_id)
+            print(f"{C.BRIGHT_RED}Agent {actor_id} killed{C.RESET}")
             return 0
     except Exception as e:
         print(f"{C.RED}Failed to kill agent: {e}{C.RESET}")
@@ -330,7 +330,7 @@ def kill_agent(agent_id: str) -> int:
     return 1
 
 
-def enable_agent(agent_id: str) -> int:
+def enable_agent(actor_id: str) -> int:
     """Enable a paused agent."""
     runtime = _get_capability_runtime()
     if not runtime:
@@ -340,8 +340,8 @@ def enable_agent(agent_id: str) -> int:
     try:
         registry = runtime["registry"]()
         if registry and hasattr(registry, 'enable_agent'):
-            registry.enable_agent(agent_id)
-            print(f"{C.GREEN}Agent {agent_id} enabled{C.RESET}")
+            registry.enable_agent(actor_id)
+            print(f"{C.GREEN}Agent {actor_id} enabled{C.RESET}")
             return 0
     except Exception as e:
         print(f"{C.RED}Failed to enable agent: {e}{C.RESET}")
@@ -354,7 +354,7 @@ def enable_agent(agent_id: str) -> int:
 def agents_command(
     target_dir: Path,
     action: str,
-    agent_id: Optional[str] = None,
+    actor_id: Optional[str] = None,
     format_output: str = "text",
 ) -> int:
     """Main entry point for agents command.
@@ -362,7 +362,7 @@ def agents_command(
     Args:
         target_dir: Project directory
         action: list, pause, stop, kill, enable
-        agent_id: Target agent ID (required for pause/stop/kill/enable)
+        actor_id: Target agent ID (required for pause/stop/kill/enable)
         format_output: Output format
 
     Returns:
@@ -371,25 +371,25 @@ def agents_command(
     if action == "list":
         return list_agents(target_dir, format_output)
     elif action == "pause":
-        if not agent_id:
+        if not actor_id:
             print(f"{C.RED}Agent ID required for pause{C.RESET}")
             return 1
-        return pause_agent(agent_id)
+        return pause_agent(actor_id)
     elif action == "stop":
-        if not agent_id:
+        if not actor_id:
             print(f"{C.RED}Agent ID required for stop{C.RESET}")
             return 1
-        return stop_agent(agent_id)
+        return stop_agent(actor_id)
     elif action == "kill":
-        if not agent_id:
+        if not actor_id:
             print(f"{C.RED}Agent ID required for kill{C.RESET}")
             return 1
-        return kill_agent(agent_id)
+        return kill_agent(actor_id)
     elif action == "enable":
-        if not agent_id:
+        if not actor_id:
             print(f"{C.RED}Agent ID required for enable{C.RESET}")
             return 1
-        return enable_agent(agent_id)
+        return enable_agent(actor_id)
     else:
         print(f"{C.RED}Unknown action: {action}{C.RESET}")
         return 1

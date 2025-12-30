@@ -102,7 +102,7 @@ FAILURE_PATTERNS = [
         suggested_fix="Check embedding evolution, tighten novelty threshold",
     ),
     FailurePattern(
-        name="agent_shouldnt_have_explored",
+        name="ACTOR_shouldnt_have_explored",
         description="Exploration triggered but was wrong tool",
         likely_layer=5,
         common_causes=[

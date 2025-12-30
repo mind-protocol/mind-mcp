@@ -2,9 +2,9 @@
 Agent Graph Operations
 
 Query and manage work agents in the mind graph.
-Agents are Actor nodes with posture-based selection.
+Agents are Actor nodes with name-based selection.
 
-The 10 agents (by posture):
+The 10 agents (by name):
 - witness: evidence-first, traces what actually happened
 - groundwork: foundation-first, builds scaffolding
 - keeper: verification-first, checks before declaring done
@@ -30,7 +30,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
-from .postures import POSTURE_TO_AGENT_ID, DEFAULT_POSTURE
+from .mapping import NAME_TO_ACTOR_ID, DEFAULT_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +72,8 @@ def _link_set_clause(props: Dict[str, Any]) -> str:
 class AgentInfo:
     """Information about an agent from the graph."""
     id: str
-    name: str
-    posture: str
-    status: str
+    name: str  # The agent's name (e.g., "witness")
+    status: str   # ready, running, or paused
     energy: float = 0.0
     weight: float = 1.0
 
@@ -84,10 +83,10 @@ class AgentGraph:
     Query and manage work agents from the mind graph.
 
     Agents are Actor nodes with:
-    - id: agent_{posture} (e.g., agent_witness)
-    - name: The posture name (e.g., witness)
+    - id: ACTOR_{name} (e.g., ACTOR_witness)
+    - name: The agent name (e.g., witness)
     - type: agent
-    - status: ready | running
+    - status: ready | running | paused
     """
 
     def __init__(
@@ -133,21 +132,21 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
 
-            for posture, agent_id in POSTURE_TO_AGENT_ID.items():
+            for name, actor_id in NAME_TO_ACTOR_ID.items():
                 cypher = f"""
-                MATCH (a:Actor {{id: '{agent_id}'}})
+                MATCH (a:Actor {{id: '{actor_id}'}})
                 RETURN a.id
                 """
                 result = self._graph_ops._query(cypher)
 
                 if not result:
                     props = {
-                        "id": agent_id,
-                        "name": posture,
+                        "id": actor_id,
+                        "name": name,
                         "node_type": "actor",
                         "type": "agent",
                         "status": "ready",
-                        "description": f"Work agent with {posture} posture",
+                        "description": f"Work agent with {name} name",
                         "weight": 1.0,
                         "energy": 0.0,
                         "created_at_s": timestamp,
@@ -158,8 +157,8 @@ class AgentGraph:
                     MERGE (a:Actor {id: $id})
                     SET a += $props
                     """
-                    self._graph_ops._query(create_cypher, {"id": agent_id, "props": props})
-                    logger.info(f"[AgentGraph] Created agent: {agent_id}")
+                    self._graph_ops._query(create_cypher, {"id": actor_id, "props": props})
+                    logger.info(f"[AgentGraph] Created agent: {actor_id}")
 
             return True
         except Exception as e:
@@ -183,16 +182,15 @@ class AgentGraph:
             agents = []
             for row in rows:
                 if len(row) >= 3:
-                    agent_id = row[0]
+                    actor_id = row[0]
                     name = row[1]
                     status = row[2] or "ready"
                     energy = row[3] if len(row) > 3 else 0.0
                     weight = row[4] if len(row) > 4 else 1.0
 
                     agents.append(AgentInfo(
-                        id=agent_id,
+                        id=actor_id,
                         name=name,
-                        posture=name,
                         status=status,
                         energy=energy or 0.0,
                         weight=weight or 1.0,
@@ -206,8 +204,8 @@ class AgentGraph:
     def _get_fallback_agents(self) -> List[AgentInfo]:
         """Return fallback agent list when graph unavailable."""
         return [
-            AgentInfo(id=agent_id, name=posture, posture=posture, status="ready")
-            for posture, agent_id in POSTURE_TO_AGENT_ID.items()
+            AgentInfo(id=actor_id, name=name, status="ready")
+            for name, actor_id in NAME_TO_ACTOR_ID.items()
         ]
 
     def get_available_agents(self) -> List[AgentInfo]:
@@ -220,15 +218,15 @@ class AgentGraph:
         all_agents = self.get_all_agents()
         return [a for a in all_agents if a.status == "running"]
 
-    def select_agent_for_problem(self, problem_type: str) -> Optional[str]:
+    def select_agent_for_task(self, task_type: str) -> Optional[str]:
         """
         Select the best agent for a problem type.
-        Matches problem type to posture, then finds an available agent.
+        Matches problem type to name, then finds an available agent.
         """
-        from .postures import PROBLEM_TO_POSTURE
+        from .mapping import TASK_TO_AGENT
 
-        posture = PROBLEM_TO_POSTURE.get(problem_type, DEFAULT_POSTURE)
-        preferred_agent_id = POSTURE_TO_AGENT_ID.get(posture)
+        name = TASK_TO_AGENT.get(task_type, DEFAULT_NAME)
+        preferred_actor_id = NAME_TO_ACTOR_ID.get(name)
 
         available = self.get_available_agents()
 
@@ -237,22 +235,22 @@ class AgentGraph:
             return None
 
         for agent in available:
-            if agent.id == preferred_agent_id:
+            if agent.id == preferred_actor_id:
                 return agent.id
 
         available.sort(key=lambda a: a.energy, reverse=True)
         return available[0].id
 
-    def get_agent_posture(self, agent_id: str) -> str:
-        """Get the posture for an agent ID."""
-        if agent_id.startswith("agent_"):
-            return agent_id[6:]
-        return DEFAULT_POSTURE
+    def get_agent_name(self, actor_id: str) -> str:
+        """Get the name for an agent ID."""
+        if actor_id.startswith("ACTOR_"):
+            return actor_id[6:]
+        return DEFAULT_NAME
 
-    def set_agent_running(self, agent_id: str) -> bool:
+    def set_agent_running(self, actor_id: str) -> bool:
         """Mark an agent as running."""
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot set {agent_id} running")
+            logger.warning(f"[AgentGraph] No graph connection, cannot set {actor_id} running")
             return False
 
         try:
@@ -262,24 +260,24 @@ class AgentGraph:
             RETURN a.id
             """
             result = self._graph_ops._query(cypher, {
-                "id": agent_id,
+                "id": actor_id,
                 "timestamp": int(time.time()),
             })
 
             if result:
-                logger.info(f"[AgentGraph] Agent {agent_id} now running")
+                logger.info(f"[AgentGraph] Agent {actor_id} now running")
                 return True
             else:
-                logger.warning(f"[AgentGraph] Agent {agent_id} not found")
+                logger.warning(f"[AgentGraph] Agent {actor_id} not found")
                 return False
         except Exception as e:
-            logger.error(f"[AgentGraph] Failed to set {agent_id} running: {e}")
+            logger.error(f"[AgentGraph] Failed to set {actor_id} running: {e}")
             return False
 
-    def set_agent_ready(self, agent_id: str) -> bool:
+    def set_agent_ready(self, actor_id: str) -> bool:
         """Mark an agent as ready (available)."""
         if not self._connect():
-            logger.warning(f"[AgentGraph] No graph connection, cannot set {agent_id} ready")
+            logger.warning(f"[AgentGraph] No graph connection, cannot set {actor_id} ready")
             return False
 
         try:
@@ -289,21 +287,21 @@ class AgentGraph:
             RETURN a.id
             """
             result = self._graph_ops._query(cypher, {
-                "id": agent_id,
+                "id": actor_id,
                 "timestamp": int(time.time()),
             })
 
             if result:
-                logger.info(f"[AgentGraph] Agent {agent_id} now ready")
+                logger.info(f"[AgentGraph] Agent {actor_id} now ready")
                 return True
             else:
-                logger.warning(f"[AgentGraph] Agent {agent_id} not found")
+                logger.warning(f"[AgentGraph] Agent {actor_id} not found")
                 return False
         except Exception as e:
-            logger.error(f"[AgentGraph] Failed to set {agent_id} ready: {e}")
+            logger.error(f"[AgentGraph] Failed to set {actor_id} ready: {e}")
             return False
 
-    def boost_agent_energy(self, agent_id: str, amount: float = 0.1) -> bool:
+    def boost_agent_energy(self, actor_id: str, amount: float = 0.1) -> bool:
         """Boost an agent's energy (used for prioritization)."""
         if not self._connect():
             return False
@@ -314,13 +312,13 @@ class AgentGraph:
             SET a.energy = coalesce(a.energy, 0) + $amount
             RETURN a.id
             """
-            self._graph_ops._query(cypher, {"id": agent_id, "amount": amount})
+            self._graph_ops._query(cypher, {"id": actor_id, "amount": amount})
             return True
         except Exception as e:
-            logger.warning(f"[AgentGraph] Failed to boost {agent_id} energy: {e}")
+            logger.warning(f"[AgentGraph] Failed to boost {actor_id} energy: {e}")
             return False
 
-    def set_agent_space(self, agent_id: str, space_id: str) -> bool:
+    def set_agent_space(self, actor_id: str, space_id: str) -> bool:
         """Set the agent's current active space and link them."""
         if not self._connect():
             return False
@@ -333,7 +331,7 @@ class AgentGraph:
 
             # Update agent's current_space and link to space
             cypher = f"""
-            MATCH (a:Actor {{id: $agent_id}})
+            MATCH (a:Actor {{id: $actor_id}})
             MERGE (s:Space {{id: $space_id}})
             SET s.node_type = 'space',
                 s.name = $space_name,
@@ -346,14 +344,14 @@ class AgentGraph:
             RETURN a.id
             """
             params = {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "space_id": space_id,
                 "space_name": space_id.replace("space_", "").replace("_", "/"),
                 "timestamp": timestamp,
                 **link_props,
             }
             self._graph_ops._query(cypher, params)
-            logger.info(f"[AgentGraph] Set {agent_id} active in {space_id}")
+            logger.info(f"[AgentGraph] Set {actor_id} active in {space_id}")
             return True
         except Exception as e:
             logger.warning(f"[AgentGraph] Failed to set agent space: {e}")
@@ -442,17 +440,17 @@ class AgentGraph:
             logger.warning(f"[AgentGraph] Failed to get task space: {e}")
             return None
 
-    def get_agent_space(self, agent_id: str) -> Optional[str]:
+    def get_agent_space(self, actor_id: str) -> Optional[str]:
         """Get the agent's current active space."""
         if not self._connect():
             return None
 
         try:
             cypher = """
-            MATCH (a:Actor {id: $agent_id})
+            MATCH (a:Actor {id: $actor_id})
             RETURN a.current_space
             """
-            result = self._graph_ops._query(cypher, {"agent_id": agent_id})
+            result = self._graph_ops._query(cypher, {"actor_id": actor_id})
             if result and result[0]:
                 return result[0][0]
             return None
@@ -460,7 +458,7 @@ class AgentGraph:
             logger.warning(f"[AgentGraph] Failed to get agent space: {e}")
             return None
 
-    def link_agent_to_task(self, agent_id: str, task_id: str) -> bool:
+    def link_agent_to_task(self, actor_id: str, task_id: str) -> bool:
         """Create claims link between agent and task narrative."""
         if not self._connect():
             return False
@@ -473,7 +471,7 @@ class AgentGraph:
             link_set = _link_set_clause(link_props)
 
             cypher = f"""
-            MATCH (a:Actor {{id: $agent_id}})
+            MATCH (a:Actor {{id: $actor_id}})
             MATCH (t:Narrative {{id: $task_id}})
             MERGE (a)-[r:link]->(t)
             SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
@@ -481,20 +479,20 @@ class AgentGraph:
             RETURN type(r)
             """
             result = self._graph_ops._query(cypher, {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "task_id": task_id,
                 "timestamp": timestamp,
                 **link_props,
             })
             if result:
-                logger.info(f"[AgentGraph] Linked {agent_id} claims {task_id}")
+                logger.info(f"[AgentGraph] Linked {actor_id} claims {task_id}")
                 return True
             return False
         except Exception as e:
             logger.error(f"[AgentGraph] Failed to link agent to task: {e}")
             return False
 
-    def link_agent_to_problem(self, agent_id: str, problem_id: str) -> bool:
+    def link_agent_to_problem(self, actor_id: str, problem_id: str) -> bool:
         """Create resolves link between agent and problem narrative."""
         if not self._connect():
             return False
@@ -507,7 +505,7 @@ class AgentGraph:
             link_set = _link_set_clause(link_props)
 
             cypher = f"""
-            MATCH (a:Actor {{id: $agent_id}})
+            MATCH (a:Actor {{id: $actor_id}})
             MATCH (p:Narrative {{id: $problem_id}})
             MERGE (a)-[r:link]->(p)
             SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
@@ -515,20 +513,20 @@ class AgentGraph:
             RETURN type(r)
             """
             result = self._graph_ops._query(cypher, {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "problem_id": problem_id,
                 "timestamp": timestamp,
                 **link_props,
             })
             if result:
-                logger.info(f"[AgentGraph] Linked {agent_id} resolves {problem_id}")
+                logger.info(f"[AgentGraph] Linked {actor_id} resolves {problem_id}")
                 return True
             return False
         except Exception as e:
             logger.error(f"[AgentGraph] Failed to link agent to problem: {e}")
             return False
 
-    def get_task_problem_type(self, task_id: str) -> Optional[str]:
+    def get_task_task_type(self, task_id: str) -> Optional[str]:
         """Get the problem type associated with a task."""
         if not self._connect():
             return None
@@ -536,12 +534,12 @@ class AgentGraph:
         try:
             cypher = """
             MATCH (t:Narrative {id: $task_id})
-            RETURN t.problem_type as problem_type
+            RETURN t.task_type as task_type
             """
             result = self._graph_ops._query(cypher, {"task_id": task_id})
             if result:
                 row = result[0]
-                return row.get("problem_type")
+                return row.get("task_type")
             return None
         except Exception as e:
             logger.warning(f"[AgentGraph] Failed to get task problem type: {e}")
@@ -549,7 +547,7 @@ class AgentGraph:
 
     def create_assignment_moment(
         self,
-        agent_id: str,
+        actor_id: str,
         task_id: str,
         problem_ids: Optional[List[str]] = None,
     ) -> Optional[str]:
@@ -562,16 +560,16 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
-            agent_name = agent_id.replace("agent_", "") if agent_id.startswith("agent_") else agent_id
+            agent_name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
             moment_id = f"moment_ASSIGN-AGENT_{agent_name}_{ts_hash}"
 
             create_cypher = """
             MERGE (m:Moment {id: $id})
             SET m.node_type = 'moment',
-                m.type = 'agent_assignment',
+                m.type = 'ACTOR_assignment',
                 m.prose = $prose,
                 m.status = 'completed',
-                m.agent_id = $agent_id,
+                m.actor_id = $actor_id,
                 m.task_id = $task_id,
                 m.created_at_s = $timestamp,
                 m.updated_at_s = $timestamp
@@ -580,7 +578,7 @@ class AgentGraph:
             self._graph_ops._query(create_cypher, {
                 "id": moment_id,
                 "prose": f"Agent {agent_name} assigned to task {task_id}",
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "task_id": task_id,
                 "timestamp": timestamp,
             })
@@ -590,13 +588,13 @@ class AgentGraph:
             expresses_props["created_at_s"] = timestamp
             expresses_set = _link_set_clause(expresses_props)
             self._graph_ops._query(f"""
-            MATCH (a:Actor {{id: $agent_id}})
+            MATCH (a:Actor {{id: $actor_id}})
             MATCH (m:Moment {{id: $moment_id}})
             MERGE (a)-[r:link]->(m)
             SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
                 {expresses_set}
             """, {
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "moment_id": moment_id,
                 "timestamp": timestamp,
                 **expresses_props,
@@ -642,19 +640,19 @@ class AgentGraph:
             logger.error(f"[AgentGraph] Failed to create assignment moment: {e}")
             return None
 
-    def get_actor_last_moment(self, agent_id: str) -> Optional[str]:
+    def get_actor_last_moment(self, actor_id: str) -> Optional[str]:
         """Get the most recent moment expressed by an actor."""
         if not self._connect():
             return None
 
         try:
             cypher = """
-            MATCH (a:Actor {id: $agent_id})-[:expresses]->(m:Moment)
+            MATCH (a:Actor {id: $actor_id})-[:expresses]->(m:Moment)
             RETURN m.id
             ORDER BY m.created_at_s DESC
             LIMIT 1
             """
-            result = self._graph_ops._query(cypher, {"agent_id": agent_id})
+            result = self._graph_ops._query(cypher, {"actor_id": actor_id})
             if result and result[0]:
                 return result[0][0]
             return None
@@ -664,7 +662,7 @@ class AgentGraph:
 
     def create_moment(
         self,
-        agent_id: str,
+        actor_id: str,
         moment_type: str,
         prose: str,
         about_ids: Optional[List[str]] = None,
@@ -675,7 +673,7 @@ class AgentGraph:
         Create a moment node linked to actor, space, and chained to previous moment.
 
         Args:
-            agent_id: Actor creating this moment
+            actor_id: Actor creating this moment
             moment_type: Type of moment (e.g., 'task_created', 'problem_detected')
             prose: Human-readable description
             about_ids: Node IDs this moment is about
@@ -691,11 +689,11 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
-            agent_name = agent_id.replace("agent_", "") if agent_id.startswith("agent_") else agent_id
+            agent_name = actor_id.replace("ACTOR_", "") if actor_id.startswith("ACTOR_") else actor_id
             moment_id = f"moment_{moment_type.upper()}_{agent_name}_{ts_hash}"
 
             # Get previous moment for chaining
-            prev_moment_id = self.get_actor_last_moment(agent_id)
+            prev_moment_id = self.get_actor_last_moment(actor_id)
 
             # Create moment node
             props = {
@@ -703,7 +701,7 @@ class AgentGraph:
                 "node_type": "moment",
                 "type": moment_type,
                 "prose": prose,
-                "agent_id": agent_id,
+                "actor_id": actor_id,
                 "created_at_s": timestamp,
                 "updated_at_s": timestamp,
             }
@@ -723,12 +721,12 @@ class AgentGraph:
             expresses_props["created_at_s"] = timestamp
             expresses_set = _link_set_clause(expresses_props)
             self._graph_ops._query(f"""
-            MATCH (a:Actor {{id: $agent_id}})
+            MATCH (a:Actor {{id: $actor_id}})
             MATCH (m:Moment {{id: $moment_id}})
             MERGE (a)-[r:link]->(m)
             SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
                 {expresses_set}
-            """, {"agent_id": agent_id, "moment_id": moment_id, "timestamp": timestamp, **expresses_props})
+            """, {"actor_id": actor_id, "moment_id": moment_id, "timestamp": timestamp, **expresses_props})
 
             # Link: previous moment → this moment (chain with physics)
             if prev_moment_id:
@@ -790,7 +788,7 @@ class AgentGraph:
 
     def assign_agent_to_work(
         self,
-        agent_id: str,
+        actor_id: str,
         task_id: str,
         problem_ids: Optional[List[str]] = None,
     ) -> Optional[str]:
@@ -798,11 +796,11 @@ class AgentGraph:
         Full assignment: link agent to task/problems and create moment.
         """
         if task_id:
-            self.link_agent_to_task(agent_id, task_id)
+            self.link_agent_to_task(actor_id, task_id)
 
         if problem_ids:
             for problem_id in problem_ids:
-                self.link_agent_to_problem(agent_id, problem_id)
+                self.link_agent_to_problem(actor_id, problem_id)
 
         # Use new create_moment with chaining
         about_ids = [task_id] if task_id else []
@@ -810,9 +808,9 @@ class AgentGraph:
             about_ids.extend(problem_ids)
 
         moment_id = self.create_moment(
-            agent_id=agent_id,
-            moment_type="agent_assignment",
-            prose=f"Agent {agent_id} assigned to task {task_id}",
+            actor_id=actor_id,
+            moment_type="ACTOR_assignment",
+            prose=f"Agent {actor_id} assigned to task {task_id}",
             about_ids=about_ids,
             extra_props={"task_id": task_id, "status": "completed"},
         )
@@ -820,7 +818,7 @@ class AgentGraph:
 
     def upsert_problem_narrative(
         self,
-        problem_type: str,
+        task_type: str,
         path: str,
         message: str,
         severity: str = "warning",
@@ -832,13 +830,13 @@ class AgentGraph:
         try:
             timestamp = int(time.time())
             path_hash = hashlib.sha256(path.encode()).hexdigest()[:6]
-            narrative_id = f"narrative_issue_{problem_type}_{path_hash}"
+            narrative_id = f"narrative_issue_{task_type}_{path_hash}"
 
             cypher = """
             MERGE (n:Narrative {id: $id})
             SET n.node_type = 'narrative',
                 n.type = 'problem',
-                n.problem_type = $problem_type,
+                n.task_type = $task_type,
                 n.path = $path,
                 n.message = $message,
                 n.severity = $severity,
@@ -849,7 +847,7 @@ class AgentGraph:
             """
             result = self._graph_ops._query(cypher, {
                 "id": narrative_id,
-                "problem_type": problem_type,
+                "task_type": task_type,
                 "path": path,
                 "message": message[:500],
                 "severity": severity,
@@ -908,22 +906,41 @@ class AgentGraph:
             return None
 
 
-def get_agent_template_path(posture: str, target_dir: Path, provider: str = "claude") -> Optional[Path]:
+def get_agent_template_path(name: str, target_dir: Path, provider: str = "claude") -> Optional[Path]:
     """
     Get the path to an agent's template file.
-    Checks: .mind/actors/ACTOR_{Posture}.md
+
+    Structure: .mind/actors/{name}/{PROVIDER}.md
+    - CLAUDE.md for Claude
+    - GEMINI.md for Gemini
+    - AGENTS.md as fallback
     """
-    posture_capitalized = posture.capitalize()
-    actor_path = target_dir / ".mind" / "actors" / f"ACTOR_{posture_capitalized}.md"
+    provider_files = {
+        "claude": "CLAUDE.md",
+        "gemini": "GEMINI.md",
+    }
+
+    actor_dir = target_dir / ".mind" / "actors" / name.lower()
+    if not actor_dir.exists():
+        return None
+
+    # Try provider-specific file first
+    provider_file = provider_files.get(provider.lower(), "AGENTS.md")
+    actor_path = actor_dir / provider_file
     if actor_path.exists():
         return actor_path
+
+    # Fallback to AGENTS.md
+    fallback_path = actor_dir / "AGENTS.md"
+    if fallback_path.exists():
+        return fallback_path
 
     return None
 
 
-def load_agent_prompt(posture: str, target_dir: Path, provider: str = "claude") -> Optional[str]:
+def load_agent_prompt(name: str, target_dir: Path, provider: str = "claude") -> Optional[str]:
     """Load the agent's base prompt/system prompt from template."""
-    template_path = get_agent_template_path(posture, target_dir, provider)
+    template_path = get_agent_template_path(name, target_dir, provider)
 
     if template_path and template_path.exists():
         return template_path.read_text()

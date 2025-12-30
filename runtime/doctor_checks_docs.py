@@ -90,7 +90,7 @@ def doctor_check_placeholder_docs(target_dir: Path, config: DoctorConfig) -> Lis
 
                 if real_placeholders:
                     issues.append(DoctorIssue(
-                        issue_type="PLACEHOLDER",
+                        task_type="PLACEHOLDER",
                         severity="critical",
                         path=rel_path,
                         message=f"Contains {len(real_placeholders)} template placeholder(s)",
@@ -157,7 +157,7 @@ def doctor_check_orphan_docs(target_dir: Path, config: DoctorConfig) -> List[Doc
     orphan_docs = doc_files - referenced_docs
     for orphan in sorted(orphan_docs)[:10]:  # Limit to 10
         issues.append(DoctorIssue(
-            issue_type="ORPHAN_DOCS",
+            task_type="ORPHAN_DOCS",
             severity="info",
             path=str(orphan),
             message="Doc not linked from code or modules.yaml",
@@ -210,7 +210,7 @@ def doctor_check_stale_impl(target_dir: Path, config: DoctorConfig) -> List[Doct
                 # Some files missing but not all (if all missing, doc might be for different project)
                 rel_path = str(impl_doc.relative_to(target_dir))
                 issues.append(DoctorIssue(
-                    issue_type="STALE_IMPL",
+                    task_type="STALE_IMPL",
                     severity="warning",
                     path=rel_path,
                     message=f"{len(missing_files)} referenced files not found",
@@ -267,7 +267,7 @@ def doctor_check_large_doc_module(target_dir: Path, config: DoctorConfig) -> Lis
             largest = [f"{f['file']} ({f['chars']//1000}K)" for f in file_sizes[:3]]
 
             issues.append(DoctorIssue(
-                issue_type="LARGE_DOC_MODULE",
+                task_type="LARGE_DOC_MODULE",
                 severity="warning",
                 path=rel_path,
                 message=f"Total {total_chars//1000}K chars (threshold: {char_threshold//1000}K)",
@@ -319,7 +319,7 @@ def doctor_check_incomplete_chain(target_dir: Path, config: DoctorConfig) -> Lis
                 rel_path = str(module_dir)
 
             issues.append(DoctorIssue(
-                issue_type="INCOMPLETE_CHAIN",
+                task_type="INCOMPLETE_CHAIN",
                 severity="warning",
                 path=rel_path,
                 message=f"Missing: {', '.join(missing)}",
@@ -386,11 +386,11 @@ def _extract_h2_sections(content: str) -> dict:
 
 def _doc_tag_allows_suppression(
     doc_path: Path,
-    issue_type: str,
+    task_type: str,
     allowed_statuses: set,
 ) -> bool:
     """Check if a doc tag suppresses an issue for now."""
-    tags = parse_doctor_doc_tags(doc_path).get(issue_type, [])
+    tags = parse_doctor_doc_tags(doc_path).get(task_type, [])
     today = date.today()
 
     for tag in tags:
@@ -415,9 +415,9 @@ def _doc_tag_allows_suppression(
     return False
 
 
-def _doc_tag_message(doc_path: Path, issue_type: str, status: str) -> str:
+def _doc_tag_message(doc_path: Path, task_type: str, status: str) -> str:
     """Return the first matching tag message for an issue type/status."""
-    tags = parse_doctor_doc_tags(doc_path).get(issue_type, [])
+    tags = parse_doctor_doc_tags(doc_path).get(task_type, [])
     for tag in tags:
         if tag.get("status") == status:
             return tag.get("message", "")
@@ -477,7 +477,7 @@ def doctor_check_doc_template_drift(target_dir: Path, config: DoctorConfig) -> L
                 message_parts.append(f"Escalation: {escalation_note}")
 
             issues.append(DoctorIssue(
-                issue_type="DOC_TEMPLATE_DRIFT",
+                task_type="DOC_TEMPLATE_DRIFT",
                 severity="warning",
                 path=rel_path,
                 message="; ".join(message_parts),
@@ -512,7 +512,7 @@ def doctor_check_validation_behaviors_list(
 
         rel_path = str(doc_path.relative_to(target_dir))
         issues.append(DoctorIssue(
-            issue_type="VALIDATION_BEHAVIORS_MISSING",
+            task_type="VALIDATION_BEHAVIORS_MISSING",
             severity="info",
             path=rel_path,
             message=f"Missing: {required_section}",
@@ -548,7 +548,7 @@ def doctor_check_nonstandard_doc_type(target_dir: Path, config: DoctorConfig) ->
 
         rel_path = str(doc_path.relative_to(target_dir))
         issues.append(DoctorIssue(
-            issue_type="NON_STANDARD_DOC_TYPE",
+            task_type="NON_STANDARD_DOC_TYPE",
             severity="warning",
             path=rel_path,
             message="Doc filename does not use a standard prefix",
@@ -716,7 +716,7 @@ def doctor_check_docs_not_ingested(target_dir: Path, config: DoctorConfig) -> Li
                     break
 
             issues.append(DoctorIssue(
-                issue_type="DOCS_NOT_INGESTED",
+                task_type="DOCS_NOT_INGESTED",
                 severity="warning",  # High priority but not blocking
                 path=rel_path,
                 message=f"Doc Thing exists but no linked Narrative (module: {module}, chain: {chain_type})",
@@ -818,7 +818,7 @@ def doctor_check_sections_without_node_id(target_dir: Path, config: DoctorConfig
                     break
 
             issues.append(DoctorIssue(
-                issue_type="SECTIONS_WITHOUT_NODE_ID",
+                task_type="SECTIONS_WITHOUT_NODE_ID",
                 severity="info",
                 path=rel_path,
                 message=f"{len(sections_without_anchor)} section(s) without graph node anchor",

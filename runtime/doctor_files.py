@@ -156,7 +156,7 @@ def load_doctor_ignore(target_dir: Path) -> List[IgnoreEntry]:
         for entry in data.get("ignores", []):
             if not isinstance(entry, dict):
                 continue
-            if "issue_type" not in entry:
+            if "task_type" not in entry:
                 continue
 
             path_value = entry.get("path", "*")
@@ -168,7 +168,7 @@ def load_doctor_ignore(target_dir: Path) -> List[IgnoreEntry]:
                     # Create separate entries for each path in the list
                     for p in path_value:
                         ignores.append(IgnoreEntry(
-                            issue_type=entry.get("issue_type", ""),
+                            task_type=entry.get("task_type", ""),
                             path=str(p),
                             reason=entry.get("reason", ""),
                             added_by=entry.get("added_by", ""),
@@ -176,7 +176,7 @@ def load_doctor_ignore(target_dir: Path) -> List[IgnoreEntry]:
                         ))
                     continue
             ignores.append(IgnoreEntry(
-                issue_type=entry.get("issue_type", ""),
+                task_type=entry.get("task_type", ""),
                 path=str(path_value),  # Ensure string
                 reason=entry.get("reason", ""),
                 added_by=entry.get("added_by", ""),
@@ -193,12 +193,12 @@ def is_issue_ignored(issue: DoctorIssue, ignores: List[IgnoreEntry]) -> bool:
     """Check if a DoctorIssue should be suppressed based on ignore rules.
 
     Matching logic:
-    - issue_type must match exactly
+    - task_type must match exactly
     - path can be: exact match, glob pattern, or "*" for all
     """
     for ignore in ignores:
         # Issue type must match
-        if ignore.issue_type != issue.issue_type:
+        if ignore.task_type != issue.task_type:
             continue
 
         # Check path matching
@@ -294,9 +294,9 @@ def _parse_doc_false_positives(doc_path: Path) -> Dict[str, str]:
             continue
         match = DOCTOR_FALSE_POSITIVE_PATTERN.match(stripped)
         if match:
-            issue_type = match.group(1).strip()
+            task_type = match.group(1).strip()
             reason = (match.group(2) or "").strip()
-            results[issue_type] = reason
+            results[task_type] = reason
 
     return results
 
@@ -331,7 +331,7 @@ def parse_doctor_doc_tags(doc_path: Path) -> Dict[str, List[Dict[str, str]]]:
         if not match:
             continue
 
-        issue_type = match.group(1).strip()
+        task_type = match.group(1).strip()
         status = match.group(2).strip()
         remainder = match.group(3).strip()
 
@@ -343,7 +343,7 @@ def parse_doctor_doc_tags(doc_path: Path) -> Dict[str, List[Dict[str, str]]]:
                 date_value = parts[0]
                 message = parts[1] if len(parts) > 1 else ""
 
-        tags.setdefault(issue_type, []).append({
+        tags.setdefault(task_type, []).append({
             "status": status,
             "date": date_value,
             "message": message,
@@ -408,7 +408,7 @@ def filter_false_positive_issues(
                     doc_rel = doc_rel.relative_to(target_dir)
                 except ValueError:
                     continue
-            if doc_rel in false_positives and issue.issue_type in false_positives[doc_rel]:
+            if doc_rel in false_positives and issue.task_type in false_positives[doc_rel]:
                 suppressed_here = True
                 break
 
@@ -422,7 +422,7 @@ def filter_false_positive_issues(
 
 def add_doctor_ignore(
     target_dir: Path,
-    issue_type: str,
+    task_type: str,
     path: str,
     reason: str,
     added_by: str = "agent"
@@ -450,12 +450,12 @@ def add_doctor_ignore(
 
         # Check for duplicate
         for entry in data["ignores"]:
-            if entry.get("issue_type") == issue_type and entry.get("path") == path:
+            if entry.get("task_type") == task_type and entry.get("path") == path:
                 return True  # Already exists
 
         # Add new entry
         data["ignores"].append({
-            "issue_type": issue_type,
+            "task_type": task_type,
             "path": path,
             "reason": reason,
             "added_by": added_by,

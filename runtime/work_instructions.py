@@ -936,9 +936,9 @@ MANDATORY FINAL LINE:
         return doc_instructions
 
     # Then check local code/test/config instructions
-    return instructions.get(problem.problem_type, {
+    return instructions.get(problem.task_type, {
         "view": "VIEW_Implement_Write_Or_Modify_Code.md",
-        "description": f"Fix {problem.problem_type} problem",
+        "description": f"Fix {problem.task_type} problem",
         "docs_to_read": [".mind/PROTOCOL.md"],
         "prompt": f"""## Task: Fix Problem
 

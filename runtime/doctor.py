@@ -239,12 +239,12 @@ def run_doctor(target_dir: Path, config: DoctorConfig, sync_graph: bool = True) 
             module = rel_path.parts[0] if rel_path.parts else target_dir.name
 
             # Check if exists
-            issue_id = generate_issue_id(issue.issue_type, module, issue.path)
+            issue_id = generate_issue_id(issue.task_type, module, issue.path)
             existing = store.get_node(issue_id)
 
             # Upsert to local store
             upsert_issue(
-                issue_type=issue.issue_type,
+                task_type=issue.task_type,
                 severity=issue.severity,
                 path=issue.path,
                 message=issue.message,
@@ -273,7 +273,7 @@ def run_doctor(target_dir: Path, config: DoctorConfig, sync_graph: bool = True) 
                         SET n.node_type = $node_type,
                             n.type = $type,
                             n.name = $name,
-                            n.issue_type = $issue_type,
+                            n.task_type = $task_type,
                             n.severity = $severity,
                             n.path = $path,
                             n.message = $message,
@@ -288,7 +288,7 @@ def run_doctor(target_dir: Path, config: DoctorConfig, sync_graph: bool = True) 
                             "node_type": node.node_type,
                             "type": node.type,
                             "name": node.name,
-                            "issue_type": node.issue_type,
+                            "task_type": node.task_type,
                             "severity": node.severity,
                             "path": node.path,
                             "message": node.message[:500],
@@ -580,7 +580,7 @@ def doctor_command(
         mapping_path = target_dir / ".mind" / "state" / "github_issues.json"
         if mapping_path.parent.exists():
             mapping_data = {
-                issue.path: {"number": issue.number, "url": issue.url, "type": issue.issue_type}
+                issue.path: {"number": issue.number, "url": issue.url, "type": issue.task_type}
                 for issue in github_issues
             }
             mapping_path.write_text(json.dumps(mapping_data, indent=2))

@@ -211,7 +211,7 @@ def doctor_check_membrane_health(target_dir: Path, config: DoctorConfig) -> List
 
     if protocol_count == 0:
         issues.append(DoctorIssue(
-            issue_type="MEMBRANE_NO_PROTOCOLS",
+            task_type="MEMBRANE_NO_PROTOCOLS",
             severity="critical",
             path="procedures/",
             message="No membrane protocols found",
@@ -226,7 +226,7 @@ def doctor_check_membrane_health(target_dir: Path, config: DoctorConfig) -> List
 
     if not available:
         issues.append(DoctorIssue(
-            issue_type="MEMBRANE_IMPORT_ERROR",
+            task_type="MEMBRANE_IMPORT_ERROR",
             severity="critical",
             path="engine/connectome/runner.py",
             message=f"Cannot import ConnectomeRunner: {import_error}",
@@ -242,7 +242,7 @@ def doctor_check_membrane_health(target_dir: Path, config: DoctorConfig) -> List
 
     if failed_checks:
         issues.append(DoctorIssue(
-            issue_type="MEMBRANE_SESSION_INVALID",
+            task_type="MEMBRANE_SESSION_INVALID",
             severity="warning",
             path="engine/connectome/session.py",
             message=f"Session lifecycle issues: {', '.join(failed_checks)}",
@@ -258,7 +258,7 @@ def doctor_check_membrane_health(target_dir: Path, config: DoctorConfig) -> List
 
     if not ordering_result["success"]:
         issues.append(DoctorIssue(
-            issue_type="MEMBRANE_STEP_ORDERING",
+            task_type="MEMBRANE_STEP_ORDERING",
             severity="warning",
             path="engine/connectome/steps.py",
             message=f"Step ordering issue: {ordering_result.get('error', 'unknown')}",
@@ -304,7 +304,7 @@ def doctor_check_membrane_protocols(target_dir: Path, config: DoctorConfig) -> L
 
             if not protocol:
                 issues.append(DoctorIssue(
-                    issue_type="MEMBRANE_EMPTY_PROTOCOL",
+                    task_type="MEMBRANE_EMPTY_PROTOCOL",
                     severity="warning",
                     path=str(protocol_file.relative_to(target_dir)),
                     message="Empty protocol file",
@@ -316,7 +316,7 @@ def doctor_check_membrane_protocols(target_dir: Path, config: DoctorConfig) -> L
             missing = required_fields - set(protocol.keys())
             if missing:
                 issues.append(DoctorIssue(
-                    issue_type="MEMBRANE_MISSING_FIELDS",
+                    task_type="MEMBRANE_MISSING_FIELDS",
                     severity="warning",
                     path=str(protocol_file.relative_to(target_dir)),
                     message=f"Missing required fields: {', '.join(missing)}",
@@ -332,7 +332,7 @@ def doctor_check_membrane_protocols(target_dir: Path, config: DoctorConfig) -> L
                         step_missing = required_step_fields - set(step_def.keys())
                         if step_missing:
                             issues.append(DoctorIssue(
-                                issue_type="MEMBRANE_INVALID_STEP",
+                                task_type="MEMBRANE_INVALID_STEP",
                                 severity="info",
                                 path=str(protocol_file.relative_to(target_dir)),
                                 message=f"Step '{step_id}' missing: {', '.join(step_missing)}",
@@ -347,7 +347,7 @@ def doctor_check_membrane_protocols(target_dir: Path, config: DoctorConfig) -> L
                             if step_type == "branch":
                                 if "checks" not in step_def:
                                     issues.append(DoctorIssue(
-                                        issue_type="MEMBRANE_BRANCH_NO_CHECKS",
+                                        task_type="MEMBRANE_BRANCH_NO_CHECKS",
                                         severity="warning",
                                         path=str(protocol_file.relative_to(target_dir)),
                                         message=f"Branch step '{step_id}' has no checks",
@@ -357,7 +357,7 @@ def doctor_check_membrane_protocols(target_dir: Path, config: DoctorConfig) -> L
 
         except yaml.YAMLError as e:
             issues.append(DoctorIssue(
-                issue_type="MEMBRANE_YAML_ERROR",
+                task_type="MEMBRANE_YAML_ERROR",
                 severity="critical",
                 path=str(protocol_file.relative_to(target_dir)),
                 message=f"YAML parse error: {e}",
@@ -365,7 +365,7 @@ def doctor_check_membrane_protocols(target_dir: Path, config: DoctorConfig) -> L
             ))
         except Exception as e:
             issues.append(DoctorIssue(
-                issue_type="MEMBRANE_PARSE_ERROR",
+                task_type="MEMBRANE_PARSE_ERROR",
                 severity="warning",
                 path=str(protocol_file.relative_to(target_dir)),
                 message=f"Parse error: {e}",
