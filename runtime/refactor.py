@@ -12,7 +12,6 @@ import shutil
 from pathlib import Path
 from typing import Iterable, List, Tuple
 
-from .doctor import doctor_command
 from .repo_overview import generate_and_save as generate_overview
 
 
@@ -124,9 +123,6 @@ def _run_post_refactor_workflow(target_dir: Path) -> None:
     overview_path = generate_overview(target_dir, subfolder="docs")
     print(f"Saved overview: {overview_path.relative_to(target_dir)}")
 
-    print("Running mind doctor to refresh health state …")
-    doctor_command(target_dir)  # uses defaults (text output, saves SYNC)
-
 
 def _parse_batch_line(line: str) -> Tuple[str, List[str]]:
     parts = shlex.split(line)
@@ -201,7 +197,7 @@ def _run_batch_actions(
     if changed:
         _run_post_refactor_workflow(target_dir)
     else:
-        print("No refactor changes applied; skipping overview/doctor.")
+        print("No refactor changes applied; skipping overview.")
 
 
 def _handle_existing_target(target: Path, skip_existing: bool, overwrite: bool) -> bool:

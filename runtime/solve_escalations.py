@@ -6,7 +6,7 @@ Scan the repo for escalation markers and report them.
 from pathlib import Path
 from typing import List, Tuple
 
-from .doctor_files import load_doctor_config, should_ignore_path, is_binary_file
+from .file_utils import load_ignore_patterns, should_ignore_path, is_binary_file
 
 ESCALATION_TAGS = (
     "@mind:doctor:escalation",
@@ -94,7 +94,7 @@ def _find_markers_in_files(target_dir: Path, marker_tags: Tuple[str, ...], task_
 
     Returns: List of (priority_sort, occurrences, path, task_type, title)
     """
-    config = load_doctor_config(target_dir)
+    ignore_patterns = load_ignore_patterns(target_dir)
     matches: List[Tuple[int, int, str, str, str]] = []
 
     # Directories to ignore (templates, skills contain instructional examples)
@@ -119,7 +119,7 @@ def _find_markers_in_files(target_dir: Path, marker_tags: Tuple[str, ...], task_
 
         if rel_path in IGNORED_FILES:
             continue
-        if should_ignore_path(path, config.ignore, target_dir):
+        if should_ignore_path(path, ignore_patterns, target_dir):
             continue
         if _is_log_file(path):
             continue

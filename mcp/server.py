@@ -57,7 +57,6 @@ from runtime.agents import (
     build_agent_prompt,
     get_learnings_content,
 )
-from runtime.work_instructions import get_problem_instructions
 from runtime.capability_integration import (
     init_capability_manager,
     get_capability_manager,

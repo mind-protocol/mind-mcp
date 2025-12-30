@@ -17,8 +17,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from .doctor_files import (
-    load_doctor_config,
+from .file_utils import (
+    load_ignore_patterns,
     should_ignore_path,
     is_binary_file,
 )
@@ -427,7 +427,7 @@ def _filter_local_imports(imports: List[str], target_dir: Path) -> List[str]:
 
 def build_file_tree(
     target_dir: Path,
-    config,
+    ignore_patterns: set,
     current_path: Optional[Path] = None,
     depth: int = 0,
     max_depth: int = 10,
@@ -438,7 +438,7 @@ def build_file_tree(
 
     Args:
         target_dir: Root directory of the project
-        config: Doctor config with ignore patterns
+        ignore_patterns: Set of glob patterns to ignore
         current_path: Current path being processed
         depth: Current recursion depth
         max_depth: Maximum recursion depth
@@ -452,7 +452,7 @@ def build_file_tree(
         return None
 
     # Skip ignored paths
-    if should_ignore_path(current_path, config.ignore, target_dir):
+    if should_ignore_path(current_path, ignore_patterns, target_dir):
         return None
 
     # Get relative path
@@ -519,7 +519,7 @@ def build_file_tree(
         all_children = []
         for child in sorted(current_path.iterdir()):
             child_info = build_file_tree(
-                target_dir, config, child, depth + 1, max_depth,
+                target_dir, ignore_patterns, child, depth + 1, max_depth,
                 min_size=min_size, top_files=top_files
             )
             if child_info:
@@ -682,7 +682,7 @@ def generate_repo_overview(
     """
     from datetime import datetime
 
-    config = load_doctor_config(target_dir)
+    ignore_patterns = load_ignore_patterns(target_dir)
 
     start_path = target_dir
     if subfolder:
@@ -692,7 +692,7 @@ def generate_repo_overview(
 
     # Build file tree with filtering
     file_tree = build_file_tree(
-        target_dir, config,
+        target_dir, ignore_patterns,
         current_path=start_path,
         min_size=min_size,
         top_files=top_files,

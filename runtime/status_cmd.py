@@ -335,32 +335,8 @@ def _path_matches_glob(path: str, pattern: str) -> bool:
 
 
 def get_all_health_issues(project_dir: Path) -> List[HealthIssue]:
-    """Get all health issues from doctor."""
-    try:
-        from .doctor import run_doctor
-        from .doctor_types import DoctorConfig
-        config = DoctorConfig()
-        result = run_doctor(project_dir, config)
-
-        all_issues = []
-        for severity in ["critical", "warning", "info"]:
-            for issue in result["issues"].get(severity, []):
-                all_issues.append(HealthIssue(
-                    task_type=issue.task_type,
-                    severity=issue.severity,
-                    path=issue.path,
-                    message=issue.message,
-                    details=issue.details if hasattr(issue, 'details') else {},
-                ))
-        return all_issues
-    except Exception as e:
-        # Return error as a single issue so user knows something went wrong
-        return [HealthIssue(
-            task_type="DOCTOR_ERROR",
-            severity="warning",
-            path="",
-            message=f"Could not run health checks: {str(e)[:80]}",
-        )]
+    """Get all health issues (doctor command removed)."""
+    return []
 
 
 def get_module_health_issues(project_dir: Path, module_name: str, code_pattern: str, docs_path: str) -> List[HealthIssue]:

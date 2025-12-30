@@ -36,8 +36,6 @@ from .init_cmd import init_protocol
 from .validate import validate_protocol
 from .prompt import print_bootstrap_prompt
 from .context import print_module_context
-from .doctor import doctor_command
-from .doctor_files import add_doctor_ignore, load_doctor_ignore
 from .project_map import print_project_map
 from .sync import sync_command
 from .solve_escalations import solve_special_markers_command
@@ -195,62 +193,6 @@ def main():
         type=Path,
         default=Path.cwd(),
         help="Project directory (default: current directory)"
-    )
-
-    # doctor command
-    doctor_parser = subparsers.add_parser(
-        "doctor",
-        help="Check project health (monoliths, stale docs, undocumented code)"
-    )
-    doctor_parser.add_argument(
-        "--dir", "-d",
-        type=Path,
-        default=Path.cwd(),
-        help="Project directory (default: current directory)"
-    )
-    doctor_parser.add_argument(
-        "--format", "-f",
-        choices=["text", "json"],
-        default="text",
-        help="Output format (default: text)"
-    )
-    doctor_parser.add_argument(
-        "--level", "-l",
-        choices=["critical", "warning", "all"],
-        default="all",
-        help="Filter by severity level (default: all)"
-    )
-    doctor_parser.add_argument(
-        "--no-save",
-        action="store_true",
-        help="Don't save to HEALTH.md"
-    )
-    doctor_parser.add_argument(
-        "--github",
-        action="store_true",
-        help="Create GitHub issues for findings (default: disabled)"
-    )
-    doctor_parser.add_argument(
-        "--no-github",
-        action="store_true",
-        help="Don't create GitHub issues for findings (default: disabled)"
-    )
-    doctor_parser.add_argument(
-        "--github-max",
-        type=int,
-        default=10,
-        help="Max GitHub issues to create (default: 10)"
-    )
-    doctor_parser.add_argument(
-        "--symbols",
-        action="store_true",
-        help="Run symbol extraction to graph before health checks"
-    )
-    doctor_parser.add_argument(
-        "--graph", "-g",
-        type=str,
-        default=None,
-        help="Graph name for symbol extraction (defaults to project name)"
     )
 
     # solve-markers command
@@ -441,39 +383,6 @@ def main():
     _add_refactor_conflict_args(batch_parser)
     batch_parser.set_defaults(overwrite=True)
     batch_parser.set_defaults(action="batch")
-
-    # ignore command
-    ignore_parser = subparsers.add_parser(
-        "ignore",
-        help="Add or list suppressed doctor issues"
-    )
-    ignore_parser.add_argument(
-        "--dir", "-d",
-        type=Path,
-        default=Path.cwd(),
-        help="Project directory (default: current directory)"
-    )
-    ignore_parser.add_argument(
-        "--list", "-l",
-        action="store_true",
-        help="List current ignores"
-    )
-    ignore_parser.add_argument(
-        "--type", "-t",
-        type=str,
-        help="Issue type to ignore (e.g., MONOLITH, HARDCODED_SECRET)"
-    )
-    ignore_parser.add_argument(
-        "--path", "-p",
-        type=str,
-        help="Path or glob pattern to ignore (e.g., src/legacy/*, tests/**)"
-    )
-    ignore_parser.add_argument(
-        "--reason", "-r",
-        type=str,
-        default="",
-        help="Reason for ignoring (for audit trail)"
-    )
 
     # docs-fix command
     docs_fix_parser = subparsers.add_parser(
@@ -927,30 +836,6 @@ def main():
     elif args.command == "context":
         success = print_module_context(args.dir, args.file)
         sys.exit(0 if success else 1)
-    elif args.command == "doctor":
-        # Run symbol extraction first if requested
-        if args.symbols:
-            import os
-            original_cwd = os.getcwd()
-            os.chdir(args.dir)
-            try:
-                result = extract_symbols_command(
-                    directory=None,
-                    graph_name=args.graph,
-                    dry_run=False
-                )
-                print(f"Symbol extraction: {result.files} files, {result.symbols} symbols, {result.links} links")
-                if result.errors:
-                    print(f"  ({len(result.errors)} errors)")
-                print()
-            finally:
-                os.chdir(original_cwd)
-
-        exit_code = doctor_command(
-            args.dir, args.format, args.level, args.no_save,
-            github=args.github and not args.no_github, github_max=args.github_max
-        )
-        sys.exit(exit_code)
     elif args.command == "solve-markers":
         exit_code = solve_special_markers_command(args.dir)
         sys.exit(exit_code)
@@ -1027,48 +912,6 @@ def main():
             sys.exit(0 if not result.errors else 1)
         finally:
             os.chdir(original_cwd)
-    elif args.command == "ignore":
-        if args.list:
-            # List current ignores
-            ignores = load_doctor_ignore(args.dir)
-            if not ignores:
-                print("No ignores configured.")
-                print(f"Add ignores with: mind ignore --type TYPE --path PATH --reason REASON")
-            else:
-                print(f"Doctor Ignores ({len(ignores)} entries):")
-                print("-" * 50)
-                for ig in ignores:
-                    print(f"  {ig.task_type}: {ig.path}")
-                    if ig.reason:
-                        print(f"    Reason: {ig.reason}")
-                    if ig.added_by or ig.added_date:
-                        print(f"    Added: {ig.added_by or 'unknown'} on {ig.added_date or 'unknown'}")
-                    print()
-            sys.exit(0)
-        elif args.type and args.path:
-            # Add new ignore
-            success = add_doctor_ignore(
-                args.dir,
-                task_type=args.type.upper(),
-                path=args.path,
-                reason=args.reason,
-                added_by="human"
-            )
-            if success:
-                print(f"Added ignore: {args.type.upper()} on {args.path}")
-            else:
-                print("Failed to add ignore (check PyYAML is installed)")
-                sys.exit(1)
-            sys.exit(0)
-        else:
-            print("Usage:")
-            print("  List ignores: mind ignore --list")
-            print("  Add ignore:   mind ignore --type TYPE --path PATH [--reason REASON]")
-            print()
-            print("Examples:")
-            print("  mind ignore --type MONOLITH --path src/legacy.py --reason 'Legacy code, too risky to split'")
-            print("  mind ignore --type MAGIC_VALUES --path tests/** --reason 'Test fixtures'")
-            sys.exit(1)
     elif args.command == "protocol":
         import logging
         import yaml
