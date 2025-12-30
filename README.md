@@ -2,89 +2,66 @@
 
 Mind Protocol MCP server and runtime for AI agents. Graph physics, traversal, structured dialogues.
 
-## Quick Start
+[![PyPI](https://img.shields.io/pypi/v/mind-mcp)](https://pypi.org/project/mind-mcp/)
+
+## Install
 
 ```bash
-# Clone and install
+pip install mind-mcp
+```
+
+Or from source:
+```bash
 git clone https://github.com/mind-protocol/mind-mcp.git
 cd mind-mcp
 pip install -e .
-
-# Initialize a project (defaults to FalkorDB)
-mind init
 ```
 
-This creates `.runtime/` with:
-- Protocol docs (PRINCIPLES.md, FRAMEWORK.md)
-- Agent definitions, skills, procedures
-- Python runtime for physics, graph, traversal
-- Database config (graph name defaults to repo name)
-
-## Local Runtime
-
-After `mind init`, projects can run mind locally without pip install:
+## Quick Start
 
 ```bash
-PYTHONPATH=".mind:$PYTHONPATH" python3 my_script.py
-```
-
-```python
-# my_script.py
-from mind.physics.constants import DECAY_RATE
-from mind.connectome import ConnectomeRunner
-from mind.infrastructure.database.factory import get_database_adapter
-
-adapter = get_database_adapter()
-```
-
-## CLI Commands
-
-```bash
-mind init [--database falkordb|neo4j]  # Initialize .runtime/ with runtime
-mind status                             # Show status and modules
-mind upgrade                            # Check for updates
-```
-
-## Database Backends
-
-Graph name defaults to repo name (e.g., `my-project` → `my_project`).
-
-### FalkorDB (default, local)
-
-```bash
+# Initialize a project
 mind init
 
-# Start FalkorDB
+# Start FalkorDB (default backend)
 docker run -p 6379:6379 falkordb/falkordb
 ```
 
-Override graph name in `.env`:
-```bash
-FALKORDB_GRAPH=custom_name
-```
+Creates `.mind/` with:
+- Protocol docs (PRINCIPLES.md, FRAMEWORK.md)
+- Agent definitions in `.mind/actors/{name}/CLAUDE.md`
+- Skills, procedures, state tracking
+- Python runtime for physics, graph, traversal
 
-### Neo4j (cloud or local)
+## Agents
 
-```bash
-mind init --database neo4j
-```
+10 work agents with specialized approaches:
 
-Configure in `.env`:
-```bash
-DATABASE_BACKEND=neo4j
-NEO4J_URI=neo4j+s://xxx.databases.neo4j.io
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password
-NEO4J_DATABASE=neo4j
-```
+| Agent | Approach | Tasks |
+|-------|----------|-------|
+| witness | evidence-first | STALE_SYNC, DOC_DELTA |
+| groundwork | foundation-first | UNDOCUMENTED, MISSING_TESTS |
+| keeper | verification-first | INVARIANT_COVERAGE, TEST_VALIDATES |
+| weaver | connection-first | BROKEN_IMPL_LINK, ORPHAN_DOCS |
+| fixer | work-first | STUB_IMPL, INCOMPLETE_IMPL |
+| architect | structure-first | YAML_DRIFT, PLACEHOLDER |
+| scout | exploration-first | MONOLITH, LARGE_DOC_MODULE |
+| voice | naming-first | NAMING_CONVENTION |
+| herald | communication-first | DOC_GAPS, DOC_DUPLICATION |
+| steward | coordination-first | ESCALATION, CONFLICTS |
 
-See `.env.mind.example` for all options.
+Agent selection uses graph physics: `score = similarity * weight * energy`
+
+## ID Convention
+
+All IDs follow `{TYPE}_{Name}` pattern:
+- `AGENT_Witness`, `AGENT_Fixer`
+- `TASK_FixAuth_a7b3`
+- `MOMENT_Assignment_witness_c4d2`
 
 ## MCP Server
 
-### Claude Code
-
-Add to `.mcp.json` in your project:
+Add to `.mcp.json`:
 
 ```json
 {
@@ -98,7 +75,7 @@ Add to `.mcp.json` in your project:
 }
 ```
 
-### Available Tools
+### Tools
 
 | Tool | Description |
 |------|-------------|
@@ -108,34 +85,64 @@ Add to `.mcp.json` in your project:
 | `procedure_list` | List available dialogues |
 | `doctor_check` | Run health checks |
 | `agent_list` | List work agents |
-| `agent_spawn` | Spawn a work agent |
+| `agent_spawn` | Spawn agent for task |
+| `agent_status` | Get/set agent status |
 | `task_list` | List pending tasks |
+| `task_claim` | Claim a task for an agent |
+| `task_complete` | Mark task completed |
+| `task_fail` | Mark task failed |
+
+## CLI
+
+```bash
+mind init [--database falkordb|neo4j]  # Initialize .mind/
+mind status                             # Show status
+mind doctor                             # Health checks
+mind work [path]                        # AI-assisted work
+```
+
+## Database Backends
+
+### FalkorDB (default)
+
+```bash
+docker run -p 6379:6379 falkordb/falkordb
+```
+
+### Neo4j
+
+```bash
+mind init --database neo4j
+```
+
+Configure in `.env`:
+```bash
+DATABASE_BACKEND=neo4j
+NEO4J_URI=neo4j+s://xxx.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=your_password
+```
 
 ## Project Structure
 
 ```
-.runtime/
+.mind/
 ├── PRINCIPLES.md          # How to work
 ├── FRAMEWORK.md           # Navigation guide
-├── config.yaml            # Mind config
-├── database_config.yaml   # Database settings
-├── agents/                # Agent postures
+├── actors/                # Agent prompts
+│   ├── witness/CLAUDE.md
+│   ├── fixer/CLAUDE.md
+│   └── ...
 ├── skills/                # Executable capabilities
 ├── procedures/            # Structured dialogues
-├── state/                 # SYNC files
-└── runtime/                  # Python runtime
-    ├── physics/           # Graph physics
-    ├── graph/             # Graph operations
-    ├── connectome/        # Dialogue runner
-    ├── infrastructure/    # DB adapters
-    └── traversal/         # Traversal logic
+└── state/                 # SYNC files
 ```
 
 ## Requirements
 
 - Python 3.10+
-- Neo4j or FalkorDB
-- Optional: OpenAI API key (for embeddings)
+- FalkorDB or Neo4j
+- Optional: OpenAI API key (embeddings)
 
 ## License
 
