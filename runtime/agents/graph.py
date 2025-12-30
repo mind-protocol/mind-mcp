@@ -755,7 +755,7 @@ class AgentGraph:
                 moment_data.update(extra_props)
 
             # Inject creates moment, links to actor, chains to previous
-            adapter = get_database_adapter(graph_name=self._graph_name)
+            adapter = get_database_adapter(graph_name=self.graph_name)
             inject(adapter, moment_data, with_context=True)
 
             # Link to about nodes if provided
@@ -796,7 +796,7 @@ class AgentGraph:
         from runtime.infrastructure.database import get_database_adapter
 
         try:
-            adapter = get_database_adapter(graph_name=self._graph_name)
+            adapter = get_database_adapter(graph_name=self.graph_name)
             inject_link(adapter, from_moment_id, to_moment_id, nature=nature)
             return True
         except Exception as e:
