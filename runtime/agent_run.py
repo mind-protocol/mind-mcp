@@ -119,6 +119,7 @@ async def run_work_agent(
             on_output=on_output,
             timeout=timeout,
             use_continue=use_continue,
+            actor_name=posture,  # Run from .mind/actors/{posture}/ for session tracking
         )
 
         duration = time.time() - start_time
@@ -159,6 +160,7 @@ async def _run_with_retry(
     on_output: Optional[Callable[[str], Awaitable[None]]],
     timeout: float,
     use_continue: bool,
+    actor_name: str = None,
 ) -> _InternalResult:
     """
     Run agent with --continue retry logic.
@@ -179,6 +181,7 @@ async def _run_with_retry(
                 continue_session=True,
                 on_output=on_output,
                 timeout=timeout,
+                actor_name=actor_name,
             )
 
             if result.success:
@@ -201,6 +204,7 @@ async def _run_with_retry(
             continue_session=False,
             on_output=on_output,
             timeout=timeout,
+            actor_name=actor_name,
         )
 
         return _InternalResult(
@@ -235,10 +239,21 @@ async def _run_agent(
     continue_session: bool,
     on_output: Optional[Callable[[str], Awaitable[None]]],
     timeout: float,
+    actor_name: str = None,
 ) -> _RunResult:
     """
     Run an agent process and collect output.
+
+    Runs from .mind/actors/{actor_name}/ if actor_name provided,
+    so session files are stored per-actor for activity tracking.
     """
+    # Determine working directory (actor folder for session tracking)
+    if actor_name:
+        work_dir = target_dir / ".mind" / "actors" / actor_name
+        work_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        work_dir = target_dir
+
     # Build command
     agent_cmd = build_agent_command(
         agent=agent_provider,
@@ -246,14 +261,14 @@ async def _run_agent(
         system_prompt=system_prompt,
         stream_json=True,
         continue_session=continue_session,
-        add_dir=target_dir,
+        add_dir=target_dir,  # Project dir for file access
         allowed_tools="Bash(*) Read(*) Edit(*) Write(*) Glob(*) Grep(*) WebFetch(*) NotebookEdit(*) TodoWrite(*)",
     )
 
-    # Start process
+    # Start process from actor folder (cwd = actor folder for session files)
     process = await asyncio.create_subprocess_exec(
         *agent_cmd.cmd,
-        cwd=str(target_dir),
+        cwd=str(work_dir),
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         stdin=asyncio.subprocess.PIPE if agent_cmd.stdin else None,

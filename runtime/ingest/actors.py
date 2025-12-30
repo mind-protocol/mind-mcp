@@ -1,8 +1,17 @@
 """
 Actor ingestion for the mind graph.
 
-Creates Actor nodes from .mind/actors/ACTOR_*.md files.
+Creates Actor nodes from .mind/actors/{name}/CLAUDE.md files.
 Each actor represents a work agent with a specific posture.
+
+Structure:
+    .mind/actors/
+    ├── witness/
+    │   ├── CLAUDE.md   # Claude-specific prompts
+    │   ├── GEMINI.md   # Gemini-specific prompts
+    │   └── AGENTS.md   # Generic prompts
+    └── fixer/
+        └── ...
 
 DOCS: .mind/docs/ACTOR_TEMPLATE.md
 """
@@ -71,35 +80,40 @@ def ingest_actors(
         "nature": "contains",
     }, with_context=False)
 
-    # Process each ACTOR_*.md file
-    actor_files = list(actors_dir.glob("ACTOR_*.md"))
-    stats["actors"] = len(actor_files)
+    # Process each actor folder (actors/{name}/)
+    actor_dirs = [d for d in actors_dir.iterdir() if d.is_dir()]
+    stats["actors"] = len(actor_dirs)
 
-    for actor_file in sorted(actor_files):
-        result = _ingest_actor(adapter, actor_file)
+    for actor_dir in sorted(actor_dirs):
+        result = _ingest_actor(adapter, actor_dir)
         stats[result] += 1
 
     return stats
 
 
-def _ingest_actor(adapter, actor_file: Path) -> str:
+def _ingest_actor(adapter, actor_dir: Path) -> str:
     """
-    Ingest a single actor file.
+    Ingest a single actor from folder.
+
+    Reads from actors/{name}/CLAUDE.md (or AGENTS.md as fallback).
 
     Returns: "created", "updated", or "unchanged"
     """
     from ..inject import inject
 
-    # Extract name from filename: ACTOR_Witness.md -> witness
-    match = re.match(r"ACTOR_(\w+)\.md", actor_file.name)
-    if not match:
-        return "unchanged"
-
-    name = match.group(1)
+    name = actor_dir.name
     actor_id = f"actor:agent_{name.lower()}"
 
+    # Find prompt file (prefer CLAUDE.md, fallback to AGENTS.md)
+    prompt_file = actor_dir / "CLAUDE.md"
+    if not prompt_file.exists():
+        prompt_file = actor_dir / "AGENTS.md"
+    if not prompt_file.exists():
+        logger.warning(f"No CLAUDE.md or AGENTS.md in {actor_dir}")
+        return "unchanged"
+
     # Parse the file
-    content = actor_file.read_text(encoding='utf-8', errors='ignore')
+    content = prompt_file.read_text(encoding='utf-8', errors='ignore')
 
     # Extract purpose from ## Purpose section
     purpose_match = re.search(
