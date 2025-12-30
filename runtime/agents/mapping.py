@@ -124,3 +124,98 @@ def get_name_description(name: str) -> str:
         "steward": "coordination-first, prioritizes and assigns",
     }
     return descriptions.get(name, "general agent")
+
+
+def normalize_agent_id(
+    agent_input: str,
+    target_dir: Optional[Path] = None,
+    graph_ops=None,
+) -> str:
+    """
+    Normalize various agent name formats to canonical AGENT_Name ID.
+
+    Handles:
+        - "AGENT_Witness" → "AGENT_Witness"
+        - "witness" → "AGENT_Witness"
+        - "Witness" → "AGENT_Witness"
+        - "WITNESS" → "AGENT_Witness"
+        - "agent_witness" → "AGENT_Witness"
+        - "agent-witness" → "AGENT_Witness"
+        - "" or None → Best HUMAN actor from graph, or AGENT_Fixer fallback
+
+    Args:
+        agent_input: Any agent name/ID format
+        target_dir: Project root for discovery
+        graph_ops: Optional graph ops for HUMAN lookup
+
+    Returns:
+        Canonical actor ID (e.g., "AGENT_Witness" or "HUMAN_Nicolas")
+    """
+    if not agent_input:
+        # Default: find best HUMAN actor from graph
+        if graph_ops:
+            try:
+                result = graph_ops._query(
+                    """
+                    MATCH (a)
+                    WHERE a.node_type = 'actor' AND a.type = 'HUMAN'
+                    RETURN a.id, COALESCE(a.weight, 1.0) * COALESCE(a.energy, 0.5) as score
+                    ORDER BY score DESC
+                    LIMIT 1
+                    """
+                )
+                if result and result[0]:
+                    return result[0][0]
+            except Exception:
+                pass
+        # Fallback to default agent
+        return f"AGENT_{DEFAULT_NAME.capitalize()}"
+
+    # Strip whitespace
+    agent_input = agent_input.strip()
+
+    # Already canonical format
+    if agent_input.startswith("AGENT_"):
+        name = agent_input[6:]  # Remove AGENT_ prefix
+        return f"AGENT_{name.capitalize()}"
+
+    # Remove common prefixes (case-insensitive)
+    lower = agent_input.lower()
+    for prefix in ["agent_", "agent-", "actor_", "actor-"]:
+        if lower.startswith(prefix):
+            agent_input = agent_input[len(prefix):]
+            break
+
+    # Extract name (handle remaining separators)
+    name = agent_input.replace("-", "_").split("_")[-1]
+
+    # Normalize to lowercase for lookup
+    name_lower = name.lower()
+
+    # Check if it's a known agent
+    agents = discover_agents(target_dir)
+    if name_lower in agents:
+        return agents[name_lower]
+
+    # Fallback to static mapping
+    if name_lower in NAME_TO_AGENT_ID:
+        return NAME_TO_AGENT_ID[name_lower]
+
+    # Generate ID from name
+    return f"AGENT_{name.capitalize()}"
+
+
+def extract_agent_name(agent_id: str) -> str:
+    """
+    Extract lowercase name from agent ID.
+
+    Args:
+        agent_id: "AGENT_Witness" or any format
+
+    Returns:
+        Lowercase name: "witness"
+    """
+    normalized = normalize_agent_id(agent_id)
+    if normalized.startswith("AGENT_"):
+        return normalized[6:].lower()
+    return normalized.lower()

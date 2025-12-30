@@ -36,6 +36,8 @@ from .mapping import (
     discover_agents,
     get_agent_id,
     list_agents,
+    normalize_agent_id,
+    extract_agent_name,
 )
 from .cli import build_agent_command, normalize_agent, AgentCommand
 from .run import (
@@ -73,6 +75,8 @@ __all__ = [
     "discover_agents",
     "get_agent_id",
     "list_agents",
+    "normalize_agent_id",
+    "extract_agent_name",
     # CLI
     "build_agent_command",
     "normalize_agent",

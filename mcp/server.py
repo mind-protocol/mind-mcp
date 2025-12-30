@@ -56,6 +56,7 @@ from runtime.agents import (
     run_for_task,
     build_agent_prompt,
     get_learnings_content,
+    normalize_agent_id,
 )
 from runtime.capability_integration import (
     init_capability_manager,
@@ -435,10 +436,10 @@ class MindServer:
                             },
                             "actor_id": {
                                 "type": "string",
-                                "description": "The actor ID claiming the task"
+                                "description": "Actor claiming (witness, AGENT_Witness, etc). Defaults to best HUMAN."
                             }
                         },
-                        "required": ["task_id", "actor_id"]
+                        "required": ["task_id"]
                     }
                 },
                 {
@@ -450,6 +451,10 @@ class MindServer:
                             "task_id": {
                                 "type": "string",
                                 "description": "The task_run node ID to complete"
+                            },
+                            "actor_id": {
+                                "type": "string",
+                                "description": "Actor completing (witness, AGENT_Witness, etc). Defaults to best HUMAN."
                             }
                         },
                         "required": ["task_id"]
@@ -468,6 +473,10 @@ class MindServer:
                             "reason": {
                                 "type": "string",
                                 "description": "Why the task failed"
+                            },
+                            "actor_id": {
+                                "type": "string",
+                                "description": "Actor reporting failure (witness, AGENT_Witness, etc). Defaults to best HUMAN."
                             }
                         },
                         "required": ["task_id", "reason"]
@@ -481,14 +490,13 @@ class MindServer:
                         "properties": {
                             "actor_id": {
                                 "type": "string",
-                                "description": "The actor ID sending heartbeat"
+                                "description": "Actor sending heartbeat (witness, AGENT_Witness, etc). Defaults to best HUMAN."
                             },
                             "step": {
                                 "type": "integer",
                                 "description": "Optional: current step number in task"
                             }
-                        },
-                        "required": ["actor_id"]
+                        }
                     }
                 }
             ]
@@ -1495,8 +1503,11 @@ Please investigate and fix this problem. Follow the project's coding standards a
         task_id = args.get("task_id")
         actor_id = args.get("actor_id")
 
-        if not task_id or not actor_id:
-            return {"content": [{"type": "text", "text": "Error: task_id and actor_id are required"}]}
+        if not task_id:
+            return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
+
+        # Normalize actor_id - defaults to best HUMAN if not provided
+        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
 
         if not self.graph_ops:
             return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
@@ -1531,9 +1542,13 @@ Please investigate and fix this problem. Follow the project's coding standards a
     def _tool_task_complete(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Mark task as completed."""
         task_id = args.get("task_id")
+        actor_id = args.get("actor_id")
 
         if not task_id:
             return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
+
+        # Normalize actor_id - defaults to best HUMAN if not provided
+        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
 
         if not self.graph_ops:
             return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
@@ -1544,9 +1559,9 @@ Please investigate and fix this problem. Follow the project's coding standards a
             timestamp = datetime.now().isoformat()
             result = self.graph_ops._query(
                 "MATCH (n {id: $id}) WHERE n.status IN ['claimed', 'running'] "
-                "SET n.status = 'completed', n.completed_at = $ts "
+                "SET n.status = 'completed', n.completed_at = $ts, n.completed_by = $actor "
                 "RETURN n.id",
-                {"id": task_id, "ts": timestamp}
+                {"id": task_id, "ts": timestamp, "actor": actor_id}
             )
             if not result or not result[0]:
                 return {"content": [{"type": "text", "text": f"Failed to complete: task not found or not active"}]}
@@ -1556,7 +1571,7 @@ Please investigate and fix this problem. Follow the project's coding standards a
             if throttler:
                 throttler.on_complete(task_id)
 
-            return {"content": [{"type": "text", "text": f"Task {task_id} completed"}]}
+            return {"content": [{"type": "text", "text": f"Task {task_id} completed by {actor_id}"}]}
 
         except Exception as e:
             logger.exception("Task complete failed")
@@ -1565,10 +1580,14 @@ Please investigate and fix this problem. Follow the project's coding standards a
     def _tool_task_fail(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Mark task as failed."""
         task_id = args.get("task_id")
+        actor_id = args.get("actor_id")
         reason = args.get("reason", "Unknown reason")
 
         if not task_id:
             return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
+
+        # Normalize actor_id - defaults to best HUMAN if not provided
+        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
 
         if not self.graph_ops:
             return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
@@ -1579,9 +1598,9 @@ Please investigate and fix this problem. Follow the project's coding standards a
             timestamp = datetime.now().isoformat()
             result = self.graph_ops._query(
                 "MATCH (n {id: $id}) WHERE n.status IN ['pending', 'claimed', 'running'] "
-                "SET n.status = 'failed', n.failed_at = $ts, n.failure_reason = $reason "
+                "SET n.status = 'failed', n.failed_at = $ts, n.failure_reason = $reason, n.failed_by = $actor "
                 "RETURN n.id",
-                {"id": task_id, "ts": timestamp, "reason": reason}
+                {"id": task_id, "ts": timestamp, "reason": reason, "actor": actor_id}
             )
             if not result or not result[0]:
                 return {"content": [{"type": "text", "text": f"Failed to mark failed: task not found or already completed"}]}
@@ -1591,7 +1610,7 @@ Please investigate and fix this problem. Follow the project's coding standards a
             if throttler:
                 throttler.on_abandon(task_id)
 
-            return {"content": [{"type": "text", "text": f"Task {task_id} failed: {reason}"}]}
+            return {"content": [{"type": "text", "text": f"Task {task_id} failed by {actor_id}: {reason}"}]}
 
         except Exception as e:
             logger.exception("Task fail failed")
@@ -1602,8 +1621,8 @@ Please investigate and fix this problem. Follow the project's coding standards a
         actor_id = args.get("actor_id")
         step = args.get("step")
 
-        if not actor_id:
-            return {"content": [{"type": "text", "text": "Error: actor_id is required"}]}
+        # Normalize actor_id - defaults to best HUMAN if not provided
+        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
 
         if not self.graph_ops:
             return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
