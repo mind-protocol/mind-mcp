@@ -135,6 +135,11 @@ class CapabilityGraphAdapter:
                 weight=weight,
                 embedding=embedding,
             )
+            # Set synthesis field (add_narrative doesn't have synthesis param)
+            self._graph._query(
+                "MATCH (n {id: $id}) SET n.synthesis = $synthesis",
+                {"id": id, "synthesis": synthesis}
+            )
             # Set status field for task_run nodes (required for claim workflow)
             if type == "task_run":
                 problem = props.get('on_problem', 'unknown')
