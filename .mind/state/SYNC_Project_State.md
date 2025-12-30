@@ -2,7 +2,7 @@
 
 ```
 LAST_UPDATED: 2025-12-30
-UPDATED_BY: Claude (agent - groundwork)
+UPDATED_BY: Claude (agent - groundwork + steward)
 ```
 
 ---
@@ -48,16 +48,47 @@ All browser-side code is self-contained — no dependencies on mind-mcp's Node.j
 
 ## RECENT CHANGES
 
+### 2025-12-30: Fixed UNMONITORED_LOGS and INCOMPLETE_CHAIN Health Checks
+
+- **What:**
+  1. Added swarm agent logs to watched paths (`.mind/swarm/**/*.log`) in flag-errors capability
+  2. Created full 9-file documentation chain for tests/traversal module
+- **Why:**
+  1. UNMONITORED_LOGS (degraded) - swarm agent logs weren't being monitored for errors
+  2. INCOMPLETE_CHAIN (critical) - tests/traversal module had no documentation
+- **Impact:**
+  1. Swarm agent logs now monitored for error detection and spike analysis
+  2. tests/traversal has complete doc chain (OBJECTIVES, PATTERNS, VOCABULARY, BEHAVIORS, ALGORITHM, VALIDATION, IMPLEMENTATION, HEALTH, SYNC)
+- **Files:**
+  - `.mind/capabilities/flag-errors/runtime/checks.py` (added swarm log pattern)
+  - `docs/tests/traversal/*.md` (9 files created)
+
+### 2025-12-30: Fixed Critical Issues and Added Test Coverage
+
+- **What:**
+  1. Fixed STUB_IMPL critical issue in `runtime/capability_integration.py` by defining missing `platform_path` variable
+  2. Created comprehensive test suite for traversal module (36 tests total)
+     - `tests/traversal/test_embedding.py` - 21 tests for EmbeddingService
+     - `tests/traversal/test_moment.py` - 15 tests for MomentOperationsMixin
+- **Why:**
+  1. STUB_IMPL health check flagged critical issue - capability runtime wasn't loading properly, falling back to non-functional stubs
+  2. MISSING_TESTS health check flagged critical issue - tests/traversal had empty test files
+- **Impact:**
+  1. Capability runtime now loads successfully, health checks can run properly
+  2. Traversal module now has comprehensive test coverage (all 36 tests passing)
+  3. Tests cover: embedding generation, batch processing, node/link embedding, similarity calculations, moment click handling, edge cases
+- **Files:**
+  - `runtime/capability_integration.py` (fixed line 39: added `platform_path` definition)
+  - `tests/traversal/test_embedding.py` (new: 21 tests)
+  - `tests/traversal/test_moment.py` (new: 15 tests)
+- **Verification:** `pytest tests/traversal/ -v` - all 36 tests pass
+
 ### 2025-12-30: Created Documentation for tests/traversal Module
 
 - **What:** Created full 9-file documentation chain for tests/traversal module (OBJECTIVES, PATTERNS, VOCABULARY, BEHAVIORS, ALGORITHM, VALIDATION, IMPLEMENTATION, HEALTH, SYNC).
 - **Why:** INCOMPLETE_CHAIN health check flagged critical signal - module had no documentation.
 - **Impact:** tests/traversal module now has complete doc chain. Health check should pass.
 - **Files:** `docs/tests/traversal/*.md` (9 files)
-
-### 2025-12-30: Fixed STUB_IMPL Critical Issue in Capability Integration
-
-- **What:** Fixed undefined `platform_path` variable in `_load_capability_module()` function, which caused capability runtime to fail loading and fall back to stub implementations. Also fixed `get_status()` and `list_capabilities()` methods to work with actual Throttler and CheckDefinition interfaces.
 - **Why:** The capability system was using stub implementations (return `[]`, `{}`, `None`) instead of real implementations, making health checks and task creation non-functional.
 - **Impact:** Capability runtime now loads successfully. All 14 capabilities with 37 health checks are discovered and registered. No stub implementations in use.
 - **Files:** `runtime/capability_integration.py` (lines 39, 281-313)
