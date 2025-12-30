@@ -299,3 +299,73 @@ def sync_liveness_to_graph(project_path: Path, graph_name: str = None) -> dict:
         "inactive_sessions": inactive_agents,
         "most_recent_age": liveness.get("most_recent_age"),
     }
+
+
+# =============================================================================
+# SESSION FILE BASED DETECTION
+# =============================================================================
+
+def get_active_agent_from_session(target_dir: Path) -> Optional[str]:
+    """
+    Detect active agent from .mind/actors/{name}/.sessionId files.
+
+    When an agent runs, it writes its session_id to .sessionId.
+    When done, the file is deleted.
+
+    Returns:
+        Agent name (e.g., "witness") if one is active, None otherwise.
+    """
+    actors_dir = target_dir / ".mind" / "actors"
+    if not actors_dir.exists():
+        return None
+
+    for agent_dir in actors_dir.iterdir():
+        if not agent_dir.is_dir():
+            continue
+
+        session_file = agent_dir / ".sessionId"
+        if session_file.exists():
+            # Agent is currently running
+            return agent_dir.name
+
+    return None
+
+
+def get_all_active_agents_from_sessions(target_dir: Path) -> list[str]:
+    """
+    Get all currently active agents from session files.
+
+    Returns:
+        List of agent names that have active session files.
+    """
+    actors_dir = target_dir / ".mind" / "actors"
+    if not actors_dir.exists():
+        return []
+
+    active = []
+    for agent_dir in actors_dir.iterdir():
+        if not agent_dir.is_dir():
+            continue
+
+        session_file = agent_dir / ".sessionId"
+        if session_file.exists():
+            active.append(agent_dir.name)
+
+    return active
+
+
+def get_session_id_for_agent(target_dir: Path, agent_name: str) -> Optional[str]:
+    """
+    Get the session ID for a specific agent if running.
+
+    Args:
+        target_dir: Project directory
+        agent_name: Agent name (e.g., "witness")
+
+    Returns:
+        Session ID string if agent is running, None otherwise.
+    """
+    session_file = target_dir / ".mind" / "actors" / agent_name / ".sessionId"
+    if session_file.exists():
+        return session_file.read_text().strip()
+    return None

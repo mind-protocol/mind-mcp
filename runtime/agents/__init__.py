@@ -62,6 +62,10 @@ from .liveness import (
     get_all_active_agents,
     sync_liveness_to_graph,
     SessionInfo,
+    # Session file based detection
+    get_active_agent_from_session,
+    get_all_active_agents_from_sessions,
+    get_session_id_for_agent,
 )
 
 __all__ = [
@@ -100,4 +104,8 @@ __all__ = [
     "get_all_active_agents",
     "sync_liveness_to_graph",
     "SessionInfo",
+    # Session file detection
+    "get_active_agent_from_session",
+    "get_all_active_agents_from_sessions",
+    "get_session_id_for_agent",
 ]

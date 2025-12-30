@@ -118,6 +118,7 @@ async def run_work_agent(
             on_output=on_output,
             timeout=timeout,
             use_continue=use_continue,
+            agent_name=name,
         )
 
         duration = time.time() - start_time
@@ -126,13 +127,65 @@ async def run_work_agent(
         if result.success:
             agent_graph.boost_agent_energy(actor_id, 0.1)
 
-        # Create completion moment capturing the output
-        completion_moment_id = None
-        if result.output:
-            # Truncate output for prose (first 500 chars)
-            output_preview = result.output[:500] + "..." if len(result.output) > 500 else result.output
-            status = "completed" if result.success else "failed"
+        # Detect cd commands and update agent's folder space links
+        if result.conversation:
+            cd_dirs = _detect_cd_commands(result.conversation)
+            if cd_dirs:
+                # Use the last cd directory as current working dir
+                new_cwd = cd_dirs[-1]
+                # Resolve relative paths against target_dir
+                if not new_cwd.startswith("/"):
+                    new_cwd = str((target_dir / new_cwd).resolve())
+                agent_graph.update_agent_cwd(actor_id, new_cwd)
 
+        # Create conversation moments from batches
+        completion_moment_id = None
+        status = "completed" if result.success else "failed"
+
+        if result.conversation:
+            batches = _group_turns_into_batches(result.conversation)
+            prev_moment_id = assignment_moment_id
+
+            for i, batch in enumerate(batches):
+                moment_id = agent_graph.create_moment(
+                    actor_id=actor_id,
+                    moment_type="CONVERSATION",
+                    prose=batch.summary,
+                    about_ids=[task_id] if task_id else None,
+                    extra_props={
+                        "task_id": task_id,
+                        "batch_index": i,
+                        "turn_count": batch.turn_count,
+                        "tools_used": batch.tools_used,
+                    },
+                )
+                # Chain moments: prev --precedes--> current
+                if prev_moment_id:
+                    agent_graph.link_moments(prev_moment_id, moment_id, "precedes")
+                prev_moment_id = moment_id
+                completion_moment_id = moment_id  # Last batch is completion
+
+            # Add final status moment
+            if completion_moment_id:
+                final_moment_id = agent_graph.create_moment(
+                    actor_id=actor_id,
+                    moment_type="COMPLETION",
+                    prose=f"Agent {name} {status} after {len(batches)} batches",
+                    about_ids=[task_id] if task_id else None,
+                    extra_props={
+                        "task_id": task_id,
+                        "status": status,
+                        "duration_seconds": round(duration, 2),
+                        "total_turns": sum(b.turn_count for b in batches),
+                        "error": result.error[:200] if result.error else None,
+                    },
+                )
+                agent_graph.link_moments(completion_moment_id, final_moment_id, "precedes")
+                completion_moment_id = final_moment_id
+
+        elif result.output:
+            # Fallback: no conversation parsed, use output
+            output_preview = result.output[:500] + "..." if len(result.output) > 500 else result.output
             completion_moment_id = agent_graph.create_moment(
                 actor_id=actor_id,
                 moment_type="COMPLETION",
@@ -162,6 +215,11 @@ async def run_work_agent(
         # Always set agent back to ready
         agent_graph.set_agent_ready(actor_id)
 
+        # Clean up session file
+        session_file = target_dir / ".mind" / "actors" / name / ".sessionId"
+        if session_file.exists():
+            session_file.unlink()
+
 
 @dataclass
 class _InternalResult:
@@ -170,6 +228,7 @@ class _InternalResult:
     output: str
     error: Optional[str] = None
     retried: bool = False
+    conversation: Optional[List["_ConversationTurn"]] = None
 
 
 async def _run_with_retry(
@@ -180,6 +239,7 @@ async def _run_with_retry(
     on_output: Optional[Callable[[str], Awaitable[None]]],
     timeout: float,
     use_continue: bool,
+    agent_name: Optional[str] = None,
 ) -> _InternalResult:
     """
     Run agent with --continue retry logic.
@@ -200,6 +260,7 @@ async def _run_with_retry(
                 continue_session=True,
                 on_output=on_output,
                 timeout=timeout,
+                agent_name=agent_name,
             )
 
             if result.success:
@@ -207,6 +268,7 @@ async def _run_with_retry(
                     success=True,
                     output=result.output,
                     retried=False,
+                    conversation=result.conversation,
                 )
         except Exception as e:
             logger.warning(f"[run] --continue attempt failed: {e}, retrying without")
@@ -222,6 +284,7 @@ async def _run_with_retry(
             continue_session=False,
             on_output=on_output,
             timeout=timeout,
+            agent_name=agent_name,
         )
 
         return _InternalResult(
@@ -229,6 +292,7 @@ async def _run_with_retry(
             output=result.output,
             error=result.error if not result.success else None,
             retried=retried,
+            conversation=result.conversation,
         )
 
     except Exception as e:
@@ -237,7 +301,25 @@ async def _run_with_retry(
             output="",
             error=str(e),
             retried=retried,
+            conversation=None,
         )
+
+
+@dataclass
+class _ConversationTurn:
+    """A single turn in the conversation."""
+    type: str  # "thinking", "text", "tool_use", "tool_result"
+    content: str
+    tool_name: Optional[str] = None
+    tool_id: Optional[str] = None
+
+
+@dataclass
+class _ConversationBatch:
+    """A batch of grouped conversation turns."""
+    summary: str  # Compact summary of the batch
+    turn_count: int
+    tools_used: List[str]  # Tool names in this batch
 
 
 @dataclass
@@ -246,6 +328,82 @@ class _RunResult:
     success: bool
     output: str
     error: Optional[str] = None
+    conversation: Optional[List[_ConversationTurn]] = None  # Full conversation turns
+
+
+def _detect_cd_commands(turns: List["_ConversationTurn"]) -> List[str]:
+    """
+    Detect cd commands in conversation and extract target directories.
+
+    Returns list of directories the agent cd'd into.
+    """
+    import re
+    directories = []
+
+    for turn in turns:
+        if turn.type == "tool_use" and turn.tool_name == "Bash":
+            try:
+                # Parse JSON tool input to get command
+                tool_input = json.loads(turn.content) if turn.content else {}
+                command = tool_input.get("command", "")
+
+                # Look for cd command patterns
+                # Matches: cd /path, cd path, cd "/path", cd 'path'
+                # In: cd /tmp, cd /tmp && ls, ls && cd /tmp, cd /tmp; ls
+                for match in re.finditer(r'(?:^|&&|;|\|)\s*cd\s+["\']?([^"\'&;|\n]+)["\']?', command):
+                    path = match.group(1).strip()
+                    if path:
+                        directories.append(path)
+            except (json.JSONDecodeError, Exception):
+                pass
+
+    return directories
+
+
+def _group_turns_into_batches(
+    turns: List[_ConversationTurn],
+    batch_size: int = 5,
+    tool_output_max_len: int = 200,
+) -> List[_ConversationBatch]:
+    """
+    Group conversation turns into compact batches.
+
+    Each batch combines up to batch_size turns into a summary:
+    - thinking: full content
+    - text: full content
+    - tool_use: Tool(full args)
+    - tool_result: truncated to tool_output_max_len
+    """
+    batches = []
+
+    for i in range(0, len(turns), batch_size):
+        batch_turns = turns[i:i + batch_size]
+        summary_parts = []
+        tools_used = []
+
+        for turn in batch_turns:
+            if turn.type == "thinking":
+                summary_parts.append(f"💭 {turn.content}")
+            elif turn.type == "text":
+                summary_parts.append(f"📝 {turn.content}")
+            elif turn.type == "tool_use":
+                tool_name = turn.tool_name or "?"
+                tools_used.append(tool_name)
+                summary_parts.append(f"🔧 {tool_name}({turn.content})")
+            elif turn.type == "tool_result":
+                # Only truncate tool output
+                content = turn.content[:tool_output_max_len]
+                if len(turn.content) > tool_output_max_len:
+                    content += "..."
+                summary_parts.append(f"→ {content}")
+
+        batches.append(_ConversationBatch(
+            summary="\n".join(summary_parts),
+            turn_count=len(batch_turns),
+            tools_used=tools_used,
+        ))
+
+    return batches
 
 
 async def _run_agent(
@@ -256,11 +414,15 @@ async def _run_agent(
     continue_session: bool,
     on_output: Optional[Callable[[str], Awaitable[None]]],
     timeout: float,
+    agent_name: Optional[str] = None,
 ) -> _RunResult:
     """
-    Run an agent process and collect output.
+    Run an agent process and collect full conversation.
+
+    Writes session_id to .mind/actors/{agent_name}/.sessionId for MCP auto-detection.
     """
-    # Build command
+    # Build command with verbose stream-json for full conversation
+    # Note: --verbose is already added in cli.py for Claude
     agent_cmd = build_agent_command(
         agent=agent_provider,
         prompt=prompt,
@@ -299,8 +461,11 @@ async def _run_agent(
     stdout_str = stdout_data.decode(errors="replace")
     stderr_str = stderr_data.decode(errors="replace")
 
-    # Parse output
+    # Parse output and conversation
     output_parts = []
+    conversation_turns: List[_ConversationTurn] = []
+    session_id = None
+
     for line in stdout_str.split("\n"):
         line = line.strip()
         if not line:
@@ -309,22 +474,88 @@ async def _run_agent(
         try:
             data = json.loads(line)
             if isinstance(data, dict):
-                if data.get("type") == "assistant":
+                msg_type = data.get("type")
+
+                # Capture session_id from system message
+                if msg_type == "system":
+                    session_id = data.get("session_id")
+                    if session_id and agent_name:
+                        # Write session_id to .mind/actors/{name}/.sessionId
+                        session_file = target_dir / ".mind" / "actors" / agent_name / ".sessionId"
+                        session_file.parent.mkdir(parents=True, exist_ok=True)
+                        session_file.write_text(session_id)
+
+                elif msg_type == "assistant":
                     msg_data = data.get("message", {})
                     if isinstance(msg_data, dict):
                         for content in msg_data.get("content", []):
                             if isinstance(content, dict):
-                                if content.get("type") == "text":
+                                content_type = content.get("type")
+
+                                if content_type == "thinking":
+                                    # Capture thinking blocks
+                                    thinking_text = content.get("thinking", "")
+                                    if thinking_text:
+                                        conversation_turns.append(_ConversationTurn(
+                                            type="thinking",
+                                            content=thinking_text,
+                                        ))
+
+                                elif content_type == "text":
                                     text = content.get("text", "")
-                                    output_parts.append(text)
-                                    if on_output:
-                                        await on_output(text)
-                elif data.get("type") == "result":
+                                    if text:
+                                        output_parts.append(text)
+                                        conversation_turns.append(_ConversationTurn(
+                                            type="text",
+                                            content=text,
+                                        ))
+                                        if on_output:
+                                            await on_output(text)
+
+                                elif content_type == "tool_use":
+                                    # Capture tool calls
+                                    tool_name = content.get("name", "")
+                                    tool_id = content.get("id", "")
+                                    tool_input = content.get("input", {})
+                                    conversation_turns.append(_ConversationTurn(
+                                        type="tool_use",
+                                        content=json.dumps(tool_input, indent=2) if tool_input else "",
+                                        tool_name=tool_name,
+                                        tool_id=tool_id,
+                                    ))
+
+                elif msg_type == "user":
+                    # User messages contain tool results
+                    msg_data = data.get("message", {})
+                    if isinstance(msg_data, dict):
+                        for content in msg_data.get("content", []):
+                            if isinstance(content, dict):
+                                if content.get("type") == "tool_result":
+                                    tool_id = content.get("tool_use_id", "")
+                                    result_content = content.get("content", "")
+                                    # Handle content that may be a list of text blocks
+                                    if isinstance(result_content, list):
+                                        result_text = "\n".join(
+                                            item.get("text", str(item))
+                                            for item in result_content
+                                            if isinstance(item, dict)
+                                        )
+                                    else:
+                                        result_text = str(result_content)
+
+                                    conversation_turns.append(_ConversationTurn(
+                                        type="tool_result",
+                                        content=result_text[:2000],  # Truncate large results
+                                        tool_id=tool_id,
+                                    ))
+
+                elif msg_type == "result":
                     result = data.get("result", "")
                     if result:
                         output_parts.append(result)
                         if on_output:
                             await on_output(result)
+
         except json.JSONDecodeError:
             # Plain text output
             output_parts.append(line)
@@ -341,11 +572,13 @@ async def _run_agent(
             success=False,
             output=output,
             error=stderr_str[:500],
+            conversation=conversation_turns,
         )
 
     return _RunResult(
         success=success,
         output=output,
+        conversation=conversation_turns,
     )
 
 

@@ -717,12 +717,12 @@ class AgentGraph:
         extra_props: Optional[Dict] = None,
     ) -> Optional[str]:
         """
-        Create a moment node linked to actor, space, and chained to previous moment.
+        Create a moment node using inject().
 
         Args:
             actor_id: Actor creating this moment
-            moment_type: Type of moment (e.g., 'task_created', 'problem_detected')
-            prose: Human-readable description
+            moment_type: Type of moment (e.g., 'COMPLETION', 'CONVERSATION')
+            prose: Human-readable description (becomes synthesis)
             about_ids: Node IDs this moment is about
             space_id: Space (module/project) where this moment occurs
             extra_props: Additional properties for the moment
@@ -730,108 +730,127 @@ class AgentGraph:
         Returns:
             Moment ID if created, None on failure
         """
-        if not self._connect():
-            return None
+        from runtime.inject import inject, set_actor, inject_link
+        from runtime.infrastructure.database import get_database_adapter
 
         try:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
             agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
-            moment_id = f"{moment_type.upper()}_{agent_name}_{ts_hash}"
+            moment_id = f"moment:{moment_type.lower()}:{agent_name}_{ts_hash}"
 
-            # Get previous moment for chaining
-            prev_moment_id = self.get_actor_last_moment(actor_id)
+            # Set actor for inject context
+            set_actor(actor_id)
 
-            # Create moment node
-            props = {
+            # Build moment data
+            moment_data = {
                 "id": moment_id,
-                "node_type": "moment",
+                "label": "Moment",
+                "name": f"{moment_type}:{agent_name}",
                 "type": moment_type,
-                "prose": prose,
-                "actor_id": actor_id,
-                "created_at_s": timestamp,
-                "updated_at_s": timestamp,
+                "synthesis": prose,
+                "timestamp": timestamp,
             }
             if extra_props:
-                props.update(extra_props)
+                moment_data.update(extra_props)
 
-            prop_sets = ", ".join([f"m.{k} = ${k}" for k in props.keys()])
-            create_cypher = f"""
-            MERGE (m:Moment {{id: $id}})
-            SET {prop_sets}
-            RETURN m.id
-            """
-            self._graph_ops._query(create_cypher, props)
+            # Inject creates moment, links to actor, chains to previous
+            adapter = get_database_adapter(graph_name=self._graph_name)
+            inject(adapter, moment_data, with_context=True)
 
-            # Link: actor expresses moment (with physics)
-            expresses_props = _build_link_props("expresses", timestamp)
-            expresses_props["created_at_s"] = timestamp
-            expresses_set = _link_set_clause(expresses_props)
-            self._graph_ops._query(f"""
-            MATCH (a:Actor {{id: $actor_id}})
-            MATCH (m:Moment {{id: $moment_id}})
-            MERGE (a)-[r:link]->(m)
-            SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
-                {expresses_set}
-            """, {"actor_id": actor_id, "moment_id": moment_id, "timestamp": timestamp, **expresses_props})
-
-            # Link: previous moment → this moment (chain with physics)
-            if prev_moment_id:
-                follows_props = _build_link_props("precedes", timestamp)
-                follows_props["created_at_s"] = timestamp
-                follows_set = _link_set_clause(follows_props)
-                self._graph_ops._query(f"""
-                MATCH (prev:Moment {{id: $prev_id}})
-                MATCH (curr:Moment {{id: $curr_id}})
-                MERGE (prev)-[r:link]->(curr)
-                SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
-                    {follows_set}
-                """, {"prev_id": prev_moment_id, "curr_id": moment_id, "timestamp": timestamp, **follows_props})
-
-            # Link: moment about target nodes (with physics)
+            # Link to about nodes if provided
             if about_ids:
-                concerns_props = _build_link_props("concerns", timestamp)
-                concerns_props["created_at_s"] = timestamp
-                concerns_set = _link_set_clause(concerns_props)
                 for about_id in about_ids:
-                    self._graph_ops._query(f"""
-                    MATCH (m:Moment {{id: $moment_id}})
-                    MATCH (n {{id: $about_id}})
-                    MERGE (m)-[r:link]->(n)
-                    SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
-                        {concerns_set}
-                    """, {"moment_id": moment_id, "about_id": about_id, "timestamp": timestamp, **concerns_props})
+                    if about_id:
+                        inject_link(adapter, moment_id, about_id, nature="about")
 
-            # Link: space includes moment (with physics)
+            # Link: space includes moment
             if space_id:
-                includes_props = _build_link_props("includes", timestamp)
-                includes_props["created_at_s"] = timestamp
-                includes_set = _link_set_clause(includes_props)
-                self._graph_ops._query(f"""
-                MERGE (s:Space {{id: $space_id}})
-                SET s.node_type = 'space',
-                    s.name = $space_name,
-                    s.updated_at_s = $timestamp,
-                    s.created_at_s = coalesce(s.created_at_s, $timestamp)
-                WITH s
-                MATCH (m:Moment {{id: $moment_id}})
-                MERGE (s)-[r:link]->(m)
-                SET r.created_at_s = coalesce(r.created_at_s, $timestamp),
-                    {includes_set}
-                """, {
-                    "moment_id": moment_id,
-                    "space_id": space_id,
-                    "space_name": space_id.replace("space_", "").replace("_", "/"),
-                    "timestamp": timestamp,
-                    **includes_props,
-                })
+                inject_link(adapter, space_id, moment_id, nature="includes")
 
-            logger.info(f"[AgentGraph] Created moment: {moment_id} (follows: {prev_moment_id or 'none'}, space: {space_id or 'none'})")
+            logger.info(f"[AgentGraph] Created moment: {moment_id}")
             return moment_id
 
         except Exception as e:
             logger.error(f"[AgentGraph] Failed to create moment: {e}")
             return None
+
+    def link_moments(
+        self,
+        from_moment_id: str,
+        to_moment_id: str,
+        nature: str = "precedes",
+    ) -> bool:
+        """
+        Link two moments using inject.
+
+        Args:
+            from_moment_id: Source moment ID
+            to_moment_id: Target moment ID
+            nature: Link nature (default: "precedes")
+
+        Returns:
+            True if link created
+        """
+        from runtime.inject import inject_link
+        from runtime.infrastructure.database import get_database_adapter
+
+        try:
+            adapter = get_database_adapter(graph_name=self._graph_name)
+            inject_link(adapter, from_moment_id, to_moment_id, nature=nature)
+            return True
+        except Exception as e:
+            logger.error(f"[AgentGraph] Failed to link moments: {e}")
+            return False
+
+    def update_agent_cwd(self, actor_id: str, new_cwd: str) -> bool:
+        """
+        Update agent's current working directory.
+
+        - Removes old works_in links to folder spaces
+        - Links to existing folder space if found
+        - Stores cwd as property on agent
+
+        Args:
+            actor_id: Agent actor ID
+            new_cwd: New working directory path
+
+        Returns:
+            True if updated
+        """
+        if not self._connect():
+            return False
+
+        try:
+            ts = int(time.time())
+
+            # Remove existing "works_in" links to folder spaces
+            self._graph_ops._query("""
+                MATCH (a {id: $actor_id})-[r:LINK {verb: 'works_in'}]->(s)
+                WHERE s.type = 'FOLDER'
+                DELETE r
+            """, {"actor_id": actor_id})
+
+            # Store cwd as property
+            self._graph_ops._query("""
+                MATCH (a {id: $actor_id})
+                SET a.cwd = $cwd, a.updated_at_s = $ts
+            """, {"actor_id": actor_id, "cwd": new_cwd, "ts": ts})
+
+            # Link to existing folder space if one exists
+            self._graph_ops._query("""
+                MATCH (a {id: $actor_id})
+                MATCH (s:Space {location: $cwd})
+                MERGE (a)-[r:LINK]->(s)
+                SET r.verb = 'works_in', r.created_at_s = coalesce(r.created_at_s, $ts)
+            """, {"actor_id": actor_id, "cwd": new_cwd, "ts": ts})
+
+            logger.info(f"[AgentGraph] Updated {actor_id} cwd to {new_cwd}")
+            return True
+
+        except Exception as e:
+            logger.error(f"[AgentGraph] Failed to update cwd: {e}")
+            return False
 
     def assign_agent_to_work(
         self,
