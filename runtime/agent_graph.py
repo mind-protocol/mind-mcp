@@ -611,7 +611,7 @@ class AgentGraph:
             # Extract agent name from ID
             agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
 
-            moment_id = f"MOMENT_Assign_{agent_name}_{ts_hash}"
+            moment_id = f"ASSIGNMENT_{agent_name}_{ts_hash}"
 
             # Create the moment node
             create_cypher = """

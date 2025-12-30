@@ -608,7 +608,7 @@ class AgentGraph:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
             agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
-            moment_id = f"MOMENT_Assign_{agent_name}_{ts_hash}"
+            moment_id = f"ASSIGNMENT_{agent_name}_{ts_hash}"
 
             create_cypher = """
             MERGE (m:Moment {id: $id})
@@ -737,7 +737,7 @@ class AgentGraph:
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
             agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
-            moment_id = f"MOMENT_{moment_type.capitalize()}_{agent_name}_{ts_hash}"
+            moment_id = f"{moment_type.upper()}_{agent_name}_{ts_hash}"
 
             # Get previous moment for chaining
             prev_moment_id = self.get_actor_last_moment(actor_id)

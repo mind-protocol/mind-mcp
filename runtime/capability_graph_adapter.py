@@ -53,19 +53,14 @@ class CapabilityGraphAdapter:
         Returns actor_id if assigned, None if no agent available.
         """
         try:
-            # Map problem types to agent names
-            from runtime.agent_graph import TASK_TO_AGENT, NAME_TO_AGENT_ID
+            from runtime.agents import AgentGraph
 
-            # Find matching name for this problem
-            name = TASK_TO_AGENT.get(problem)
-            if not name:
-                # Default to fixer for unknown problems
-                name = "fixer"
-
-            # Get agent ID for this name
-            actor_id = NAME_TO_AGENT_ID.get(name)
+            # Use graph physics to select agent based on task synthesis
+            agent_graph = AgentGraph(graph_name=self._graph.graph_name)
+            task_synthesis = f"fix {problem}"
+            actor_id = agent_graph.select_agent_for_task(task_synthesis)
             if not actor_id:
-                actor_id = f"AGENT_{name.capitalize()}"
+                actor_id = "AGENT_Fixer"
 
             # Check if agent is idle/ready (not already working on max tasks)
             result = self._graph._query(

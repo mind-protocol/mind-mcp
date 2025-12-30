@@ -51,8 +51,8 @@ load_dotenv(project_root / ".env")
 from runtime.connectome import ConnectomeRunner
 from runtime.agents import (
     AgentGraph,
-    TASK_TO_AGENT,
     NAME_TO_AGENT_ID,
+    DEFAULT_NAME,
     run_work_agent,
     run_for_task,
     build_agent_prompt,
@@ -654,19 +654,10 @@ class MindServer:
                 output = "\n".join(schema_lines) + "\n\nNo doc issues found."
                 return {"content": [{"type": "text", "text": output}]}
 
-            # Get available agents
-            available_agents = {a.id: a for a in self.agent_graph.get_available_agents()}
-
             lines = schema_lines + ["", f"Found {len(issues)} doc issues:\n"]
             for idx, issue in enumerate(issues):
-                # Determine assigned agent
-                name = TASK_TO_AGENT.get(issue.task_type, "fixer")
-                actor_id = f"ACTOR_{name}"
-                agent_status = "ready" if actor_id in available_agents else "busy"
-
                 lines.append(f"{idx+1}. [{issue.severity.upper()}] {issue.task_type}")
                 lines.append(f"   Path: {issue.path}")
-                lines.append(f"   Agent: {actor_id} ({agent_status})")
                 lines.append(f"   Message: {issue.message[:80]}...")
                 lines.append("")
 
@@ -688,15 +679,6 @@ class MindServer:
             lines.append(f"     Status: {agent.status}")
             lines.append(f"     Energy: {agent.energy:.2f}")
             lines.append("")
-
-        # Show name mappings
-        lines.append("\nPosture → Problem Types:")
-        name_problems: Dict[str, List[str]] = {}
-        for task_type, name in TASK_TO_AGENT.items():
-            name_problems.setdefault(name, []).append(task_type)
-
-        for name, problems in sorted(name_problems.items()):
-            lines.append(f"  {name}: {', '.join(problems[:3])}{'...' if len(problems) > 3 else ''}")
 
         return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
@@ -847,10 +829,15 @@ class MindServer:
         elif not task_type or not path:
             return {"content": [{"type": "text", "text": "Error: Either task_id OR (task_type + path) required"}]}
 
-        # Select agent if not specified
+        # Select agent if not specified - use graph physics
         if not actor_id:
-            name = TASK_TO_AGENT.get(task_type, "fixer") if task_type else "fixer"
-            actor_id = f"ACTOR_{name}"
+            # Build synthesis for agent selection
+            task_synthesis = f"{task_type or 'task'}: {path or 'unknown'}"
+            if prompt:
+                task_synthesis += f" - {prompt[:100]}"
+            actor_id = self.agent_graph.select_agent_for_task(task_synthesis)
+            if not actor_id:
+                actor_id = f"AGENT_{DEFAULT_NAME.capitalize()}"
 
         # Check if agent is available
         agents = {a.id: a for a in self.agent_graph.get_all_agents()}
