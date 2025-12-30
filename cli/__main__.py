@@ -43,6 +43,7 @@ def main():
     p.add_argument("--stream", action="store_true", help="Stream moments live")
     p.add_argument("--logs", action="store_true", help="Tail log files")
     p.add_argument("--log-file", type=str, default=None, help="Custom log file path")
+    p.add_argument("--background", "-b", action="store_true", help="Run in background")
 
     args = parser.parse_args()
 
@@ -72,6 +73,7 @@ def main():
             stream=args.stream,
             logs=args.logs,
             log_file=args.log_file,
+            background=args.background,
         )
         sys.exit(0)
 

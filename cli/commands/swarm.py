@@ -2,8 +2,8 @@
 mind swarm - Run multiple agents in parallel with live streaming.
 
 Usage:
-    mind swarm --agents 3              # Run 3 agents in parallel
-    mind swarm --agents 5 --log swarm.log
+    mind swarm --agents 3              # Run 3 agents in parallel (foreground)
+    mind swarm --agents 3 --background # Run in background
     mind swarm --status                # Show running agents
     mind swarm --stop                  # Stop all agents
 """
@@ -14,6 +14,7 @@ import json
 import time
 import signal
 import subprocess
+import threading
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -61,21 +62,18 @@ def _get_pending_tasks() -> List[dict]:
         return []
 
 
-def _spawn_agent_process(agent_id: str, log_file: Path) -> Optional[int]:
-    """Spawn a background agent process. Returns PID."""
-    # Get target directory (current working directory)
-    target_dir = Path.cwd()
-
-    script = f'''
+def _build_agent_script(agent_id: str, log_file: Path, target_dir: Path) -> str:
+    """Build the Python script for an agent process."""
+    return f'''
 import sys
 import asyncio
 import logging
 from pathlib import Path
 
-# Setup logging
+# Setup logging - both file and stderr for live output
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s [{agent_id}] %(message)s',
+    format='[{agent_id}] %(message)s',
     handlers=[
         logging.FileHandler("{log_file}"),
         logging.StreamHandler(sys.stderr)
@@ -206,11 +204,37 @@ async def main():
 asyncio.run(main())
 '''
 
+
+def _run_agent_foreground(agent_id: str, log_file: Path, target_dir: Path):
+    """Run an agent in foreground, streaming output."""
+    script = _build_agent_script(agent_id, log_file, target_dir)
+
+    proc = subprocess.Popen(
+        [sys.executable, "-c", script],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,  # Merge stderr to stdout for unified streaming
+        bufsize=1,
+        universal_newlines=True,
+    )
+
+    # Stream output line by line
+    for line in iter(proc.stdout.readline, ''):
+        if line:
+            print(line.rstrip())
+
+    proc.wait()
+    return proc.returncode
+
+
+def _spawn_agent_background(agent_id: str, log_file: Path, target_dir: Path) -> Optional[int]:
+    """Spawn an agent in background. Returns PID."""
+    script = _build_agent_script(agent_id, log_file, target_dir)
+
     try:
         proc = subprocess.Popen(
             [sys.executable, "-c", script],
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
             start_new_session=True,
         )
         return proc.pid
@@ -244,9 +268,10 @@ def _is_running(pid: int) -> bool:
         return False
 
 
-def run_swarm(num_agents: int, log_file: Optional[Path] = None):
+def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool = False):
     """Start N agents in parallel."""
     _ensure_dirs()
+    target_dir = Path.cwd()
 
     # First, assign pending tasks to agents
     try:
@@ -259,7 +284,7 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None):
     except Exception as e:
         print(f"Task assignment: {e}")
 
-    # Get available agents (those with claimed tasks)
+    # Get available agents
     agents = _get_available_agents()
     if not agents:
         print("No available agents found in graph")
@@ -269,23 +294,44 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None):
     agents = agents[:num_agents]
     print(f"Starting {len(agents)} agents...")
 
-    # Spawn agents
-    pids = {}
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    for agent_id in agents:
-        agent_name = agent_id.replace("AGENT_", "").lower()
-        agent_log = log_file or (LOG_DIR / f"{agent_name}_{timestamp}.log")
+    if background:
+        # Background mode - spawn and exit
+        pids = {}
+        for agent_id in agents:
+            agent_name = agent_id.replace("AGENT_", "").lower()
+            agent_log = log_file or (LOG_DIR / f"{agent_name}_{timestamp}.log")
 
-        pid = _spawn_agent_process(agent_id, agent_log)
-        if pid:
-            pids[agent_id] = {"pid": pid, "log": str(agent_log), "started": timestamp}
-            print(f"  ✓ {agent_id} (pid={pid})")
+            pid = _spawn_agent_background(agent_id, agent_log, target_dir)
+            if pid:
+                pids[agent_id] = {"pid": pid, "log": str(agent_log), "started": timestamp}
+                print(f"  ✓ {agent_id} (pid={pid})")
 
-    _save_pids(pids)
-    print(f"\nSwarm started. Logs in {LOG_DIR}/")
-    print("Use 'mind swarm --status' to check progress")
-    print("Use 'mind swarm --stream' to watch moments")
+        _save_pids(pids)
+        print(f"\nSwarm started in background. Logs in {LOG_DIR}/")
+        print("Use 'mind swarm --status' to check progress")
+        print("Use 'mind swarm --logs' to tail logs")
+    else:
+        # Foreground mode - run agents in threads, stream all output
+        print()  # Blank line before agent output
+
+        def run_agent_thread(agent_id: str):
+            agent_name = agent_id.replace("AGENT_", "").lower()
+            agent_log = log_file or (LOG_DIR / f"{agent_name}_{timestamp}.log")
+            _run_agent_foreground(agent_id, agent_log, target_dir)
+
+        threads = []
+        for agent_id in agents:
+            t = threading.Thread(target=run_agent_thread, args=(agent_id,))
+            t.start()
+            threads.append(t)
+
+        # Wait for all agents to complete
+        for t in threads:
+            t.join()
+
+        print(f"\nSwarm complete. Logs saved to {LOG_DIR}/")
 
 
 def show_status():
@@ -420,6 +466,7 @@ def run(
     stream: bool = False,
     logs: bool = False,
     log_file: str = None,
+    background: bool = False,
 ):
     """
     Run multiple agents in parallel.
@@ -431,6 +478,7 @@ def run(
         stream: Stream moments live
         logs: Tail log files
         log_file: Custom log file path
+        background: Run in background (default: foreground)
     """
     if status:
         show_status()
@@ -442,10 +490,11 @@ def run(
         tail_logs()
     elif agents > 0:
         log_path = Path(log_file) if log_file else None
-        run_swarm(agents, log_path)
+        run_swarm(agents, log_path, background=background)
     else:
         print("Usage:")
-        print("  mind swarm --agents N    Start N agents")
+        print("  mind swarm --agents N    Start N agents (foreground)")
+        print("  mind swarm --agents N --background   Start in background")
         print("  mind swarm --status      Show agent status")
         print("  mind swarm --stream      Stream moments live")
         print("  mind swarm --logs        Tail log files")
