@@ -93,7 +93,7 @@ async def run_work_agent(
     name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
 
     # Initialize graph connection
-    agent_graph = AgentGraph(graph_name="mind")
+    agent_graph = AgentGraph()  # Uses default from config
 
     # Set agent to running
     agent_graph.set_agent_running(actor_id)
@@ -613,7 +613,7 @@ async def run_for_task(
     Returns:
         RunResult
     """
-    agent_graph = AgentGraph(graph_name="mind")
+    agent_graph = AgentGraph()  # Uses default from config
 
     # Get problem type from task if not provided
     if not task_type:
