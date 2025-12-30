@@ -109,6 +109,32 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     generate_embeddings(graph_name)
     steps.append("embeddings")
 
+    # 16. Health checks - fire init.after_scan to detect issues and create tasks
+    print("\n## Health Checks")
+    try:
+        from runtime.capability_integration import CapabilityManager
+        from runtime.physics.graph import GraphOps
+
+        graph_ops = GraphOps(graph_name=graph_name)
+        manager = CapabilityManager(target_dir, graph_ops)
+        summary = manager.initialize()
+
+        if summary.get("checks", 0) > 0:
+            result = manager.fire_trigger("init.after_scan", create_tasks=True)
+            signals = result.get("signals", {})
+            tasks = result.get("tasks_created", 0)
+
+            if tasks > 0:
+                print(f"✓ Health: {signals.get('healthy', 0)} ok, {signals.get('degraded', 0)} degraded, {signals.get('critical', 0)} critical")
+                print(f"✓ Tasks: {tasks} task_runs created")
+            else:
+                print(f"✓ Health: {result.get('checks_run', 0)} checks passed")
+            steps.append("health_checks")
+        else:
+            print("○ No capability checks available")
+    except Exception as e:
+        print(f"○ Health checks skipped: {e}")
+
     # Write to SYNC file
     _update_sync_file(target_dir, version, database, graph_name, steps)
 

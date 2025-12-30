@@ -738,10 +738,26 @@ class AgentGraph:
             return None
 
         try:
+            # Get task synthesis for readable moment
+            task_synth = None
+            try:
+                synth_result = self._graph_ops._query(
+                    "MATCH (t:Narrative {id: $tid}) RETURN t.synthesis",
+                    {"tid": task_id}
+                )
+                if synth_result and synth_result[0]:
+                    task_synth = synth_result[0][0]
+            except Exception:
+                pass
+
             timestamp = int(time.time())
             ts_hash = hashlib.sha256(str(timestamp).encode()).hexdigest()[:4]
             agent_name = actor_id.replace("AGENT_", "").lower() if actor_id.startswith("AGENT_") else actor_id
             moment_id = f"ASSIGNMENT_{agent_name}_{ts_hash}"
+
+            # Use synthesis if available, else task_id
+            task_desc = task_synth or task_id
+            prose = f"Agent {agent_name} assigned to: {task_desc}"
 
             create_cypher = """
             MERGE (m:Moment {id: $id})
@@ -757,7 +773,7 @@ class AgentGraph:
             """
             self._graph_ops._query(create_cypher, {
                 "id": moment_id,
-                "prose": f"Agent {agent_name} assigned to task {task_id}",
+                "prose": prose,
                 "actor_id": actor_id,
                 "task_id": task_id,
                 "timestamp": timestamp,
@@ -1027,15 +1043,31 @@ class AgentGraph:
             for problem_id in problem_ids:
                 self.link_agent_to_problem(actor_id, problem_id)
 
+        # Get task synthesis for readable moment
+        task_synth = None
+        try:
+            synth_result = self._graph_ops._query(
+                "MATCH (t:Narrative {id: $tid}) RETURN t.synthesis",
+                {"tid": task_id}
+            )
+            if synth_result and synth_result[0]:
+                task_synth = synth_result[0][0]
+        except Exception:
+            pass
+
         # Use new create_moment with chaining
         about_ids = [task_id] if task_id else []
         if problem_ids:
             about_ids.extend(problem_ids)
 
+        agent_name = actor_id.replace("AGENT_", "")
+        task_desc = task_synth or task_id
+        prose = f"Agent {agent_name} assigned to: {task_desc}"
+
         moment_id = self.create_moment(
             actor_id=actor_id,
             moment_type="ASSIGNMENT",
-            prose=f"Agent {actor_id} assigned to task {task_id}",
+            prose=prose,
             about_ids=about_ids,
             extra_props={"task_id": task_id, "status": "completed"},
         )

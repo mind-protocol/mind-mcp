@@ -31,6 +31,14 @@ class CapabilityGraphAdapter:
     def __init__(self, graph_ops: GraphOps):
         self._graph = graph_ops
 
+    def execute(self, cypher: str, params: Dict[str, Any] = None) -> None:
+        """Execute a Cypher write query."""
+        self._graph._adapter.execute(cypher, params or {})
+
+    def query(self, cypher: str, params: Dict[str, Any] = None) -> List:
+        """Execute a Cypher read query."""
+        return self._graph._adapter.query(cypher, params or {})
+
     def _compute_embedding(self, text: str) -> Optional[List[float]]:
         """Compute embedding for text using the embedding service."""
         try:

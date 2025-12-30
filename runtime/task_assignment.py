@@ -99,7 +99,7 @@ def select_best_agent(task_id: str, task_synthesis: str, adapter) -> Optional[st
     return best_agent
 
 
-def assign_task(task_id: str, agent_id: str, adapter) -> bool:
+def assign_task(task_id: str, agent_id: str, adapter, synthesis: str = "") -> bool:
     """Create claimed_by link between task and agent.
 
     Returns True if assignment succeeded.
@@ -116,7 +116,10 @@ def assign_task(task_id: str, agent_id: str, adapter) -> bool:
                 l.created_at = $timestamp
         """, {"task_id": task_id, "agent_id": agent_id, "timestamp": timestamp})
 
-        logger.info(f"Assigned {task_id} -> {agent_id}")
+        # Log with synthesis (task description) instead of ID
+        agent_short = agent_id.replace("AGENT_", "")
+        task_desc = (synthesis or task_id)[:60]
+        logger.info(f"Agent {agent_short} assigned to task: {task_desc}")
         return True
 
     except Exception as e:
@@ -134,7 +137,7 @@ def assign_single_task(task_id: str, task_synthesis: str, adapter) -> Optional[s
     agent_id = select_best_agent(task_id, task_synthesis, adapter)
 
     if agent_id:
-        if assign_task(task_id, agent_id, adapter):
+        if assign_task(task_id, agent_id, adapter, synthesis=task_synthesis):
             return agent_id
 
     return None

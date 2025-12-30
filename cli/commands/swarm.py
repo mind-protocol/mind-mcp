@@ -308,6 +308,60 @@ def _is_running(pid: int) -> bool:
         return False
 
 
+def _fire_capability_trigger(trigger_type: str, target_dir: Path) -> int:
+    """Fire a capability trigger to generate tasks. Returns tasks created."""
+    try:
+        from runtime.capability_integration import CapabilityManager
+        from runtime.physics.graph import GraphOps
+        from runtime.infrastructure.database import get_database_adapter
+
+        graph_ops = GraphOps()
+        manager = CapabilityManager(target_dir, graph_ops)
+        manager.initialize()
+
+        # For scheduled triggers (cron.*), discover modules and run checks for each
+        if trigger_type.startswith("cron."):
+            adapter = get_database_adapter()
+            # Get all module/space IDs from graph
+            modules_result = adapter.query("""
+                MATCH (s:Space)
+                WHERE s.id IS NOT NULL
+                RETURN s.id
+                LIMIT 50
+            """)
+            module_ids = [r[0] for r in modules_result] if modules_result else ["runtime"]
+
+            total_created = 0
+            for module_id in module_ids:
+                result = manager.fire_trigger(
+                    trigger_type,
+                    payload={"module_id": module_id, "modules": module_ids},
+                    create_tasks=True
+                )
+                total_created += result.get("tasks_created", 0)
+            return total_created
+        else:
+            result = manager.fire_trigger(trigger_type, create_tasks=True)
+            return result.get("tasks_created", 0)
+    except Exception as e:
+        print(f"Trigger failed: {e}")
+        return 0
+
+
+def _get_pending_task_count() -> int:
+    """Get count of pending tasks."""
+    try:
+        from runtime.infrastructure.database import get_database_adapter
+        adapter = get_database_adapter()
+        result = adapter.query("""
+            MATCH (t:Narrative {type: 'task_run', status: 'pending'})
+            RETURN count(t)
+        """)
+        return result[0][0] if result else 0
+    except Exception:
+        return 0
+
+
 def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool = False):
     """Start N agents in parallel."""
     _ensure_dirs()
@@ -321,6 +375,20 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool
             print(f"Assigned {assigned} tasks to agents")
     except Exception as e:
         print(f"Task assignment: {e}")
+
+    # If no pending tasks, try to generate some via derive-tasks
+    pending = _get_pending_task_count()
+    if pending == 0:
+        print("No pending tasks - firing derive-tasks...")
+        created = _fire_capability_trigger("cron.daily", target_dir)
+        if created > 0:
+            print(f"Created {created} new tasks")
+            # Re-assign
+            try:
+                from runtime.task_assignment import startup_assign
+                startup_assign()
+            except Exception:
+                pass
 
     # Get agents that have claimed tasks, ordered by weight × energy (best first)
     try:
@@ -459,25 +527,68 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool
             except Exception:
                 pass  # Ignore setup errors
 
-        def run_agent_thread(agent_id: str):
+        # Track subprocess PIDs for cleanup
+        agent_procs = []
+
+        def run_agent_subprocess(agent_id: str):
             agent_name = agent_id.replace("AGENT_", "").lower()
             agent_log = log_file or (LOG_DIR / f"{agent_name}_{timestamp}.log")
-            _run_agent_silent(agent_id, agent_log, target_dir)
+            script = _build_agent_script(agent_id, agent_log, target_dir)
+            proc = subprocess.Popen(
+                [sys.executable, "-c", script],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            agent_procs.append(proc)
+            proc.wait()
+
+        def cleanup_on_interrupt():
+            """Kill agents and reset running tasks to claimed."""
+            print(f"\n{Colors.WARNING}Interrupted - cleaning up...{Colors.RESET}")
+
+            # Kill all agent subprocesses
+            for proc in agent_procs:
+                try:
+                    proc.terminate()
+                    proc.wait(timeout=2)
+                except Exception:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+
+            # Reset running tasks back to claimed
+            try:
+                from runtime.infrastructure.database import get_database_adapter
+                db = get_database_adapter()
+                db.execute("""
+                    MATCH (t:Narrative {type: 'task_run', status: 'running'})
+                    SET t.status = 'claimed'
+                """)
+                print(f"{Colors.INFO}Reset running tasks to claimed{Colors.RESET}")
+            except Exception as e:
+                print(f"Failed to reset tasks: {e}")
 
         # Start moment streamer
         moment_thread = threading.Thread(target=stream_new_moments, daemon=True)
         moment_thread.start()
 
-        # Start agent threads
+        # Start agent threads (using subprocesses for clean termination)
         agent_threads = []
-        for agent_id in agents:
-            t = threading.Thread(target=run_agent_thread, args=(agent_id,))
-            t.start()
-            agent_threads.append(t)
+        try:
+            for agent_id in agents:
+                t = threading.Thread(target=run_agent_subprocess, args=(agent_id,))
+                t.start()
+                agent_threads.append(t)
 
-        # Wait for all agents to complete
-        for t in agent_threads:
-            t.join()
+            # Wait for all agents to complete
+            for t in agent_threads:
+                t.join()
+
+        except KeyboardInterrupt:
+            stop_streaming.set()
+            cleanup_on_interrupt()
+            return
 
         # Stop moment streaming
         stop_streaming.set()

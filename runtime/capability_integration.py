@@ -20,34 +20,26 @@ log = logging.getLogger(__name__)
 
 def _load_capability_module():
     """
-    Load capability runtime from mind-platform using explicit path.
-
-    This avoids namespace conflicts since both mind-mcp and mind-platform
-    have a 'runtime' package.
+    Load capability runtime from local runtime/capability module.
     """
-    # Find mind-platform
+    try:
+        from runtime import capability
+        return capability
+    except ImportError:
+        pass
+
+    # Fallback: try explicit path
     this_file = Path(__file__).resolve()
-    platform_paths = [
-        this_file.parent.parent.parent / "mind-platform",
-        Path.home() / "mind-platform",
-    ]
+    capability_init = this_file.parent / "capability" / "__init__.py"
 
-    platform_path = None
-    for p in platform_paths:
-        if p.exists() and (p / "runtime" / "capability" / "__init__.py").exists():
-            platform_path = p
-            break
-
-    if not platform_path:
+    if not capability_init.exists():
         return None
 
     # Load using importlib from explicit path
-    capability_init = platform_path / "runtime" / "capability" / "__init__.py"
-
     spec = importlib.util.spec_from_file_location(
-        "mind_platform_capability",
+        "runtime_capability",
         capability_init,
-        submodule_search_locations=[str(platform_path / "runtime" / "capability")]
+        submodule_search_locations=[str(capability_init.parent)]
     )
 
     if spec is None or spec.loader is None:
