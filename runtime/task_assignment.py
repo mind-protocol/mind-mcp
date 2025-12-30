@@ -49,15 +49,15 @@ def select_best_agent(task_id: str, task_synthesis: str, adapter) -> Optional[st
         logger.warning(f"Could not embed task: {task_id}")
         return None
 
-    # Get available agents (not paused, not maxed out)
+    # Get available agents (not paused)
     # Uses AGENT type (uppercase) for new-format agents with synthesis
+    # No hard limit - load penalty handles distribution
     result = adapter.query("""
         MATCH (a:Actor)
         WHERE a.type = 'AGENT' AND COALESCE(a.status, 'idle') <> 'paused'
         OPTIONAL MATCH (a)<-[r:LINK {verb: 'claimed_by'}]-(t:Narrative {type: 'task_run'})
         WHERE t.status IN ['claimed', 'running']
         WITH a, count(t) as active_tasks
-        WHERE active_tasks < 5
         RETURN a.id, a.synthesis, a.weight, a.energy, a.embedding, active_tasks
     """)
 
