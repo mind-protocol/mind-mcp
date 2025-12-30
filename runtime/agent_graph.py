@@ -139,7 +139,7 @@ class AgentInfo:
     id: str
     name: str
     posture: str  # The agent's posture type
-    status: str   # ready or running
+    status: str   # ready, running, or paused
     energy: float = 0.0
     weight: float = 1.0
 
@@ -152,7 +152,7 @@ class AgentGraph:
     - id: agent_{posture} (e.g., agent_witness)
     - name: The posture name (e.g., witness)
     - type: agent
-    - status: ready | running
+    - status: ready | running | paused
     """
 
     def __init__(
@@ -432,6 +432,44 @@ class AgentGraph:
             logger.error(f"[AgentGraph] Failed to set {agent_id} ready: {e}")
             return False
 
+    def set_agent_paused(self, agent_id: str) -> bool:
+        """
+        Mark an agent as paused.
+
+        Paused agents won't have their claimed tasks promoted to running.
+
+        Args:
+            agent_id: The agent to pause
+
+        Returns:
+            True if successful, False on failure
+        """
+        if not self._connect():
+            logger.warning(f"[AgentGraph] No graph connection, cannot pause {agent_id}")
+            return False
+
+        try:
+            import time
+            cypher = """
+            MATCH (a:Actor {id: $id})
+            SET a.status = 'paused', a.updated_at_s = $timestamp
+            RETURN a.id
+            """
+            result = self._graph_ops._query(cypher, {
+                "id": agent_id,
+                "timestamp": int(time.time()),
+            })
+
+            if result:
+                logger.info(f"[AgentGraph] Agent {agent_id} now paused")
+                return True
+            else:
+                logger.warning(f"[AgentGraph] Agent {agent_id} not found")
+                return False
+        except Exception as e:
+            logger.error(f"[AgentGraph] Failed to pause {agent_id}: {e}")
+            return False
+
     def boost_agent_energy(self, agent_id: str, amount: float = 0.1) -> bool:
         """
         Boost an agent's energy (used for prioritization).
@@ -504,7 +542,7 @@ class AgentGraph:
 
         Args:
             agent_id: The agent ID (e.g., "agent_witness")
-            issue_id: The issue narrative ID (e.g., "narrative_ISSUE_engine-MONOLITH_a7")
+            issue_id: The issue narrative ID (e.g., "narrative_PROBLEM_engine-MONOLITH_a7")
 
         Returns:
             True if link created successfully
@@ -694,7 +732,7 @@ class AgentGraph:
         Issue narratives track doctor issues as graph nodes so agents
         can be linked to them via working_on edges.
 
-        ID format: narrative_ISSUE_{issue_type}_{path_hash_6}
+        ID format: narrative_PROBLEM_{issue_type}_{path_hash_6}
 
         Args:
             issue_type: Doctor issue type (e.g., "STALE_SYNC")
@@ -716,12 +754,12 @@ class AgentGraph:
             timestamp = int(time.time())
             # Create deterministic ID from issue_type + path
             path_hash = hashlib.sha256(path.encode()).hexdigest()[:6]
-            narrative_id = f"narrative_ISSUE_{issue_type}_{path_hash}"
+            narrative_id = f"narrative_PROBLEM_{issue_type}_{path_hash}"
 
             cypher = """
             MERGE (n:Narrative {id: $id})
             SET n.node_type = 'narrative',
-                n.type = 'issue',
+                n.type = 'problem',
                 n.issue_type = $issue_type,
                 n.path = $path,
                 n.message = $message,

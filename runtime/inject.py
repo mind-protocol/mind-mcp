@@ -132,7 +132,7 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
             task_id = result[0][0]
 
             # Check throttler before promoting
-            if not _throttler_allows_running(task_id, actor_id):
+            if not _throttler_allows_running(adapter, task_id, actor_id):
                 logger.warning(f"Throttler blocked promotion of {task_id} to running")
                 return None
 
@@ -149,13 +149,26 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
     return None
 
 
-def _throttler_allows_running(task_id: str, actor_id: str) -> bool:
+def _throttler_allows_running(adapter, task_id: str, actor_id: str) -> bool:
     """Check if throttler allows promoting task to running.
 
     Checks:
-    1. Agent mode not paused/stopped
-    2. Running count < max_concurrent_agents
+    1. Actor not paused (individual agent pause)
+    2. Agent mode not paused/stopped (global pause)
+    3. Running count < max_concurrent_agents
     """
+    # 1. Check actor status (individual pause)
+    try:
+        result = adapter.query(
+            "MATCH (a {id: $actor_id}) RETURN a.status",
+            {"actor_id": actor_id}
+        )
+        if result and result[0] and result[0][0] == 'paused':
+            logger.info(f"Actor {actor_id} is paused, blocking promotion")
+            return False
+    except Exception as e:
+        logger.debug(f"Actor status check failed: {e}")
+
     try:
         from .capability_integration import (
             get_throttler, get_controller,
@@ -164,7 +177,7 @@ def _throttler_allows_running(task_id: str, actor_id: str) -> bool:
         if not CAPABILITY_RUNTIME_AVAILABLE:
             return True  # No capability runtime = allow
 
-        # 1. Check agent mode
+        # 2. Check agent mode (global pause)
         controller = get_controller()
         if controller and controller.mode in (AgentMode.PAUSED, AgentMode.STOPPED):
             logger.info(f"Agent mode is {controller.mode.value}, blocking promotion")
@@ -180,7 +193,13 @@ def _throttler_allows_running(task_id: str, actor_id: str) -> bool:
             1 for slot in throttler.active.values()
             if getattr(slot, 'status', None) == 'running'
         )
-        max_concurrent = getattr(throttler, 'max_concurrent_agents', 5)
+
+        # Get max from: throttler attr > env > default 5
+        import os
+        max_concurrent = getattr(
+            throttler, 'max_concurrent_agents',
+            int(os.environ.get('MIND_MAX_CONCURRENT_AGENTS', 5))
+        )
 
         if running_count >= max_concurrent:
             logger.info(f"Max concurrent ({max_concurrent}) reached, blocking promotion")
