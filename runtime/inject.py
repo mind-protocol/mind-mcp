@@ -142,6 +142,17 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
                 "MATCH (t {id: $task_id}) SET t.status = 'running'",
                 {"task_id": task_id}
             )
+
+            # Ensure claimed_by link exists (should already exist, but ensure)
+            adapter.execute(
+                """
+                MATCH (t {id: $task_id})
+                MATCH (a {id: $actor_id})
+                MERGE (t)-[r:LINK]->(a)
+                SET r.verb = 'claimed_by'
+                """,
+                {"task_id": task_id, "actor_id": actor_id}
+            )
             logger.info(f"Promoted task {task_id} from claimed → running")
             return task_id
     except Exception as e:
@@ -174,6 +185,17 @@ def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
                 SET t.status = 'running',
                     t.claimed_by = $actor_id,
                     t.claimed_at = datetime()
+                """,
+                {"task_id": task_id, "actor_id": actor_id}
+            )
+
+            # Create claimed_by link (actor claims task)
+            adapter.execute(
+                """
+                MATCH (t {id: $task_id})
+                MATCH (a {id: $actor_id})
+                MERGE (t)-[r:LINK]->(a)
+                SET r.verb = 'claimed_by'
                 """,
                 {"task_id": task_id, "actor_id": actor_id}
             )
