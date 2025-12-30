@@ -45,6 +45,24 @@ CODE_EXTENSIONS = {".py", ".ts", ".js", ".tsx", ".jsx"}
 
 STALENESS_THRESHOLD_DAYS = 7
 
+# Paths to exclude from checks
+EXCLUDED_PATHS = [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    "__pycache__",
+    ".venv",
+    "venv",
+    ".pytest_cache",
+]
+
+
+def should_skip_path(path: Path) -> bool:
+    """Check if path should be skipped."""
+    path_str = str(path)
+    return any(excluded in path_str for excluded in EXCLUDED_PATHS)
+
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -201,7 +219,9 @@ def stub_detection(ctx) -> dict:  # ctx: CheckContext
     stub_functions = []
 
     for path in paths:
-        # Skip test files and migrations
+        # Skip excluded paths, test files, and migrations
+        if should_skip_path(path):
+            continue
         if "test" in str(path).lower() or "migration" in str(path).lower():
             continue
 
@@ -266,6 +286,10 @@ def incomplete_detection(ctx) -> dict:
     markers = []
 
     for path in paths:
+        # Skip excluded paths
+        if should_skip_path(path):
+            continue
+
         try:
             content = path.read_text()
             lines = content.split("\n")
@@ -401,6 +425,10 @@ def stale_impl_detection(ctx) -> dict:
             code_files.extend(Path(".").rglob(f"*{ext}"))
 
     for code_file in code_files:
+        # Skip excluded paths
+        if should_skip_path(code_file):
+            continue
+
         # Get linked doc
         doc_marker = get_docs_marker(code_file)
         if not doc_marker:
