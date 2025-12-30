@@ -51,7 +51,6 @@ export class RemoteAdapter implements ConnectomeAdapter {
   }
 
   async getNodes(): Promise<Node[]> {
-    // TODO: Implement via GraphQL query to L4 API
     const response = await fetch(`${this.config.api_url}/graphql`, {
       method: 'POST',
       headers: {
@@ -81,7 +80,6 @@ export class RemoteAdapter implements ConnectomeAdapter {
   }
 
   async getLinks(): Promise<Link[]> {
-    // TODO: Implement via GraphQL query to L4 API
     const response = await fetch(`${this.config.api_url}/graphql`, {
       method: 'POST',
       headers: {

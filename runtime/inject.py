@@ -775,6 +775,12 @@ def _inject_node(
     exclude = {"label", "node_type"}
     props = {k: v for k, v in node.items() if k not in exclude and v is not None}
 
+    # Add timestamps
+    now = int(time.time())
+    props["updated_at_s"] = now
+    if not exists:
+        props["created_at_s"] = now
+
     # Escape newlines in string fields
     for key in ["synthesis", "content", "name"]:
         if key in props and isinstance(props[key], str):
@@ -863,12 +869,17 @@ def _inject_link(
     # Ensure verb is set
     props["verb"] = verb
 
+    # Add timestamps
+    now = int(time.time())
+    props["updated_at_s"] = now
+    # created_at_s set via coalesce in query (only on first creation)
+
     # Build SET clause for properties
     if props:
         set_parts = [f"r.{k} = ${k}" for k in props.keys()]
-        set_clause = "SET " + ", ".join(set_parts)
+        set_clause = "SET r.created_at_s = coalesce(r.created_at_s, $now), " + ", ".join(set_parts)
     else:
-        set_clause = ""
+        set_clause = "SET r.created_at_s = coalesce(r.created_at_s, $now)"
 
     query = f"""
     MATCH (a {{id: $from_id}})
@@ -878,7 +889,7 @@ def _inject_link(
     RETURN type(r)
     """
 
-    params = {"from_id": from_id, "to_id": to_id, **props}
+    params = {"from_id": from_id, "to_id": to_id, "now": now, **props}
     adapter.execute(query, params)
     return "created"  # MERGE doesn't distinguish create/update
 

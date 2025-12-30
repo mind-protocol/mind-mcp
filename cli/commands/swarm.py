@@ -19,6 +19,43 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
 
+# ANSI color codes
+class Colors:
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
+    # Agent colors (cycle through these)
+    AGENTS = [
+        "\033[36m",  # Cyan
+        "\033[33m",  # Yellow
+        "\033[35m",  # Magenta
+        "\033[32m",  # Green
+        "\033[34m",  # Blue
+        "\033[91m",  # Light Red
+        "\033[92m",  # Light Green
+        "\033[93m",  # Light Yellow
+        "\033[94m",  # Light Blue
+        "\033[95m",  # Light Magenta
+    ]
+    # Status colors
+    SUCCESS = "\033[32m"  # Green
+    ERROR = "\033[31m"    # Red
+    WARNING = "\033[33m"  # Yellow
+    INFO = "\033[36m"     # Cyan
+    MOMENT = "\033[35m"   # Magenta
+
+# Agent color mapping
+_agent_colors = {}
+_color_index = 0
+
+def _get_agent_color(agent_id: str) -> str:
+    """Get consistent color for an agent."""
+    global _color_index
+    if agent_id not in _agent_colors:
+        _agent_colors[agent_id] = Colors.AGENTS[_color_index % len(Colors.AGENTS)]
+        _color_index += 1
+    return _agent_colors[agent_id]
+
 # PID file for tracking background processes
 SWARM_DIR = Path(".mind/swarm")
 PID_FILE = SWARM_DIR / "pids.json"
@@ -64,6 +101,7 @@ def _get_pending_tasks() -> List[dict]:
 
 def _build_agent_script(agent_id: str, log_file: Path, target_dir: Path) -> str:
     """Build the Python script for an agent process."""
+    agent_name = agent_id.replace("AGENT_", "")
     return f'''
 import sys
 import asyncio
@@ -73,7 +111,7 @@ from pathlib import Path
 # Setup logging - both file and stderr for live output
 logging.basicConfig(
     level=logging.INFO,
-    format='[{agent_id}] %(message)s',
+    format='[{agent_name}] %(message)s',
     handlers=[
         logging.FileHandler("{log_file}"),
         logging.StreamHandler(sys.stderr)
@@ -181,6 +219,15 @@ async def main():
                         {{"id": task_id}}
                     )
                     logger.info(f"Completed: {{task_id}}")
+                    # Log moment if created
+                    if run_result.completion_moment_id:
+                        # Get moment synthesis
+                        m = adapter.query(
+                            "MATCH (m:Moment {{id: $id}}) RETURN m.synthesis",
+                            {{"id": run_result.completion_moment_id}}
+                        )
+                        if m and m[0] and m[0][0]:
+                            logger.info(f"Moment: {{m[0][0][:80]}}")
                     tasks_completed += 1
                 else:
                     adapter.execute(
@@ -205,22 +252,15 @@ asyncio.run(main())
 '''
 
 
-def _run_agent_foreground(agent_id: str, log_file: Path, target_dir: Path):
-    """Run an agent in foreground, streaming output."""
+def _run_agent_silent(agent_id: str, log_file: Path, target_dir: Path):
+    """Run an agent silently, logging only to file."""
     script = _build_agent_script(agent_id, log_file, target_dir)
 
     proc = subprocess.Popen(
         [sys.executable, "-c", script],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,  # Merge stderr to stdout for unified streaming
-        bufsize=1,
-        universal_newlines=True,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
     )
-
-    # Stream output line by line
-    for line in iter(proc.stdout.readline, ''):
-        if line:
-            print(line.rstrip())
 
     proc.wait()
     return proc.returncode
@@ -313,25 +353,125 @@ def run_swarm(num_agents: int, log_file: Optional[Path] = None, background: bool
         print("Use 'mind swarm --status' to check progress")
         print("Use 'mind swarm --logs' to tail logs")
     else:
-        # Foreground mode - run agents in threads, stream all output
+        # Foreground mode - run agents in threads, stream moments from graph
         print()  # Blank line before agent output
+
+        # Track which moments we've seen
+        seen_moments = set()
+        seen_claims = set()
+        stop_streaming = threading.Event()
+
+        def stream_new_moments():
+            """Poll graph for new moments and display them."""
+            try:
+                from runtime.infrastructure.database import get_database_adapter
+                adapter = get_database_adapter()
+                last_ts = int(time.time()) - 5  # Start from 5 seconds ago (seconds, not ms)
+
+                while not stop_streaming.is_set():
+                    try:
+                        # Check for newly claimed tasks
+                        claims = adapter.query("""
+                            MATCH (a:Actor)-[r:LINK {verb: 'claims'}]->(t:Narrative {type: 'task_run'})
+                            WHERE t.status IN ['claimed', 'running']
+                            RETURN a.id, t.id, t.synthesis, t.status
+                        """)
+                        for claim in claims:
+                            actor_id, task_id, synth, status = claim
+                            key = f"{actor_id}:{task_id}"
+                            if key not in seen_claims:
+                                seen_claims.add(key)
+                                agent_name = (actor_id or "?").replace("AGENT_", "")
+                                color = _get_agent_color(actor_id or "?")
+                                task_short = (synth or task_id or "")[:50]
+                                print(f"{color}{Colors.BOLD}[{agent_name}]{Colors.RESET} {Colors.INFO}▶ started:{Colors.RESET} {task_short}")
+
+                        # Get moments with actor and task info
+                        result = adapter.query("""
+                            MATCH (m:Moment)
+                            WHERE m.created_at_s > $last_ts
+                            OPTIONAL MATCH (a:Actor)-[:LINK {verb: 'creates'}]->(m)
+                            OPTIONAL MATCH (m)-[:LINK]->(t:Narrative {type: 'task_run'})
+                            RETURN m.id, m.created_at_s, a.id, m.synthesis, m.type,
+                                   t.synthesis, t.status
+                            ORDER BY m.created_at_s ASC
+                            LIMIT 20
+                        """, {"last_ts": last_ts})
+
+                        for r in result:
+                            moment_id, ts, actor_id, synthesis, moment_type, task_synth, task_status = r
+                            if moment_id and moment_id not in seen_moments:
+                                seen_moments.add(moment_id)
+                                last_ts = max(last_ts, ts or 0)
+
+                                # Format agent name
+                                agent_name = (actor_id or "?").replace("AGENT_", "").replace("actor:", "")
+                                color = _get_agent_color(actor_id or "?")
+
+                                # Format task
+                                task_name = (task_synth or "")[:40]
+
+                                # Format status with color
+                                status = task_status or moment_type or "active"
+                                if status in ["completed", "COMPLETION"]:
+                                    status_color = Colors.SUCCESS
+                                    status_icon = "✓"
+                                elif status in ["failed", "error"]:
+                                    status_color = Colors.ERROR
+                                    status_icon = "✗"
+                                elif status in ["running", "CONVERSATION"]:
+                                    status_color = Colors.INFO
+                                    status_icon = "→"
+                                else:
+                                    status_color = Colors.DIM
+                                    status_icon = "•"
+
+                                # Format synthesis (moment's own synthesis)
+                                synth = (synthesis or "")[:70]
+
+                                # Single line: [Agent] ✓ status | task | synthesis
+                                parts = [f"{color}{Colors.BOLD}[{agent_name}]{Colors.RESET}"]
+                                parts.append(f"{status_color}{status_icon} {status}{Colors.RESET}")
+                                if task_name:
+                                    parts.append(f"{Colors.WARNING}{task_name}{Colors.RESET}")
+                                if synth:
+                                    parts.append(synth)
+
+                                print(" | ".join(parts))
+
+                    except Exception:
+                        pass  # Ignore query errors during streaming
+
+                    time.sleep(0.5)  # Poll every 500ms
+
+            except Exception:
+                pass  # Ignore setup errors
 
         def run_agent_thread(agent_id: str):
             agent_name = agent_id.replace("AGENT_", "").lower()
             agent_log = log_file or (LOG_DIR / f"{agent_name}_{timestamp}.log")
-            _run_agent_foreground(agent_id, agent_log, target_dir)
+            _run_agent_silent(agent_id, agent_log, target_dir)
 
-        threads = []
+        # Start moment streamer
+        moment_thread = threading.Thread(target=stream_new_moments, daemon=True)
+        moment_thread.start()
+
+        # Start agent threads
+        agent_threads = []
         for agent_id in agents:
             t = threading.Thread(target=run_agent_thread, args=(agent_id,))
             t.start()
-            threads.append(t)
+            agent_threads.append(t)
 
         # Wait for all agents to complete
-        for t in threads:
+        for t in agent_threads:
             t.join()
 
-        print(f"\nSwarm complete. Logs saved to {LOG_DIR}/")
+        # Stop moment streaming
+        stop_streaming.set()
+        time.sleep(1)  # Give moment thread time to show final moments
+
+        print(f"\n{Colors.SUCCESS}Swarm complete.{Colors.RESET} Logs saved to {LOG_DIR}/")
 
 
 def show_status():
@@ -362,7 +502,7 @@ def show_status():
         result = adapter.query("""
             MATCH (m:Moment)
             RETURN m.id, substring(COALESCE(m.synthesis, m.name, ''), 0, 50)
-            ORDER BY m.timestamp DESC
+            ORDER BY m.created_at_s DESC
             LIMIT 5
         """)
         for r in result:
@@ -409,10 +549,11 @@ def stream_moments(follow: bool = True):
         while True:
             result = adapter.query("""
                 MATCH (m:Moment)
-                WHERE m.timestamp > $last_ts
-                RETURN m.id, m.timestamp, m.actor_id,
+                WHERE m.created_at_s > $last_ts
+                OPTIONAL MATCH (a:Actor)-[:LINK {verb: 'creates'}]->(m)
+                RETURN m.id, m.created_at_s, a.id,
                        substring(COALESCE(m.synthesis, m.name, ''), 0, 60)
-                ORDER BY m.timestamp ASC
+                ORDER BY m.created_at_s ASC
                 LIMIT 20
             """, {"last_ts": last_ts})
 
