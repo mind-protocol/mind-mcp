@@ -85,9 +85,15 @@ def select_best_agent(task_id: str, task_synthesis: str, adapter) -> Optional[st
             energy or 1.0,
         )
 
-        # Decrease score by 20% per active task (load balancing)
-        load_penalty = 1.0 - (0.2 * (active_tasks or 0))
-        score *= max(load_penalty, 0.2)  # Floor at 20%
+        # Hard cap: skip agents with too many active tasks
+        active = active_tasks or 0
+        if active >= 10:
+            continue  # Skip overloaded agents
+
+        # Exponential decay penalty: score *= 0.5^active_tasks
+        # 0 tasks = 1.0, 1 task = 0.5, 2 = 0.25, 3 = 0.125, etc.
+        load_penalty = 0.5 ** active
+        score *= load_penalty
 
         if score > best_score:
             best_score = score

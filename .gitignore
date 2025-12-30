@@ -60,3 +60,4 @@ logs/
 .mind/work/
 .mind/traces/
 .mcp.json
+.sessionId
