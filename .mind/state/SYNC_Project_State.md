@@ -36,10 +36,10 @@ UPDATED_BY: agent_claude
 
 **Usage pattern:**
 ```python
-from runtime.inject import inject, set_context
+from runtime.inject import inject, set_actor
 
-# Set injection context (typically done by query handler)
-set_context(actor_id="actor:agent_witness", task_id="task:fix_bug_123")
+# Set active actor (task is auto-detected from graph)
+set_actor("actor:agent_witness")
 
 # Inject node - automatically creates moment and links
 inject(adapter, {

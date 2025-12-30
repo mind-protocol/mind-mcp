@@ -4,25 +4,31 @@ Canonical Graph Injection
 Single entry point for injecting nodes and links into the graph.
 
 Features:
-- Embedding generation for synthesis
-- Nature string → physics floats conversion
+- Nature string → physics floats conversion (BEFORE synthesis)
+- Synthesis generation from physics state
+- Embedding generation from synthesis
 - Automatic context linking (actor, space, moment)
 - Moment chaining (each moment links to actor's previous moment)
+- Active task detection from graph (no manual setting)
 
 Injection Context:
 - Every inject from a query creates a moment
 - Each moment links to actor's previous moment (temporal chain)
 - Every node links to: active actor, active space, current moment
 
+Task Detection:
+- Queries graph for tasks linked to actor with status='running'
+- If multiple running tasks, picks highest weight × energy
+
 Space Resolution:
-1. Find active task → follow implements chain → find space
+1. Detect active task → follow implements chain → find space
 2. Fallback: actor's linked spaces, pick by weight × energy (logs warning)
 
 Usage:
-    from runtime.inject import inject, set_context
+    from runtime.inject import inject, set_actor
 
-    # Set injection context (typically done by query handler)
-    set_context(actor_id="actor:agent_witness", task_id="task:fix_bug_123")
+    # Set active actor (task is auto-detected from graph)
+    set_actor("actor:agent_witness")
 
     # Inject - automatically creates moment and links
     inject(adapter, {
@@ -48,33 +54,24 @@ DEFAULT_ACTOR = "actor:human"  # Human user (you talking to the system)
 
 _context: Dict[str, Any] = {
     "actor_id": DEFAULT_ACTOR,
-    "task_id": None,
     "last_moment_id": {},  # actor_id -> last moment_id
 }
 
 
-def set_context(
-    actor_id: str = None,
-    task_id: str = None,
-) -> None:
+def set_actor(actor_id: str = None) -> None:
     """
-    Set injection context.
-
-    Called by query handlers before injection operations.
+    Set active actor for injection context.
 
     Args:
         actor_id: Active actor (default: "actor:human")
-        task_id: Active task (e.g., "task:fix_bug_123")
     """
     _context["actor_id"] = actor_id or DEFAULT_ACTOR
-    if task_id is not None:
-        _context["task_id"] = task_id
 
 
 def clear_context() -> None:
-    """Reset to default context (human actor, no task)."""
+    """Reset to default context (human actor)."""
     _context["actor_id"] = DEFAULT_ACTOR
-    _context["task_id"] = None
+    _context["last_moment_id"] = {}
 
 
 def get_actor() -> str:
@@ -91,21 +88,76 @@ def get_context() -> Dict[str, Any]:
 # SPACE RESOLUTION
 # =============================================================================
 
+def _detect_active_task(adapter, actor_id: str) -> Optional[str]:
+    """
+    Detect active task for actor from graph.
+
+    Resolution order:
+    1. Tasks linked to actor with status='running' (pick highest weight × energy)
+    2. Tasks linked to actor with status='claimed' → promote to 'running'
+
+    Returns:
+        Task ID or None if no active task
+    """
+    # 1. Look for running tasks
+    try:
+        result = adapter.query(
+            """
+            MATCH (a {id: $actor_id})-[r:LINK]-(t)
+            WHERE t.status = 'running'
+            RETURN t.id, COALESCE(r.weight, 1.0) * COALESCE(r.energy, 0.1) as score
+            ORDER BY score DESC
+            LIMIT 1
+            """,
+            {"actor_id": actor_id}
+        )
+        if result and result[0]:
+            return result[0][0]
+    except Exception as e:
+        logger.debug(f"Running task detection failed for {actor_id}: {e}")
+
+    # 2. No running tasks - look for claimed, promote highest w×e to running
+    try:
+        result = adapter.query(
+            """
+            MATCH (a {id: $actor_id})-[r:LINK]-(t)
+            WHERE t.status = 'claimed'
+            RETURN t.id, COALESCE(r.weight, 1.0) * COALESCE(r.energy, 0.1) as score
+            ORDER BY score DESC
+            LIMIT 1
+            """,
+            {"actor_id": actor_id}
+        )
+        if result and result[0]:
+            task_id = result[0][0]
+            # Promote claimed → running
+            adapter.execute(
+                "MATCH (t {id: $task_id}) SET t.status = 'running'",
+                {"task_id": task_id}
+            )
+            logger.info(f"Promoted task {task_id} from claimed → running")
+            return task_id
+    except Exception as e:
+        logger.debug(f"Claimed task detection failed for {actor_id}: {e}")
+
+    return None
+
+
 def _resolve_active_space(adapter) -> Optional[str]:
     """
     Resolve the active space for injection context.
 
     Resolution order:
-    1. Active task → follow implements chain → find space
+    1. Detect active task → follow implements chain → find space
     2. Fallback: actor's linked spaces, pick by weight × energy
 
     Returns:
         Space ID or None if resolution fails
     """
-    task_id = _context.get("task_id")
     actor_id = get_actor()
 
-    # 1. Try task → implements chain → space
+    # 1. Detect active task, then follow implements chain to space
+    task_id = _detect_active_task(adapter, actor_id)
     if task_id:
         try:
             # Follow implements links from task until we hit a space
