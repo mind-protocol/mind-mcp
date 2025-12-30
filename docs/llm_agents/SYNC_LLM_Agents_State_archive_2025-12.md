@@ -206,7 +206,7 @@ Original file: SYNC_LLM_Agents_State.md
 ### 2025-12-25: Expanded Gemini implementation doc to runtime detail
 
 - **What:** Added sections covering code structure, design patterns, schema, flow-by-flow docking, logic chains, dependencies, state handling, runtime behavior, concurrency, and bidirectional links so the implementation doc now satisfies the template expectations.
-- **Why:** Resolve the DOC_TEMPLATE_DRIFT warning pointing at `IMPLEMENTATION_LLM_Agent_Code_Architecture.md` by giving each required heading substantive narrative and clarifying how the adapter interacts with the CLI and TUI.
+- **Why:** Resolve the DOC_TEMPLATE_DRIFT warning pointing at `IMPLEMENTATION_LLM_Agent_Code_Architecture.md` by giving each required heading substantive narrative and clarifying how the adapter interacts with the CLI.
 - **Files:** `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`, `docs/llm_agents/SYNC_LLM_Agents_State.md`
 - **Verification:** `mind validate` *(fails: existing connectome health doc gaps, membrane naming, and CHAIN/link warnings already tracked by the doctor)*
 

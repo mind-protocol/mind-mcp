@@ -47,7 +47,7 @@ The protocol specifies:
 4. **Where to find things** (consistent structure)
 
 **Key insight:** Agents shouldn't understand the whole system. They should receive:
-- A tiny bootstrap (.mind/CLAUDE.md + root AGENTS.md with Codex guidance, including protocol-first reading, no self-run TUI, verbose outputs, and parallel-work awareness)
+- A tiny bootstrap (.mind/CLAUDE.md + root AGENTS.md with Codex guidance, including protocol-first reading, verbose outputs, and parallel-work awareness)
 - One VIEW for their current task
 - Tools to navigate when needed
 

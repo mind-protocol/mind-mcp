@@ -12,7 +12,7 @@ You have a limited context window. You can't load everything. But you need:
 - To not hallucinate structure that doesn't exist
 
 This protocol solves these problems through:
-1. **Agents** — Cognitive postures that shape how you approach work
+1. **Agents** — Cognitive subtypes that shape how you approach work
 2. **Procedures** — Structured dialogues for common tasks
 3. **Skills** — Executable capabilities with gates and processes
 4. **Documentation chains** — Bidirectional links between code and docs
@@ -111,11 +111,11 @@ The chain: OBJECTIVES → PATTERNS → BEHAVIORS → ALGORITHM → VALIDATION �
 
 Understand what's happening, what changed recently, any handoffs for you.
 
-### 3. Choose Your Agent Posture
+### 3. Choose Your Agent Subtype
 
 Agents are cognitive stances that shape how you approach work. Pick the one matching your task:
 
-| Agent | Posture | When to Use |
+| Agent | Subtype | When to Use |
 |-------|---------|-------------|
 | **witness** | Observe → trace → name | Before fixing, when behavior doesn't match docs, investigating |
 | **groundwork** | Act → ship → iterate | Implementing features, writing code, making things work |
@@ -213,7 +213,7 @@ After changes, update SYNC files:
 
 | Pattern | Purpose | When to Load |
 |---------|---------|--------------|
-| `.mind/agents/{name}/` | Cognitive posture files | When adopting a posture |
+| `.mind/agents/{name}/` | Cognitive subtype files | When adopting a subtype |
 | `.mind/skills/SKILL_*.md` | Executable capabilities | When performing that capability |
 | `procedures/*.yaml` | Structured dialogues | Via procedure tools |
 
@@ -228,7 +228,7 @@ Understand before changing. The docs exist so you don't have to reverse-engineer
 Don't assume the next agent knows what you know. Write it down in SYNC.
 
 **Handoffs Have Recipients**
-Specify who they're for: which agent posture will the next agent use?
+Specify who they're for: which agent subtype will the next agent use?
 
 **Proof Over Assertion**
 Don't claim things work. Show how to verify. Link to tests. Provide evidence.
@@ -564,7 +564,7 @@ graph_query(queries: ["What characters exist?", "How does physics work?"], top_k
 | `doctor_check` | Run health checks, find issues |
 | `task_list` | List pending tasks by module/objective |
 | `agent_list` | Show available work agents |
-| `agent_spawn` | Spawn agent for task/issue |
+| `agent_run` | Run agent for task/issue |
 | `agent_status` | Get/set agent status |
 
 ---

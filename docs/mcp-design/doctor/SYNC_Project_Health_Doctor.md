@@ -26,7 +26,7 @@ The command provides holistic project health analysis beyond pass/fail validatio
 - Escaped marker references in BEHAVIORS to avoid triggering escalation scans.
 - Special marker detection now includes `@mind&#58;todo` entries for task triage.
 - Doc-link integrity and code-doc delta coupling checks now guard the prompt doc chain and flagged 27 doc-link + 3 code-doc delta warnings (see `...mind/state/SYNC_Project_Health.md`).
- - Implementation docs now explicitly list each doctor, repair, repo-overview, solve, and TUI code path mentioned by the latest doctor scan so the doc-link integrity check can anchor back to this module.
+ - Implementation docs now explicitly list each doctor, repair, repo-overview, solve, and CLI code path mentioned by the latest doctor scan so the doc-link integrity check can anchor back to this module.
 - Incomplete-implementation detection now treats stub-only bodies (pass/return None/NotImplemented) as incomplete while allowing concise return-based helpers.
 - Stub-only detection now evaluates every function boundary (including end-of-file) to avoid false positives on short helpers.
 - Large doc module threshold increased by 25% (62.5K chars) to reduce noisy warnings for moderately sized modules.

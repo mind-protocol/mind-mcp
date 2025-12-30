@@ -49,14 +49,14 @@ Original file: SYNC_CLI_State.md
 ## NOTES
 
 - Older details (TODO lists, prior minor changes) were removed for size.
-- This archive is CLI-specific; protocol and TUI archives live under their respective `docs/*/archive/` folders.
+- This archive is CLI-specific; protocol and CLI archives live under their respective `docs/*/archive/` folders.
 
 ---
 
 ## RELATED ARCHIVES
 
 - Protocol archive: `../../protocol/archive/SYNC_Archive_2024-12.md`
-- TUI archive: `../../tui/archive/SYNC_TUI_State_Archive_2025-12.md`
+- CLI archive: `../../tui/archive/SYNC_TUI_State_Archive_2025-12.md`
 ---
 
 ## MERGED SNAPSHOTS

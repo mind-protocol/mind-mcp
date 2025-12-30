@@ -81,7 +81,7 @@ We lean on those algorithm and validation references because they capture the re
 
 ## OBJECTIVES SERVED
 
-This adapter is tuned to measurable outputs that keep the CLI, TUI, and automation tooling aligned:
+This adapter is tuned to measurable outputs that keep the CLI, and automation tooling aligned:
 
 - Provide a fully parseable JSON stream whenever `--output-format stream-json` is selected so downstream tooling can consume assistant, tool, and result messages without brittle parsing workarounds.
 - Offer a clean plain-text fallback when `--output-format text` is requested so scripts and humans that do not want JSON still receive only the assistant response text while diagnostics stay on stderr.

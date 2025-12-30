@@ -24,13 +24,13 @@ SYNC:            ./SYNC_LLM_Agents_State.md
 
 ## OVERVIEW
 
-The Gemini adapter is a CLI program that loads credentials, initializes the Gemini SDK, constructs a conversation history, and emits a normalized stream of JSON messages for the TUI.
+The Gemini adapter is a CLI program that loads credentials, initializes the Gemini SDK, constructs a conversation history, and emits a normalized stream of JSON messages for the CLI.
 
 ---
 
 ## OBJECTIVES AND BEHAVIORS
 
-The adapter pursues two complementary goals: protect the CLI from provider SDK dependencies while still delivering a consistent, observable stream that the TUI and repair workflow can trust. It behaves like a guarded translator—validating credentials, logging diagnostics to stderr, and emitting structured assistant/tool messages so downstream panels and loggers can interpret every turn without guessing formats.
+The adapter pursues two complementary goals: protect the CLI from provider SDK dependencies while still delivering a consistent, observable stream that the CLI and repair workflow can trust. It behaves like a guarded translator—validating credentials, logging diagnostics to stderr, and emitting structured assistant/tool messages so downstream panels and loggers can interpret every turn without guessing formats.
 Building this narrative also anchors the template to the 50+ character requirement so the doctor can assert the entry is finished before downstream work reuses it.
 This extra clause gives future agents a quick indication that the behavior description is complete enough to satisfy automated length checks before they rely on it.
 It also documents which observable behaviors count toward that 50+ character guarantee so the doctor knows what to verify.
@@ -126,7 +126,7 @@ Conversation history
     ↓
 Gemini streaming response
     ↓
-Normalized JSON output (TUI)
+Normalized JSON output
 ```
 
 ---
@@ -141,7 +141,7 @@ Normalized JSON output (TUI)
 ## DATA STRUCTURES
 
 - `HistoryEntry` objects capture the speaker (`user` or `assistant`) and message text, which the Gemini SDK turns into conversation history.
-- `StreamChunk` dicts include `type`, `message`, and optional `tool_call`/`tool_result` fields that the TUI consumes.
+- `StreamChunk` dicts include `type`, `message`, and optional `tool_call`/`tool_result` fields that the CLI consumes.
 - `ToolResult` dicts bundle `tool_code`, `args`, and output metadata to allow downstream listeners to replay actions.
 
 ---
@@ -149,7 +149,7 @@ Normalized JSON output (TUI)
 ## KEY DECISIONS
 
 - Keep the CLI thin: delegate credential loading to `dotenv` plus environmental fallback and default to `gemini-3-flash-preview`.
-- Always emit JSON stream chunks with a stable shape before running any tool handlers so the TUI never sees partial structures.
+- Always emit JSON stream chunks with a stable shape before running any tool handlers so the CLI never sees partial structures.
 - Route tool outputs through `tool_code`/`tool_result` pairs so the repair system can document agent effects.
 
 ---
@@ -165,7 +165,7 @@ Normalized JSON output (TUI)
 ## INTERACTIONS
 
 - Invoked by `mind agent` or `mind work` when Gemini is the selected provider.
-- The TUI listens on the JSON stream (`assistant_chunks`) and renders every `type`/`content` field in agent panels.
+- The CLI listens on the JSON stream (`assistant_chunks`) and renders every `type`/`content` field in agent panels.
 - Tool handlers post `tool_result` messages so the repair workflow can track side effects.
 
 ---

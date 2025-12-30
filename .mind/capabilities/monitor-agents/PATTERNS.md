@@ -66,6 +66,6 @@ Check agent status
 - Health check error handling
 
 **Out of scope:**
-- Agent spawning
+- Agent running
 - Task prioritization
 - Performance metrics

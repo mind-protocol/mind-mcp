@@ -57,18 +57,18 @@ def stuck_agent_detection(ctx) -> dict:
         # First dead agent is primary, others listed
         first = dead_agents[0]
         return Signal.critical(
-            actor_id=first.actor_id,  # For atomic handler
+            agent_id=first.agent_id,  # For atomic handler
             dead_count=len(dead_agents),
-            dead_agents=[a.actor_id for a in dead_agents],
+            dead_agents=[a.agent_id for a in dead_agents],
             stuck_count=len(stuck_agents),
         )
 
     if stuck_agents:
         first = stuck_agents[0]
         return Signal.degraded(
-            actor_id=first.actor_id,  # For atomic handler
+            agent_id=first.agent_id,  # For atomic handler
             stuck_count=len(stuck_agents),
-            stuck_agents=[a.actor_id for a in stuck_agents],
+            stuck_agents=[a.agent_id for a in stuck_agents],
         )
 
     return Signal.healthy()
@@ -96,18 +96,18 @@ def orphan_task_detection(ctx) -> dict:
     registry = get_registry()
 
     # Find dead agents
-    dead_actor_ids = {
-        a.actor_id for a in registry.agents.values()
+    dead_agent_ids = {
+        a.agent_id for a in registry.agents.values()
         if a.status == AgentStatus.DEAD
     }
 
-    if not dead_actor_ids:
+    if not dead_agent_ids:
         return Signal.healthy()
 
     # Find tasks claimed by dead agents
     orphan_tasks = []
     for task_id, slot in throttler.active.items():
-        if slot.claimed_by in dead_actor_ids:
+        if slot.claimed_by in dead_agent_ids:
             orphan_tasks.append(task_id)
             # Auto-release
             throttler.on_abandon(task_id)
@@ -149,7 +149,7 @@ def health_check_failure(ctx) -> dict:
 
 
 @check(
-    id="ACTOR_queue_health",
+    id="agent_queue_health",
     triggers=[
         triggers.cron.every(5),  # Every 5 minutes
     ],

@@ -80,7 +80,7 @@ The CLI (`runtime/agent_cli.py`) builds `python -m mind.llms.gemini_agent` with 
 
 | Boundary | Inside | Outside | Interface |
 |----------|--------|---------|-----------|
-| CLI ↔ Gemini adapter | Argument parsing, credential validation, tool helper wiring | TUI, agent_cli routing, downstream tool runners | CLI wraps `python -m mind.llms.gemini_agent` with flags and trusts the JSON stream. |
+| CLI ↔ Gemini adapter | Argument parsing, credential validation, tool helper wiring | agent_cli routing, downstream tool runners | CLI wraps `python -m mind.llms.gemini_agent` with flags and trusts the JSON stream. |
 
 ---
 
@@ -92,12 +92,12 @@ The CLI (`runtime/agent_cli.py`) builds `python -m mind.llms.gemini_agent` with 
 StreamMessage:
   required:
     - type: string                # e.g., "assistant", "tool_result", or "error"
-    - message: object             # carries text content or metadata for the TUI
+    - message: object             # carries text content or metadata for the CLI
   optional:
     - name: string                # tool name when the message describes tool output
     - result: object              # payload returned by the tool helper
   constraints:
-    - type determines the structure of `message` so the TUI can render consistently.
+    - type determines the structure of `message` so the CLI can render consistently.
 ```
 
 ### ToolInvocationPayload
@@ -133,7 +133,7 @@ This flow tracks how a user prompt crosses the subprocess boundary, reaches the 
 ```yaml
 flow:
   name: gemini_prompt_stream
-  purpose: Deliver prompts to Gemini, include tool results, and emit structured responses for the TUI.
+  purpose: Deliver prompts to Gemini, include tool results, and emit structured responses for the CLI.
   scope: [agent_cli subprocess launch, gemini_agent parsing, SDK chat loop, stdout stream]
   steps:
     - id: cli_launch
@@ -185,7 +185,7 @@ flow:
         payload: StreamMessage schema above
         async_hook: optional
         needs: health watcher to verify JSON validity under load
-        notes: critical for TUI sanity checks.
+        notes: critical for CLI sanity checks.
       - id: dock_tool_result
         type: custom
         direction: output
@@ -209,7 +209,7 @@ flow:
 
 ### LC1: Prompt-To-Streamed-Response
 
-**Purpose:** Drive the CLI prompt through Gemini and emit assistant/text chunks for the TUI.
+**Purpose:** Drive the CLI prompt through Gemini and emit assistant/text chunks for the CLI.
 
 ```
 agent_cli.py:select_provider → creates subprocess command
@@ -222,7 +222,7 @@ agent_cli.py:select_provider → creates subprocess command
 **Data transformation:**
 - Input: `PromptArgs` from CLI — CLI command line, `.env`, defaults → structured subprocess invocation.
 - After step 2: `genai.Client` + `tool_map` — ready to receive and act on Gemini output.
-- After step 3: `Chat` object streaming `parts` — each part becomes a JSON `assistant` object for the TUI.
+- After step 3: `Chat` object streaming `parts` — each part becomes a JSON `assistant` object for the CLI.
 - Output: Streamed JSON lines (or plain text) delivered on stdout.
 
 ### LC2: Tool Invocation Handshake
@@ -328,7 +328,7 @@ No explicit async or threading constructs are present, so the adapter relies on 
 |--------|----------|---------|-------------|
 | `GEMINI_API_KEY` | CLI arg `--api-key`, `.env`, or environment variable | _None_ | Required for authenticating the Gemini SDK; failure exits with a JSON error. |
 | `MIND_GOOGLE_SEARCH_URL` | `.env` or environment variable | `https://www.google.com/search` | Base URL for the Google search helper so tests can override it for offline runs. |
-| `--output-format` | CLI flag | `stream-json` | Selects structured streaming vs plain text; stream-json is the default so the TUI can parse it deterministically. |
+| `--output-format` | CLI flag | `stream-json` | Selects structured streaming vs plain text; stream-json is the default so the CLI can parse it deterministically. |
 | `--allowed-tools` | CLI flag | _None_ | Comma-separated whitelist of helpers (currently unused but reserved for gating). |
 | `--model-name` | CLI flag or `GEMINI_MODEL` env | `gemini-3-flash-preview` | Overrides the Gemini model used for the chat session. |
 
@@ -362,7 +362,7 @@ No explicit async or threading constructs are present, so the adapter relies on 
 
 ### Missing Implementation
 
-<!-- @mind:todo Gate the stderr model listing so the TUI does not parse noisy diagnostics when the Gemini SDK logs available models. -->
+<!-- @mind:todo Gate the stderr model listing so the CLI does not parse noisy diagnostics when the Gemini SDK logs available models. -->
 <!-- @mind:todo Honor the `--allowed-tools` flag by filtering `tool_map` before passing it to `genai.Client` for the next provider. -->
 
 ### Ideas

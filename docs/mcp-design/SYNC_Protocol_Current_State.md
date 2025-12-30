@@ -53,7 +53,7 @@ Protocol V1.1 complete. Now includes formal markers for human-agent collaboratio
 **Recent changes (2025-12-19):**
 - Updated `mind overview` to generate multiple maps by default: `map.md` in root, `docs/map.md` as backup, and `map_{folder}.md` for core directories (`src`, `app`, `backend`, etc).
 - Added `--folder` (or `-p`) option to `mind overview` to target a specific directory.
-- Relocated primary repository map from `docs/map.md` to the project root (`map.md`) and updated TUI/documentation references.
+- Relocated primary repository map from `docs/map.md` to the project root (`map.md`) and updated documentation references.
 - Added **DATA** section to `PATTERNS_TEMPLATE.md` to allow modules to list their data sources (files, URLs, other).
 - Compressed legacy sync details into archive notes for long-term reference.
 - Added root overview stubs so validation still sees full chain files.

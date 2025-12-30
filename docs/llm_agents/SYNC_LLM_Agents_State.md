@@ -25,8 +25,8 @@ THIS:            SYNC_LLM_Agents_State.md (you are here)
 ## MATURITY
 
 **What's canonical (v1):**
-- `gemini_agent.py` provides a Gemini CLI wrapper for the TUI/CLI.
-- Streamed JSON output matches the TUI expectations used by other agents.
+- `gemini_agent.py` provides a Gemini CLI wrapper for the CLI.
+- Streamed JSON output matches the CLI expectations used by other agents.
 
 **What's still being designed:**
 - Shared abstractions for additional LLM providers.
@@ -40,7 +40,7 @@ THIS:            SYNC_LLM_Agents_State.md (you are here)
 
 ## CURRENT STATE
 
-`runtime/llms/gemini_agent.py` implements a standalone CLI process that authenticates with GEMINI_API_KEY (CLI arg, `.env`, or env var), sends a prompt to Gemini, streams JSON output for the TUI, and executes basic local tools (filesystem/search/web fetch). Google search requests use a configurable base URL via `MIND_GOOGLE_SEARCH_URL`. The CLI builds the subprocess invocation from `runtime/agent_cli.py` when the `gemini` provider is selected.
+`runtime/llms/gemini_agent.py` implements a standalone CLI process that authenticates with GEMINI_API_KEY (CLI arg, `.env`, or env var), sends a prompt to Gemini, streams JSON output for the CLI, and executes basic local tools (filesystem/search/web fetch). Google search requests use a configurable base URL via `MIND_GOOGLE_SEARCH_URL`. The CLI builds the subprocess invocation from `runtime/agent_cli.py` when the `gemini` provider is selected.
 
 ---
 
@@ -65,7 +65,7 @@ noted in handoff context and has not been triaged yet.
 **Where I stopped:** Documentation only; no behavior changes.
 
 **What you need to understand:**
-The Gemini adapter is a thin wrapper intended to isolate provider SDK usage. It streams JSON chunks for the TUI and supports basic local tool execution. The default model is `gemini-3-flash-preview`.
+The Gemini adapter is a thin wrapper intended to isolate provider SDK usage. It streams JSON chunks for the CLI and supports basic local tool execution. The default model is `gemini-3-flash-preview`.
 
 **Watch out for:**
 The adapter prints model listings to stderr unconditionally; consider gating if that output is noisy.

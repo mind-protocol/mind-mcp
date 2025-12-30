@@ -27,7 +27,7 @@ Boundaries:
 
 HEALTH is separate from tests because it verifies real system health without changing implementation files. For LLM agents, this allows monitoring real-world interactions and detecting provider-side drift or API changes without modifying the core adapter code.
 
-- **Failure mode avoided:** Provider API updates that change the JSON schema, leading to silent failures in the TUI.
+- **Failure mode avoided:** Provider API updates that change the JSON schema, leading to silent failures in the CLI.
 - **Docking-based checks:** Uses the subprocess stdout/stderr and exit codes as docking points.
 - **Throttling:** Prevents excessive API costs by running heavy verification checks at a low cadence.
 
@@ -76,7 +76,7 @@ health_indicators:
   - name: stream_validity
     flow_id: gemini_stream_flow
     priority: high
-    rationale: TUI depends on parsing every JSON chunk correctly.
+    rationale: CLI depends on parsing every JSON chunk correctly.
   - name: api_connectivity
     flow_id: gemini_stream_flow
     priority: high
@@ -89,8 +89,8 @@ health_indicators:
 
 | Objective | Indicators | Why These Signals Matter |
 |-----------|------------|--------------------------|
-| Preserve the streaming contract so every chunk the TUI consumes stays parseable and complete | stream_validity | Guards the core inference channel by confirming chunk shape, tool_message pairings, and final result blocks before downstream UI/agents render anything; the doctor reads this table to correlate the health ratio with observed stream noise, making drift easy to detect. |
-| Lock in provider connectivity so credentials or network failures are caught before the CLI assumes Gemini is reachable | api_connectivity | Keeps the CLI/TUI reliable by surfacing missing API keys, bad client instantiations, and diagnostic noise as structured errors that operators can act on quickly; the health tracker turns the binary flag into a quick dashboard ping so missing keys show up as connection outages instead of silent stream gaps. |
+| Preserve the streaming contract so every chunk the CLI consumes stays parseable and complete | stream_validity | Guards the core inference channel by confirming chunk shape, tool_message pairings, and final result blocks before downstream UI/agents render anything; the doctor reads this table to correlate the health ratio with observed stream noise, making drift easy to detect. |
+| Lock in provider connectivity so credentials or network failures are caught before the CLI assumes Gemini is reachable | api_connectivity | Keeps the CLI reliable by surfacing missing API keys, bad client instantiations, and diagnostic noise as structured errors that operators can act on quickly; the health tracker turns the binary flag into a quick dashboard ping so missing keys show up as connection outages instead of silent stream gaps. |
 
 ---
 
@@ -149,7 +149,7 @@ This indicator keeps the streaming JSON surface deterministic so the toolchain n
 ```yaml
 value_and_validation:
   indicator: stream_validity
-  client_value: The CLI/TUI pipeline can parse each Gemini output chunk immediately without needing retries or manual intervention.
+  client_value: The CLI pipeline can parse each Gemini output chunk immediately without needing retries or manual intervention.
   validation:
     - validation_id: V-GEMINI-JSON
       criteria: Chunks must be valid newline-delimited JSON with 'type' and 'content' fields, and tool messages must arrive as matched pairs.
@@ -241,7 +241,7 @@ forwarding:
 display:
   locations:
     - surface: CLI health banner
-      location: Repair/TUI diagnostics screen
+      location: Repair/CLI diagnostics screen
       signal: green/amber/red float_0_1
       notes: The palette mirrors the float ratio semantics so operators see severity at a glance.
 ```
@@ -266,7 +266,7 @@ This indicator makes sure the adapter never starts streaming without the credent
 ```yaml
 value_and_validation:
   indicator: api_connectivity
-  client_value: Prevents the CLI/TUI from assuming Gemini is reachable by surfacing missing or invalid GEMINI_API_KEY instances before streaming can start.
+  client_value: Prevents the CLI from assuming Gemini is reachable by surfacing missing or invalid GEMINI_API_KEY instances before streaming can start.
   validation:
     - validation_id: V1
       criteria: Missing credentials emit a structured JSON error and exit code 1 before a Gemini request is sent.

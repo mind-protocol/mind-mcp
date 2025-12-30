@@ -60,9 +60,9 @@ The HEALTH doc now stores the signal-to-dock mapping for each invariant so the `
 - **Why:** Turned the CLI prompt into an observable health signal so any drift or unanswered doc-coupling gaps are visible during routine health sweeps (see `docs/mcp-design/HEALTH_Protocol_Verification.md`).
 - **Impact:** `mind doctor` now surfaces the prompt health status while also flagging 27 doc-link issues and 3 code-doc delta warnings; these are new observations captured in this module's TODO list.
 
-### 2025-12-22: Documented CLI/TUI modules mentioned by `mind doctor`
+### 2025-12-22: Documented CLI modules mentioned by `mind doctor`
 
-- **What:** Expanded CLI core and TUI implementation docs to mention every `runtime/doctor*`, `runtime/repair*`, `runtime/repo_overview*`, `runtime/solve_escalations`, `runtime/core_utils`, and `runtime/tui/*` file flagged by the doc-link scan.
+- **What:** Expanded CLI core and CLI implementation docs to mention every `runtime/doctor*`, `runtime/repair*`, `runtime/repo_overview*`, `runtime/solve_escalations`, `runtime/core_utils`, and `runtime/tui/*` file flagged by the doc-link scan.
 - **Why:** The doctor warning list now only contains issues that have explicit bidirectional links in the implementation docs.
 - **Impact:** The Implementation docs now expose the precise code paths referenced by the doctor module and piped into prompt health, which reduces the triage surface for future doc-link integrity runs.
 - **Confirmation:** Reran `mind doctor --format json` (`/tmp/doctor_final.json`) after the updates and confirmed zero `DOC_LINK_INTEGRITY` or `CODE_DOC_DELTA_COUPLING` warnings for this module.

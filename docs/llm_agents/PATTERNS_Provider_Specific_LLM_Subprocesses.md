@@ -68,7 +68,7 @@ Adapters consume CLI arguments, `.env` files, and environment variables for cred
 Each provider gets its own small CLI wrapper that:
 - Reads provider credentials from CLI args, `.env`, or environment variables.
 - Adapts prompt/system prompt into the provider's expected input shape.
-- Streams output in a normalized JSON format compatible with the TUI.
+- Streams output in a normalized JSON format compatible with the CLI.
 - Exits cleanly with structured errors when credentials or API calls fail.
 
 The main CLI (`agent_cli.py`) builds a simple subprocess invocation and avoids SDK imports.
@@ -76,14 +76,14 @@ The main CLI (`agent_cli.py`) builds a simple subprocess invocation and avoids S
 ## BEHAVIORS SUPPORTED
 
 This pattern guarantees the CLI can reliably launch each provider adapter without embedding provider SDKs or mixing credential loading into `agent_cli.py`.
-- Provides endpoint adapters with a consistent streaming JSON shape and plain-text fallback so the TUI can parse either mode without format-guessing logic.
+- Provides endpoint adapters with a consistent streaming JSON shape and plain-text fallback so the CLI can parse either mode without format-guessing logic.
 - Lets each adapter validate credentials, log errors, and emit structured output independently while the CLI keeps only a thin subprocess wrapper.
 
 ## BEHAVIORS PREVENTED
 
 The subprocess boundary prevents the core CLI from importing heavyweight provider SDKs, keeping dependency management local to the adapter scripts.
 - Keeps debug logs, model listings, and stack traces out of stdout so downstream consumers never parse mixed formats.
-- Stops adapters from emitting mixed JSON/plain text sequences, ensuring every stream mode remains deterministic for the TUI.
+- Stops adapters from emitting mixed JSON/plain text sequences, ensuring every stream mode remains deterministic for the CLI.
 
 ---
 
@@ -95,7 +95,7 @@ The CLI should not import provider SDKs directly. The adapter script owns the SD
 
 ### Principle 2: Normalize streaming output
 
-Adapters should emit JSON messages that mimic the expected streaming format so the TUI can consume output consistently, regardless of provider.
+Adapters should emit JSON messages that mimic the expected streaming format so the CLI can consume output consistently, regardless of provider.
 
 ### Principle 3: Fail fast on missing credentials
 
@@ -110,14 +110,14 @@ Adapters should check for required API keys early and exit with explicit error m
 | google.generativeai | Gemini SDK used to make API calls |
 | dotenv | Optional `.env` loading for GEMINI_API_KEY |
 | argparse | CLI argument parsing |
-| json | Stream JSON output for TUI |
+| json | Stream JSON output for CLI |
 | os | Environment variable access |
 
 ---
 
 ## INSPIRATIONS
 
-- The Claude/Codex JSON stream format used by the TUI
+- The Claude/Codex JSON stream format used by the CLI
 - Unix-style subprocess boundaries for isolating dependencies
 
 ---

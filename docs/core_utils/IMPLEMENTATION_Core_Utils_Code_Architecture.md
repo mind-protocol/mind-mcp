@@ -70,7 +70,7 @@ mind/
 
 | Boundary | Inside | Outside | Interface |
 |----------|--------|---------|-----------|
-| Core utilities | filesystem helpers, constants | CLI command logic, doc rendering, TUI | `get_templates_path`, `find_module_directories` |
+| Core utilities | filesystem helpers, constants | CLI command logic, doc rendering, CLI | `get_templates_path`, `find_module_directories` |
 
 ---
 

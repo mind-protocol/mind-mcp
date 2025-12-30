@@ -313,15 +313,15 @@ def execute_implement(task_run, agent):
     """
 
     skill = load_skill("SKILL_implement")
-    task_type = task_run.task_type
+    problem_type = task_run.problem_type
 
-    if task_type == "STUB_IMPL":
+    if problem_type == "STUB_IMPL":
         return implement_stub(task_run, agent)
-    elif task_type == "INCOMPLETE_IMPL":
+    elif problem_type == "INCOMPLETE_IMPL":
         return complete_impl(task_run, agent)
-    elif task_type == "UNDOC_IMPL":
+    elif problem_type == "UNDOC_IMPL":
         return document_impl(task_run, agent)
-    elif task_type == "STALE_IMPL":
+    elif problem_type == "STALE_IMPL":
         return update_impl_docs(task_run, agent)
 
 

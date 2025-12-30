@@ -9,7 +9,7 @@ purpose: |
 
 inputs:
   target: path
-  task_type: string
+  problem_type: string
   error_details: object
 
 outputs:
@@ -22,7 +22,7 @@ steps:
     name: Identify Problem Type
     action: match
     params:
-      value: "{task_type}"
+      value: "{problem_type}"
       cases:
         MEMBRANE_NO_PROTOCOLS: install_templates
         MEMBRANE_PARSE_ERROR: fix_syntax

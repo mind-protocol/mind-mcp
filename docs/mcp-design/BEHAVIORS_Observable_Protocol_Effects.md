@@ -139,7 +139,7 @@ AND:    The agent describes the task details in YAML format
 - `.mind/templates/*.md`
 - `...mind/state/SYNC_Project_State.md`
 - Updated .mind/CLAUDE.md with protocol bootstrap
-- Updated AGENTS.md with the bootstrap plus Codex guidance (protocol-first reading, no self-run TUI, verbose outputs, parallel-work awareness)
+- Updated AGENTS.md with the bootstrap plus Codex guidance (protocol-first reading, verbose outputs, parallel-work awareness)
 
 ### Agent Task Execution
 

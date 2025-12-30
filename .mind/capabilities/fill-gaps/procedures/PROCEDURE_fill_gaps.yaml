@@ -8,7 +8,7 @@ purpose: |
 
 inputs:
   target: doc_path
-  task_type: enum[DOC_GAPS, DOC_DUPLICATION, LARGE_DOC_MODULE]
+  problem_type: enum[DOC_GAPS, DOC_DUPLICATION, LARGE_DOC_MODULE]
   context: object  # problem-specific context
 
 outputs:
@@ -23,7 +23,7 @@ steps:
     name: Read Task Context
     action: read_task_inputs
     outputs:
-      task_type: string
+      problem_type: string
       target: path
       context: object
 
@@ -32,7 +32,7 @@ steps:
   # ==========================================================================
   - id: read_gap_context
     name: Read Gap Context
-    condition: "task_type == 'DOC_GAPS'"
+    condition: "problem_type == 'DOC_GAPS'"
     action: read
     params:
       path: "{target}"
@@ -42,7 +42,7 @@ steps:
 
   - id: research_gap
     name: Research Gap Content
-    condition: "task_type == 'DOC_GAPS'"
+    condition: "problem_type == 'DOC_GAPS'"
     action: research
     params:
       query: "{context.gap_text}"
@@ -55,7 +55,7 @@ steps:
 
   - id: fill_gap_content
     name: Fill Gap With Content
-    condition: "task_type == 'DOC_GAPS'"
+    condition: "problem_type == 'DOC_GAPS'"
     action: generate_content
     params:
       gap_context: "{context.gap_text}"
@@ -66,7 +66,7 @@ steps:
 
   - id: replace_gap_marker
     name: Replace Gap Marker
-    condition: "task_type == 'DOC_GAPS'"
+    condition: "problem_type == 'DOC_GAPS'"
     action: edit
     params:
       path: "{target}"
@@ -78,7 +78,7 @@ steps:
   # ==========================================================================
   - id: read_both_docs
     name: Read Both Documents
-    condition: "task_type == 'DOC_DUPLICATION'"
+    condition: "problem_type == 'DOC_DUPLICATION'"
     action: read
     params:
       paths:
@@ -90,7 +90,7 @@ steps:
 
   - id: determine_canonical
     name: Determine Canonical Source
-    condition: "task_type == 'DOC_DUPLICATION'"
+    condition: "problem_type == 'DOC_DUPLICATION'"
     action: compare
     params:
       primary: "{target}"
@@ -105,7 +105,7 @@ steps:
 
   - id: find_overlaps
     name: Find Overlapping Sections
-    condition: "task_type == 'DOC_DUPLICATION'"
+    condition: "problem_type == 'DOC_DUPLICATION'"
     action: diff
     params:
       canonical: "{canonical}"
@@ -115,7 +115,7 @@ steps:
 
   - id: replace_with_references
     name: Replace Duplicates With References
-    condition: "task_type == 'DOC_DUPLICATION'"
+    condition: "problem_type == 'DOC_DUPLICATION'"
     action: edit
     params:
       path: "{secondary}"
@@ -129,7 +129,7 @@ steps:
   # ==========================================================================
   - id: check_doc_type
     name: Check Document Type
-    condition: "task_type == 'LARGE_DOC_MODULE'"
+    condition: "problem_type == 'LARGE_DOC_MODULE'"
     action: analyze
     params:
       path: "{target}"
@@ -139,7 +139,7 @@ steps:
 
   - id: archive_sync_entries
     name: Archive Old SYNC Entries
-    condition: "task_type == 'LARGE_DOC_MODULE' and is_sync"
+    condition: "problem_type == 'LARGE_DOC_MODULE' and is_sync"
     action: split_sync
     params:
       sync_path: "{target}"
@@ -151,7 +151,7 @@ steps:
 
   - id: split_by_sections
     name: Split By Sections
-    condition: "task_type == 'LARGE_DOC_MODULE' and not is_sync"
+    condition: "problem_type == 'LARGE_DOC_MODULE' and not is_sync"
     action: split_doc
     params:
       path: "{target}"
@@ -161,7 +161,7 @@ steps:
 
   - id: add_cross_refs
     name: Add Cross References
-    condition: "task_type == 'LARGE_DOC_MODULE'"
+    condition: "problem_type == 'LARGE_DOC_MODULE'"
     action: add_references
     params:
       original: "{target}"
@@ -175,10 +175,10 @@ steps:
     action: validate
     params:
       checks:
-        - gap_marker_removed: "task_type != 'DOC_GAPS' or '@mind:gap' not in read(target)"
+        - gap_marker_removed: "problem_type != 'DOC_GAPS' or '@mind:gap' not in read(target)"
         - refs_valid: "all links resolve"
-        - size_ok: "task_type != 'LARGE_DOC_MODULE' or line_count(target) < 200"
-        - content_quality: "task_type != 'DOC_GAPS' or len(new_content) > 50"
+        - size_ok: "problem_type != 'LARGE_DOC_MODULE' or line_count(target) < 200"
+        - content_quality: "problem_type != 'DOC_GAPS' or len(new_content) > 50"
     outputs:
       validated: boolean
       errors: string[]
@@ -190,7 +190,7 @@ steps:
       path: "find_sync({target})"
       content: |
         ### {today}
-        - Resolved {task_type} in {target}
+        - Resolved {problem_type} in {target}
         - {resolution_summary}
 
   - id: complete

@@ -9,7 +9,7 @@ purpose: |
 
 inputs:
   target: string           # Log path or hook path
-  task_type: string     # LOG_ERROR or HOOK_UNDOC
+  problem_type: string     # LOG_ERROR or HOOK_UNDOC
   error_message: string    # For LOG_ERROR
   stack_trace: string      # For LOG_ERROR
   hook_name: string        # For HOOK_UNDOC
@@ -30,7 +30,7 @@ steps:
     params:
       paths:
         - "{target}"
-        - condition: "task_type == 'LOG_ERROR'"
+        - condition: "problem_type == 'LOG_ERROR'"
           value: ".mind/logs/*.log"
     outputs:
       context: string
@@ -41,7 +41,7 @@ steps:
 
   - id: read_surrounding_logs
     name: Read Surrounding Log Entries
-    condition: "task_type == 'LOG_ERROR'"
+    condition: "problem_type == 'LOG_ERROR'"
     action: read
     params:
       path: "{target}"
@@ -52,7 +52,7 @@ steps:
 
   - id: identify_error_location
     name: Identify Error Location
-    condition: "task_type == 'LOG_ERROR'"
+    condition: "problem_type == 'LOG_ERROR'"
     action: parse
     params:
       input: "{stack_trace}"
@@ -62,7 +62,7 @@ steps:
 
   - id: read_error_code
     name: Read Code at Error Location
-    condition: "task_type == 'LOG_ERROR'"
+    condition: "problem_type == 'LOG_ERROR'"
     action: read
     params:
       path: "{error_location.file}"
@@ -72,7 +72,7 @@ steps:
 
   - id: form_hypotheses
     name: Form Hypotheses
-    condition: "task_type == 'LOG_ERROR'"
+    condition: "problem_type == 'LOG_ERROR'"
     action: analyze
     params:
       context: "{log_context}"
@@ -89,7 +89,7 @@ steps:
 
   - id: verify_hypothesis
     name: Verify Top Hypothesis
-    condition: "task_type == 'LOG_ERROR'"
+    condition: "problem_type == 'LOG_ERROR'"
     action: verify
     params:
       hypothesis: "{hypotheses[0]}"
@@ -99,7 +99,7 @@ steps:
 
   - id: create_diagnosis
     name: Create Diagnosis
-    condition: "task_type == 'LOG_ERROR'"
+    condition: "problem_type == 'LOG_ERROR'"
     action: create_diagnosis
     params:
       root_cause: "{verification.conclusion}"
@@ -115,7 +115,7 @@ steps:
 
   - id: read_hook_code
     name: Read Hook Code
-    condition: "task_type == 'HOOK_UNDOC'"
+    condition: "problem_type == 'HOOK_UNDOC'"
     action: read
     params:
       path: "{target}"
@@ -124,7 +124,7 @@ steps:
 
   - id: analyze_hook
     name: Analyze Hook Behavior
-    condition: "task_type == 'HOOK_UNDOC'"
+    condition: "problem_type == 'HOOK_UNDOC'"
     action: analyze
     params:
       code: "{hook_code}"
@@ -140,7 +140,7 @@ steps:
 
   - id: find_behaviors_doc
     name: Find or Create BEHAVIORS.md
-    condition: "task_type == 'HOOK_UNDOC'"
+    condition: "problem_type == 'HOOK_UNDOC'"
     action: find_or_create
     params:
       pattern: "docs/**/BEHAVIORS*.md"
@@ -150,7 +150,7 @@ steps:
 
   - id: write_hook_doc
     name: Write Hook Documentation
-    condition: "task_type == 'HOOK_UNDOC'"
+    condition: "problem_type == 'HOOK_UNDOC'"
     action: append
     params:
       path: "{behaviors_path}"
@@ -182,11 +182,11 @@ steps:
     action: validate
     params:
       checks:
-        - condition: "task_type == 'LOG_ERROR'"
+        - condition: "problem_type == 'LOG_ERROR'"
           check: diagnosis_has_evidence
-        - condition: "task_type == 'LOG_ERROR'"
+        - condition: "problem_type == 'LOG_ERROR'"
           check: root_cause_identified
-        - condition: "task_type == 'HOOK_UNDOC'"
+        - condition: "problem_type == 'HOOK_UNDOC'"
           check: hook_doc_complete
     outputs:
       validated: boolean

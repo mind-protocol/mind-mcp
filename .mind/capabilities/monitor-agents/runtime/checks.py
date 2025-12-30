@@ -27,7 +27,7 @@ TASK_RELEASE_THRESHOLD = 2 * 60 * 60  # 2 hours - release
 # =============================================================================
 
 @check(
-    id="ACTOR_health",
+    id="agent_health",
     triggers=[
         triggers.cron.every("60s"),
     ],
@@ -109,16 +109,16 @@ def task_health(ctx) -> List[Dict[str, Any]]:
 
     for task in claimed_tasks:
         # Check if claiming agent is dead
-        actor_id = task.get("claimed_by")
-        if actor_id:
-            agent = ctx.get_node(actor_id)
+        agent_id = task.get("claimed_by")
+        if agent_id:
+            agent = ctx.get_node(agent_id)
             if agent and agent.get("status") == "dead":
                 problems.append({
                     "problem": "TASK_ORPHAN",
                     "target": task["id"],
                     "signal": "critical",
                     "context": {
-                        "dead_agent": actor_id,
+                        "dead_agent": agent_id,
                     }
                 })
                 continue

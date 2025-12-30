@@ -18,7 +18,6 @@ It safeguards:
 
 Boundaries:
 - This file covers the doctor's internal checks and reporting logic.
-- It does not verify the TUI's "Doctor" tab (covered in `docs/tui/HEALTH_TUI_Coverage.md`).
 
 ---
 

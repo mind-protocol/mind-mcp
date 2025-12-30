@@ -7,7 +7,7 @@ purpose: |
   creating algorithm documentation, and synchronizing docs with code.
 
 inputs:
-  task_type: string  # STUB_IMPL, INCOMPLETE_IMPL, UNDOC_IMPL, STALE_IMPL
+  problem_type: string  # STUB_IMPL, INCOMPLETE_IMPL, UNDOC_IMPL, STALE_IMPL
   target: path          # File or module path
   details: object       # Problem-specific details (functions, markers, etc.)
 
@@ -24,7 +24,7 @@ steps:
     name: Identify Problem Type
     action: switch
     params:
-      on: "{task_type}"
+      on: "{problem_type}"
       cases:
         STUB_IMPL: goto_implement_stub
         INCOMPLETE_IMPL: goto_complete_impl
@@ -41,7 +41,7 @@ steps:
 
   - id: read_stub_spec
     name: Read Specification
-    condition: "task_type == 'STUB_IMPL'"
+    condition: "problem_type == 'STUB_IMPL'"
     action: read
     params:
       paths:
@@ -53,7 +53,7 @@ steps:
 
   - id: implement_stub
     name: Implement Stub Functions
-    condition: "task_type == 'STUB_IMPL'"
+    condition: "problem_type == 'STUB_IMPL'"
     action: agent_implement
     params:
       target: "{target}"
@@ -64,7 +64,7 @@ steps:
 
   - id: test_stub
     name: Run Tests
-    condition: "task_type == 'STUB_IMPL'"
+    condition: "problem_type == 'STUB_IMPL'"
     action: run_tests
     params:
       target: "{target}"
@@ -74,7 +74,7 @@ steps:
 
   - id: validate_stub
     name: Validate No Stubs Remain
-    condition: "task_type == 'STUB_IMPL'"
+    condition: "problem_type == 'STUB_IMPL'"
     action: validate
     params:
       checks:
@@ -93,7 +93,7 @@ steps:
 
   - id: read_todo_context
     name: Read TODO Context
-    condition: "task_type == 'INCOMPLETE_IMPL'"
+    condition: "problem_type == 'INCOMPLETE_IMPL'"
     action: read_lines
     params:
       file: "{target}"
@@ -104,7 +104,7 @@ steps:
 
   - id: complete_code
     name: Complete Partial Code
-    condition: "task_type == 'INCOMPLETE_IMPL'"
+    condition: "problem_type == 'INCOMPLETE_IMPL'"
     action: agent_complete
     params:
       target: "{target}"
@@ -115,7 +115,7 @@ steps:
 
   - id: test_complete
     name: Run Tests
-    condition: "task_type == 'INCOMPLETE_IMPL'"
+    condition: "problem_type == 'INCOMPLETE_IMPL'"
     action: run_tests
     params:
       target: "{target}"
@@ -124,7 +124,7 @@ steps:
 
   - id: validate_complete
     name: Validate No TODOs Remain
-    condition: "task_type == 'INCOMPLETE_IMPL'"
+    condition: "problem_type == 'INCOMPLETE_IMPL'"
     action: validate
     params:
       checks:
@@ -143,7 +143,7 @@ steps:
 
   - id: read_implementation
     name: Read Implementation Code
-    condition: "task_type == 'UNDOC_IMPL'"
+    condition: "problem_type == 'UNDOC_IMPL'"
     action: read
     params:
       paths:
@@ -153,7 +153,7 @@ steps:
 
   - id: extract_code_paths
     name: Extract Code Paths
-    condition: "task_type == 'UNDOC_IMPL'"
+    condition: "problem_type == 'UNDOC_IMPL'"
     action: parse_impl_links
     params:
       doc: "{impl_doc}"
@@ -162,7 +162,7 @@ steps:
 
   - id: read_code_files
     name: Read Code Files
-    condition: "task_type == 'UNDOC_IMPL'"
+    condition: "problem_type == 'UNDOC_IMPL'"
     action: read
     params:
       paths: "{code_paths}"
@@ -171,7 +171,7 @@ steps:
 
   - id: analyze_algorithms
     name: Analyze Algorithms
-    condition: "task_type == 'UNDOC_IMPL'"
+    condition: "problem_type == 'UNDOC_IMPL'"
     action: agent_analyze
     params:
       code: "{code_content}"
@@ -181,7 +181,7 @@ steps:
 
   - id: create_algorithm_doc
     name: Create ALGORITHM.md
-    condition: "task_type == 'UNDOC_IMPL'"
+    condition: "problem_type == 'UNDOC_IMPL'"
     action: create_from_template
     params:
       template: templates/docs/ALGORITHM_TEMPLATE.md
@@ -193,7 +193,7 @@ steps:
 
   - id: validate_algorithm
     name: Validate ALGORITHM.md
-    condition: "task_type == 'UNDOC_IMPL'"
+    condition: "problem_type == 'UNDOC_IMPL'"
     action: validate
     params:
       checks:
@@ -214,7 +214,7 @@ steps:
 
   - id: get_code_diff
     name: Get Code Diff
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: git_diff
     params:
       file: "{details.code_file}"
@@ -224,7 +224,7 @@ steps:
 
   - id: analyze_changes
     name: Analyze Changes
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: agent_analyze_changes
     params:
       diff: "{diff}"
@@ -233,7 +233,7 @@ steps:
 
   - id: read_current_doc
     name: Read Current Doc
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: read
     params:
       paths:
@@ -243,7 +243,7 @@ steps:
 
   - id: update_doc
     name: Update Documentation
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: agent_update_doc
     params:
       doc: "{doc_content}"
@@ -253,7 +253,7 @@ steps:
 
   - id: write_updated_doc
     name: Write Updated Doc
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: write
     params:
       path: "{details.doc_file}"
@@ -261,7 +261,7 @@ steps:
 
   - id: update_last_updated
     name: Update LAST_UPDATED
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: update_field
     params:
       file: "{details.doc_file}"
@@ -270,7 +270,7 @@ steps:
 
   - id: validate_sync
     name: Validate Sync
-    condition: "task_type == 'STALE_IMPL'"
+    condition: "problem_type == 'STALE_IMPL'"
     action: validate
     params:
       checks:
@@ -290,7 +290,7 @@ steps:
       file: "docs/{module}/SYNC.md"
       entry: |
         ### {today}
-        - Fixed {task_type} in {target}
+        - Fixed {problem_type} in {target}
         - Task: {task_id}
 
   - id: complete

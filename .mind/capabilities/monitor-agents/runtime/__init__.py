@@ -12,6 +12,6 @@ from .checks import (
 
 __all__ = [
     "CHECKS",
-    "ACTOR_health",
+    "agent_health",
     "task_health",
 ]

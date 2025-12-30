@@ -8,7 +8,7 @@ purpose: |
 
 inputs:
   target: file_path
-  task_type: problem_id
+  problem_type: problem_id
   details: object
 
 outputs:
@@ -35,7 +35,7 @@ steps:
     action: analyze_file
     params:
       file: "{target}"
-      task_type: "{task_type}"
+      problem_type: "{problem_type}"
     outputs:
       analysis: object
 
@@ -44,7 +44,7 @@ steps:
     action: create_plan
     params:
       analysis: "{analysis}"
-      task_type: "{task_type}"
+      problem_type: "{problem_type}"
     outputs:
       plan: object
       steps: list
@@ -77,7 +77,7 @@ steps:
     name: Validate Result
     action: validate_refactor
     params:
-      task_type: "{task_type}"
+      problem_type: "{problem_type}"
       target: "{target}"
       original_analysis: "{analysis}"
     outputs:

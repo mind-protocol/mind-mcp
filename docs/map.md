@@ -1,31 +1,34 @@
 # Repository Map: mind-mcp
 
-*Generated: 2025-12-29 22:55*
+*Generated: 2025-12-30 02:49*
 
-- **Files:** 444
-- **Directories:** 98
-- **Total Size:** 4.8M
-- **Doc Files:** 318
-- **Code Files:** 125
+- **Files:** 457
+- **Directories:** 99
+- **Total Size:** 5.0M
+- **Doc Files:** 319
+- **Code Files:** 136
 - **Areas:** 14 (docs/ subfolders)
 - **Modules:** 32 (subfolders in areas)
-- **DOCS Links:** 71 (0.57 avg per code file)
+- **DOCS Links:** 82 (0.6 avg per code file)
 
-- markdown: 318
-- python: 121
+- markdown: 319
+- python: 132
 - typescript: 4
 
 ```
-├── cli/ (62.4K)
-│   ├── commands/ (6.9K)
+├── cli/ (104.1K)
+│   ├── commands/ (45.7K)
+│   │   ├── agents.py (12.1K) →
+│   │   ├── events.py (14.9K) →
 │   │   ├── fix_embeddings.py (1.1K)
-│   │   ├── init.py (4.7K)
+│   │   ├── init.py (4.6K)
+│   │   ├── tasks.py (11.7K) →
 │   │   ├── upgrade.py (790)
 │   │   └── (..2 more files)
-│   ├── helpers/ (53.6K)
+│   ├── helpers/ (56.5K)
 │   │   ├── check_mind_status_in_directory.py (5.0K)
 │   │   ├── copy_capabilities_to_target.py (1.7K)
-│   │   ├── copy_ecosystem_templates_to_target.py (2.5K)
+│   │   ├── copy_ecosystem_templates_to_target.py (4.0K)
 │   │   ├── create_ai_config_files_for_claude_agents_gemini.py (2.2K)
 │   │   ├── create_database_config_yaml.py (1.9K)
 │   │   ├── fix_embeddings_for_nodes_and_links.py (9.2K)
@@ -33,7 +36,7 @@
 │   │   ├── inject_seed_yaml_to_graph.py (11.6K)
 │   │   ├── setup_database_and_apply_schema.py (5.0K)
 │   │   ├── validate_embedding_config_matches_stored.py (2.3K)
-│   │   └── (..13 more files)
+│   │   └── (..14 more files)
 │   ├── __main__.py (1.9K)
 │   └── (..2 more files)
 ├── connectome/ (30.8K)
@@ -50,7 +53,7 @@
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
 ├── docs/ (2.6M)
-│   ├── agents/ (216.8K)
+│   ├── agents/ (227.8K)
 │   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
 │   │   │   │   └── SYNC_archive_2024-12.md (20.5K)
@@ -65,20 +68,21 @@
 │   │   │   ├── TOOL_REFERENCE.md (3.2K)
 │   │   │   ├── VALIDATION_Narrator.md (8.6K)
 │   │   │   └── (..4 more files)
-│   │   └── world-runner/ (104.5K)
-│   │       ├── archive/ (23.7K)
-│   │       │   └── SYNC_archive_2024-12.md (23.7K)
-│   │       ├── ALGORITHM_World_Runner.md (11.3K)
-│   │       ├── BEHAVIORS_World_Runner.md (8.0K)
-│   │       ├── HEALTH_World_Runner.md (13.3K)
-│   │       ├── IMPLEMENTATION_World_Runner_Service_Architecture.md (8.4K)
-│   │       ├── INPUT_REFERENCE.md (1.9K)
-│   │       ├── PATTERNS_World_Runner.md (7.5K)
-│   │       ├── SYNC_World_Runner.md (16.2K)
-│   │       ├── TEST_World_Runner_Coverage.md (3.6K)
-│   │       ├── TOOL_REFERENCE.md (3.7K)
-│   │       ├── VALIDATION_World_Runner_Invariants.md (6.3K)
-│   │       └── (..1 more files)
+│   │   ├── world-runner/ (104.5K)
+│   │   │   ├── archive/ (23.7K)
+│   │   │   │   └── SYNC_archive_2024-12.md (23.7K)
+│   │   │   ├── ALGORITHM_World_Runner.md (11.3K)
+│   │   │   ├── BEHAVIORS_World_Runner.md (8.0K)
+│   │   │   ├── HEALTH_World_Runner.md (13.3K)
+│   │   │   ├── IMPLEMENTATION_World_Runner_Service_Architecture.md (8.4K)
+│   │   │   ├── INPUT_REFERENCE.md (1.9K)
+│   │   │   ├── PATTERNS_World_Runner.md (7.5K)
+│   │   │   ├── SYNC_World_Runner.md (16.2K)
+│   │   │   ├── TEST_World_Runner_Coverage.md (3.6K)
+│   │   │   ├── TOOL_REFERENCE.md (3.7K)
+│   │   │   ├── VALIDATION_World_Runner_Invariants.md (6.3K)
+│   │   │   └── (..1 more files)
+│   │   └── PATTERNS_Agent_System.md (11.0K)
 │   ├── architecture/ (56.7K)
 │   │   └── cybernetic_studio_architecture/ (56.7K)
 │   │       ├── ALGORITHM_Cybernetic_Studio_Process_Flow.md (4.4K)
@@ -306,7 +310,7 @@
 │   │   ├── SYNC_Protocol_Current_State.md (8.0K)
 │   │   ├── SYNC_Protocol_Current_State_archive_2025-12.md (1.9K)
 │   │   └── VALIDATION_Protocol_Invariants.md (6.1K)
-│   ├── mcp-tools/ (94.6K)
+│   ├── mcp-tools/ (94.5K)
 │   │   ├── ALGORITHM_MCP_Tools.md (5.5K)
 │   │   ├── BEHAVIORS_MCP_Tools.md (5.3K)
 │   │   ├── HEALTH_MCP_Tools.md (11.9K)
@@ -432,14 +436,22 @@
 │   │   └── VALIDATION_Tools.md (5.1K)
 │   ├── ARCHITECTURE.md (4.4K)
 │   └── map.md (281.4K)
-├── mcp/ (57.5K)
+├── mcp/ (76.6K)
 │   ├── tools/
 │   │   └── (..1 more files)
-│   ├── server.py (57.5K)
+│   ├── server.py (76.6K)
 │   └── (..2 more files)
 ├── runtime/ (2.5M)
 │   ├── actors/
 │   │   └── (..4 more files)
+│   ├── agents/ (101.3K)
+│   │   ├── __init__.py (1.8K) →
+│   │   ├── cli.py (3.2K) →
+│   │   ├── graph.py (36.4K) →
+│   │   ├── mapping.py (3.7K) →
+│   │   ├── prompts.py (7.9K) →
+│   │   ├── run.py (11.6K) →
+│   │   └── verification.py (36.8K) →
 │   ├── client/
 │   │   └── (..5 more files)
 │   ├── connectome/ (103.7K)
@@ -465,7 +477,7 @@
 │   │   │   ├── queries.py (28.0K)
 │   │   │   └── (..1 more files)
 │   │   └── (..1 more files)
-│   ├── infrastructure/ (242.7K)
+│   ├── infrastructure/ (243.4K)
 │   │   ├── api/ (94.5K)
 │   │   │   ├── app.py (28.1K) →
 │   │   │   ├── graphs.py (14.9K) →
@@ -483,8 +495,8 @@
 │   │   │   ├── factory.py (6.5K) →
 │   │   │   ├── falkordb_adapter.py (6.6K) →
 │   │   │   └── neo4j_adapter.py (5.7K) →
-│   │   ├── embeddings/ (19.8K)
-│   │   │   ├── __init__.py (1.2K) →
+│   │   ├── embeddings/ (20.5K)
+│   │   │   ├── __init__.py (1.9K) →
 │   │   │   ├── embed_pending.py (2.9K)
 │   │   │   ├── factory.py (4.1K) →
 │   │   │   ├── openai_adapter.py (4.4K) →
@@ -501,9 +513,10 @@
 │   │   └── tempo/ (4.2K)
 │   │       ├── tempo_controller.py (4.1K)
 │   │       └── (..1 more files)
-│   ├── ingest/ (68.9K)
-│   │   ├── capabilities.py (12.8K) →
-│   │   ├── docs.py (36.7K) →
+│   ├── ingest/ (72.4K)
+│   │   ├── actors.py (4.4K) →
+│   │   ├── capabilities.py (11.7K) →
+│   │   ├── docs.py (36.9K) →
 │   │   ├── files.py (19.0K) →
 │   │   └── (..1 more files)
 │   ├── membrane/ (15.8K)
@@ -517,7 +530,7 @@
 │   │   ├── base.py (12.6K)
 │   │   ├── links.py (12.9K)
 │   │   └── nodes.py (18.5K) →
-│   ├── physics/ (790.8K)
+│   ├── physics/ (794.6K)
 │   │   ├── archive/ (36.9K)
 │   │   │   └── tick_v1_0.py (36.9K) →
 │   │   ├── graph/ (233.7K)
@@ -561,8 +574,8 @@
 │   │   ├── exploration.py (42.8K) →
 │   │   ├── flow.py (36.3K) →
 │   │   ├── nature.py (14.1K)
-│   │   ├── subentity.py (39.7K)
-│   │   ├── synthesis.py (19.6K) →
+│   │   ├── subentity.py (39.6K)
+│   │   ├── synthesis.py (23.4K) →
 │   │   ├── synthesis_unfold.py (16.1K)
 │   │   ├── traversal_logger.py (52.3K)
 │   │   └── (..15 more files)
@@ -575,17 +588,17 @@
 │   │   ├── embedding.py (7.2K) →
 │   │   ├── moment.py (20.0K)
 │   │   └── (..2 more files)
-│   ├── cli.py (37.1K) →
+│   ├── cli.py (40.4K) →
 │   ├── cluster_metrics.py (31.4K)
 │   ├── doctor_checks_content.py (31.2K) →
 │   ├── doctor_graph.py (93.8K) →
-│   ├── procedure_runner.py (45.9K)
-│   ├── status_cmd.py (31.1K) →
+│   ├── inject.py (30.4K) →
+│   ├── procedure_runner.py (42.0K)
+│   ├── status_cmd.py (37.2K) →
 │   ├── symbol_extractor.py (49.2K) →
-│   ├── work_core.py (39.4K) →
-│   ├── work_instructions.py (31.1K) →
+│   ├── work_instructions.py (31.3K) →
 │   ├── work_verification.py (37.8K) →
-│   └── (..44 more files)
+│   └── (..42 more files)
 ├── tests/
 │   ├── graph/
 │   │   └── (..3 more files)
@@ -595,10 +608,44 @@
 │   │   └── (..2 more files)
 │   └── (..1 more files)
 ├── .mindignore (838)
+├── =0.2.0 (4.2K)
 ├── AGENTS.md (29.9K)
-├── README.md (3.2K)
-└── map.md (281.4K)
+├── README.md (2.9K)
+└── map.md (286.8K)
 ```
+
+**Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
+
+**Definitions:**
+- `class C`
+- `class AgentInfo`
+- `def _get_capability_runtime()`
+- `def _get_agents_from_graph()`
+- `def _get_agents_from_runtime()`
+- `def _format_duration()`
+- `def _status_color()`
+- `def list_agents()`
+- `def pause_agent()`
+- `def stop_agent()`
+- `def kill_agent()`
+- `def enable_agent()`
+- `def agents_command()`
+
+**Docs:** `docs/cli/commands/IMPLEMENTATION_Events_Command.md`
+
+**Definitions:**
+- `class C`
+- `class EventInfo`
+- `def _parse_time_window()`
+- `def _event_type_color()`
+- `def _severity_indicator()`
+- `def _get_events_from_logs()`
+- `def _get_events_from_graph()`
+- `def _format_timestamp()`
+- `def list_events()`
+- `def list_errors()`
+- `def events_command()`
+- `def errors_command()`
 
 **Definitions:**
 - `def run()`
@@ -606,6 +653,19 @@
 **Definitions:**
 - `def run()`
 - `def _update_sync_file()`
+
+**Docs:** `docs/cli/commands/IMPLEMENTATION_Tasks_Command.md`
+
+**Definitions:**
+- `class C`
+- `class TaskInfo`
+- `def _status_color()`
+- `def _priority_indicator()`
+- `def _get_tasks_from_graph()`
+- `def _get_tasks_from_throttler()`
+- `def _format_age()`
+- `def list_tasks()`
+- `def tasks_command()`
 
 **Definitions:**
 - `def run()`
@@ -621,6 +681,8 @@
 **Definitions:**
 - `def _is_protected()`
 - `def _is_excluded()`
+- `def _is_actor_system_file()`
+- `def _copy_actor_system()`
 - `def copy_ecosystem_templates()`
 - `def ignore_excluded()`
 
@@ -1180,6 +1242,35 @@
 - # No automated tests for World Runner service yet.
 - ## SYNC STATUS
 - ## MARKERS
+
+**Code refs:**
+- `runtime/agents/postures.py`
+
+**Sections:**
+- # Agent System — Design Patterns
+- ## Purpose
+- ## Architecture Overview
+- ## Key Components
+- # .mind/capabilities/create-doc-chain/runtime/checks.py
+- # Detect missing docs
+- # Build command
+- # Execute
+- # Success
+- # Retry with feedback (up to 3 times)
+- ## Data Flow
+- ## Graph Schema
+- ## Entry Points
+- # Run work on all detected issues
+- # Filter by issue type
+- # List tasks
+- # Spawn agent for specific issue
+- # Spawn agent for task node
+- ## File Structure
+- ## Adding New Detection
+- # Detection logic
+- # runtime/agents/postures.py
+- # runtime/agents/instructions.py
+- ## Deprecation: Doctor Module
 
 **Sections:**
 - # ARCHITECTURE — Cybernetic Studio — Algorithm: Stimulus-to-Surface Flow
@@ -4057,7 +4148,6 @@
 - `runtime/doctor.py`
 
 **Doc refs:**
-- `docs/tui/HEALTH_TUI_Coverage.md`
 
 **Sections:**
 - # Project Health Doctor — Health: Verification Mechanics and Coverage
@@ -7417,9 +7507,6 @@
 - `docs/tools/PATTERNS_Tools.md`
 - `docs/tools/SYNC_Tools.md`
 - `docs/tools/VALIDATION_Tools.md`
-- `docs/tui/ALGORITHM_TUI_Widget_Interaction_Flow.md`
-- `docs/tui/HEALTH_TUI_Coverage.md`
-- `docs/tui/PATTERNS_TUI_Modular_Interface_Design.md`
 - `implementation/IMPLEMENTATION_Physics_Architecture.md`
 - `implementation/IMPLEMENTATION_Physics_Code_Structure.md`
 - `implementation/IMPLEMENTATION_Physics_Dataflow.md`
@@ -7452,7 +7539,7 @@
 - `def _tool_doctor_check()`
 - `def _tool_agent_list()`
 - `def _tool_task_list()`
-- `def _tool_agent_spawn()`
+- `def _tool_agent_run()`
 - `def _tool_agent_status()`
 - `def _tool_graph_query()`
 - `def _resolve_actor()`
@@ -7461,10 +7548,117 @@
 - `def _tool_capability_status()`
 - `def _tool_capability_trigger()`
 - `def _tool_capability_list()`
+- `def _tool_file_watcher()`
+- `def _tool_git_trigger()`
+- `def _tool_task_claim()`
+- `def _tool_task_complete()`
+- `def _tool_task_fail()`
+- `def _tool_agent_heartbeat()`
 - `def _format_response()`
 - `def _success_response()`
 - `def _error_response()`
 - `def main()`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Definitions:**
+- `class AgentCommand`
+- `def normalize_agent()`
+- `def build_agent_command()`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Definitions:**
+- `def _get_link_physics()`
+- `def _build_link_props()`
+- `def _link_set_clause()`
+- `class AgentInfo`
+- `class AgentGraph`
+- `def __init__()`
+- `def _connect()`
+- `def ensure_agents_exist()`
+- `def get_all_agents()`
+- `def _get_fallback_agents()`
+- `def get_available_agents()`
+- `def get_running_agents()`
+- `def select_agent_for_task()`
+- `def get_agent_name()`
+- `def set_agent_running()`
+- `def set_agent_ready()`
+- `def boost_agent_energy()`
+- `def set_agent_space()`
+- `def link_task_to_space()`
+- `def get_task_space()`
+- `def get_agent_space()`
+- `def link_agent_to_task()`
+- `def link_agent_to_problem()`
+- `def get_task_task_type()`
+- `def create_assignment_moment()`
+- `def get_actor_last_moment()`
+- `def create_moment()`
+- `def assign_agent_to_work()`
+- `def upsert_problem_narrative()`
+- `def upsert_task_narrative()`
+- `def get_agent_template_path()`
+- `def load_agent_prompt()`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Definitions:**
+- `def make_id()`
+- `def discover_agents()`
+- `def get_agent_id()`
+- `def list_agents()`
+- `def get_name_description()`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Definitions:**
+- `def get_agent_system_prompt()`
+- `def get_learnings_content()`
+- `def split_docs_to_read()`
+- `def _detect_github_issue_number()`
+- `def build_agent_prompt()`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Definitions:**
+- `class RunResult`
+- `async def run_work_agent()`
+- `class _InternalResult`
+- `async def _run_with_retry()`
+- `class _RunResult`
+- `async def _run_agent()`
+- `async def run_for_task()`
+
+**Docs:** `docs/agents/PATTERNS_Agent_System.md`
+
+**Definitions:**
+- `class VerificationSession`
+- `def record_attempt()`
+- `def should_escalate()`
+- `def get_escalation_reason()`
+- `def mark_escalated()`
+- `def add_deferred_todo()`
+- `class VerificationCheck`
+- `class VerificationResult`
+- `def _run_file_check()`
+- `def _run_command_check()`
+- `def _run_membrane_check()`
+- `def _execute_membrane_query()`
+- `def create_membrane_query_function()`
+- `def membrane_query()`
+- `def _find_test_path()`
+- `def _path_to_module()`
+- `def verify_completion()`
+- `def format_verification_feedback()`
+- `def all_passed()`
+- `def get_failed_membrane_protocols()`
+- `def format_escalation_feedback()`
+- `def format_todo_suggestion()`
+- `def should_suggest_todos()`
 
 **Docs:** `docs/connectome/PATTERNS_Connectome.md`
 
@@ -7948,6 +8142,10 @@
 **Docs:** `docs/infrastructure/embeddings/`
 
 **Definitions:**
+- `def get_embedding()`
+- `def cosine_similarity()`
+
+**Definitions:**
 - `def embed_all_pending()`
 - `def _node_embed_text()`
 - `def _link_embed_text()`
@@ -8085,13 +8283,17 @@
 - `async def run()`
 - `def stop()`
 
+**Docs:** `.mind/docs/AGENT_TEMPLATE.md`
+
+**Definitions:**
+- `def ingest_actors()`
+- `def _ingest_actor()`
+
 **Docs:** `docs/capabilities/PATTERNS_Capabilities.md`
 
 **Definitions:**
 - `def ingest_capabilities()`
 - `def _ingest_capability()`
-- `def _upsert_node()`
-- `def _upsert_link()`
 - `def _generate_synthesis()`
 - `def _parse_procedure_yaml()`
 - `def _extract_procedure_reference()`
@@ -8834,7 +9036,7 @@
 - `def transition_to()`
 - `def is_terminal()`
 - `def is_active()`
-- `def spawn_node()`
+- `def run_node()`
 - `def focus_node()`
 - `def criticality()`
 - `def compute_energy_injection()`
@@ -8844,7 +9046,7 @@
 - `def update_progress()`
 - `def is_fatigued()`
 - `def update_crystallization_embedding()`
-- `def spawn_child()`
+- `def run_child()`
 - `def set_sibling_references()`
 - `def merge_child_results()`
 - `def get_emotions()`
@@ -8877,6 +9079,10 @@
 - `def synthesize_narrative_name()`
 - `def synthesize_narrative_content()`
 - `def synthesize_from_crystallization()`
+- `def _get_energy_state()`
+- `def _get_importance()`
+- `def synthesize_node()`
+- `def synthesize_link_full()`
 
 **Definitions:**
 - `class ParsedNodeSynthesis`
@@ -9196,6 +9402,34 @@
 - `def _link_to_embed_text()`
 - `def sync_file_things_to_graph()`
 
+**Docs:** `docs/ingest/PATTERNS_Graph_Injection.md`
+
+**Definitions:**
+- `def set_actor()`
+- `def clear_context()`
+- `def get_actor()`
+- `def get_context()`
+- `def _detect_active_task()`
+- `def _throttler_allows_running()`
+- `def _resolve_active_space()`
+- `def _create_moment()`
+- `def _apply_context_links()`
+- `def _inject_link_raw()`
+- `def normalize_id()`
+- `def validate_id()`
+- `def parse_id()`
+- `def _generate_node_synthesis()`
+- `def _generate_link_synthesis()`
+- `def _get_embedding_service()`
+- `def _generate_embedding()`
+- `def _nature_to_physics()`
+- `def inject()`
+- `def _inject_node()`
+- `def _inject_link()`
+- `def inject_batch()`
+- `def inject_node()`
+- `def inject_link()`
+
 **Definitions:**
 - `def _get_cluster_validator()`
 - `def _get_markdown_sync()`
@@ -9228,10 +9462,7 @@
 - `def _create_completion_moment()`
 - `def _find_actor_last_moment()`
 - `def _execute_query()`
-- `def _generate_node_embedding()`
-- `def _generate_link_embedding()`
 - `def _upsert_node()`
-- `def _find_node_by_id()`
 - `def _upsert_link()`
 - `def _node_exists()`
 - `def _get_from_context()`
@@ -9267,6 +9498,8 @@
 - `def get_module_status()`
 - `def get_all_modules_status()`
 - `def format_module_status()`
+- `def _get_dashboard_data()`
+- `def format_dashboard()`
 - `def format_global_status()`
 - `def status_command()`
 
@@ -9323,30 +9556,7 @@
 **Docs:** `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md`
 
 **Definitions:**
-- `def get_symbol_name()`
-- `def get_problem_folder_name()`
-- `class WorkResult`
-- `class EscalationDecision`
-- `def get_learnings_content()`
-- `def _get_git_head()`
-- `def get_problem_symbol()`
-- `def get_problem_action_parts()`
-- `def get_problem_action()`
-- `def get_depth_types()`
-- `def split_docs_to_read()`
-- `def _detect_recent_issue_number()`
-- `def build_agent_prompt()`
-- `def parse_decisions_from_output()`
-- `def parse_stream_json_line()`
-- `async def spawn_work_agent_async()`
-- `def run_agent_sync()`
-- `def _select_work_agent()`
-- `async def spawn_work_agent_with_verification_async()`
-
-**Docs:** `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md`
-
-**Definitions:**
-- `def get_issue_instructions()`
+- `def get_problem_instructions()`
 
 **Docs:** `docs/membrane/VALIDATION_Completion_Verification.md`
 
@@ -9415,15 +9625,15 @@
 
 **Sections:**
 - # mind-mcp
+- ## Install
 - ## Quick Start
-- # Clone and install
-- # Initialize a project (defaults to FalkorDB)
-- ## Local Runtime
-- # my_script.py
-- ## CLI Commands
-- ## Database Backends
-- # Start FalkorDB
+- # Initialize a project
+- # Start FalkorDB (default backend)
+- ## Agents
+- ## ID Convention
 - ## MCP Server
+- ## CLI
+- ## Database Backends
 - ## Project Structure
 - ## Requirements
 - ## License
@@ -9568,6 +9778,7 @@
 - `repair_verification.py`
 - `route.ts`
 - `runtime/agent_cli.py`
+- `runtime/agents/postures.py`
 - `runtime/api/app.py`
 - `runtime/cli.py`
 - `runtime/cluster_builder.py`
@@ -9794,6 +10005,7 @@
 - `data/MIND Documentation Chain Pattern (Draft “Marco”).md`
 - `docs/MAPPING.md`
 - `docs/TAXONOMY.md`
+- `docs/agents/PATTERNS_Agent_System.md`
 - `docs/agents/narrator/ALGORITHM_Scene_Generation.md`
 - `docs/agents/narrator/BEHAVIORS_Narrator.md`
 - `docs/agents/narrator/HANDOFF_Rolling_Window_Architecture.md`
@@ -9821,6 +10033,9 @@
 - `docs/cli/archive/SYNC_CLI_Development_State_archive_2025-12.md`
 - `docs/cli/archive/SYNC_CLI_State_Archive_2025-12.md`
 - `docs/cli/archive/SYNC_archive_2024-12.md`
+- `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
+- `docs/cli/commands/IMPLEMENTATION_Events_Command.md`
+- `docs/cli/commands/IMPLEMENTATION_Tasks_Command.md`
 - `docs/cli/core/ALGORITHM_CLI_Command_Execution_Logic/ALGORITHM_Overview.md`
 - `docs/cli/core/BEHAVIORS_CLI_Command_Effects.md`
 - `docs/cli/core/HEALTH_CLI_Command_Test_Coverage.md`
@@ -9855,6 +10070,7 @@
 - `docs/infrastructure/tempo/PATTERNS_Tempo.md`
 - `docs/ingest/PATTERNS_Doc_Ingestion.md`
 - `docs/ingest/PATTERNS_File_Ingestion.md`
+- `docs/ingest/PATTERNS_Graph_Injection.md`
 - `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
 - `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
 - `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
@@ -9925,9 +10141,6 @@
 - `docs/tools/PATTERNS_Tools.md`
 - `docs/tools/SYNC_Tools.md`
 - `docs/tools/VALIDATION_Tools.md`
-- `docs/tui/ALGORITHM_TUI_Widget_Interaction_Flow.md`
-- `docs/tui/HEALTH_TUI_Coverage.md`
-- `docs/tui/PATTERNS_TUI_Modular_Interface_Design.md`
 - `implementation/IMPLEMENTATION_Physics_Architecture.md`
 - `implementation/IMPLEMENTATION_Physics_Code_Structure.md`
 - `implementation/IMPLEMENTATION_Physics_Dataflow.md`

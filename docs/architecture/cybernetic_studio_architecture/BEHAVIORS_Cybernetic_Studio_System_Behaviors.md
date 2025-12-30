@@ -79,7 +79,7 @@ At the architectural level, inputs are stimuli from various sources, and outputs
 
 **Inputs:**
 - **L1 Raw Stimuli:** Commits, file changes (read/write), command executions, test runs, backend errors, self-observations, conversations. (From repos, IDE plugins, external systems).
-- **User/Agent Actions:** Commands issued in CLI/TUI, modifications to SYNC files, direct graph queries.
+- **User/Agent Actions:** Commands issued in CLI, modifications to SYNC files, direct graph queries.
 
 **Outputs:**
 - **Graph State Changes:** New nodes (Characters, Places, Things, Narratives, Moments), new edges (BELIEF, THEN, PRESENT, ATTACHED_TO, NARRATIVE_LINK), changes to Weight/Energy.
