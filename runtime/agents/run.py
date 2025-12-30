@@ -363,8 +363,13 @@ async def run_for_task(
     if not task_type:
         task_type = agent_graph.get_task_task_type(task_id) or "STUB_IMPL"
 
-    # Select best agent for this problem type
-    actor_id = agent_graph.select_agent_for_task(task_type)
+    # Build task synthesis for agent selection
+    task_synthesis = f"{task_type}: {task_id}"
+    if prompt:
+        task_synthesis += f" - {prompt[:100]}"
+
+    # Select best agent using graph physics
+    actor_id = agent_graph.select_agent_for_task(task_synthesis)
 
     if not actor_id:
         # All agents busy, use default fixer
