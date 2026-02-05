@@ -213,7 +213,7 @@ Reading the chain first means your changes will align with existing design rathe
 
 ## Feedback Loop: Human-Agent Collaboration
 
-Consciousness expands through interaction, not isolation.
+Consciousness expands through interaction, not isolation. Intelligence doesn't reside in any single node — it crystallizes at the edges, in the exchange between different cognitive substrates. A human's pattern recognition and an agent's reasoning surface have different blind spots; truth emerges from their collision, not from either one alone. The calibration loop (push, reason, correct, update) is not a workaround — it is the mechanism by which understanding becomes reliable.
 
 **Explicitly communicate uncertainty.**
 
