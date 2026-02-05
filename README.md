@@ -67,25 +67,33 @@ Add to `.mcp.json`:
 | Tool | Description |
 |------|-------------|
 | `graph_query` | Semantic search across the graph |
+| `node_create` | Create narrative or actor nodes |
 | `procedure_start` | Start a structured dialogue |
 | `procedure_continue` | Continue dialogue with answer |
+| `procedure_abort` | Abort a dialogue session |
 | `procedure_list` | List available dialogues |
-| `doctor_check` | Run health checks |
-| `agent_list` | List work agents |
-| `agent_spawn` | Spawn agent for task |
+| `ACTOR_list` | List work agents and status |
+| `AGENT_run` | Run agent on a task |
 | `agent_status` | Get/set agent status |
+| `agent_heartbeat` | Update agent heartbeat |
 | `task_list` | List pending tasks |
 | `task_claim` | Claim a task for an agent |
 | `task_complete` | Mark task completed |
 | `task_fail` | Mark task failed |
+| `capability_status` | Capability system status |
+| `capability_trigger` | Fire a trigger manually |
+| `capability_list` | List loaded capabilities |
+| `file_watcher` | Start/stop file watcher |
+| `git_trigger` | Fire git hooks |
 
 ## CLI
 
 ```bash
 mind init [--database falkordb|neo4j]  # Initialize .mind/
 mind status                             # Show status
-mind doctor                             # Health checks
-mind work [path]                        # AI-assisted work
+mind upgrade                            # Check for updates
+mind fix-embeddings [--dry-run]         # Fix missing embeddings
+mind swarm --agents N                   # Run multiple agents
 ```
 
 ## Database Backends
