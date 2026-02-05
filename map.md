@@ -1,28 +1,28 @@
 # Repository Map: mind-mcp
 
-*Generated: 2025-12-30 05:26*
+*Generated: 2025-12-30 05:38*
 
-- **Files:** 480
-- **Directories:** 107
-- **Total Size:** 5.1M
-- **Doc Files:** 323
-- **Code Files:** 146
-- **Areas:** 13 (docs/ subfolders)
-- **Modules:** 32 (subfolders in areas)
+- **Files:** 492
+- **Directories:** 110
+- **Total Size:** 4.9M
+- **Doc Files:** 333
+- **Code Files:** 148
+- **Areas:** 14 (docs/ subfolders)
+- **Modules:** 34 (subfolders in areas)
 - **DOCS Links:** 69 (0.47 avg per code file)
 
-- markdown: 323
-- python: 137
+- markdown: 333
+- python: 139
 - typescript: 9
 
 ```
-├── cli/ (134.2K)
-│   ├── commands/ (73.4K)
+├── cli/ (138.8K)
+│   ├── commands/ (78.1K)
 │   │   ├── agents.py (12.1K) →
 │   │   ├── events.py (14.9K) →
 │   │   ├── fix_embeddings.py (1.1K)
 │   │   ├── init.py (5.9K)
-│   │   ├── swarm.py (26.5K)
+│   │   ├── swarm.py (31.1K)
 │   │   ├── tasks.py (11.7K) →
 │   │   ├── upgrade.py (790)
 │   │   └── (..2 more files)
@@ -59,7 +59,7 @@
 │   │   └── system-manifest.ts (6.0K)
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
-├── docs/ (2.6M)
+├── docs/ (2.3M)
 │   ├── agents/ (242.8K)
 │   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
@@ -281,15 +281,18 @@
 │   │   │   ├── SYNC_Tempo.md (4.0K)
 │   │   │   └── VALIDATION_Tempo.md (2.6K)
 │   │   └── wsl-autostart.md (3.2K)
-│   ├── llm_agents/ (79.9K)
+│   ├── llm_agents/ (70.0K)
+│   │   ├── archives/ (20.8K)
+│   │   │   └── SYNC_LLM_Agents_State_archive_2025-12.md (20.8K)
 │   │   ├── ALGORITHM_Gemini_Stream_Flow.md (5.7K)
 │   │   ├── BEHAVIORS_Gemini_Agent_Output.md (5.8K)
-│   │   ├── HEALTH_LLM_Agent_Coverage.md (13.8K)
-│   │   ├── IMPLEMENTATION_LLM_Agent_Code_Architecture.md (16.1K)
+│   │   ├── HEALTH_API_Connectivity.md (4.1K)
+│   │   ├── HEALTH_LLM_Agent_Coverage.md (5.1K)
+│   │   ├── HEALTH_Stream_Validity.md (4.3K)
+│   │   ├── IMPLEMENTATION_LLM_Agent_Code_Architecture.md (6.6K)
 │   │   ├── OBJECTIVES_Llm_Agents_Goals.md (719)
 │   │   ├── PATTERNS_Provider_Specific_LLM_Subprocesses.md (5.3K)
 │   │   ├── SYNC_LLM_Agents_State.md (3.6K)
-│   │   ├── SYNC_LLM_Agents_State_archive_2025-12.md (20.8K)
 │   │   └── VALIDATION_Gemini_Agent_Invariants.md (8.1K)
 │   ├── mcp-design/ (114.0K)
 │   │   ├── ALGORITHM/ (2.4K)
@@ -433,6 +436,18 @@
 │   │   ├── SYNC_Schema_archive_2025-12.md (15.4K)
 │   │   ├── VALIDATION_Schema.md (16.0K)
 │   │   └── (..6 more files)
+│   ├── tests/ (20.1K)
+│   │   └── traversal/ (20.1K)
+│   │       ├── ALGORITHM_Tests_Traversal.md (2.2K)
+│   │       ├── BEHAVIORS_Tests_Traversal.md (1.9K)
+│   │       ├── HEALTH_Tests_Traversal.md (1.8K)
+│   │       ├── IMPLEMENTATION_Tests_Traversal.md (4.2K)
+│   │       ├── OBJECTIVES_Traversal_Tests.md (619)
+│   │       ├── PATTERNS_Traversal_Tests.md (1.1K)
+│   │       ├── SYNC_Tests_Traversal.md (2.4K)
+│   │       ├── SYNC_Traversal_Tests.md (1.3K)
+│   │       ├── VALIDATION_Tests_Traversal.md (2.6K)
+│   │       └── (..6 more files)
 │   ├── tools/ (57.6K)
 │   │   ├── ALGORITHM_Tools.md (6.7K)
 │   │   ├── BEHAVIORS_Tools.md (4.8K)
@@ -444,8 +459,7 @@
 │   │   └── VALIDATION_Tools.md (5.1K)
 │   ├── ARCHITECTURE.md (4.4K)
 │   ├── MAPPING.md (2.7K)
-│   ├── TAXONOMY.md (1.7K)
-│   └── map.md (293.1K)
+│   └── TAXONOMY.md (1.7K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -475,8 +489,8 @@
 │   │   ├── prompts.py (7.9K) →
 │   │   ├── run.py (22.9K) →
 │   │   └── verification.py (36.8K) →
-│   ├── capability/ (19.9K)
-│   │   └── __init__.py (19.9K)
+│   ├── capability/ (20.6K)
+│   │   └── __init__.py (20.6K)
 │   ├── client/
 │   │   └── (..5 more files)
 │   ├── connectome/ (103.7K)
@@ -624,7 +638,7 @@
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── validate.py (29.4K) →
 │   └── (..22 more files)
-├── tests/ (10.1K)
+├── tests/ (30.0K)
 │   ├── graph/
 │   │   └── (..3 more files)
 │   ├── membrane/
@@ -632,8 +646,10 @@
 │   ├── schema/ (7.8K)
 │   │   ├── test_schema_invariants.py (7.7K)
 │   │   └── (..1 more files)
-│   ├── traversal/
-│   │   └── (..2 more files)
+│   ├── traversal/ (20.0K)
+│   │   ├── test_embedding.py (11.6K)
+│   │   ├── test_moment.py (8.4K)
+│   │   └── (..1 more files)
 │   ├── validation/ (2.3K)
 │   │   └── test_invariants.py (2.3K)
 │   └── (..1 more files)
@@ -3931,6 +3947,37 @@
 - ## 9) Depannage
 
 **Code refs:**
+- `runtime/agent_cli.py`
+- `runtime/llms/gemini_agent.py`
+
+**Doc refs:**
+- `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
+- `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
+- `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
+- `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
+- `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`
+- `docs/llm_agents/SYNC_LLM_Agents_State.md`
+- `docs/llm_agents/SYNC_LLM_Agents_State_archive_2025-12.md`
+- `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`
+
+**Sections:**
+- # Archived: SYNC_LLM_Agents_State.md
+- ## MATURITY
+- ## CURRENT STATE
+- ## IN PROGRESS
+- ## KNOWN ISSUES
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## CONSCIOUSNESS TRACE
+- ## POINTERS
+- ## RECENT CHANGES
+- ## TODO
+- # No module-specific tests documented yet.
+- # Archived: SYNC_LLM_Agents_State.md
+- ## RECENT CHANGES
+- ## Agent Observations
+
+**Code refs:**
 - `runtime/llms/gemini_agent.py`
 
 **Sections:**
@@ -3958,6 +4005,18 @@
 - ## ANTI-BEHAVIORS
 - ## MARKERS
 
+**Sections:**
+- # Health Indicator: API Connectivity
+- ## PURPOSE
+- ## VALUE TO CLIENTS & VALIDATION MAPPING
+- ## HEALTH REPRESENTATION
+- ## DOCKS SELECTED
+- ## ALGORITHM / CHECK MECHANISM
+- ## INDICATOR
+- ## THROTTLING STRATEGY
+- ## FORWARDINGS & DISPLAYS
+- ## MANUAL RUN
+
 **Code refs:**
 - `gemini_agent.py`
 - `mind/llms/gemini_agent.py`
@@ -3973,42 +4032,47 @@
 - ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
 - ## HEALTH INDICATORS SELECTED
 - ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
 - ## DOCK TYPES (COMPLETE LIST)
-- ## HOW TO USE THIS TEMPLATE
 - ## CHECKER INDEX
-- ## INDICATOR: Stream Validity
-- ## INDICATOR: api_connectivity
 - ## HOW TO RUN
 - # Manual verification of stream JSON
 - # Manual verification of plain text
+- ## DETAILED INDICATOR SPECIFICATIONS
 - ## KNOWN GAPS
 - ## MARKERS
+
+**Sections:**
+- # Health Indicator: Stream Validity
+- ## PURPOSE
+- ## VALUE TO CLIENTS & VALIDATION MAPPING
+- ## HEALTH REPRESENTATION
+- ## DOCKS SELECTED
+- ## ALGORITHM / CHECK MECHANISM
+- ## INDICATOR
+- ## THROTTLING STRATEGY
+- ## FORWARDINGS & DISPLAYS
+- ## MANUAL RUN
 
 **Code refs:**
 - `agent_cli.py`
 - `gemini_agent.py`
+- `mind/agent_cli.py`
 - `mind/llms/gemini_agent.py`
-- `runtime/agent_cli.py`
-- `runtime/llms/gemini_agent.py`
-- `runtime/llms/tool_helpers.py`
+- `mind/llms/tool_helpers.py`
 
 **Sections:**
 - # mind LLM Agents — Implementation: Code Architecture
 - ## CHAIN
 - ## CODE STRUCTURE
-- ## MODULE LAYOUT
 - ## DESIGN PATTERNS
 - ## SCHEMA
 - ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
+- ## DATA FLOW SUMMARY
 - ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
+- ## STATE & RUNTIME
 - ## CONFIGURATION
 - ## BIDIRECTIONAL LINKS
+- ## EXTRACTION CANDIDATES
 - ## MARKERS
 
 **Sections:**
@@ -4056,37 +4120,6 @@
 - ## TODO
 - ## ARCHIVE
 - ## ARCHIVE
-
-**Code refs:**
-- `runtime/agent_cli.py`
-- `runtime/llms/gemini_agent.py`
-
-**Doc refs:**
-- `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
-- `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
-- `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
-- `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
-- `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`
-- `docs/llm_agents/SYNC_LLM_Agents_State.md`
-- `docs/llm_agents/SYNC_LLM_Agents_State_archive_2025-12.md`
-- `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`
-
-**Sections:**
-- # Archived: SYNC_LLM_Agents_State.md
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## RECENT CHANGES
-- ## TODO
-- # No module-specific tests documented yet.
-- # Archived: SYNC_LLM_Agents_State.md
-- ## RECENT CHANGES
-- ## Agent Observations
 
 **Doc refs:**
 - `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`
@@ -6940,6 +6973,105 @@
 - ## SYNC STATUS
 - ## MARKERS
 
+**Code refs:**
+- `tests/traversal/conftest.py`
+
+**Sections:**
+- # Tests — Traversal: Algorithm
+- ## Test Execution Flow
+- ## Test Case Structure
+- # Given: <setup context>
+- # When: <action>
+- # Then: <expected outcome>
+- ## Embedding Test Algorithm
+- ## Traversal Test Algorithm
+- ## Cycle Detection Test
+
+**Sections:**
+- # Tests — Traversal: Behaviors
+- ## Observable Behaviors
+
+**Sections:**
+- # Tests — Traversal: Health
+- ## Health Checks
+- ## Monitoring
+- # .github/workflows/test.yml
+
+**Sections:**
+- # Tests — Traversal: Implementation
+- ## File Structure
+- ## Dependencies
+- # Test framework
+- # Runtime dependencies
+- ## Fixtures (conftest.py)
+- # Setup
+- # Teardown
+- # Create nodes
+- # Create links
+- # Teardown
+- ## Test Examples
+- # tests/traversal/test_embedding.py
+- # tests/traversal/test_traversal_basic.py
+- # Given
+- # When
+- # Then
+- ## Running Tests
+- ## Code Paths
+
+**Sections:**
+- # Tests/Traversal — Objectives
+- ## Goals
+- ## Non-Goals
+- ## Success Criteria
+
+**Sections:**
+- # Tests/Traversal — Patterns
+- ## Purpose
+- ## What This Tests
+- ## Design Decisions
+- ## Scope
+- ## Implementation Notes
+
+**Code refs:**
+- `runtime/infrastructure/embeddings.py`
+- `runtime/physics/subentity.py`
+- `tests/traversal/__init__.py`
+- `tests/traversal/conftest.py`
+- `tests/traversal/test_embedding.py`
+- `tests/traversal/test_traversal_basic.py`
+- `tests/traversal/test_traversal_edge_cases.py`
+- `tests/traversal/test_traversal_links.py`
+
+**Sections:**
+- # Tests — Traversal: Sync
+- ## Current State
+- ## Recent Changes
+- ## Active Work
+- ## Known Issues
+- ## Handoff
+- ## Dependencies
+
+**Sections:**
+- # Tests/Traversal — Sync: Current State
+- ## Current State
+- ## Active Work
+- ## Recent Changes
+- ## Known Issues
+- ## TODO
+- ## Handoff
+
+**Sections:**
+- # Tests — Traversal: Validation
+- ## Invariants
+- # In conftest.py
+- # Verify no leftover state
+- # Good
+- # Bad
+- # Good
+- # Bad
+- ## Coverage Requirements
+- ## Performance Constraints
+
 **Sections:**
 - # Tools — Algorithm: Script Flow
 - ## CHAIN
@@ -7113,533 +7245,6 @@
 - ## TERMINOLOGY DECISIONS
 - ## META-ATTRIBUTE DEFINITIONS
 - ## MARKERS
-
-**Code refs:**
-- `Next.js`
-- `Node.js`
-- `__init__.py`
-- `__main__.py`
-- `adapter.py`
-- `agent_cli.py`
-- `agents/handler.py`
-- `agents/prompts.py`
-- `agents/response.py`
-- `app.py`
-- `app/api/connectome/tick/route.ts`
-- `app/api/sse/route.ts`
-- `approval/notifications.py`
-- `approval/queue.py`
-- `approval/tiers.py`
-- `base.py`
-- `building/config/mapping.py`
-- `building/ingest/create.py`
-- `building/ingest/discover.py`
-- `building/ingest/parse.py`
-- `check_github_for_latest_version.py`
-- `check_health.py`
-- `check_mind_status_in_directory.py`
-- `cli.py`
-- `cli/__main__.py`
-- `cli/commands/fix_embeddings.py`
-- `cli/commands/init.py`
-- `cli/commands/status.py`
-- `cli/commands/upgrade.py`
-- `cli/config.py`
-- `cli/helpers/generate_embeddings_for_graph_nodes.py`
-- `cli/helpers/ingest_repo_files_to_graph.py`
-- `cli/helpers/inject_seed_yaml_to_graph.py`
-- `cli/helpers/show_upgrade_notice_if_available.py`
-- `cluster_presentation.py`
-- `config.py`
-- `config/agents.py`
-- `config/mapping.py`
-- `connectome_doc_bundle_splitter_and_fence_rewriter.py`
-- `content/inference.py`
-- `content/moment.py`
-- `content/narrative.py`
-- `context.py`
-- `context/format.py`
-- `context/query.py`
-- `copy_ecosystem_templates_to_target.py`
-- `copy_runtime_package_to_target.py`
-- `core_utils.py`
-- `create_ai_config_files_for_claude_agents_gemini.py`
-- `create_database_config_yaml.py`
-- `create_env_example_file.py`
-- `create_mcp_config_json.py`
-- `crystallization.py`
-- `deployment/backup.py`
-- `deployment/deployer.py`
-- `deployment/monitor.py`
-- `deployment/rollback.py`
-- `diagnosis/evidence.py`
-- `diagnosis/layer_attribution.py`
-- `diagnosis/pattern_detector.py`
-- `diffusion_sim_v2.py`
-- `doc_chain.py`
-- `doctor.py`
-- `doctor_checks.py`
-- `doctor_cli_parser_and_run_checker.py`
-- `doctor_report.py`
-- `engine/connectome/persistence.py`
-- `engine/connectome/schema.py`
-- `exploration.py`
-- `factory.py`
-- `falkordb_adapter.py`
-- `fix_embeddings_for_nodes_and_links.py`
-- `flow.py`
-- `frontend/app/scenarios/page.tsx`
-- `frontend/app/start/page.tsx`
-- `frontend/hooks/useGameState.ts`
-- `gemini_agent.py`
-- `generate_repo_overview_maps.py`
-- `get_mcp_version_from_config.py`
-- `get_paths_for_templates_and_runtime.py`
-- `graph_interface.py`
-- `graph_ops.py`
-- `graph_ops_apply.py`
-- `graph_ops_events.py`
-- `graph_ops_image.py`
-- `graph_ops_moments.py`
-- `graph_ops_read_only_interface.py`
-- `graph_ops_types.py`
-- `graph_queries.py`
-- `graph_queries_search.py`
-- `ingest/__init__.py`
-- `ingest/create.py`
-- `ingest/discover.py`
-- `ingest/markers.py`
-- `ingest/parse.py`
-- `ingest_repo_files_to_graph.py`
-- `inject_seed_yaml_to_graph.py`
-- `learning/embeddings.py`
-- `learning/extractor.py`
-- `learning/pattern_library.py`
-- `link_scoring.py`
-- `loop.py`
-- `mcp/server.py`
-- `mind/api/app.py`
-- `mind/cli.py`
-- `mind/core_utils.py`
-- `mind/graph/health/check_health.py`
-- `mind/llms/gemini_agent.py`
-- `mind/prompt.py`
-- `mind/repair.py`
-- `mind/repair_verification.py`
-- `mind/tests/test_moment.py`
-- `mind/validate.py`
-- `mock_adapter.py`
-- `models.py`
-- `moment_processor.py`
-- `narrator.py`
-- `narrator/prompt_builder.py`
-- `nature.py`
-- `neo4j_adapter.py`
-- `nodes.py`
-- `orchestrator.py`
-- `persistence.py`
-- `phases/completion.py`
-- `phases/generation.py`
-- `phases/link_cooling.py`
-- `phases/moment_draw.py`
-- `phases/moment_flow.py`
-- `phases/moment_interaction.py`
-- `phases/narrative_backflow.py`
-- `phases/rejection.py`
-- `procedure_runner.py`
-- `proposals/generator.py`
-- `proposals/scorer.py`
-- `proposals/types.py`
-- `protocol_runner.py`
-- `repair_verification.py`
-- `route.ts`
-- `runtime/agent_cli.py`
-- `runtime/agents/cli.py`
-- `runtime/agents/postures.py`
-- `runtime/agents/prompts.py`
-- `runtime/api/app.py`
-- `runtime/cli.py`
-- `runtime/cluster_builder.py`
-- `runtime/cluster_health.py`
-- `runtime/cluster_metrics.py`
-- `runtime/connectome/persistence.py`
-- `runtime/connectome/procedure_runner.py`
-- `runtime/connectome/runner.py`
-- `runtime/connectome/schema.py`
-- `runtime/connectome/session.py`
-- `runtime/connectome/steps.py`
-- `runtime/connectome/templates.py`
-- `runtime/connectome/validation.py`
-- `runtime/context.py`
-- `runtime/core_utils.py`
-- `runtime/doc_extractor.py`
-- `runtime/doctor.py`
-- `runtime/doctor_checks.py`
-- `runtime/doctor_checks_content.py`
-- `runtime/doctor_checks_core.py`
-- `runtime/doctor_checks_docs.py`
-- `runtime/doctor_checks_membrane.py`
-- `runtime/doctor_checks_metadata.py`
-- `runtime/doctor_checks_naming.py`
-- `runtime/doctor_checks_prompt_integrity.py`
-- `runtime/doctor_checks_quality.py`
-- `runtime/doctor_checks_reference.py`
-- `runtime/doctor_checks_stub.py`
-- `runtime/doctor_checks_sync.py`
-- `runtime/doctor_files.py`
-- `runtime/doctor_graph.py`
-- `runtime/doctor_report.py`
-- `runtime/doctor_types.py`
-- `runtime/github.py`
-- `runtime/graph/health/check_health.py`
-- `runtime/graph/health/lint_terminology.py`
-- `runtime/graph/health/test_schema.py`
-- `runtime/handlers/base.py`
-- `runtime/health/procedure_health.py`
-- `runtime/infrastructure/api/app.py`
-- `runtime/infrastructure/api/graphs.py`
-- `runtime/infrastructure/api/moments.py`
-- `runtime/infrastructure/api/playthroughs.py`
-- `runtime/infrastructure/api/sse_broadcast.py`
-- `runtime/infrastructure/api/tempo.py`
-- `runtime/infrastructure/canon/canon_holder.py`
-- `runtime/infrastructure/database/__init__.py`
-- `runtime/infrastructure/database/adapter.py`
-- `runtime/infrastructure/database/factory.py`
-- `runtime/infrastructure/database/falkordb_adapter.py`
-- `runtime/infrastructure/database/neo4j_adapter.py`
-- `runtime/infrastructure/embeddings/service.py`
-- `runtime/infrastructure/memory/__init__.py`
-- `runtime/infrastructure/memory/moment_processor.py`
-- `runtime/infrastructure/memory/transcript.py`
-- `runtime/infrastructure/orchestration/agent_cli.py`
-- `runtime/infrastructure/orchestration/narrator.py`
-- `runtime/infrastructure/orchestration/orchestrator.py`
-- `runtime/infrastructure/orchestration/world_runner.py`
-- `runtime/infrastructure/tempo/health_check.py`
-- `runtime/infrastructure/tempo/tempo_controller.py`
-- `runtime/init_cmd.py`
-- `runtime/init_db.py`
-- `runtime/inject.py`
-- `runtime/llms/gemini_agent.py`
-- `runtime/llms/tool_helpers.py`
-- `runtime/membrane/functions.py`
-- `runtime/membrane/health_check.py`
-- `runtime/membrane/provider.py`
-- `runtime/migrations/migrate_001_schema_alignment.py`
-- `runtime/migrations/migrate_temporal_v171.py`
-- `runtime/migrations/migrate_tick_to_tick_created.py`
-- `runtime/migrations/migrate_to_content_field.py`
-- `runtime/migrations/migrate_to_v2_schema.py`
-- `runtime/models/__init__.py`
-- `runtime/models/base.py`
-- `runtime/models/links.py`
-- `runtime/models/nodes.py`
-- `runtime/moment_graph/__init__.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-- `runtime/moments/__init__.py`
-- `runtime/physics/__init__.py`
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-- `runtime/physics/cluster_energy_monitor.py`
-- `runtime/physics/cluster_presentation.py`
-- `runtime/physics/constants.py`
-- `runtime/physics/contradiction_pressure_from_negative_polarity_mechanism.py`
-- `runtime/physics/crystallization.py`
-- `runtime/physics/display_snap_transition_checker.py`
-- `runtime/physics/exploration.py`
-- `runtime/physics/flow.py`
-- `runtime/physics/graph/adapters/__init__.py`
-- `runtime/physics/graph/adapters/base.py`
-- `runtime/physics/graph/adapters/falkordb_adapter.py`
-- `runtime/physics/graph/adapters/mock_adapter.py`
-- `runtime/physics/graph/adapters/neo4j_adapter.py`
-- `runtime/physics/graph/connectome_read_cli.py`
-- `runtime/physics/graph/graph_interface.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_ops_apply.py`
-- `runtime/physics/graph/graph_ops_events.py`
-- `runtime/physics/graph/graph_ops_links.py`
-- `runtime/physics/graph/graph_ops_moments.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_ops_types.py`
-- `runtime/physics/graph/graph_queries.py`
-- `runtime/physics/graph/graph_queries_moments.py`
-- `runtime/physics/graph/graph_queries_search.py`
-- `runtime/physics/graph/graph_query_utils.py`
-- `runtime/physics/health/check_subentity.py`
-- `runtime/physics/health/checker.py`
-- `runtime/physics/health/checkers/energy_conservation.py`
-- `runtime/physics/health/checkers/moment_lifecycle.py`
-- `runtime/physics/link_scoring.py`
-- `runtime/physics/nature.py`
-- `runtime/physics/phases/completion.py`
-- `runtime/physics/phases/generation.py`
-- `runtime/physics/phases/link_cooling.py`
-- `runtime/physics/phases/moment_draw.py`
-- `runtime/physics/phases/moment_flow.py`
-- `runtime/physics/phases/moment_interaction.py`
-- `runtime/physics/phases/narrative_backflow.py`
-- `runtime/physics/phases/rejection.py`
-- `runtime/physics/primes_lag_and_half_life_decay_mechanism.py`
-- `runtime/physics/subentity.py`
-- `runtime/physics/synthesis.py`
-- `runtime/physics/synthesis_unfold.py`
-- `runtime/physics/tick.py`
-- `runtime/physics/tick_v1_2.py`
-- `runtime/physics/tick_v1_2_queries.py`
-- `runtime/physics/tick_v1_2_types.py`
-- `runtime/physics/traversal_logger.py`
-- `runtime/project_map.py`
-- `runtime/project_map_html.py`
-- `runtime/prompt.py`
-- `runtime/protocol_runner.py`
-- `runtime/protocol_validator.py`
-- `runtime/refactor.py`
-- `runtime/repair.py`
-- `runtime/repair_core.py`
-- `runtime/repair_escalation_interactive.py`
-- `runtime/repair_instructions.py`
-- `runtime/repair_instructions_docs.py`
-- `runtime/repair_report.py`
-- `runtime/repair_verification.py`
-- `runtime/repo_overview.py`
-- `runtime/repo_overview_formatters.py`
-- `runtime/solve_escalations.py`
-- `runtime/symbol_extractor.py`
-- `runtime/sync.py`
-- `runtime/tests/test_cluster_energy_monitor.py`
-- `runtime/tests/test_cluster_presentation.py`
-- `runtime/tests/test_e2e_moment_graph.py`
-- `runtime/tests/test_energy_v1_2.py`
-- `runtime/tests/test_moment.py`
-- `runtime/tests/test_moment_graph.py`
-- `runtime/tests/test_moment_lifecycle.py`
-- `runtime/tests/test_moments_api.py`
-- `runtime/tests/test_physics_display_snap.py`
-- `runtime/tests/test_router_schema_validation.py`
-- `runtime/tests/test_subentity.py`
-- `runtime/tests/test_traversal_logger.py`
-- `runtime/validate.py`
-- `runtime/work.py`
-- `scripts/check_chain_links.py`
-- `scripts/check_doc_completeness.py`
-- `scripts/check_doc_refs.py`
-- `scripts/check_orphans.py`
-- `semantic_proximity_based_character_node_selector.py`
-- `setup_database_and_apply_schema.py`
-- `show_upgrade_notice_if_available.py`
-- `signals/aggregator.py`
-- `signals/collector.py`
-- `snake_case.py`
-- `stream_dialogue.py`
-- `surface.py`
-- `sync_skills_to_ai_tool_directories.py`
-- `synthesis.py`
-- `test_loader.py`
-- `test_runner.py`
-- `test_schema.py`
-- `test_schema_links.py`
-- `test_schema_nodes.py`
-- `test_session.py`
-- `test_steps.py`
-- `test_validation.py`
-- `tests/building/test_agents.py`
-- `tests/building/test_ingest.py`
-- `tests/mind/test_cli.py`
-- `tests/mind/test_cluster_builder.py`
-- `tests/runtime/test_cli.py`
-- `tests/runtime/test_cluster_builder.py`
-- `tests/test_cluster_stability.py`
-- `tick.py`
-- `tools/archive/migrate_schema_v11.py`
-- `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
-- `tools/coverage/validate.py`
-- `tools/mcp/membrane_server.py`
-- `tools/migrate_v11_fields.py`
-- `tools/stream_dialogue.py`
-- `tools/test_health_live.py`
-- `update_gitignore_with_runtime_entry.py`
-- `utils.py`
-- `validate_embedding_config_matches_stored.py`
-- `validation/modes/shadow.py`
-- `validation/modes/unit_test.py`
-- `validation/validator.py`
-
-**Doc refs:**
-- `agents/narrator/CLAUDE.md`
-- `agents/narrator/CLAUDE_old.md`
-- `agents/world_runner/CLAUDE.md`
-- `algorithms/ALGORITHM_Physics_Energy_Flow_Sources_Sinks_And_Moment_Dynamics.md`
-- `algorithms/ALGORITHM_Physics_Energy_Mechanics_And_Link_Semantics.md`
-- `algorithms/ALGORITHM_Physics_Handler_And_Input_Processing_Flows.md`
-- `algorithms/ALGORITHM_Physics_Mechanisms.md`
-- `algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md`
-- `algorithms/ALGORITHM_Physics_Speed_Control_And_Display_Filtering.md`
-- `algorithms/ALGORITHM_Physics_Tick_Cycle_Gating_Flips_And_Dispatch.md`
-- `archive/SYNC_CLI_Development_State_archive_2025-12.md`
-- `archive/SYNC_archive_2024-12.md`
-- `data/ARCHITECTURE — Cybernetic Studio.md`
-- `data/MIND Documentation Chain Pattern (Draft “Marco”).md`
-- `docs/MAPPING.md`
-- `docs/TAXONOMY.md`
-- `docs/agents/PATTERNS_Agent_System.md`
-- `docs/agents/narrator/ALGORITHM_Scene_Generation.md`
-- `docs/agents/narrator/BEHAVIORS_Narrator.md`
-- `docs/agents/narrator/HANDOFF_Rolling_Window_Architecture.md`
-- `docs/agents/narrator/HEALTH_Narrator.md`
-- `docs/agents/narrator/IMPLEMENTATION_Narrator.md`
-- `docs/agents/narrator/INPUT_REFERENCE.md`
-- `docs/agents/narrator/PATTERNS_Narrator.md`
-- `docs/agents/narrator/PATTERNS_World_Building.md`
-- `docs/agents/narrator/SYNC_Narrator.md`
-- `docs/agents/narrator/SYNC_Narrator_archive_2025-12.md`
-- `docs/agents/narrator/TEST_Narrator.md`
-- `docs/agents/narrator/TOOL_REFERENCE.md`
-- `docs/agents/narrator/VALIDATION_Narrator.md`
-- `docs/agents/narrator/archive/SYNC_archive_2024-12.md`
-- `docs/architecture/cybernetic_studio_architecture/ALGORITHM_Cybernetic_Studio_Process_Flow.md`
-- `docs/architecture/cybernetic_studio_architecture/BEHAVIORS_Cybernetic_Studio_System_Behaviors.md`
-- `docs/architecture/cybernetic_studio_architecture/HEALTH_Cybernetic_Studio_Health_Checks.md`
-- `docs/architecture/cybernetic_studio_architecture/IMPLEMENTATION_Cybernetic_Studio_Code_Structure.md`
-- `docs/architecture/cybernetic_studio_architecture/PATTERNS_Cybernetic_Studio_Architecture.md`
-- `docs/architecture/cybernetic_studio_architecture/SYNC_Cybernetic_Studio_Architecture_State.md`
-- `docs/architecture/cybernetic_studio_architecture/VALIDATION_Cybernetic_Studio_Architectural_Invariants.md`
-- `docs/capabilities/PATTERNS_Capabilities.md`
-- `docs/cli/ALGORITHM_CLI_Command_Execution_Logic.md`
-- `docs/cli/HEALTH_CLI_Coverage.md`
-- `docs/cli/archive/SYNC_CLI_Development_State_archive_2025-12.md`
-- `docs/cli/archive/SYNC_CLI_State_Archive_2025-12.md`
-- `docs/cli/archive/SYNC_archive_2024-12.md`
-- `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
-- `docs/cli/commands/IMPLEMENTATION_Events_Command.md`
-- `docs/cli/commands/IMPLEMENTATION_Tasks_Command.md`
-- `docs/cli/core/ALGORITHM_CLI_Command_Execution_Logic/ALGORITHM_Overview.md`
-- `docs/cli/core/BEHAVIORS_CLI_Command_Effects.md`
-- `docs/cli/core/HEALTH_CLI_Command_Test_Coverage.md`
-- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture.md`
-- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/overview/IMPLEMENTATION_Overview.md`
-- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/runtime/IMPLEMENTATION_Runtime_And_Dependencies.md`
-- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/schema/IMPLEMENTATION_Schema.md`
-- `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture/structure/IMPLEMENTATION_Code_Structure.md`
-- `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md`
-- `docs/cli/core/SYNC_CLI_Development_State.md`
-- `docs/cli/core/VALIDATION_CLI_Instruction_Invariants.md`
-- `docs/cli/prompt/ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md`
-- `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
-- `docs/cli/prompt/PATTERNS_Prompt_Command_Workflow_Design.md`
-- `docs/cli/prompt/SYNC_Prompt_Command_State.md`
-- `docs/connectome/PATTERNS_Connectome.md`
-- `docs/core_utils/ALGORITHM_Core_Utils_Template_Path_And_Module_Discovery.md`
-- `docs/core_utils/ALGORITHM_Template_Path_Resolution_And_Doc_Discovery.md`
-- `docs/core_utils/PATTERNS_Core_Utils_Functions.md`
-- `docs/infrastructure/api/ALGORITHM_Api.md`
-- `docs/infrastructure/api/ALGORITHM_Playthrough_Creation.md`
-- `docs/infrastructure/api/API_Graph_Management.md`
-- `docs/infrastructure/api/BEHAVIORS_Api.md`
-- `docs/infrastructure/api/IMPLEMENTATION_Api.md`
-- `docs/infrastructure/api/PATTERNS_Api.md`
-- `docs/infrastructure/api/SYNC_Api.md`
-- `docs/infrastructure/api/TEST_Api.md`
-- `docs/infrastructure/api/VALIDATION_Api.md`
-- `docs/infrastructure/canon/PATTERNS_Canon.md`
-- `docs/infrastructure/tempo/ALGORITHM_Tempo_Controller.md`
-- `docs/infrastructure/tempo/IMPLEMENTATION_Tempo.md`
-- `docs/infrastructure/tempo/PATTERNS_Tempo.md`
-- `docs/ingest/PATTERNS_Doc_Ingestion.md`
-- `docs/ingest/PATTERNS_File_Ingestion.md`
-- `docs/ingest/PATTERNS_Graph_Injection.md`
-- `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
-- `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
-- `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
-- `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
-- `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`
-- `docs/llm_agents/SYNC_LLM_Agents_State.md`
-- `docs/llm_agents/SYNC_LLM_Agents_State_archive_2025-12.md`
-- `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`
-- `docs/membrane/IMPLEMENTATION_Membrane_System.md`
-- `docs/membrane/VALIDATION_Completion_Verification.md`
-- `docs/mind/models/HEALTH_Models.md`
-- `docs/mind/models/PATTERNS_Models.md`
-- `docs/mind/models/VALIDATION_Models.md`
-- `docs/mind_cli_core/OBJECTIVES_mind_cli_core.md`
-- `docs/mind_cli_core/PATTERNS_mind_cli_core.md`
-- `docs/mind_cli_core/SYNC_mind_cli_core.md`
-- `docs/physics/ALGORITHM_Physics.md`
-- `docs/physics/BEHAVIORS_Physics.md`
-- `docs/physics/DESIGN_Traversal_Logger.md`
-- `docs/physics/EXAMPLE_Traversal_Log.md`
-- `docs/physics/HEALTH_Energy_Physics.md`
-- `docs/physics/IMPLEMENTATION_Physics.md`
-- `docs/physics/PATTERNS_Physics.md`
-- `docs/physics/SYNC_Physics.md`
-- `docs/physics/SYNC_Physics_archive_2025-12.md`
-- `docs/physics/TEST_Physics.md`
-- `docs/physics/VALIDATION_Energy_Physics.md`
-- `docs/physics/VALIDATION_Physics.md`
-- `docs/physics/algorithms/ALGORITHM_Physics_Mechanisms.md`
-- `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.1_Energy_Physics.md`
-- `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md`
-- `docs/physics/attention/PATTERNS_Attention_Energy_Split.md`
-- `docs/physics/attention/VALIDATION_Attention_Split_And_Interrupts.md`
-- `docs/physics/graph/ALGORITHM_Energy_Flow.md`
-- `docs/physics/graph/ALGORITHM_Weight.md`
-- `docs/physics/graph/BEHAVIORS_Graph.md`
-- `docs/physics/graph/PATTERNS_Graph.md`
-- `docs/physics/graph/SYNC_Graph.md`
-- `docs/physics/graph/SYNC_Graph_archive_2025-12.md`
-- `docs/physics/graph/VALIDATION_Living_Graph.md`
-- `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
-- `docs/physics/subentity/ALGORITHM_SubEntity.md`
-- `docs/physics/subentity/BEHAVIORS_SubEntity.md`
-- `docs/physics/subentity/SYNC_SubEntity.md`
-- `docs/physics/subentity/VALIDATION_SubEntity.md`
-- `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md`
-- `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
-- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
-- `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
-- `docs/runtime/models/HEALTH_Models.md`
-- `docs/runtime/models/PATTERNS_Models.md`
-- `docs/runtime/models/VALIDATION_Models.md`
-- `docs/runtime/moments/PATTERNS_Moments.md`
-- `docs/runtime/moments/SYNC_Moments.md`
-- `docs/schema/GRAMMAR_Link_Synthesis.md`
-- `docs/schema/PATTERNS_Schema.md`
-- `docs/schema/SCHEMA.md`
-- `docs/schema/SCHEMA_Moments.md`
-- `docs/schema/SYNC_Schema.md`
-- `docs/schema/models/PATTERNS_Pydantic_Schema_Models.md`
-- `docs/tools/ALGORITHM_Tools.md`
-- `docs/tools/BEHAVIORS_Tools.md`
-- `docs/tools/HEALTH_Tools.md`
-- `docs/tools/IMPLEMENTATION_Tools.md`
-- `docs/tools/OBJECTIVES_Tools_Goals.md`
-- `docs/tools/PATTERNS_Tools.md`
-- `docs/tools/SYNC_Tools.md`
-- `docs/tools/VALIDATION_Tools.md`
-- `docs/tui/ALGORITHM_TUI_Widget_Interaction_Flow.md`
-- `docs/tui/HEALTH_TUI_Coverage.md`
-- `docs/tui/PATTERNS_TUI_Modular_Interface_Design.md`
-- `implementation/IMPLEMENTATION_Physics_Architecture.md`
-- `implementation/IMPLEMENTATION_Physics_Code_Structure.md`
-- `implementation/IMPLEMENTATION_Physics_Dataflow.md`
-- `implementation/IMPLEMENTATION_Physics_Runtime.md`
-- `state/SYNC_Project_State.md`
-- `templates/CLAUDE_ADDITION.md`
-- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
-- `templates/mind/PRINCIPLES.md`
-- `templates/mind/PROTOCOL.md`
-- `templates/mind/agents/manager/CLAUDE.md`
-- `templates/runtime/PRINCIPLES.md`
-- `templates/runtime/PROTOCOL.md`
-- `templates/runtime/agents/manager/CLAUDE.md`
-- `tools/HEALTH_Tools.md`
-
-**Sections:**
-- # Repository Map: mind-mcp
 
 **Definitions:**
 - `class MindServer`
@@ -9765,6 +9370,59 @@
 - `def test_crystallization_embedding_continuous()`
 - `def test_queries_are_read_only()`
 - `def test_no_llm_in_validation()`
+
+**Definitions:**
+- `class TestEmbeddingService`
+- `def test_init_default_model()`
+- `def test_init_custom_model()`
+- `def test_load_model()`
+- `def test_load_model_missing_dependency()`
+- `class TestEmbedText`
+- `def test_embed_simple_text()`
+- `def test_embed_empty_text()`
+- `def test_embed_whitespace_only()`
+- `class TestEmbedBatch`
+- `def test_embed_batch_multiple_texts()`
+- `def test_embed_batch_empty_list()`
+- `def test_embed_batch_with_empty_strings()`
+- `class TestNodeEmbedding`
+- `def test_embed_character_node()`
+- `def test_embed_place_node()`
+- `def test_embed_generic_node()`
+- `class TestLinkEmbedding`
+- `def test_embed_simple_link()`
+- `def test_embed_link_with_emotions()`
+- `class TestSimilarity`
+- `def test_similarity_identical_vectors()`
+- `def test_similarity_orthogonal_vectors()`
+- `def test_similarity_opposite_vectors()`
+- `def test_similarity_normalized_vectors()`
+- `class TestSingleton`
+- `def test_get_embedding_service_singleton()`
+- `def test_singleton_preserves_state()`
+
+**Definitions:**
+- `class MockGraphOps`
+- `def __init__()`
+- `def _query()`
+- `class TestHandleClick`
+- `def test_no_matching_transitions()`
+- `def test_single_matching_transition()`
+- `def test_weight_below_threshold()`
+- `def test_weight_crosses_threshold()`
+- `def test_case_insensitive_word_matching()`
+- `def test_require_words_as_list()`
+- `def test_multiple_transitions_same_word()`
+- `def test_no_require_words()`
+- `class TestMomentLifecycle`
+- `def test_initialization()`
+- `def test_query_method_required()`
+- `def test_handle_click_returns_dict()`
+- `class TestEdgeCases`
+- `def test_empty_clicked_word()`
+- `def test_none_moment_id()`
+- `def test_special_characters_in_word()`
+- `def test_unicode_in_word()`
 
 **Definitions:**
 - `def test_v1_template_paths()`

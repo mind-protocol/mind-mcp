@@ -464,7 +464,6 @@ def create_moments_router(
             if not moment:
                 raise HTTPException(status_code=404, detail="Moment not found")
 
-            # TODO: Add attachments, speakers, transitions
             return moment
 
         except HTTPException:

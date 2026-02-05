@@ -374,6 +374,54 @@ class MindServer:
                     }
                 },
                 {
+                    "name": "node_create",
+                    "description": "Create a new node in the graph. Supports narrative nodes (thoughts, facts, tasks) and actor nodes (agents, characters). Returns the created node ID.",
+                    "inputSchema": {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string",
+                                "description": "Unique node ID. Auto-generated if not provided."
+                            },
+                            "node_type": {
+                                "type": "string",
+                                "enum": ["narrative", "actor"],
+                                "description": "Type of node: 'narrative' for thoughts/facts/tasks, 'actor' for agents/characters"
+                            },
+                            "type": {
+                                "type": "string",
+                                "description": "Subtype (e.g., 'task_run', 'fact', 'thought', 'agent', 'character')"
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "Display name for the node"
+                            },
+                            "content": {
+                                "type": "string",
+                                "description": "Full content/description of the node"
+                            },
+                            "synthesis": {
+                                "type": "string",
+                                "description": "Short summary (used for embedding). Auto-generated from content if not provided."
+                            },
+                            "weight": {
+                                "type": "number",
+                                "description": "Importance weight (default: 1.0)"
+                            },
+                            "energy": {
+                                "type": "number",
+                                "description": "Activity energy (default: 1.0)"
+                            },
+                            "link_to": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "Node IDs to link this node to"
+                            }
+                        },
+                        "required": ["node_type"]
+                    }
+                },
+                {
                     "name": "capability_status",
                     "description": "Get status of the capability system: loaded capabilities, registered triggers, throttler state.",
                     "inputSchema": {
@@ -542,6 +590,8 @@ class MindServer:
             return self._tool_agent_status(arguments)
         elif tool_name == "graph_query":
             return self._tool_graph_query(arguments)
+        elif tool_name == "node_create":
+            return self._tool_node_create(arguments)
         elif tool_name == "capability_status":
             return self._tool_capability_status(arguments)
         elif tool_name == "capability_trigger":
@@ -1327,6 +1377,99 @@ Please investigate and fix this problem. Follow the project's coding standards a
             if debug:
                 debug_lines.append(f"Ask failed: {e}")
             return f"Ask failed: {e}"
+
+    def _tool_node_create(self, args: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a new node in the graph."""
+        import uuid
+        import time
+
+        node_type = args.get("node_type")
+        if not node_type:
+            return {"content": [{"type": "text", "text": "Error: 'node_type' is required (narrative or actor)"}]}
+
+        # Generate ID if not provided
+        node_id = args.get("id") or f"{args.get('type', node_type)}_{uuid.uuid4().hex[:8]}"
+        subtype = args.get("type", "thought" if node_type == "narrative" else "agent")
+        name = args.get("name", node_id)
+        content = args.get("content", "")
+        synthesis = args.get("synthesis") or (content[:100] if content else name)
+        weight = args.get("weight", 1.0)
+        energy = args.get("energy", 1.0)
+        link_to = args.get("link_to", [])
+
+        if not self.graph_ops:
+            return {"content": [{"type": "text", "text": "Error: No graph connection available"}]}
+
+        try:
+            # Compute embedding from synthesis
+            embedding = None
+            try:
+                from runtime.infrastructure.embeddings.service import get_embedding_service
+                embed_service = get_embedding_service()
+                embedding = embed_service.embed(synthesis)
+            except Exception as e:
+                logger.warning(f"Could not compute embedding: {e}")
+
+            # Create node based on type
+            if node_type == "narrative":
+                self.graph_ops.add_narrative(
+                    id=node_id,
+                    name=name,
+                    content=content,
+                    type=subtype,
+                    weight=weight,
+                    embedding=embedding,
+                )
+                # Set synthesis field
+                self.graph_ops._query(
+                    "MATCH (n {id: $id}) SET n.synthesis = $synthesis, n.energy = $energy, n.created_at_s = $ts",
+                    {"id": node_id, "synthesis": synthesis, "energy": energy, "ts": int(time.time())}
+                )
+            elif node_type == "actor":
+                self.graph_ops.add_character(
+                    id=node_id,
+                    name=name,
+                    type=subtype,
+                    weight=weight,
+                    energy=energy,
+                    embedding=embedding,
+                )
+            else:
+                return {"content": [{"type": "text", "text": f"Error: Unknown node_type '{node_type}'. Use 'narrative' or 'actor'."}]}
+
+            # Create links if requested
+            links_created = []
+            for target_id in link_to:
+                try:
+                    self.graph_ops._query("""
+                        MATCH (source {id: $source_id})
+                        MATCH (target {id: $target_id})
+                        MERGE (source)-[r:link]->(target)
+                        SET r.weight = 1.0, r.energy = 1.0
+                    """, {"source_id": node_id, "target_id": target_id})
+                    links_created.append(target_id)
+                except Exception as e:
+                    logger.warning(f"Could not link to {target_id}: {e}")
+
+            # Build response
+            lines = [
+                f"Created {node_type} node:",
+                f"  ID: {node_id}",
+                f"  Type: {subtype}",
+                f"  Name: {name}",
+                f"  Weight: {weight}",
+                f"  Energy: {energy}",
+            ]
+            if content:
+                lines.append(f"  Content: {content[:100]}{'...' if len(content) > 100 else ''}")
+            if links_created:
+                lines.append(f"  Links created: {', '.join(links_created)}")
+
+            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
+
+        except Exception as e:
+            logger.exception("Node creation failed")
+            return {"content": [{"type": "text", "text": f"Error creating node: {e}"}]}
 
     def _tool_capability_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
         """Get capability system status."""

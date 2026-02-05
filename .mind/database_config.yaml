@@ -3,7 +3,7 @@ database:
   falkordb:
     host: localhost
     port: 6379
-    graph_name: mind_mcp
+    graph_name: mind_platform
 embedding:
   provider: local
   model: all-mpnet-base-v2

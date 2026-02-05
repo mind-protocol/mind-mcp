@@ -2,7 +2,7 @@
 
 ```
 LAST_UPDATED: 2025-12-30
-UPDATED_BY: Claude (agent - groundwork + steward)
+UPDATED_BY: Claude (steward)
 ```
 
 ---
@@ -47,6 +47,27 @@ All browser-side code is self-contained — no dependencies on mind-mcp's Node.j
 ---
 
 ## RECENT CHANGES
+
+### 2025-12-30: Fixed LARGE_DOC_MODULE Health Issue
+
+- **What:**
+  1. Removed duplicate `docs/map.md` (auto-generated file already at root)
+  2. Created `docs/llm_agents/archives/` for archive files
+  3. Moved `SYNC_LLM_Agents_State_archive_2025-12.md` to archives
+  4. Split `HEALTH_LLM_Agent_Coverage.md` (401 → 154 lines):
+     - Main file: overview/index
+     - `HEALTH_Stream_Validity.md`: detailed stream_validity indicator (140 lines)
+     - `HEALTH_API_Connectivity.md`: detailed api_connectivity indicator (140 lines)
+  5. Compressed `IMPLEMENTATION_LLM_Agent_Code_Architecture.md` (377 → 190 lines):
+     - Removed verbose docking specs (referenced ALGORITHM instead)
+     - Merged State/Runtime/Concurrency sections
+- **Why:** LARGE_DOC_MODULE health check flagged 4 docs exceeding 200-line limit. Protocol principle: docs should be focused and digestible.
+- **Impact:** All oversized docs resolved. Documentation now follows size constraints while maintaining clarity through focused reference files.
+- **Files:**
+  - Removed: `docs/map.md` (duplicate)
+  - Created: `docs/llm_agents/archives/`, `HEALTH_Stream_Validity.md`, `HEALTH_API_Connectivity.md`
+  - Modified: `HEALTH_LLM_Agent_Coverage.md`, `IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
+  - Moved: `SYNC_LLM_Agents_State_archive_2025-12.md` → `archives/`
 
 ### 2025-12-30: Fixed UNMONITORED_LOGS and INCOMPLETE_CHAIN Health Checks
 
@@ -331,6 +352,18 @@ Graph Explorer could benefit from keyboard shortcuts for navigation.
 ---
 
 ## Init: 2025-12-30 05:32
+
+| Setting | Value |
+|---------|-------|
+| Version | v0.0.0 |
+| Database | falkordb |
+| Graph | mind_mcp |
+
+**Steps completed:** ecosystem, capabilities, runtime, ai_configs, skills, database_config, database_setup, file_ingest, capabilities_graph, agents, env_example, mcp_config, gitignore, overview, embeddings, health_checks
+
+---
+
+## Init: 2025-12-30 05:38
 
 | Setting | Value |
 |---------|-------|

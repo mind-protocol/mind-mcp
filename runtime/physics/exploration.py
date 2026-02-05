@@ -69,6 +69,7 @@ class GraphInterface:
     is_moment: Callable[[str], Awaitable[bool]] = None
 
     # Mutations
+    update_node: Callable[[str, Dict[str, Any]], Awaitable[None]] = None
     update_link: Callable[[str, Dict[str, Any]], Awaitable[None]] = None
     create_narrative: Callable[[Dict[str, Any]], Awaitable[str]] = None
     create_link: Callable[[Dict[str, Any]], Awaitable[str]] = None
@@ -481,12 +482,13 @@ class ExplorationRunner:
             node_type = target_node.get('type', target_node.get('labels', ['Node'])[0] if isinstance(target_node.get('labels'), list) else 'Node')
 
             # Regenerate synthesis if embedding drifted (ticks deprecated)
-            regenerate_node_synthesis_if_drifted(
+            was_regenerated, new_synthesis = regenerate_node_synthesis_if_drifted(
                 target_node,
                 node_type,
                 target_node.get('embedding'),
             )
-            # TODO: Persist node update (would need update_node in GraphInterface)
+            if was_regenerated and self.graph.update_node:
+                await self.graph.update_node(target_id, {'synthesis': new_synthesis})
 
         # Update crystallization embedding
         await self._update_crystallization_embedding(se)
@@ -626,7 +628,8 @@ class ExplorationRunner:
             node = await self.graph.get_node(se.position)
             if node:
                 inject_node_energy(node, se.criticality, state_mult)
-                # TODO: Persist node update
+                if self.graph.update_node:
+                    await self.graph.update_node(se.position, {'energy': node['energy']})
 
         # v1.9: BOTH conditions required for crystallization
         if alignment > 0.7 and novelty > 0.7:

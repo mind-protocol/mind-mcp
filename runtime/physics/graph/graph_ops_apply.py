@@ -780,16 +780,15 @@ class ApplyOperationsMixin:
     # =========================================================================
 
     def _apply_node_update(self, update: Dict):
-        """Apply an update to a node."""
+        """Apply property updates to a node."""
         node_id = update['node']
+        props = {k: v for k, v in update.items() if k != 'node'}
+        if not props:
+            return
 
-        if 'modifier_add' in update:
-            mod = update['modifier_add']
-            cypher = f"""
-            MATCH (n {{id: '{node_id}'}})
-            SET n.modifiers = COALESCE(n.modifiers, '[]')
-            """
-            self._query(cypher)
-            # TODO: Proper modifier handling
-
-        # Add other update types as needed
+        set_parts = [f"n.{k} = {repr(v)}" for k, v in props.items()]
+        cypher = f"""
+        MATCH (n {{id: '{node_id}'}})
+        SET {', '.join(set_parts)}
+        """
+        self._query(cypher)

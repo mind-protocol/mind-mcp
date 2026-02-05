@@ -223,6 +223,23 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
             node = await get_node(node_id)
             return node.get('node_type') == 'moment' if node else False
 
+        async def update_node(node_id: str, updates: Dict[str, Any]) -> None:
+            """Update node properties by ID."""
+            if not updates:
+                return
+            set_parts = []
+            for key, value in updates.items():
+                if isinstance(value, str):
+                    set_parts.append(f"n.{key} = '{value}'")
+                elif isinstance(value, (int, float)):
+                    set_parts.append(f"n.{key} = {value}")
+            if set_parts:
+                set_clause = ", ".join(set_parts)
+                try:
+                    graph.query(f"MATCH (n {{id: '{node_id}'}}) SET {set_clause}")
+                except Exception as e:
+                    print(f"update_node failed: {e}")
+
         async def update_link(link_id: str, updates: Dict[str, Any]) -> None:
             pass  # Not implemented for now
 
@@ -313,6 +330,7 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
             get_all_narratives=get_all_narratives,
             is_narrative=is_narrative,
             is_moment=is_moment,
+            update_node=update_node,
             update_link=update_link,
             create_narrative=create_narrative,
             create_link=create_link,
@@ -350,6 +368,9 @@ def _get_mock_graph_interface() -> GraphInterface:
     async def is_moment(node_id: str) -> bool:
         return False
 
+    async def update_node(node_id: str, updates: Dict[str, Any]) -> None:
+        pass
+
     async def update_link(link_id: str, updates: Dict[str, Any]) -> None:
         pass
 
@@ -368,6 +389,7 @@ def _get_mock_graph_interface() -> GraphInterface:
         get_all_narratives=get_all_narratives,
         is_narrative=is_narrative,
         is_moment=is_moment,
+        update_node=update_node,
         update_link=update_link,
         create_narrative=create_narrative,
         create_link=create_link,

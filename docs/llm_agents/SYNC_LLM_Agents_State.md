@@ -1,8 +1,8 @@
 # LLM Agents — Sync: Current State
 
 ```
-LAST_UPDATED: 2025-12-25
-UPDATED_BY: codex
+LAST_UPDATED: 2025-12-30
+UPDATED_BY: Claude (steward)
 STATUS: DESIGNING
 ```
 
@@ -46,8 +46,7 @@ THIS:            SYNC_LLM_Agents_State.md (you are here)
 
 ## IN PROGRESS
 
-No active implementation work is underway; the last changes were
-documentation-only updates, and adapter behavior is unchanged.
+None. Documentation has been reorganized for clarity and size limits.
 
 ---
 
@@ -58,14 +57,42 @@ noted in handoff context and has not been triaged yet.
 
 ---
 
+## RECENT CHANGES
+
+### 2025-12-30: Reorganized Documentation for Size Limits
+
+- **What:**
+  1. Split HEALTH_LLM_Agent_Coverage.md (401 → 154 lines) into focused files:
+     - Main HEALTH file kept as overview/index
+     - Created HEALTH_Stream_Validity.md (140 lines) for stream_validity indicator details
+     - Created HEALTH_API_Connectivity.md (140 lines) for api_connectivity indicator details
+  2. Compressed IMPLEMENTATION_LLM_Agent_Code_Architecture.md (377 → 190 lines):
+     - Removed verbose docking point specifications (referenced ALGORITHM instead)
+     - Merged State Management, Runtime Behavior, and Concurrency into single "STATE & RUNTIME" section
+     - Kept essential info: code structure, dependencies, schema, links
+  3. Created archives/ directory and moved archive files there
+- **Why:** LARGE_DOC_MODULE health check flagged these files as exceeding 200-line limit. Protocol principle: docs should be focused and digestible.
+- **Impact:** All llm_agents documentation files now under 200 lines. Detailed specifications extracted to focused reference files while main docs remain navigable.
+- **Files:**
+  - `HEALTH_LLM_Agent_Coverage.md` (compressed to 154 lines)
+  - `HEALTH_Stream_Validity.md` (new, 140 lines)
+  - `HEALTH_API_Connectivity.md` (new, 140 lines)
+  - `IMPLEMENTATION_LLM_Agent_Code_Architecture.md` (compressed to 190 lines)
+  - `archives/SYNC_LLM_Agents_State_archive_2025-12.md` (moved to archives)
+
+---
+
 ## HANDOFF: FOR AGENTS
 
 **Your likely VIEW:** `VIEW_Implement_Write_Or_Modify_Code.md`
 
-**Where I stopped:** Documentation only; no behavior changes.
+**Where I stopped:** Documentation restructuring complete. No code changes.
 
 **What you need to understand:**
-The Gemini adapter is a thin wrapper intended to isolate provider SDK usage. It streams JSON chunks for the CLI and supports basic local tool execution. The default model is `gemini-3-flash-preview`.
+- The Gemini adapter is a thin wrapper that isolates provider SDK usage
+- Streams JSON chunks for CLI, supports basic local tool execution
+- Default model: `gemini-3-flash-preview`
+- Health indicator specs now in separate files (HEALTH_Stream_Validity.md, HEALTH_API_Connectivity.md)
 
 **Watch out for:**
 The adapter prints model listings to stderr unconditionally; consider gating if that output is noisy.

@@ -35,6 +35,9 @@ def _load_capability_module():
     if not capability_init.exists():
         return None
 
+    # Platform path is the runtime directory containing the capability module
+    platform_path = capability_init.parent.parent  # runtime/
+
     # Load using importlib from explicit path
     spec = importlib.util.spec_from_file_location(
         "runtime_capability",
@@ -276,18 +279,17 @@ class CapabilityManager:
         }
 
         if throttler:
-            # Count pending (unclaimed) vs claimed tasks
-            pending = sum(1 for s in throttler.active.values() if s.claimed_by is None)
-            claimed = sum(1 for s in throttler.active.values() if s.claimed_by is not None)
+            # Throttler tracks cooldowns, not active tasks
             status["throttler"] = {
-                "pending_count": pending,
-                "active_count": claimed,
+                "cooldown_s": throttler.cooldown_s,
+                "max_per_module": throttler.max_per_module,
+                "tracked_keys": len(throttler._created),
             }
 
         if controller:
             status["controller"] = {
-                "mode": controller.mode.value if hasattr(controller.mode, 'value') else str(controller.mode),
-                "can_claim": controller.can_claim(),
+                "enabled": controller.enabled,
+                "paused": controller.paused,
             }
 
         return status
@@ -301,13 +303,12 @@ class CapabilityManager:
                 "path": str(cap_path),
                 "checks": [],
             }
-            for check_fn in checks:
-                meta = check_fn.__check_meta__
+            for check_def in checks:
                 cap_info["checks"].append({
-                    "id": meta["id"],
-                    "triggers": [t["type"] for t in meta["triggers"]],
-                    "on_problem": meta["on_problem"],
-                    "task": meta["task"],
+                    "id": check_def.id,
+                    "triggers": [t.type for t in check_def.triggers],
+                    "on_problem": check_def.on_problem,
+                    "task": check_def.task,
                 })
             result.append(cap_info)
         return result

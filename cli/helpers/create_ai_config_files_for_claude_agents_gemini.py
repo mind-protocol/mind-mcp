@@ -24,6 +24,10 @@ def _create_claude_md(target_dir: Path) -> None:
 
 ---
 
+@.mind/STYLE.md
+
+---
+
 ## Before Any Task
 
 Check: `.mind/state/SYNC_Project_State.md`
@@ -36,9 +40,16 @@ Update: `.mind/state/SYNC_Project_State.md`
     if not path.exists():
         path.write_text(section)
         print("✓ CLAUDE.md created")
-    elif "@.mind/PRINCIPLES.md" not in path.read_text():
-        path.write_text(path.read_text().rstrip() + "\n\n" + section)
-        print("✓ CLAUDE.md updated")
+    else:
+        content = path.read_text()
+        if "@.mind/PRINCIPLES.md" not in content:
+            # No mind references at all — append full section
+            path.write_text(content.rstrip() + "\n\n" + section)
+            print("✓ CLAUDE.md updated (added mind references)")
+        elif "@.mind/STYLE.md" not in content:
+            # Has PRINCIPLES but missing STYLE — rewrite with new template
+            path.write_text(section)
+            print("✓ CLAUDE.md updated (added STYLE.md reference)")
 
 
 def _create_agents_md(target_dir: Path) -> None:

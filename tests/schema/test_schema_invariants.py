@@ -8,7 +8,7 @@ Each test is marked with # VALIDATES: V<num> to track coverage.
 import pytest
 from runtime.infrastructure.database import get_database_adapter
 from runtime.schema.nodes import Actor, Space, Thing, Narrative, Moment
-from runtime.schema.links import Link
+from runtime.schema.links import LinkBase
 
 
 # VALIDATES: V1

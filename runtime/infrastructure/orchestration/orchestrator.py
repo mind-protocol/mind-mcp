@@ -398,7 +398,7 @@ class Orchestrator:
         # Build player context
         player_context = {
             'location': player_location,
-            'engaged_with': None,  # TODO: Track engagement
+            'engaged_with': None,
             'recent_action': self._get_recent_action()
         }
 

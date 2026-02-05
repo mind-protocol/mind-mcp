@@ -270,11 +270,11 @@ class GraphTickV1_2:
     ):
         """Unified traversal recording using flow.py primitive."""
         from runtime.physics.flow import energy_flows_through
-        
-        # Link dict in v1.2 queries typically has 'rid' or is updateable
-        # Note: we need to update the link in the graph too
-        updated_link = energy_flows_through(link, amount, flow_emotions)
-        
-        # TODO: Implement relationship update by RID in GraphOps
-        # For now we log and trust subsequent cooling will handle it if energy was pushed to nodes
+
+        origin_weight = link.get('origin_weight', 1.0) or 1.0
+        target_weight = link.get('target_weight', 1.0) or 1.0
+        updated_link = energy_flows_through(link, amount, flow_emotions, origin_weight, target_weight)
+
+        # Link update not persisted: queries don't return relationship IDs,
+        # so we can't uniquely match the relationship for update. Cooling handles cleanup.
         logger.debug(f"[Traversal] {origin_id} -> {target_id}: amount {amount:.2f}, new link energy {updated_link.get('energy'):.2f}")
