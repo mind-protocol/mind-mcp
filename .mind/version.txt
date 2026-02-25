@@ -1,2 +1,2 @@
-9b5c4c3b3931b9cee4c1cb7ec88855e45c3c8698
+96b4ff4e0038fb3b75bf42f8b2f8bcf029d1b7fb
 git@github.com:mind-protocol/mind-mcp.git
