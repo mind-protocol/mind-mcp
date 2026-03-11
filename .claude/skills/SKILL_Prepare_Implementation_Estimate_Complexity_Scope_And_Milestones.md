@@ -20,13 +20,28 @@ Implementation preparation in mind = the phase between a complete documentation 
 - **Context budget**: Estimated tokens/compactions required to implement a module in one session
 - **Technical complexity**: How many code-deploy-test cycles a module will likely need (1 = trivial, 5 = research-level)
 - **Connectivity score**: How many other modules a module depends on or is depended on by (0 = isolated, 10+ = hub)
+- **ROI (Return on Implementation)**: What value a module delivers and what is lost while it doesn't exist — the only dimension that answers "why build this before that?"
 - **Milestone**: A shippable increment with testable acceptance criteria (POC → Alpha → Beta → GA)
 - **Feature-milestone mapping**: Which BEHAVIORS from each module belong in which milestone
+
+**On ROI and physicalization:**
+
+ROI is the hardest dimension to score because it depends on context that changes faster than any estimation document can track. In an interconnected system, omitting a single variable can invalidate an entire priority calculation. Two facts drive this:
+
+1. **Complexity is exponential.** The more modules interact, the more a ROI calculation must account for second and third-order effects. Manual scoring (by human or AI) simplifies by necessity and therefore lies by necessity.
+
+2. **Speed is accelerating.** These decisions must be made faster as technology moves faster. Humans are slow to compute ROI. AI needs human grounding to stay real. Neither alone is sufficient.
+
+**The bridge model (now):** Score ROI manually using the factors below. Accept that this is a simplification. Use it as a starting point, not as truth.
+
+**The target model (when graph physics is operational):** ROI is not scored — it emerges. Each module/behavior exists as a cluster of nodes in the knowledge graph. Active project intentions (narratives) create energy that flows through the graph. Modules with the most tension (blocked narratives, unresolved dependencies, high energy throughput) naturally surface as highest priority. The membrane routes attention to where it's needed. No human or AI decides — the physics decides. This is "physicalized ROI."
+
+**Why this matters for the skill:** The manual ROI scores below are a bridge. They should be replaced by graph-physics-derived priority as soon as the graph is operational for this purpose. The skill must document both modes so that the transition is intentional, not forgotten.
 
 ---
 
 ## Purpose
-Analyze a fully-documented project to produce complexity estimates, context budgets, connectivity maps, milestone definitions, and a feature-milestone matrix — so implementation proceeds in the right order with the right expectations.
+Analyze a fully-documented project to produce complexity estimates, context budgets, connectivity maps, ROI assessments, milestone definitions, and a feature-milestone matrix — so implementation proceeds in the right order with the right expectations and for the right reasons.
 
 ---
 
@@ -44,7 +59,7 @@ hardware_target: "<device constraints if any>"       # optional — e.g. "Quest 
 ```yaml
 complexity_matrix:
   - file: "ESTIMATION_Complexity_Matrix.md"
-    content: "Per-module: context budget, technical complexity, connectivity score, estimated LOC, estimated sessions"
+    content: "Per-module: context budget, technical complexity, connectivity score, ROI score, estimated LOC, estimated sessions"
 milestone_plan:
   - file: "ESTIMATION_Milestone_Plan.md"
     content: "Milestone definitions with feature-milestone mapping from BEHAVIORS"
@@ -60,7 +75,7 @@ implementation_sequence:
 
 ## Gates
 
-- Every module must have all 5 scores (context budget, complexity, connectivity, estimated LOC, estimated sessions) — no hand-waving
+- Every module must have all 6 scores (context budget, complexity, connectivity, ROI, estimated LOC, estimated sessions) — no hand-waving
 - Milestones must trace to VALIDATION acceptance criteria — not invented from scratch
 - Feature-milestone mapping must reference specific BEHAVIORS by ID — not vague descriptions
 - Dependency graph must be a DAG (no cycles) — if cycles exist, document them as risks
@@ -159,7 +174,54 @@ connectivity_metrics:
 - Parallelizable clusters (independent modules that can be built simultaneously)
 - Hub modules (highest connectivity — these are the riskiest)
 
-### 5. Estimate lines of code per module
+### 5. Assess ROI per module (bridge mode)
+
+For each module, answer three questions:
+
+```yaml
+roi_factors:
+  - value_delivered: "What becomes possible once this module exists? What experience, capability, or proof does it unlock?"
+  - cost_of_absence: "What is blocked, degraded, or impossible while this module doesn't exist? Which other modules are waiting on it?"
+  - narrative_tension: "How much unresolved tension (user need, technical debt, blocked milestone) accumulates while this remains unbuilt?"
+```
+
+**Scoring (bridge mode, 1-5):**
+
+| ROI Score | Meaning | Example |
+|---|---|---|
+| 1 (Low) | Nice-to-have. Nothing blocked. Deferred without consequence. | Ambient particles, seasonal light |
+| 2 (Minor) | Improves experience but core works without it. | Weather effects, reverb zones |
+| 3 (Moderate) | Enables a meaningful capability. Some things blocked. | Day/night cycle, VR navigation |
+| 4 (High) | Critical path. Multiple modules or milestones depend on it. | Voice pipeline, citizen mind, economy sync |
+| 5 (Essential) | Nothing works without it. The project doesn't exist without this module. | Server infrastructure, district rendering |
+
+**ROI factors detail:**
+
+```yaml
+value_dimensions:
+  - demonstrability: "Can you show this to someone and they understand the project? (1=invisible infra, 5=the core demo)"
+  - differentiation: "Does this make the project unique vs. any other 3D/VR/chat project? (1=commodity, 5=nothing like it exists)"
+  - unblock_count: "How many other modules/behaviors are waiting on this? (count from dependency graph)"
+  - user_impact: "If a visitor enters the world, how much does this module affect their experience? (1=invisible, 5=defines the experience)"
+  - risk_reduction: "Does building this early reduce uncertainty for later modules? (1=no, 5=proves a critical unknown)"
+```
+
+**Compound ROI score:** Weighted average — `(demonstrability × 0.15) + (differentiation × 0.20) + (unblock_count × 0.25) + (user_impact × 0.25) + (risk_reduction × 0.15)`, rounded.
+
+**Integration into sequence:** The implementation sequence uses `DAG_constraint × ROI_weight` to determine order. Within the same DAG level (modules that could be built in any order), ROI determines which goes first. A module with ROI 5 at DAG level 2 may be promoted to build alongside DAG level 1 modules if its dependencies can be stubbed.
+
+**Toward physicalized ROI:**
+
+This manual scoring is a bridge. The target architecture:
+1. Each module/behavior becomes a cluster of nodes in the knowledge graph (narratives, moments, patterns)
+2. Project intentions (what we're trying to build, for whom, why) are active narratives with energy
+3. The physics engine routes energy through the graph — modules with high tension (many blocked narratives depending on them) accumulate energy naturally
+4. The membrane surfaces the highest-energy clusters as implementation priorities
+5. No scoring needed — priority emerges from topology and energy flow
+
+Document this transition explicitly in the ESTIMATION output so it's not lost.
+
+### 6. Estimate lines of code per module
 
 From IMPLEMENTATION doc:
 ```yaml
@@ -172,7 +234,7 @@ loc_estimation:
 
 **Formula:** `estimated_LOC = (new_files × avg_size) + config + tests`
 
-### 6. Define milestones from VALIDATION
+### 7. Define milestones from VALIDATION
 
 Read the project's VALIDATION doc (top-level and per-module) and extract milestone definitions:
 
@@ -197,7 +259,7 @@ For each milestone, define:
 - What acceptance criteria must pass (from VALIDATION)
 - What can be stubbed/mocked vs must be real
 
-### 7. Map features to milestones
+### 8. Map features to milestones
 
 For each module's BEHAVIORS doc, assign each behavior to a milestone:
 
@@ -218,7 +280,7 @@ feature_mapping:
 - Beta: Behaviors that add depth, polish, edge cases
 - GA: Behaviors related to performance, monitoring, deployment
 
-### 8. Produce implementation sequence
+### 9. Produce implementation sequence
 
 Combine all analyses into an ordered build plan:
 
@@ -226,10 +288,12 @@ Combine all analyses into an ordered build plan:
 sequence_rules:
   - "Core/Hub modules first (highest connectivity)"
   - "Dependencies before dependents (DAG order)"
-  - "Within same level: highest-value milestone behaviors first"
+  - "Within same DAG level: ROI score determines order (highest ROI first)"
+  - "ROI can promote a module: if ROI=5 and dependencies can be stubbed, build alongside earlier DAG level"
   - "Group by natural session boundaries (context budget)"
   - "Flag multi-session modules with handoff strategy"
   - "Identify parallel tracks for multi-agent work"
+  - "Document ROI justification per module — not just the score, but what it unlocks and what's blocked"
 ```
 
 **Output format per module:**
@@ -240,6 +304,7 @@ sequence_rules:
   context_budget: "M"
   complexity: 3
   connectivity: 8
+  roi: 5
   estimated_loc: 1200
   estimated_sessions: 2
   depends_on: ["<modules that must be done first>"]
@@ -247,9 +312,10 @@ sequence_rules:
   compaction_strategy: "<how to handle context window limits>"
   behaviors_included: ["B1", "B3", "B5"]
   behaviors_deferred: ["B2→Alpha", "B4→Beta"]
+  roi_justification: "<what this unlocks and what's blocked without it>"
 ```
 
-### 9. Risk assessment
+### 10. Risk assessment
 
 Flag specific risks:
 
@@ -262,14 +328,14 @@ risk_categories:
   - performance_uncertainty: "Modules with real-time constraints on target hardware"
 ```
 
-### 10. Write estimation documents
+### 11. Write estimation documents
 
 Produce 4 output files in the project's docs directory:
 
-1. **ESTIMATION_Complexity_Matrix.md** — Table: module × (context, complexity, connectivity, LOC, sessions)
+1. **ESTIMATION_Complexity_Matrix.md** — Table: module × (context, complexity, connectivity, ROI, LOC, sessions) + ROI factor breakdown + physicalization roadmap
 2. **ESTIMATION_Milestone_Plan.md** — Milestone definitions with behavior mapping
-3. **ESTIMATION_Dependency_Graph.md** — ASCII DAG + critical path + parallel clusters
-4. **ESTIMATION_Implementation_Sequence.md** — Ordered build plan with session boundaries
+3. **ESTIMATION_Dependency_Graph.md** — ASCII DAG + critical path + parallel clusters + ROI-weighted build order
+4. **ESTIMATION_Implementation_Sequence.md** — Ordered build plan with session boundaries, ROI justification per module, and notes on where physicalized ROI would change the order
 
 ---
 
@@ -278,7 +344,7 @@ Produce 4 output files in the project's docs directory:
 | Protocol | When | Creates |
 |----------|------|---------|
 | `protocol:explore_space` | Step 1: module discovery | Module inventory |
-| `protocol:record_work` | Step 10: after writing docs | progress moment + handoff |
+| `protocol:record_work` | Step 11: after writing docs | progress moment + handoff |
 
 ---
 
