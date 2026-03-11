@@ -6,6 +6,7 @@ Usage:
     mind init [--database falkordb|neo4j]
     mind status
     mind upgrade
+    mind export [--target notebooklm]
     mind fix-embeddings [--dry-run]
     mind swarm --agents N
 """
@@ -14,7 +15,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .commands import init, status, upgrade, fix_embeddings, swarm
+from .commands import init, status, upgrade, fix_embeddings, swarm, export
 from .helpers.show_upgrade_notice_if_available import show_upgrade_notice
 
 
@@ -31,6 +32,11 @@ def main():
 
     p = subs.add_parser("upgrade", help="Check for updates")
     p.add_argument("--dir", "-d", type=Path, default=Path.cwd())
+
+    p = subs.add_parser("export", help="Export project for external tools")
+    p.add_argument("--dir", "-d", type=Path, default=Path.cwd())
+    p.add_argument("--target", "-t", choices=["notebooklm"], default="notebooklm",
+                   help="Export target (default: notebooklm)")
 
     p = subs.add_parser("fix-embeddings", help="Fix missing/mismatched embeddings")
     p.add_argument("--dir", "-d", type=Path, default=Path.cwd())
@@ -59,6 +65,10 @@ def main():
 
     elif args.command == "upgrade":
         ok = upgrade.run(args.dir)
+        sys.exit(0 if ok else 1)
+
+    elif args.command == "export":
+        ok = export.run(args.dir, target=args.target)
         sys.exit(0 if ok else 1)
 
     elif args.command == "fix-embeddings":
