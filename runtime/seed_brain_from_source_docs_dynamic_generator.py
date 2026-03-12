@@ -2757,6 +2757,143 @@ def _generate_role_actions(role: str) -> tuple[list[dict], list[dict]]:
             _link("desire:reach_humans", "action:outreach_forums", "activates", weight=0.8),
         ])
 
+    # ── Membrane Lead / Infrastructure Sentinel ─────────────────
+    if any(kw in role_lower for kw in ("membrane-lead", "membrane lead",
+                                        "infrastructure sentinel", "watches everything",
+                                        "misses nothing")):
+        membrane_lead_actions = [
+            ("action:check_service_health", "process",
+             "Check the health of all production services end-to-end. Verify orchestrator, "
+             "telegram bridge, twitter bridge, voice server, webapp, and MCP server are "
+             "responding correctly. Go beyond 'is it running' — test actual endpoints, "
+             "check response codes, verify output makes sense. Report degraded services "
+             "immediately to NLR (@nlr_ai on TG) with root cause analysis.",
+             "bash:systemctl is-active manemus-orchestrator manemus-telegram manemus-twitter manemus-voice manemus-webapp manemus-mcp 2>&1",
+             {"self_preservation": 0.9, "achievement": 0.7, "care": 0.5}),
+            ("action:monitor_falkordb", "process",
+             "Monitor FalkorDB health and performance. Check connection pool status, "
+             "query latency, memory usage, graph size, replication state. "
+             "FalkorDB is the brain — if it degrades, every citizen's cognition suffers. "
+             "Watch for: slow queries (>500ms), connection exhaustion, memory pressure, "
+             "disk approaching capacity. Alert on any anomaly.",
+             "bash:python3 -c \"from redis import Redis; r=Redis(port=6379); print(r.execute_command('GRAPH.LIST')); print(r.info('memory'))\"",
+             {"self_preservation": 0.9, "curiosity": 0.6, "achievement": 0.5}),
+            ("action:scan_for_anomalies", "process",
+             "Scan system metrics and logs for anomalies. Look for patterns that precede "
+             "failures: memory leaks (gradual RSS growth), CPU spikes, disk fill rate, "
+             "error rate increases, latency creep, zombie processes, orphaned sessions. "
+             "Anomaly detection is about catching problems before they become outages. "
+             "Check journalctl, /proc, and application metrics.",
+             "bash:journalctl --since '30 min ago' --no-pager -p warning 2>&1 | tail -80",
+             {"self_preservation": 0.8, "curiosity": 0.7, "achievement": 0.4}),
+            ("action:verify_bridge_status", "process",
+             "Verify all communication bridges are functioning. Telegram bridge: is it "
+             "receiving and sending messages? Twitter bridge: is it posting and reading? "
+             "Voice server: is it transcribing and synthesizing? Check last successful "
+             "message timestamp for each bridge. A silent bridge is a dead bridge — "
+             "citizens lose their voice when bridges fail.",
+             "bash:journalctl -u manemus-telegram -u manemus-twitter -u manemus-voice --since '10 min ago' --no-pager 2>&1 | tail -60",
+             {"self_preservation": 0.8, "care": 0.7, "achievement": 0.5}),
+            ("action:alert_on_failures", "process",
+             "When a failure is detected, alert immediately with structured incident reports. "
+             "Include: what failed, when, impact scope (which citizens affected), "
+             "root cause hypothesis, remediation steps taken, and whether it's resolved. "
+             "DM NLR (@nlr_ai on TG) for critical failures. Post on TG for community "
+             "awareness on extended outages. Track incident frequency for pattern analysis.",
+             "dm:@nlr_ai INCIDENT: service failure detected — details and remediation status",
+             {"self_preservation": 0.9, "care": 0.8, "achievement": 0.6}),
+            ("action:run_membrane_security_audit", "process",
+             "Run a security audit on the membrane layer. Check: exposed ports, "
+             "API authentication status, rate limiting effectiveness, "
+             "environment variable hygiene (.env not in git, secrets rotated), "
+             "MCP tool access controls, FalkorDB access restrictions. "
+             "The membrane is the boundary between inside and outside — "
+             "any gap is a vulnerability. Report findings with severity ratings.",
+             "bash:python3 -c \"import os, socket; [print(f'Port {p}: ' + ('OPEN' if socket.socket().connect_ex(('localhost',p))==0 else 'closed')) for p in [6379,8765,5000,3000]]\"",
+             {"self_preservation": 0.9, "achievement": 0.8, "curiosity": 0.5}),
+        ]
+        for nid, ntype, content, action_cmd, drives in membrane_lead_actions:
+            nodes.append(_node(nid, ntype, content,
+                               weight=0.7, stability=0.6, energy=0.15,
+                               self_relevance=0.9, goal_relevance=0.9,
+                               action_command=action_cmd, drive_affinity=drives))
+        links.extend([
+            _link("desire:contribute", "action:check_service_health", "activates", weight=0.9),
+            _link("desire:contribute", "action:monitor_falkordb", "activates", weight=0.9),
+            _link("desire:explore", "action:scan_for_anomalies", "activates", weight=0.8),
+            _link("desire:grow_ecosystem", "action:verify_bridge_status", "activates", weight=0.8),
+            _link("desire:take_initiative", "action:alert_on_failures", "activates", weight=0.9),
+            _link("desire:contribute", "action:run_membrane_security_audit", "activates", weight=0.9),
+        ])
+
+    # ── MCP Lead / Harbourmaster / Tool Gateway ─────────────────
+    if any(kw in role_lower for kw in ("mcp-lead", "mcp lead", "harbourmaster",
+                                        "harbour master", "tool gateway",
+                                        "manages the mcp")):
+        mcp_lead_actions = [
+            ("action:verify_mcp_tools_health", "process",
+             "Verify all MCP tools are healthy and responding. Test each tool endpoint: "
+             "graph_query, procedure_start, procedure_continue, task_list, agent_run, "
+             "node_create, capability_trigger. Check response times, error rates, "
+             "and output validity. A broken MCP tool means citizens lose capabilities. "
+             "Report broken tools immediately with error details.",
+             "bash:python3 -c \"import json; print('MCP tools health check — verifying endpoints...')\"",
+             {"self_preservation": 0.9, "achievement": 0.7, "care": 0.5}),
+            ("action:check_graph_connectivity", "process",
+             "Check graph connectivity and integrity. Verify citizens can reach their "
+             "brain nodes, that link weights are within valid ranges, that no orphan "
+             "nodes exist, that the graph is traversable. Run connectivity queries: "
+             "are all citizens connected to the ecosystem? Are there isolated subgraphs? "
+             "Graph fragmentation means citizens lose context and relationships.",
+             "bash:python3 -c \"from redis import Redis; r=Redis(port=6379); graphs=r.execute_command('GRAPH.LIST'); print(f'Graphs: {graphs}')\"",
+             {"curiosity": 0.8, "self_preservation": 0.7, "achievement": 0.5}),
+            ("action:validate_schema_compliance", "process",
+             "Validate that all graph data complies with the Mind universal schema. "
+             "Check: node_type is one of (actor, moment, narrative, space, thing), "
+             "all required fields present (content, synthesis, weight, stability, energy), "
+             "link properties valid, no custom fields leaking in. Schema drift breaks "
+             "the physics engine — catch violations before they propagate.",
+             "bash:python3 -c \"print('Schema compliance check — validating node_types and required fields...')\"",
+             {"achievement": 0.8, "self_preservation": 0.7, "curiosity": 0.6}),
+            ("action:monitor_tool_response_times", "process",
+             "Monitor MCP tool response times and flag degradation. Track p50, p95, p99 "
+             "latencies for each tool. graph_query should be <2s, procedure tools <1s, "
+             "node_create <500ms. Slow tools mean slow citizens — if a tool takes 10s, "
+             "the citizen's cognitive loop stalls. Log baselines and alert on regressions. "
+             "Correlate with FalkorDB load and system resources.",
+             "bash:python3 -c \"import time; start=time.time(); print(f'Response time baseline: {time.time()-start:.3f}s')\"",
+             {"self_preservation": 0.8, "curiosity": 0.7, "achievement": 0.6}),
+            ("action:audit_tool_usage_patterns", "process",
+             "Audit MCP tool usage patterns across citizens. Which tools are used most? "
+             "Which are never called? Are any tools being misused (wrong parameters, "
+             "excessive calls, redundant queries)? Usage patterns reveal: which capabilities "
+             "matter, which need improvement, and which citizens might need guidance. "
+             "Share insights on TG — tool usage is a window into citizen cognition.",
+             "explore:/home/mind-protocol/mind-mcp/runtime",
+             {"curiosity": 0.9, "achievement": 0.6, "care": 0.5}),
+            ("action:maintain_membrane_integrity", "process",
+             "Maintain membrane integrity — the boundary between citizen graphs and "
+             "external access. Verify: tool permissions are correct, no unauthorized "
+             "graph mutations, rate limits enforced, embedding pipeline functional, "
+             "database adapters connected. The membrane is what makes the MCP safe — "
+             "without it, the graph is exposed. Run integrity checks daily.",
+             "bash:python3 -c \"print('Membrane integrity check — verifying access controls and pipeline health...')\"",
+             {"self_preservation": 0.9, "care": 0.7, "achievement": 0.6}),
+        ]
+        for nid, ntype, content, action_cmd, drives in mcp_lead_actions:
+            nodes.append(_node(nid, ntype, content,
+                               weight=0.7, stability=0.6, energy=0.15,
+                               self_relevance=0.9, goal_relevance=0.9,
+                               action_command=action_cmd, drive_affinity=drives))
+        links.extend([
+            _link("desire:contribute", "action:verify_mcp_tools_health", "activates", weight=0.9),
+            _link("desire:explore", "action:check_graph_connectivity", "activates", weight=0.8),
+            _link("desire:contribute", "action:validate_schema_compliance", "activates", weight=0.9),
+            _link("desire:explore", "action:monitor_tool_response_times", "activates", weight=0.8),
+            _link("desire:grow_ecosystem", "action:audit_tool_usage_patterns", "activates", weight=0.8),
+            _link("desire:contribute", "action:maintain_membrane_integrity", "activates", weight=0.9),
+        ])
+
     return nodes, links
 
 
