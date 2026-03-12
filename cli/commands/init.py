@@ -15,7 +15,6 @@ from ..helpers.create_mcp_config_json import create_mcp_config
 from ..helpers.update_gitignore_with_runtime_entry import update_gitignore
 from ..helpers.ingest_repo_files_to_graph import ingest_repo_files
 from ..helpers.ingest_capabilities_to_graph import ingest_capabilities
-from ..helpers.inject_agents_to_graph import inject_agents
 from ..helpers.generate_repo_overview_maps import generate_overview
 from ..helpers.generate_embeddings_for_graph_nodes import generate_embeddings
 from ..helpers.get_mcp_version_from_config import get_mcp_version
@@ -79,37 +78,32 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     ingest_capabilities(target_dir, graph_name)
     steps.append("capabilities_graph")
 
-    # 10. Agent injection (creates 10 work agents)
-    print("\n## Agents")
-    inject_agents(target_dir, graph_name)
-    steps.append("agents")
-
-    # 11. Env example
+    # 10. Env example
     print("\n## Environment")
     create_env_example(target_dir, database)
     steps.append("env_example")
 
-    # 12. MCP config
+    # 11. MCP config
     print("\n## MCP Server")
     create_mcp_config(target_dir)
     steps.append("mcp_config")
 
-    # 13. Gitignore
+    # 12. Gitignore
     print("\n## Gitignore")
     update_gitignore(target_dir)
     steps.append("gitignore")
 
-    # 14. Overview (generates map.md files)
+    # 13. Overview (generates map.md files)
     print("\n## Overview")
     generate_overview(target_dir)
     steps.append("overview")
 
-    # 15. Embeddings (with progress bar)
+    # 14. Embeddings (with progress bar)
     print("\n## Embeddings")
     generate_embeddings(graph_name)
     steps.append("embeddings")
 
-    # 16. Health checks - fire init.after_scan to detect issues and create tasks
+    # 15. Health checks - fire init.after_scan to detect issues and create tasks
     print("\n## Health Checks")
     try:
         from runtime.capability_integration import CapabilityManager

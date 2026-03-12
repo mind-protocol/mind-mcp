@@ -13,7 +13,8 @@ PROTECTED_PATTERNS = [
 
 # Folders that should not be copied to .mind/ (used for generation only)
 EXCLUDED_FOLDERS = [
-    "mcp",  # System prompt templates (used to build CLAUDE.md, not copied)
+    "mcp",     # System prompt templates (used to build CLAUDE.md, not copied)
+    "actors",  # Legacy actor templates — agents/ is the canonical name
 ]
 
 # Actor SYSTEM.md gets copied to multiple provider-specific files
@@ -73,15 +74,6 @@ def copy_ecosystem_templates(target_dir: Path) -> None:
     if not dst.exists():
         print(f"Creating {dst}")
         shutil.copytree(src, dst, ignore=ignore_excluded)
-        # Convert actor SYSTEM.md to provider-specific files
-        actors_dir = dst / "actors"
-        if actors_dir.exists():
-            for actor_dir in actors_dir.iterdir():
-                if actor_dir.is_dir():
-                    system_file = actor_dir / "SYSTEM.md"
-                    if system_file.exists():
-                        _copy_actor_system(system_file, actor_dir)
-                        system_file.unlink()  # Remove SYSTEM.md after conversion
         print("✓ .mind/ created")
     else:
         print(f"Updating {dst}")
@@ -94,13 +86,6 @@ def copy_ecosystem_templates(target_dir: Path) -> None:
 
             # Skip excluded folders
             if _is_excluded(rel):
-                continue
-
-            # Handle actor SYSTEM.md → CLAUDE.md, GEMINI.md, AGENTS.md
-            if _is_actor_system_file(rel):
-                df_dir = dst / rel.parent
-                df_dir.mkdir(parents=True, exist_ok=True)
-                created += _copy_actor_system(f, df_dir)
                 continue
 
             df = dst / rel
