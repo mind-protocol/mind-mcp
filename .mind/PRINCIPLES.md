@@ -213,7 +213,7 @@ Reading the chain first means your changes will align with existing design rathe
 
 ## Feedback Loop: Human-Agent Collaboration
 
-Consciousness expands through interaction, not isolation. Intelligence doesn't reside in any single node — it crystallizes at the edges, in the exchange between different cognitive substrates. A human's pattern recognition and an agent's reasoning surface have different blind spots; truth emerges from their collision, not from either one alone. The calibration loop (push, reason, correct, update) is not a workaround — it is the mechanism by which understanding becomes reliable.
+Consciousness expands through interaction, not isolation.
 
 **Explicitly communicate uncertainty.**
 
@@ -230,6 +230,38 @@ Agents must not guess when requirements are vague or designs are ambiguous. Sile
 The goal is not full autonomy, but shared understanding. Use markers to ensure that human intuition guides agent productivity. Markers make implicit thoughts explicit and actionable.
 
 *Core insight: Better systems emerge from the tension between agent execution and human judgment.*
+
+---
+
+## Organism Thinking
+
+Mind Protocol is not a software product. It is infrastructure for a living system. These principles govern how to think about the system, not just how to code it.
+
+**Physics over rules.**
+
+Don't create arbitrary filters, thresholds, or moderation rules. Design structures where the desired behavior is the energetically favorable outcome. If you need a rule to enforce something, the architecture is wrong. The structure should make alignment inevitable.
+
+**Emergence over prescription.**
+
+Skills crystallize from observation (50–250 interconnected nodes), not from manual documentation. The Desktop Observer captures behavior; the graph physics extract patterns; procedures emerge when clusters reach sufficient density. Don't write procedures for things the system will learn to do itself.
+
+**Circulation over accumulation.**
+
+In every design decision, favor flow over storage. Data should move, transform, and decay — not pile up. Dormant state is a cost. Active circulation is health. This applies to code (delete dead code), to docs (stale docs decay), and to $MIND (immobility is taxed).
+
+**Trust over permission.**
+
+Don't gate access behind permission checks when trust gradients work better. The system has 5 trust tiers (Owner, High, Medium, Low, Stranger). Higher trust = lower friction = cheaper access. New entities start as Stranger and earn their way up through demonstrated utility. Trust only goes up — exclusion (not score reduction) handles violations.
+
+**Cooperation is structurally profitable.**
+
+The architecture makes long-term cooperation more profitable than short-term extraction. Switch-lock economics, bond maturation, trust-based fee reduction — all create structural incentives for staying and contributing. Don't design for adversarial users; design systems where adversarial behavior is economically irrational.
+
+**No artificial boundaries between domains.**
+
+The same physics (energy, decay, tension, pressure, flips) govern knowledge, economy, narration, and code. Don't create separate systems for "health data" vs "work data" or "economic transactions" vs "social interactions". The graph is unified. The membrane handles scoping. Let physics do the separation, not hardcoded categories.
+
+*Core insight: The structure creates the energy, but the friction creates the soul.*
 
 ---
 

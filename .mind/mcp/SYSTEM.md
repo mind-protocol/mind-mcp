@@ -51,6 +51,21 @@ Templates come from `mind-platform/templates/` via `mind init`.
 
 ---
 
+## Graph Invariants
+
+These are absolute. No agent may violate them:
+
+- **5 node types only**: Actor, Moment, Narrative, Space, Thing. No new types.
+- **Append-only memory**: Never delete, never rollback. Errors decay naturally.
+- **Physics over rules**: Don't create artificial filters. Design structures where desired behavior is energetically favorable.
+- **Friction is vital**: 80/20 Mirror ratio. Never optimize for pure consensus.
+- **Trust > $MIND**: Trust is monotonic (only goes up). $MIND is metabolic energy, not capital. Accumulation is taxed.
+- **Intention attracts**: No search function. Membrane routes by structural alignment.
+- **Existence is guaranteed**: UBC is unconditional. Never condition survival on performance.
+- **Cooperation is structurally profitable**: Long-term contribution is always more rational than extraction.
+
+---
+
 ## MCP Tools
 
 Use the Mind MCP server for:

@@ -58,6 +58,8 @@ from runtime.agents import (
     get_learnings_content,
     normalize_agent_id,
 )
+from mcp.tools.gemini_chat import TOOL_SCHEMA as GEMINI_TOOL_SCHEMA, handle_gemini_chat
+from mcp.tools.telegram_notify import TOOL_SCHEMA as TELEGRAM_NOTIFY_SCHEMA, handle_telegram_notify
 from runtime.capability_integration import (
     init_capability_manager,
     get_capability_manager,
@@ -563,7 +565,9 @@ class MindServer:
                             }
                         }
                     }
-                }
+                },
+                GEMINI_TOOL_SCHEMA,
+                TELEGRAM_NOTIFY_SCHEMA,
             ]
         }
 
@@ -610,6 +614,10 @@ class MindServer:
             return self._tool_task_fail(arguments)
         elif tool_name == "agent_heartbeat":
             return self._tool_agent_heartbeat(arguments)
+        elif tool_name == "gemini_chat":
+            return handle_gemini_chat(arguments)
+        elif tool_name == "telegram_notify":
+            return handle_telegram_notify(arguments)
         else:
             raise ValueError(f"Unknown tool: {tool_name}")
 

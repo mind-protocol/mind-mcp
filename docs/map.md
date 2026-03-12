@@ -654,7 +654,7 @@
 ├── .mindignore (839)
 ├── AGENTS.md (34.4K)
 ├── README.md (3.3K)
-└── map.md (297.1K)
+└── map.md (297.4K)
 ```
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`

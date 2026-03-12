@@ -111,7 +111,6 @@ def get_watched_log_paths() -> list:
         "logs/**/*.log",
         "*.log",
         "log/*.log",
-        ".mind/swarm/**/*.log",  # Swarm agent logs
     ]
 
     paths = []
