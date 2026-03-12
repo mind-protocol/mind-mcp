@@ -129,7 +129,7 @@ def get_database_adapter(
     # Determine graph name
     if graph_name is None:
         if backend == "falkordb":
-            graph_name = config["database"]["falkordb"].get("graph_name", "blood_ledger")
+            graph_name = config["database"]["falkordb"].get("graph_name") or "mind_project"
         else:
             graph_name = config["database"]["neo4j"].get("database", "neo4j")
 

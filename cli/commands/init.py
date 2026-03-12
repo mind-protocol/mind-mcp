@@ -24,7 +24,7 @@ from ..helpers.save_version_hash import save_version_hash
 
 def run(target_dir: Path, database: str = "falkordb") -> bool:
     """Initialize .mind/ in target directory."""
-    graph_name = target_dir.name.lower().replace("-", "_").replace(" ", "_")
+    graph_name = target_dir.resolve().name.lower().replace("-", "_").replace(" ", "_")
     version = get_mcp_version()
     steps = []
 
