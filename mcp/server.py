@@ -54,6 +54,7 @@ from mcp.tools.think_handler import TOOL_SCHEMA as THINK_SCHEMA, handle_think
 from mcp.tools.send_handler import TOOL_SCHEMA as SEND_SCHEMA, handle_send
 from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
 from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
+from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
 
 logging.basicConfig(
     level=logging.INFO,
@@ -77,6 +78,8 @@ TOOL_SCHEMAS = [
     MEDIA_SCHEMA,
     # ACT (citizen autonomy)
     ALARM_SCHEMA,
+    # ACT (living places)
+    PLACE_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -91,6 +94,7 @@ TOOL_DISPATCH = {
     "send":        (handle_send,        False),
     "media":       (handle_media,       False),
     "alarm":       (handle_alarm,       False),
+    "place":       (handle_place,       True),
 }
 
 
