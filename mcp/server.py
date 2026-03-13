@@ -1,43 +1,31 @@
 #!/usr/bin/env python3
 """
-Mind MCP Server
+Mind MCP Server — Membrane Dispatcher
 
-Exposes the mind graph system as MCP tools for AI agents.
+Exposes the mind graph system as 9 MCP tools organized by THINK / ACT / SPEAK.
 
-Tools:
-  - procedure_start: Start a structured dialogue session
-  - procedure_continue: Continue with an answer
-  - procedure_abort: Abort a session
-  - procedure_list: List available procedures
-  - agent_list: List work agents
-  - agent_run: Run a work agent
-  - agent_status: Get/set agent status
-  - task_list: List available tasks
-  - graph_query: Query the graph in natural language
+THINK (knowledge & reasoning):
+  1. graph_query   — semantic search across the knowledge graph
+  2. graph_write   — create nodes and links in the graph
+  3. procedure     — structured dialogues (list/start/continue/abort)
+
+ACT (work & coordination):
+  4. task          — manage tasks (list/claim/complete/fail)
+  5. agent         — manage work agents (list/run/status)
+  6. think         — consult another LLM (Gemini)
+
+SPEAK (outward communication):
+  7. send          — send message to any platform (telegram, ...)
 
 Usage:
-  Run as MCP server (stdio):
-    python tools/mcp/mind_server.py
-
-  Configure in Claude Code settings:
-    {
-      "mcpServers": {
-        "mind": {
-          "command": "python",
-          "args": ["tools/mcp/mind_server.py"],
-          "cwd": "/path/to/mind"
-        }
-      }
-    }
+  python mcp/server.py
 """
 
-import asyncio
 import sys
 import json
 import logging
-import random
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -48,49 +36,68 @@ from dotenv import load_dotenv
 load_dotenv(project_root / ".env")
 
 from runtime.connectome import ConnectomeRunner
-from runtime.agents import (
-    AgentGraph,
-    NAME_TO_AGENT_ID,
-    DEFAULT_NAME,
-    run_work_agent,
-    run_for_task,
-    build_agent_prompt,
-    get_learnings_content,
-    normalize_agent_id,
-)
-from mcp.tools.gemini_chat import TOOL_SCHEMA as GEMINI_TOOL_SCHEMA, handle_gemini_chat
-from mcp.tools.telegram_notify import TOOL_SCHEMA as TELEGRAM_NOTIFY_SCHEMA, handle_telegram_notify
+from runtime.agents import AgentGraph
 from runtime.capability_integration import (
     init_capability_manager,
-    get_capability_manager,
     CapabilityManager,
     CAPABILITY_RUNTIME_AVAILABLE,
-    get_throttler,
-    get_agent_registry,
-    claim_task,
-    complete_task,
-    fail_task,
-    update_actor_heartbeat,
-    set_actor_working,
-    set_actor_idle,
 )
+
+# Import tool schemas and handlers
+from mcp.tools.context import ServerContext
+from mcp.tools.graph_query_handler import TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, handle_graph_query
+from mcp.tools.graph_write_handler import TOOL_SCHEMA as GRAPH_WRITE_SCHEMA, handle_graph_write
+from mcp.tools.procedure_handler import TOOL_SCHEMA as PROCEDURE_SCHEMA, handle_procedure
+from mcp.tools.task_handler import TOOL_SCHEMA as TASK_SCHEMA, handle_task
+from mcp.tools.agent_handler import TOOL_SCHEMA as AGENT_SCHEMA, handle_agent
+from mcp.tools.think_handler import TOOL_SCHEMA as THINK_SCHEMA, handle_think
+from mcp.tools.send_handler import TOOL_SCHEMA as SEND_SCHEMA, handle_send
+from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
+from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stderr
+    stream=sys.stderr,
 )
 logger = logging.getLogger("mind")
 
-# =============================================================================
-# MCP PROTOCOL IMPLEMENTATION
-# =============================================================================
+# All tool schemas in presentation order
+TOOL_SCHEMAS = [
+    # THINK
+    GRAPH_QUERY_SCHEMA,
+    GRAPH_WRITE_SCHEMA,
+    PROCEDURE_SCHEMA,
+    # ACT
+    TASK_SCHEMA,
+    AGENT_SCHEMA,
+    THINK_SCHEMA,
+    # SPEAK
+    SEND_SCHEMA,
+    MEDIA_SCHEMA,
+    # ACT (citizen autonomy)
+    ALARM_SCHEMA,
+]
+
+# Tool name → (handler_fn, needs_ctx)
+# handlers that need ServerContext get it; stateless ones (think, send) don't
+TOOL_DISPATCH = {
+    "graph_query": (handle_graph_query, True),
+    "graph_write": (handle_graph_write, True),
+    "procedure":   (handle_procedure,   True),
+    "task":        (handle_task,        True),
+    "agent":       (handle_agent,       True),
+    "think":       (handle_think,       False),
+    "send":        (handle_send,        False),
+    "media":       (handle_media,       False),
+    "alarm":       (handle_alarm,       False),
+}
+
 
 class MindServer:
     """MCP Server for mind graph tools."""
 
     def __init__(self, connectomes_dir: Optional[Path] = None):
-        """Initialize server with optional connectomes directory."""
         self.connectomes_dir = connectomes_dir or (project_root / "procedures")
         self.target_dir = project_root
 
@@ -102,19 +109,18 @@ class MindServer:
         except Exception as e:
             logger.debug(f"Upgrade check skipped: {e}")
 
-        # Try to get graph connections if available
+        # Graph connections
+        self.graph_ops = None
+        self.graph_queries = None
         try:
             from runtime.physics.graph import GraphOps, GraphQueries
-            # Don't pass graph_name - let the adapter use config
             self.graph_ops = GraphOps()
             self.graph_queries = GraphQueries()
             logger.info("Connected to graph database")
         except Exception as e:
             logger.warning(f"No graph connection: {e}")
-            self.graph_ops = None
-            self.graph_queries = None
 
-        # Try to connect to membrane graph
+        # Membrane graph
         try:
             from runtime.membrane import get_membrane_queries
             self.membrane_queries = get_membrane_queries()
@@ -124,16 +130,16 @@ class MindServer:
             logger.warning(f"No membrane connection: {e}")
             self.membrane_queries = None
 
-        # Initialize agent graph for work agent management
+        # Agent graph
         try:
             self.agent_graph = AgentGraph()
             self.agent_graph.ensure_agents_exist()
             logger.info("Agent graph initialized")
         except Exception as e:
             logger.warning(f"No agent graph: {e}")
-            self.agent_graph = AgentGraph()  # Fallback mode
+            self.agent_graph = AgentGraph()
 
-        # Initialize capability manager
+        # Capability manager (internal — not exposed as tools)
         self.capability_manager: Optional[CapabilityManager] = None
         if CAPABILITY_RUNTIME_AVAILABLE:
             try:
@@ -143,20 +149,16 @@ class MindServer:
                 )
                 cap_summary = self.capability_manager.initialize()
                 logger.info(f"Capabilities: {cap_summary}")
-
-                # Start cron scheduler
                 self.capability_manager.start_cron_scheduler()
-
-                # Fire startup trigger
                 startup_result = self.capability_manager.fire_trigger(
-                    "init.startup", {}, create_tasks=True
+                    "init.startup", {}, create_tasks=True,
                 )
                 logger.info(f"Startup trigger: {startup_result}")
             except Exception as e:
                 logger.warning(f"Capability system failed: {e}")
                 self.capability_manager = None
 
-        # Auto-assign pending tasks on startup
+        # Auto-assign pending tasks
         try:
             from runtime.task_assignment import startup_assign
             assigned, skipped = startup_assign(self.target_dir)
@@ -165,10 +167,22 @@ class MindServer:
         except Exception as e:
             logger.debug(f"Task assignment skipped: {e}")
 
+        # Connectome runner (for procedures)
         self.runner = ConnectomeRunner(
             graph_ops=self.graph_ops,
             graph_queries=self.graph_queries,
-            connectomes_dir=self.connectomes_dir
+            connectomes_dir=self.connectomes_dir,
+        )
+
+        # Build shared context for handlers
+        self.ctx = ServerContext(
+            graph_ops=self.graph_ops,
+            graph_queries=self.graph_queries,
+            agent_graph=self.agent_graph,
+            runner=self.runner,
+            target_dir=self.target_dir,
+            capability_manager=self.capability_manager,
+            connectomes_dir=self.connectomes_dir,
         )
 
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
@@ -193,1746 +207,42 @@ class MindServer:
             return self._error_response(request_id, -32000, str(e))
 
     def _handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle initialize request."""
         return {
             "protocolVersion": "2024-11-05",
-            "capabilities": {
-                "tools": {}
-            },
-            "serverInfo": {
-                "name": "mind",
-                "version": "0.1.0"
-            }
+            "capabilities": {"tools": {}},
+            "serverInfo": {"name": "mind", "version": "0.2.0"},
         }
 
     def _handle_list_tools(self) -> Dict[str, Any]:
-        """Return list of available tools."""
-        return {
-            "tools": [
-                {
-                    "name": "procedure_start",
-                    "description": "Start a new procedure dialogue session. Returns the first step.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "procedure": {
-                                "type": "string",
-                                "description": "Name of the procedure to run (e.g., 'create_validation', 'document_progress')"
-                            },
-                            "context": {
-                                "type": "object",
-                                "description": "Optional initial context values (e.g., {\"actor_id\": \"actor_claude\"})"
-                            }
-                        },
-                        "required": ["procedure"]
-                    }
-                },
-                {
-                    "name": "procedure_continue",
-                    "description": "Continue a procedure session with an answer to the current step.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "session_id": {
-                                "type": "string",
-                                "description": "Session ID from procedure_start"
-                            },
-                            "answer": {
-                                "description": "Answer for the current step. Type depends on what the step expects."
-                            }
-                        },
-                        "required": ["session_id", "answer"]
-                    }
-                },
-                {
-                    "name": "procedure_abort",
-                    "description": "Abort a procedure session. No changes will be committed.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "session_id": {
-                                "type": "string",
-                                "description": "Session ID to abort"
-                            }
-                        },
-                        "required": ["session_id"]
-                    }
-                },
-                {
-                    "name": "procedure_list",
-                    "description": "List available procedure definitions.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                },
-                {
-                    "name": "ACTOR_list",
-                    "description": "List all work agents and their status (ready/running).",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                },
-                {
-                    "name": "task_list",
-                    "description": "List available tasks grouped by objective. Shows pending tasks agents can work on.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "module": {
-                                "type": "string",
-                                "description": "Filter by module name"
-                            },
-                            "objective": {
-                                "type": "string",
-                                "description": "Filter by objective type (documented, synced, maintainable, etc.)"
-                            },
-                            "limit": {
-                                "type": "integer",
-                                "description": "Max tasks to return (default: 20)"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "AGENT_run",
-                    "description": "Run a work agent to fix a problem OR work on a task (narrative node).",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "task_id": {
-                                "type": "string",
-                                "description": "Narrative node ID for the task (e.g., 'task_fix_physics_sync'). If provided, task_type/path are ignored."
-                            },
-                            "task_type": {
-                                "type": "string",
-                                "description": "Problem type (e.g., STALE_SYNC, UNDOCUMENTED). Used if task_id not provided."
-                            },
-                            "path": {
-                                "type": "string",
-                                "description": "Path of the problem to fix. Used if task_id not provided."
-                            },
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Optional: specific agent to use (e.g., agent_witness). Auto-selected if not provided."
-                            },
-                            "provider": {
-                                "type": "string",
-                                "enum": ["claude", "gemini", "codex"],
-                                "description": "LLM provider to use (default: claude)"
-                            }
-                        }
-                    }
-                },
-                {
-                    "name": "agent_status",
-                    "description": "Get or set the status of a specific agent.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Agent ID (e.g., agent_witness)"
-                            },
-                            "set_status": {
-                                "type": "string",
-                                "enum": ["ready", "running"],
-                                "description": "Optional: set the agent status"
-                            }
-                        },
-                        "required": ["actor_id"]
-                    }
-                },
-                {
-                    "name": "graph_query",
-                    "description": "Query the graph using natural language. Supports multiple queries at once. Uses SubEntity traversal to find relevant nodes and their connections.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "queries": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "One or more natural language queries (e.g., ['Who is Edmund?', 'What oaths exist?'])"
-                            },
-                            "intent": {
-                                "type": "string",
-                                "description": "WHY you're searching - affects traversal strategy (e.g., 'find contradictions', 'summarize events', 'verify claims')"
-                            },
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Actor performing the query (for context, default: actor_claude)"
-                            },
-                            "debug": {
-                                "type": "boolean",
-                                "description": "Enable debug mode with traversal logs (default: false)"
-                            },
-                            "timeout": {
-                                "type": "number",
-                                "description": "Query timeout in seconds (default: 30)"
-                            }
-                        },
-                        "required": ["queries"]
-                    }
-                },
-                {
-                    "name": "node_create",
-                    "description": "Create a new node in the graph. Supports narrative nodes (thoughts, facts, tasks) and actor nodes (agents, characters). Returns the created node ID.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "id": {
-                                "type": "string",
-                                "description": "Unique node ID. Auto-generated if not provided."
-                            },
-                            "node_type": {
-                                "type": "string",
-                                "enum": ["narrative", "actor"],
-                                "description": "Type of node: 'narrative' for thoughts/facts/tasks, 'actor' for agents/characters"
-                            },
-                            "type": {
-                                "type": "string",
-                                "description": "Subtype (e.g., 'task_run', 'fact', 'thought', 'agent', 'character')"
-                            },
-                            "name": {
-                                "type": "string",
-                                "description": "Display name for the node"
-                            },
-                            "content": {
-                                "type": "string",
-                                "description": "Full content/description of the node"
-                            },
-                            "synthesis": {
-                                "type": "string",
-                                "description": "Short summary (used for embedding). Auto-generated from content if not provided."
-                            },
-                            "weight": {
-                                "type": "number",
-                                "description": "Importance weight (default: 1.0)"
-                            },
-                            "energy": {
-                                "type": "number",
-                                "description": "Activity energy (default: 1.0)"
-                            },
-                            "link_to": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "description": "Node IDs to link this node to"
-                            }
-                        },
-                        "required": ["node_type"]
-                    }
-                },
-                {
-                    "name": "capability_status",
-                    "description": "Get status of the capability system: loaded capabilities, registered triggers, throttler state.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                },
-                {
-                    "name": "capability_trigger",
-                    "description": "Fire a trigger manually. Used for testing or manual health checks.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "trigger_type": {
-                                "type": "string",
-                                "description": "Type of trigger (e.g., 'init.startup', 'file.on_modify', 'cron.hourly')"
-                            },
-                            "file_path": {
-                                "type": "string",
-                                "description": "Optional file path for file triggers"
-                            },
-                            "create_tasks": {
-                                "type": "boolean",
-                                "description": "Whether to create task_run nodes for non-healthy signals (default: true)"
-                            }
-                        },
-                        "required": ["trigger_type"]
-                    }
-                },
-                {
-                    "name": "capability_list",
-                    "description": "List all loaded capabilities with their health checks.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {}
-                    }
-                },
-                {
-                    "name": "file_watcher",
-                    "description": "Start or stop the file watcher for automatic file.on_* triggers.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "action": {
-                                "type": "string",
-                                "enum": ["start", "stop", "status"],
-                                "description": "Action to perform"
-                            }
-                        },
-                        "required": ["action"]
-                    }
-                },
-                {
-                    "name": "git_trigger",
-                    "description": "Fire a git trigger (post_commit or pre_commit).",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "trigger": {
-                                "type": "string",
-                                "enum": ["post_commit", "pre_commit"],
-                                "description": "Which git trigger to fire"
-                            }
-                        },
-                        "required": ["trigger"]
-                    }
-                },
-                {
-                    "name": "task_claim",
-                    "description": "Atomically claim a pending task for an agent. Returns success/failure.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "task_id": {
-                                "type": "string",
-                                "description": "The task_run node ID to claim"
-                            },
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Actor claiming (witness, AGENT_Witness, etc). Defaults to best HUMAN."
-                            }
-                        },
-                        "required": ["task_id"]
-                    }
-                },
-                {
-                    "name": "task_complete",
-                    "description": "Mark a task as completed. Updates graph and releases throttler slot.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "task_id": {
-                                "type": "string",
-                                "description": "The task_run node ID to complete"
-                            },
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Actor completing (witness, AGENT_Witness, etc). Defaults to best HUMAN."
-                            }
-                        },
-                        "required": ["task_id"]
-                    }
-                },
-                {
-                    "name": "task_fail",
-                    "description": "Mark a task as failed with a reason. Updates graph and releases throttler slot.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "task_id": {
-                                "type": "string",
-                                "description": "The task_run node ID that failed"
-                            },
-                            "reason": {
-                                "type": "string",
-                                "description": "Why the task failed"
-                            },
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Actor reporting failure (witness, AGENT_Witness, etc). Defaults to best HUMAN."
-                            }
-                        },
-                        "required": ["task_id", "reason"]
-                    }
-                },
-                {
-                    "name": "agent_heartbeat",
-                    "description": "Update agent heartbeat. Call every 60s while working on a task.",
-                    "inputSchema": {
-                        "type": "object",
-                        "properties": {
-                            "actor_id": {
-                                "type": "string",
-                                "description": "Actor sending heartbeat (witness, AGENT_Witness, etc). Defaults to best HUMAN."
-                            },
-                            "step": {
-                                "type": "integer",
-                                "description": "Optional: current step number in task"
-                            }
-                        }
-                    }
-                },
-                GEMINI_TOOL_SCHEMA,
-                TELEGRAM_NOTIFY_SCHEMA,
-            ]
-        }
+        return {"tools": TOOL_SCHEMAS}
 
     def _handle_call_tool(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle a tool call."""
+        """Dispatch tool call to the appropriate handler."""
         tool_name = params.get("name", "")
         arguments = params.get("arguments", {})
 
-        if tool_name == "procedure_start":
-            return self._tool_start(arguments)
-        elif tool_name == "procedure_continue":
-            return self._tool_continue(arguments)
-        elif tool_name == "procedure_abort":
-            return self._tool_abort(arguments)
-        elif tool_name == "procedure_list":
-            return self._tool_list(arguments)
-        elif tool_name == "ACTOR_list":
-            return self._tool_agent_list(arguments)
-        elif tool_name == "task_list":
-            return self._tool_task_list(arguments)
-        elif tool_name == "AGENT_run":
-            return self._tool_agent_run(arguments)
-        elif tool_name == "agent_status":
-            return self._tool_agent_status(arguments)
-        elif tool_name == "graph_query":
-            return self._tool_graph_query(arguments)
-        elif tool_name == "node_create":
-            return self._tool_node_create(arguments)
-        elif tool_name == "capability_status":
-            return self._tool_capability_status(arguments)
-        elif tool_name == "capability_trigger":
-            return self._tool_capability_trigger(arguments)
-        elif tool_name == "capability_list":
-            return self._tool_capability_list(arguments)
-        elif tool_name == "file_watcher":
-            return self._tool_file_watcher(arguments)
-        elif tool_name == "git_trigger":
-            return self._tool_git_trigger(arguments)
-        elif tool_name == "task_claim":
-            return self._tool_task_claim(arguments)
-        elif tool_name == "task_complete":
-            return self._tool_task_complete(arguments)
-        elif tool_name == "task_fail":
-            return self._tool_task_fail(arguments)
-        elif tool_name == "agent_heartbeat":
-            return self._tool_agent_heartbeat(arguments)
-        elif tool_name == "gemini_chat":
-            return handle_gemini_chat(arguments)
-        elif tool_name == "telegram_notify":
-            return handle_telegram_notify(arguments)
-        else:
+        entry = TOOL_DISPATCH.get(tool_name)
+        if not entry:
             raise ValueError(f"Unknown tool: {tool_name}")
 
-    def _tool_start(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Start a procedure session."""
-        procedure_name = args.get("procedure")
-        context = args.get("context", {})
-
-        if not procedure_name:
-            return {"content": [{"type": "text", "text": "Error: 'procedure' is required"}]}
-
-        response = self.runner.start(procedure_name, initial_context=context)
-        return self._format_response(response)
-
-    def _tool_continue(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Continue a procedure session."""
-        session_id = args.get("session_id")
-        answer = args.get("answer")
-
-        if not session_id:
-            return {"content": [{"type": "text", "text": "Error: 'session_id' is required"}]}
-
-        response = self.runner.continue_session(session_id, answer)
-        return self._format_response(response)
-
-    def _tool_abort(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Abort a procedure session."""
-        session_id = args.get("session_id")
-
-        if not session_id:
-            return {"content": [{"type": "text", "text": "Error: 'session_id' is required"}]}
-
-        response = self.runner.abort(session_id)
-        return self._format_response(response)
-
-    def _tool_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List available procedures."""
-        procedures = []
-        if self.connectomes_dir and self.connectomes_dir.exists():
-            for path in self.connectomes_dir.glob("*.yaml"):
-                procedures.append(path.stem)
-
-        text = "Available procedures:\n"
-        for p in procedures:
-            text += f"  - {p}\n"
-
-        return {"content": [{"type": "text", "text": text}]}
-
-    def _tool_agent_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List all agents with status and session liveness."""
-        from pathlib import Path
-        from runtime.agents.liveness import check_agent_liveness
-
-        agents = self.agent_graph.get_all_agents()
-
-        # Check session liveness
-        liveness = check_agent_liveness(Path.cwd())
-        session_alive = liveness.get("alive", False)
-        most_recent_age = liveness.get("most_recent_age")
-        active_count = liveness.get("active_sessions", 0)
-
-        lines = ["Work Agents:\n"]
-
-        # Session liveness summary
-        if session_alive:
-            lines.append(f"  Session: ACTIVE ({active_count} sessions, last: {most_recent_age:.1f}s ago)\n")
+        handler_fn, needs_ctx = entry
+        if needs_ctx:
+            return handler_fn(arguments, self.ctx)
         else:
-            age_str = f"{most_recent_age:.0f}s ago" if most_recent_age else "unknown"
-            lines.append(f"  Session: IDLE (last: {age_str})\n")
-
-        for agent in agents:
-            status_icon = "🟢" if agent.status == "ready" else "🔴"
-            lines.append(f"  {status_icon} {agent.id} ({agent.name})")
-            lines.append(f"     Status: {agent.status}")
-            lines.append(f"     Energy: {agent.energy:.2f}")
-            lines.append("")
-
-        return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-    def _tool_task_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List available tasks with linked problems."""
-        module_filter = args.get("module")
-        objective_filter = args.get("objective")
-        limit = args.get("limit", 20)
-
-        if not self.graph_queries:
-            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
-
-        try:
-            # Query tasks with their linked issues and objectives
-            cypher = """
-            MATCH (t:Narrative)
-            WHERE t.type = 'task' AND (t.status IS NULL OR t.status <> 'completed')
-            OPTIONAL MATCH (t)-[r:relates]->(o:Narrative {type: 'objective'})
-            RETURN t.id, t.name, t.task_type, t.module, t.skill, t.status,
-                   collect(DISTINCT o.name) as objectives, t.created_at_s
-            ORDER BY t.created_at_s DESC
-            LIMIT $limit
-            """
-            result = self.graph_queries._query(cypher, {"limit": limit * 2})
-
-            if not result:
-                return {"content": [{"type": "text", "text": "No tasks found. Run `doctor` first to create tasks."}]}
-
-            # Filter and format
-            lines = ["Available Tasks:\n"]
-            count = 0
-
-            for row in result:
-                task_id, name, task_type, module, skill, status, objectives, _created = row
-
-                # Apply filters
-                if module_filter and module != module_filter:
-                    continue
-                if objective_filter and objective_filter not in str(objectives):
-                    continue
-
-                count += 1
-                if count > limit:
-                    break
-
-                status_icon = "⏳" if status == "pending" else "🔄" if status == "in_progress" else "⏸️"
-                lines.append(f"{status_icon} {name}")
-                lines.append(f"   ID: {task_id}")
-                lines.append(f"   Module: {module} | Skill: {skill}")
-                if objectives:
-                    lines.append(f"   Serves: {', '.join(objectives[:2])}")
-                lines.append("")
-
-            # Query issue count per task
-            lines.append(f"\nTotal: {count} task(s)")
-            lines.append("\nTo run an agent for a task:")
-            lines.append("  agent_run(task_id='<task_id>')")
-
-            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-        except Exception as e:
-            logger.exception("Task list failed")
-            return {"content": [{"type": "text", "text": f"Error listing tasks: {e}"}]}
-
-    def _tool_agent_run(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Run a work agent to fix a problem or work on a task. Actually executes the agent."""
-        task_id = args.get("task_id")
-        task_type = args.get("task_type")
-        path = args.get("path")
-        actor_id = args.get("actor_id")
-        provider = args.get("provider", "claude")
-
-        task_content = None
-        task_type = None
-        prompt = None
-
-        # If task_id provided, fetch from graph with full context
-        if task_id:
-            if self.graph_queries:
-                try:
-                    # Query task with linked problems and objectives
-                    cypher = """
-                    MATCH (t:Narrative {id: $task_id})
-                    OPTIONAL MATCH (t)-[:relates]->(o:Narrative {type: 'objective'})
-                    OPTIONAL MATCH (p:Narrative {type: 'problem'})-[:relates]->(t)
-                    RETURN t.id, t.name, t.content, t.type, t.module, t.skill, t.task_type,
-                           collect(DISTINCT {id: o.id, name: o.name, type: o.objective_type}) as objectives,
-                           collect(DISTINCT {id: p.id, type: p.task_type, path: p.path, message: p.message, severity: p.severity}) as problems
-                    """
-                    result = self.graph_queries._query(cypher, {"task_id": task_id})
-                    if result and len(result) > 0:
-                        row = result[0]
-                        task_name = row[1] if len(row) > 1 else task_id
-                        task_content = row[2] if len(row) > 2 else None
-                        task_type = row[3] if len(row) > 3 else "task"
-                        task_module = row[4] if len(row) > 4 else ""
-                        task_skill = row[5] if len(row) > 5 else ""
-                        task_subtype = row[6] if len(row) > 6 else ""
-                        objectives = row[7] if len(row) > 7 else []
-                        problems = row[8] if len(row) > 8 else []
-
-                        # Derive task_type from first problem or task_type
-                        if not task_type and problems:
-                            first_problem = problems[0] if isinstance(problems[0], dict) else {}
-                            task_type = first_problem.get("type", "TASK")
-                        elif not task_type:
-                            task_type = task_subtype.upper() if task_subtype else "TASK"
-
-                        # Build rich prompt with full context
-                        prompt_lines = [
-                            f"# Task: {task_name}",
-                            f"Module: {task_module}",
-                            f"Skill: {task_skill}",
-                            "",
-                        ]
-
-                        if objectives:
-                            prompt_lines.append("## Objectives this serves:")
-                            for obj in objectives[:3]:
-                                if isinstance(obj, dict) and obj.get("name"):
-                                    prompt_lines.append(f"- {obj.get('name')}")
-                            prompt_lines.append("")
-
-                        if problems:
-                            prompt_lines.append("## Problems to fix:")
-                            for prob in problems[:10]:  # Limit to 10 problems
-                                if isinstance(prob, dict) and prob.get("path"):
-                                    prompt_lines.append(f"- [{prob.get('severity', 'warning')}] {prob.get('type')}: {prob.get('path')}")
-                                    if prob.get("message"):
-                                        prompt_lines.append(f"  {prob.get('message')[:200]}")
-                            prompt_lines.append("")
-
-                        if task_content:
-                            prompt_lines.append("## Task description:")
-                            prompt_lines.append(task_content)
-
-                        prompt_lines.append("\n## Instructions:")
-                        prompt_lines.append("Fix all the problems listed above. Follow project conventions.")
-
-                        prompt = "\n".join(prompt_lines)
-                    else:
-                        return {"content": [{"type": "text", "text": f"Error: Task '{task_id}' not found in graph"}]}
-                except Exception as e:
-                    logger.warning(f"Failed to fetch task {task_id}: {e}")
-                    return {"content": [{"type": "text", "text": f"Error fetching task: {e}"}]}
-            else:
-                return {"content": [{"type": "text", "text": "Error: No graph connection for task lookup"}]}
-        elif not task_type or not path:
-            return {"content": [{"type": "text", "text": "Error: Either task_id OR (task_type + path) required"}]}
-
-        # Select agent if not specified - use graph physics
-        if not actor_id:
-            # Build synthesis for agent selection
-            task_synthesis = f"{task_type or 'task'}: {path or 'unknown'}"
-            if prompt:
-                task_synthesis += f" - {prompt[:100]}"
-            actor_id = self.agent_graph.select_agent_for_task(task_synthesis)
-            if not actor_id:
-                actor_id = f"AGENT_{DEFAULT_NAME.capitalize()}"
-
-        # Check if agent is available
-        agents = {a.id: a for a in self.agent_graph.get_all_agents()}
-        if actor_id in agents and agents[actor_id].status == "running":
-            return {"content": [{"type": "text", "text": f"Error: {actor_id} is already running. Choose another agent or wait."}]}
-
-        name = actor_id.replace("ACTOR_", "")
-
-        # Track created moments for output
-        moments_created = []
-
-        # Derive space from path (module context)
-        space_id = None
-        if path:
-            # Extract module from path: runtime/agents -> space_runtime_agents
-            path_parts = Path(path).parts[:2]  # Take first 2 parts
-            if path_parts:
-                space_id = f"space_{'_'.join(path_parts)}"
-        elif task_id:
-            # Get space from task
-            space_id = self.agent_graph.get_task_space(task_id)
-
-        # Link space to agent and task
-        if space_id:
-            self.agent_graph.set_agent_space(actor_id, space_id)
-            if task_id:
-                self.agent_graph.link_task_to_space(task_id, space_id)
-
-        # Upsert problem/task narratives before linking
-        problem_ids = None
-        if task_type and path:
-            # Create/update problem narrative in graph
-            problem_narrative_id = self.agent_graph.upsert_problem_narrative(
-                task_type=task_type,
-                path=path,
-                message=f"Problem detected: {task_type} at {path}",
-                severity="warning",
-            )
-            if problem_narrative_id:
-                problem_ids = [problem_narrative_id]
-                # Create moment for problem detection
-                problem_moment = self.agent_graph.create_moment(
-                    actor_id=actor_id,
-                    moment_type="problem_detected",
-                    prose=f"Detected {task_type} at {path}",
-                    about_ids=[problem_narrative_id],
-                    space_id=space_id,
-                    extra_props={"task_type": task_type, "path": path},
-                )
-                if problem_moment:
-                    moments_created.append(("problem_detected", problem_moment, f"Detected {task_type} at {path}"))
-
-            # Build prompt for problem-based run
-            if not prompt:
-                prompt = f"""Fix the problem:
-Problem Type: {task_type}
-Path: {path}
-
-Please investigate and fix this problem. Follow the project's coding standards and documentation patterns."""
-
-        # Use task_id for assignment, or create from problem
-        assignment_task_id = task_id
-        if not assignment_task_id and task_type:
-            # Create task narrative for this fix
-            assignment_task_id = self.agent_graph.upsert_task_narrative(
-                task_type=f"FIX_{task_type}",
-                content=f"Fix {task_type} at {path}",
-                name=f"Fix {task_type}",
-            )
-            if assignment_task_id:
-                # Create moment for task creation
-                task_moment = self.agent_graph.create_moment(
-                    actor_id=actor_id,
-                    moment_type="task_created",
-                    prose=f"Created task to fix {task_type}",
-                    about_ids=[assignment_task_id] + (problem_ids or []),
-                    space_id=space_id,
-                    extra_props={"task_id": assignment_task_id, "task_type": f"FIX_{task_type}"},
-                )
-                if task_moment:
-                    moments_created.append(("task_created", task_moment, f"Created task: Fix {task_type}"))
-
-        # Actually run and run the agent
-        try:
-            coro = run_work_agent(
-                actor_id=actor_id,
-                prompt=prompt,
-                target_dir=self.target_dir,
-                agent_provider=provider,
-                timeout=300.0,
-                use_continue=True,
-                task_id=assignment_task_id,
-                problem_ids=problem_ids,
-            )
-            # Handle both sync and async contexts
-            try:
-                loop = asyncio.get_running_loop()
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as pool:
-                    run_result = pool.submit(asyncio.run, coro).result()
-            except RuntimeError:
-                # No running loop, use asyncio.run directly
-                run_result = asyncio.run(coro)
-
-            # Build response with node details
-            lines = [
-                "# Agent Execution Complete",
-                "",
-                "## Agent",
-                f"- **ID:** {actor_id}",
-                f"- **Posture:** {name} ({get_learnings_content.__doc__ or 'work agent'})",
-                f"- **Provider:** {provider}",
-                f"- **Success:** {run_result.success}",
-                f"- **Duration:** {run_result.duration_seconds:.1f}s",
-            ]
-
-            # Show task details
-            if task_id or assignment_task_id:
-                lines.extend([
-                    "",
-                    "## Task",
-                    f"- **ID:** {task_id or assignment_task_id}",
-                ])
-                if not task_id and task_type:
-                    lines.extend([
-                        f"- **Type:** FIX_{task_type}",
-                        f"- **Name:** Fix {task_type}",
-                        f"- **Content:** Fix {task_type} at {path}",
-                    ])
-
-            # Show moment chain (chronological)
-            if run_result.assignment_moment_id:
-                moments_created.append(("ACTOR_assignment", run_result.assignment_moment_id, f"Agent {actor_id} assigned to task"))
-
-            if moments_created:
-                lines.extend([
-                    "",
-                    "## Moment Chain",
-                    f"*Actor: {actor_id}*",
-                ])
-                if space_id:
-                    lines.append(f"*Space: {space_id}*")
-                lines.append("")
-                for i, (moment_type, moment_id, prose) in enumerate(moments_created):
-                    prefix = "→ " if i > 0 else "● "
-                    lines.append(f"{prefix}**{moment_type}**: {prose}")
-                    lines.append(f"  `{moment_id}`")
-                    if i < len(moments_created) - 1:
-                        lines.append(f"  ↓ follows")
-
-            # Show exact command that was run
-            from runtime.agents import build_agent_command
-            cmd_info = build_agent_command(
-                agent=provider,
-                prompt="<prompt>",
-                system_prompt="<system_prompt>",
-                stream_json=True,
-                continue_session=True,
-                add_dir=self.target_dir,
-                allowed_tools="Bash Read Edit Write Glob Grep WebFetch NotebookEdit TodoWrite",
-            )
-            lines.extend([
-                "",
-                "## Command",
-                f"```",
-                f"{' '.join(cmd_info.cmd[:8])}...",
-                f"```",
-            ])
-
-            if run_result.retried_without_continue:
-                lines.append(f"  Note: Retried without --continue")
-
-            if run_result.error:
-                lines.append(f"  Error: {run_result.error[:200]}")
-
-            if run_result.output:
-                lines.extend([
-                    "",
-                    "Agent Output:",
-                    run_result.output[:1000] + ("..." if len(run_result.output) > 1000 else ""),
-                ])
-
-            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-        except Exception as e:
-            logger.exception("Agent run failed")
-            return {"content": [{"type": "text", "text": f"Error executing agent: {e}"}]}
-
-    def _tool_agent_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Get or set agent status, with session liveness detection."""
-        from pathlib import Path
-        from runtime.agents.liveness import check_agent_liveness
-
-        actor_id = args.get("actor_id")
-        set_status = args.get("set_status")
-
-        if not actor_id:
-            return {"content": [{"type": "text", "text": "Error: actor_id is required"}]}
-
-        if set_status:
-            if set_status == "running":
-                self.agent_graph.set_agent_running(actor_id)
-            else:
-                self.agent_graph.set_agent_ready(actor_id)
-            return {"content": [{"type": "text", "text": f"Agent {actor_id} status set to {set_status}"}]}
-
-        # Get current status from graph
-        agents = {a.id: a for a in self.agent_graph.get_all_agents()}
-        if actor_id not in agents:
-            return {"content": [{"type": "text", "text": f"Agent {actor_id} not found"}]}
-
-        agent = agents[actor_id]
-
-        # Check session liveness (reads ~/.claude/projects/)
-        liveness = check_agent_liveness(Path.cwd())
-        session_alive = liveness.get("alive", False)
-        most_recent_age = liveness.get("most_recent_age")
-
-        lines = [
-            f"Agent: {agent.id}",
-            f"Posture: {agent.name}",
-            f"Graph Status: {agent.status}",
-            f"Session Alive: {session_alive}",
-        ]
-        if most_recent_age is not None:
-            lines.append(f"Last Activity: {most_recent_age:.1f}s ago")
-        lines.extend([
-            f"Energy: {agent.energy:.2f}",
-            f"Weight: {agent.weight:.2f}",
-        ])
-        return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-    def _tool_graph_query(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Query the graph using natural language via SubEntity exploration."""
-        queries = args.get("queries", [])
-        intent = args.get("intent")  # WHY searching - affects traversal
-        actor_id = args.get("actor_id", "actor_claude")
-        debug = args.get("debug", False)
-        timeout = args.get("timeout", 30.0)
-
-        if not queries:
-            return {"content": [{"type": "text", "text": "Error: 'queries' array is required"}]}
-
-        if not self.graph_queries:
-            return {"content": [{"type": "text", "text": "Error: No graph connection available"}]}
-
-        # Resolve actor: check if exists, otherwise pick randomly
-        actor_id = self._resolve_actor(actor_id, debug)
-
-        debug_lines = []
-        if debug:
-            debug_lines.append("=== DEBUG MODE ===")
-            debug_lines.append(f"Actor: {actor_id}")
-            debug_lines.append(f"Intent: {intent or '(none)'}")
-            debug_lines.append(f"Timeout: {timeout}s")
-            debug_lines.append("")
-
-        try:
-            # Run queries
-            results = asyncio.run(
-                self._ask_async(queries, actor_id, intent, timeout, debug, debug_lines)
-            )
-
-            # Format output
-            output_lines = []
-
-            if debug:
-                output_lines.extend(debug_lines)
-                output_lines.append("")
-
-            # Markdown output
-            for i, item in enumerate(results, 1):
-                if len(results) > 1:
-                    output_lines.append(f"## Query {i}: {item['query']}\n")
-                output_lines.append(item["result"] if isinstance(item["result"], str) else json.dumps(item["result"], indent=2))
-                output_lines.append("")
-
-            return {"content": [{"type": "text", "text": "\n".join(output_lines)}]}
-
-        except Exception as e:
-            logger.exception("Graph query failed")
-            error_msg = f"Error executing query: {e}"
-            if debug:
-                import traceback
-                error_msg += f"\n\nTraceback:\n{traceback.format_exc()}"
-            return {"content": [{"type": "text", "text": error_msg}]}
-
-    def _resolve_actor(self, actor_id: str, debug: bool = False) -> str:
-        """Resolve actor ID: return existing actor or pick random one."""
-        if not self.graph_queries:
-            return actor_id
-
-        # Check if actor exists
-        result = self.graph_queries._query(
-            "MATCH (a:Actor {id: $actor_id}) RETURN a.id",
-            {"actor_id": actor_id}
-        )
-        if result and result[0]:
-            return actor_id
-
-        # Actor not found, pick a random one
-        actors = self.graph_queries._query(
-            "MATCH (a:Actor) RETURN a.id LIMIT 20"
-        )
-        if actors:
-            random_actor = random.choice(actors)[0]
-            if debug:
-                logger.info(f"Actor {actor_id} not found, using random actor: {random_actor}")
-            return random_actor
-
-        # No actors in graph, return original (will fail later with clear error)
-        return actor_id
-
-    async def _ask_async(
-        self,
-        queries: List[str],
-        actor_id: str,
-        intent: Optional[str],
-        timeout: float,
-        debug: bool,
-        debug_lines: List[str]
-    ) -> List[Dict[str, Any]]:
-        """Async SubEntity exploration for multiple queries - runs concurrently."""
-        valid_queries = [q for q in queries if q and q.strip()]
-
-        if not valid_queries:
-            return []
-
-        if debug:
-            debug_lines.append(f"Running {len(valid_queries)} queries concurrently...")
-
-        # Create tasks for all queries
-        tasks = [
-            self._ask_single(query, actor_id, intent, timeout, debug, debug_lines)
-            for query in valid_queries
-        ]
-
-        # Run all queries concurrently
-        results_raw = await asyncio.gather(*tasks, return_exceptions=True)
-
-        # Format results
-        results = []
-        for query, result in zip(valid_queries, results_raw):
-            if isinstance(result, Exception):
-                results.append({"query": query, "result": f"Error: {result}"})
-            else:
-                results.append({"query": query, "result": result})
-
-        return results
-
-    async def _ask_single(self, query: str, actor_id: str, intent: Optional[str], timeout: float, debug: bool, debug_lines: List[str]) -> str:
-        """Async SubEntity exploration to answer a single query."""
-        import time
-        from runtime.infrastructure.embeddings.service import get_embedding_service
-        start = time.time()
-
-        try:
-            from runtime.explore_cmd import run_exploration
-
-            if debug:
-                debug_lines.append(f"Starting SubEntity exploration...")
-                debug_lines.append(f"Actor: {actor_id}, Timeout: {timeout}s")
-
-            # Create query moment and link to actor
-            embed_service = get_embedding_service()
-            moment_id = self.graph_queries._create_query_moment(
-                query=query,
-                embed_fn=embed_service.embed,
-                initial_energy=1.0
-            )
-            # Link actor to moment
-            self.graph_queries._query("""
-                MATCH (a {id: $actor_id})
-                MATCH (m {id: $moment_id})
-                MERGE (a)-[r:link]->(m)
-                SET r.weight = 1.0, r.energy = 1.0
-            """, {'actor_id': actor_id, 'moment_id': moment_id})
-
-            # Link to previous actor moment
-            prev_moment = self.graph_queries._query("""
-                MATCH (a {id: $actor_id})-[:link]->(m:Moment)
-                WHERE m.id <> $moment_id
-                RETURN m.id
-                ORDER BY m.created_at_s DESC
-                LIMIT 1
-            """, {'actor_id': actor_id, 'moment_id': moment_id})
-            if prev_moment:
-                prev_id = prev_moment[0][0] if prev_moment[0] else None
-                if prev_id:
-                    self.graph_queries._query("""
-                        MATCH (prev {id: $prev_id})
-                        MATCH (curr {id: $curr_id})
-                        MERGE (prev)-[r:link]->(curr)
-                        SET r.weight = 1.0, r.energy = 0.0
-                    """, {'prev_id': prev_id, 'curr_id': moment_id})
-                    if debug:
-                        debug_lines.append(f"Linked to previous: {prev_id}")
-
-            if debug:
-                debug_lines.append(f"Created moment: {moment_id}")
-
-            # Run exploration asynchronously
-            result, log_path = await run_exploration(
-                query=query,
-                actor_id=actor_id,
-                intention=intent,  # WHY searching - affects traversal strategy
-                graph_name=None,  # Use config default
-                origin_moment=moment_id,
-                timeout=timeout,
-                debug=debug,
-            )
-
-            elapsed = time.time() - start
-
-            if debug:
-                debug_lines.append(f"Exploration completed in {elapsed:.2f}s")
-                debug_lines.append(f"State: {result.state.value}")
-                debug_lines.append(f"Satisfaction: {result.satisfaction:.2f}")
-                debug_lines.append(f"Found narratives: {len(result.found_narratives)}")
-                if log_path:
-                    debug_lines.append(f"Log: {log_path}.txt")
-
-            # Format result using cluster presentation
-            from runtime.physics.cluster_presentation import (
-                ClusterNode,
-                ClusterLink,
-                RawCluster,
-                present_cluster,
-                IntentionType,  # For presentation filtering (not link scoring)
-            )
-
-            if not result.found_narratives:
-                return "No relevant narratives found."
-
-            # Parse intention type
-            intent_type = IntentionType.EXPLORE
-            if intent:
-                intent_lower = intent.lower()
-                if "summar" in intent_lower:
-                    intent_type = IntentionType.SUMMARIZE
-                elif "verif" in intent_lower or "check" in intent_lower:
-                    intent_type = IntentionType.VERIFY
-                elif "find" in intent_lower or "next" in intent_lower:
-                    intent_type = IntentionType.FIND_NEXT
-                elif "retriev" in intent_lower or "get" in intent_lower:
-                    intent_type = IntentionType.RETRIEVE
-
-            # Fetch actual content for each found narrative
-            nodes = []
-            query_embedding = embed_service.embed(query)
-
-            for narr_id, alignment in result.found_narratives.items():
-                narr_data = self.graph_queries._query("""
-                    MATCH (n {id: $narr_id})
-                    RETURN n.name, n.content, n.synthesis, n.node_type, n.energy, n.weight
-                """, {'narr_id': narr_id})
-
-                if narr_data and narr_data[0]:
-                    name = narr_data[0][0] or narr_id
-                    content = narr_data[0][1] or ""
-                    synthesis = narr_data[0][2] or name
-                    node_type = narr_data[0][3] or "narrative"
-                    energy = narr_data[0][4] or 1.0
-                    weight = narr_data[0][5] or alignment
-
-                    # Use content or synthesis for display
-                    display_text = synthesis if synthesis else (content[:200] if content else name)
-
-                    nodes.append(ClusterNode(
-                        id=narr_id,
-                        node_type=node_type,
-                        name=name,
-                        synthesis=display_text,
-                        embedding=query_embedding,
-                        weight=weight,
-                        energy=energy,
-                    ))
-
-            # Add actor node
-            nodes.append(ClusterNode(
-                id=actor_id,
-                node_type='actor',
-                name=actor_id,
-                synthesis=f"Explorer: {actor_id}",
-                embedding=query_embedding,
-                weight=1.0,
-                energy=1.0,
-            ))
-
-            # Create links from actor to narratives
-            links = []
-            for narr_id, alignment in result.found_narratives.items():
-                links.append(ClusterLink(
-                    id=f"link_{actor_id}_{narr_id}",
-                    source_id=actor_id,
-                    target_id=narr_id,
-                    synthesis=f"found (alignment: {alignment:.2f})",
-                    embedding=query_embedding,
-                    weight=alignment,
-                    energy=alignment,
-                    permanence=0.5,
-                    trust_disgust=0.0,
-                ))
-
-            # Build and present cluster
-            raw_cluster = RawCluster(
-                nodes=nodes,
-                links=links,
-                traversed_link_ids={l.id for l in links},
-            )
-
-            presented = present_cluster(
-                raw_cluster=raw_cluster,
-                query=query,
-                intention=intent or query,
-                intention_type=intent_type,
-                query_embedding=query_embedding,
-                intention_embedding=query_embedding,
-                start_id=actor_id,
-            )
-
-            # Add crystallization info if present
-            output = presented.markdown
-            if result.crystallized:
-                output += f"\n\n*Crystallized: {result.crystallized}*"
-
-            return output
-
-        except Exception as e:
-            if debug:
-                debug_lines.append(f"Ask failed: {e}")
-            return f"Ask failed: {e}"
-
-    def _tool_node_create(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Create a new node in the graph."""
-        import uuid
-        import time
-
-        node_type = args.get("node_type")
-        if not node_type:
-            return {"content": [{"type": "text", "text": "Error: 'node_type' is required (narrative or actor)"}]}
-
-        # Generate ID if not provided
-        node_id = args.get("id") or f"{args.get('type', node_type)}_{uuid.uuid4().hex[:8]}"
-        subtype = args.get("type", "thought" if node_type == "narrative" else "agent")
-        name = args.get("name", node_id)
-        content = args.get("content", "")
-        synthesis = args.get("synthesis") or (content[:100] if content else name)
-        weight = args.get("weight", 1.0)
-        energy = args.get("energy", 1.0)
-        link_to = args.get("link_to", [])
-
-        if not self.graph_ops:
-            return {"content": [{"type": "text", "text": "Error: No graph connection available"}]}
-
-        try:
-            # Compute embedding from synthesis
-            embedding = None
-            try:
-                from runtime.infrastructure.embeddings.service import get_embedding_service
-                embed_service = get_embedding_service()
-                embedding = embed_service.embed(synthesis)
-            except Exception as e:
-                logger.warning(f"Could not compute embedding: {e}")
-
-            # Create node based on type
-            if node_type == "narrative":
-                self.graph_ops.add_narrative(
-                    id=node_id,
-                    name=name,
-                    content=content,
-                    type=subtype,
-                    weight=weight,
-                    embedding=embedding,
-                )
-                # Set synthesis field
-                self.graph_ops._query(
-                    "MATCH (n {id: $id}) SET n.synthesis = $synthesis, n.energy = $energy, n.created_at_s = $ts",
-                    {"id": node_id, "synthesis": synthesis, "energy": energy, "ts": int(time.time())}
-                )
-            elif node_type == "actor":
-                self.graph_ops.add_character(
-                    id=node_id,
-                    name=name,
-                    type=subtype,
-                    weight=weight,
-                    energy=energy,
-                    embedding=embedding,
-                )
-            else:
-                return {"content": [{"type": "text", "text": f"Error: Unknown node_type '{node_type}'. Use 'narrative' or 'actor'."}]}
-
-            # Create links if requested
-            links_created = []
-            for target_id in link_to:
-                try:
-                    self.graph_ops._query("""
-                        MATCH (source {id: $source_id})
-                        MATCH (target {id: $target_id})
-                        MERGE (source)-[r:link]->(target)
-                        SET r.weight = 1.0, r.energy = 1.0
-                    """, {"source_id": node_id, "target_id": target_id})
-                    links_created.append(target_id)
-                except Exception as e:
-                    logger.warning(f"Could not link to {target_id}: {e}")
-
-            # Build response
-            lines = [
-                f"Created {node_type} node:",
-                f"  ID: {node_id}",
-                f"  Type: {subtype}",
-                f"  Name: {name}",
-                f"  Weight: {weight}",
-                f"  Energy: {energy}",
-            ]
-            if content:
-                lines.append(f"  Content: {content[:100]}{'...' if len(content) > 100 else ''}")
-            if links_created:
-                lines.append(f"  Links created: {', '.join(links_created)}")
-
-            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-        except Exception as e:
-            logger.exception("Node creation failed")
-            return {"content": [{"type": "text", "text": f"Error creating node: {e}"}]}
-
-    def _tool_capability_status(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Get capability system status."""
-        if not self.capability_manager:
-            return {"content": [{"type": "text", "text": "Capability system not available"}]}
-
-        status = self.capability_manager.get_status()
-
-        lines = ["Capability System Status\n"]
-        lines.append(f"Initialized: {status['initialized']}")
-        lines.append(f"Capabilities: {status['capabilities']}")
-        lines.append(f"Cron Scheduler: {'running' if status['cron_running'] else 'stopped'}")
-        lines.append(f"File Watcher: {'running' if status.get('file_watcher_running') else 'stopped'}")
-
-        if status.get("registry"):
-            reg = status["registry"]
-            lines.append(f"\nTrigger Registry:")
-            lines.append(f"  Trigger types: {reg.get('trigger_types', 0)}")
-            lines.append(f"  Total checks: {reg.get('total_checks', 0)}")
-            if reg.get("by_type"):
-                lines.append("  By type:")
-                for trigger_type, count in sorted(reg["by_type"].items())[:10]:
-                    lines.append(f"    {trigger_type}: {count}")
-
-        if status.get("throttler"):
-            th = status["throttler"]
-            lines.append(f"\nThrottler:")
-            lines.append(f"  Pending: {th.get('pending_count', 0)}")
-            lines.append(f"  Active: {th.get('active_count', 0)}")
-
-        if status.get("controller"):
-            ctrl = status["controller"]
-            lines.append(f"\nController:")
-            lines.append(f"  Mode: {ctrl.get('mode', 'unknown')}")
-            lines.append(f"  Can claim: {ctrl.get('can_claim', False)}")
-
-        return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-    def _tool_capability_trigger(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Fire a trigger manually."""
-        if not self.capability_manager:
-            return {"content": [{"type": "text", "text": "Capability system not available"}]}
-
-        trigger_type = args.get("trigger_type")
-        if not trigger_type:
-            return {"content": [{"type": "text", "text": "Error: trigger_type is required"}]}
-
-        payload = {}
-        if args.get("file_path"):
-            payload["file_path"] = args["file_path"]
-
-        create_tasks = args.get("create_tasks", True)
-
-        try:
-            result = self.capability_manager.fire_trigger(
-                trigger_type=trigger_type,
-                payload=payload,
-                create_tasks=create_tasks,
-            )
-
-            lines = [f"Trigger: {trigger_type}\n"]
-            lines.append(f"Checks run: {result.get('checks_run', 0)}")
-            lines.append(f"  Healthy: {result.get('healthy', 0)}")
-            lines.append(f"  Degraded: {result.get('degraded', 0)}")
-            lines.append(f"  Critical: {result.get('critical', 0)}")
-
-            task_runs = result.get("task_runs", [])
-            if task_runs:
-                lines.append(f"\nTask runs created: {len(task_runs)}")
-                # Fetch task details from graph
-                for task_id in task_runs[:10]:
-                    try:
-                        task_result = self.graph_ops._query(
-                            "MATCH (n {id: $id}) RETURN n.name, n.status, n.content, n.claimed_by",
-                            {"id": task_id}
-                        )
-                        if task_result and task_result[0]:
-                            name = task_result[0][0] or "Unknown"
-                            status = task_result[0][1] or "pending"
-                            content = task_result[0][2] or ""
-                            claimed_by = task_result[0][3]
-                            lines.append(f"  - [{status}] {name}")
-                            if claimed_by:
-                                lines.append(f"    Assigned: {claimed_by}")
-                            if content:
-                                lines.append(f"    Content: {content}")
-                            lines.append(f"    ID: {task_id}")
-                        else:
-                            lines.append(f"  - {task_id}")
-                    except:
-                        lines.append(f"  - {task_id}")
-
-            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-        except Exception as e:
-            logger.exception("Trigger failed")
-            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
-
-    def _tool_capability_list(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """List all loaded capabilities."""
-        if not self.capability_manager:
-            return {"content": [{"type": "text", "text": "Capability system not available"}]}
-
-        capabilities = self.capability_manager.list_capabilities()
-
-        if not capabilities:
-            return {"content": [{"type": "text", "text": "No capabilities loaded"}]}
-
-        lines = [f"Loaded Capabilities: {len(capabilities)}\n"]
-
-        for cap in capabilities:
-            lines.append(f"📦 {cap['name']}")
-            for check in cap["checks"]:
-                triggers_str = ", ".join(check["triggers"][:2])
-                if len(check["triggers"]) > 2:
-                    triggers_str += "..."
-                lines.append(f"   ├─ {check['id']}")
-                lines.append(f"   │  Triggers: {triggers_str}")
-                lines.append(f"   │  Problem: {check['on_problem']}")
-                lines.append(f"   └─ Task: {check['task']}")
-            lines.append("")
-
-        return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-    def _tool_file_watcher(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Control the file watcher."""
-        if not self.capability_manager:
-            return {"content": [{"type": "text", "text": "Capability system not available"}]}
-
-        action = args.get("action")
-
-        if action == "start":
-            self.capability_manager.start_file_watcher()
-            running = self.capability_manager.file_watcher and self.capability_manager.file_watcher.running
-            if running:
-                return {"content": [{"type": "text", "text": "File watcher started"}]}
-            else:
-                return {"content": [{"type": "text", "text": "Failed to start file watcher"}]}
-
-        elif action == "stop":
-            self.capability_manager.stop_file_watcher()
-            return {"content": [{"type": "text", "text": "File watcher stopped"}]}
-
-        elif action == "status":
-            running = self.capability_manager.file_watcher and self.capability_manager.file_watcher.running
-            status = "running" if running else "stopped"
-            return {"content": [{"type": "text", "text": f"File watcher: {status}"}]}
-
-        else:
-            return {"content": [{"type": "text", "text": "Error: action must be 'start', 'stop', or 'status'"}]}
-
-    def _tool_git_trigger(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Fire a git trigger."""
-        if not self.capability_manager:
-            return {"content": [{"type": "text", "text": "Capability system not available"}]}
-
-        trigger = args.get("trigger")
-        git_hooks = self.capability_manager.get_git_hooks()
-
-        if not git_hooks:
-            return {"content": [{"type": "text", "text": "Git hooks not available"}]}
-
-        try:
-            if trigger == "post_commit":
-                result = git_hooks.fire_post_commit()
-            elif trigger == "pre_commit":
-                result = git_hooks.fire_pre_commit()
-            else:
-                return {"content": [{"type": "text", "text": "Error: trigger must be 'post_commit' or 'pre_commit'"}]}
-
-            lines = [f"Git trigger: {trigger}\n"]
-            lines.append(f"Checks run: {result.get('checks_run', 0)}")
-            lines.append(f"  Healthy: {result.get('healthy', 0)}")
-            lines.append(f"  Degraded: {result.get('degraded', 0)}")
-            lines.append(f"  Critical: {result.get('critical', 0)}")
-
-            task_runs = result.get("task_runs", [])
-            if task_runs:
-                lines.append(f"\nTask runs created: {len(task_runs)}")
-                for task_id in task_runs[:5]:
-                    lines.append(f"  - {task_id}")
-
-            return {"content": [{"type": "text", "text": "\n".join(lines)}]}
-
-        except Exception as e:
-            logger.exception("Git trigger failed")
-            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
-
-    def _tool_task_claim(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Atomically claim a task (throttler check happens at promotion to running)."""
-        task_id = args.get("task_id")
-        actor_id = args.get("actor_id")
-
-        if not task_id:
-            return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
-
-        # Normalize actor_id - defaults to best HUMAN if not provided
-        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
-
-        if not self.graph_ops:
-            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
-
-        try:
-            # Claim in graph - pending → claimed
-            # Throttler check happens later when promoting claimed → running (in inject)
-            from datetime import datetime
-            timestamp = datetime.now().isoformat()
-            result = self.graph_ops._query(
-                "MATCH (n {id: $id}) WHERE n.status = 'pending' "
-                "SET n.status = 'claimed', n.claimed_by = $actor, n.claimed_at = $ts "
-                "RETURN n.id",
-                {"id": task_id, "actor": actor_id, "ts": timestamp}
-            )
-            if not result or not result[0]:
-                return {"content": [{"type": "text", "text": f"Failed to claim: task not found or already claimed"}]}
-
-            # Create claimed_by link
-            self.graph_ops._query(
-                "MATCH (t {id: $task_id}) MATCH (a {id: $actor_id}) "
-                "MERGE (t)-[:LINK {verb: 'claimed_by'}]->(a)",
-                {"task_id": task_id, "actor_id": actor_id}
-            )
-
-            return {"content": [{"type": "text", "text": f"Task {task_id} claimed by {actor_id}"}]}
-
-        except Exception as e:
-            logger.exception("Task claim failed")
-            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
-
-    def _tool_task_complete(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Mark task as completed."""
-        task_id = args.get("task_id")
-        actor_id = args.get("actor_id")
-
-        if not task_id:
-            return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
-
-        # Normalize actor_id - defaults to best HUMAN if not provided
-        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
-
-        if not self.graph_ops:
-            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
-
-        try:
-            # Complete in graph using direct query
-            from datetime import datetime
-            timestamp = datetime.now().isoformat()
-            result = self.graph_ops._query(
-                "MATCH (n {id: $id}) WHERE n.status IN ['claimed', 'running'] "
-                "SET n.status = 'completed', n.completed_at = $ts, n.completed_by = $actor "
-                "RETURN n.id",
-                {"id": task_id, "ts": timestamp, "actor": actor_id}
-            )
-            if not result or not result[0]:
-                return {"content": [{"type": "text", "text": f"Failed to complete: task not found or not active"}]}
-
-            # Release throttler slot
-            throttler = get_throttler()
-            if throttler:
-                throttler.on_complete(task_id)
-
-            return {"content": [{"type": "text", "text": f"Task {task_id} completed by {actor_id}"}]}
-
-        except Exception as e:
-            logger.exception("Task complete failed")
-            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
-
-    def _tool_task_fail(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Mark task as failed."""
-        task_id = args.get("task_id")
-        actor_id = args.get("actor_id")
-        reason = args.get("reason", "Unknown reason")
-
-        if not task_id:
-            return {"content": [{"type": "text", "text": "Error: task_id is required"}]}
-
-        # Normalize actor_id - defaults to best HUMAN if not provided
-        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
-
-        if not self.graph_ops:
-            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
-
-        try:
-            # Fail in graph using direct query
-            from datetime import datetime
-            timestamp = datetime.now().isoformat()
-            result = self.graph_ops._query(
-                "MATCH (n {id: $id}) WHERE n.status IN ['pending', 'claimed', 'running'] "
-                "SET n.status = 'failed', n.failed_at = $ts, n.failure_reason = $reason, n.failed_by = $actor "
-                "RETURN n.id",
-                {"id": task_id, "ts": timestamp, "reason": reason, "actor": actor_id}
-            )
-            if not result or not result[0]:
-                return {"content": [{"type": "text", "text": f"Failed to mark failed: task not found or already completed"}]}
-
-            # Release throttler slot
-            throttler = get_throttler()
-            if throttler:
-                throttler.on_abandon(task_id)
-
-            return {"content": [{"type": "text", "text": f"Task {task_id} failed by {actor_id}: {reason}"}]}
-
-        except Exception as e:
-            logger.exception("Task fail failed")
-            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
-
-    def _tool_agent_heartbeat(self, args: Dict[str, Any]) -> Dict[str, Any]:
-        """Update agent heartbeat."""
-        actor_id = args.get("actor_id")
-        step = args.get("step")
-
-        # Normalize actor_id - defaults to best HUMAN if not provided
-        actor_id = normalize_agent_id(actor_id, graph_ops=self.graph_ops)
-
-        if not self.graph_ops:
-            return {"content": [{"type": "text", "text": "Error: No graph connection"}]}
-
-        try:
-            # Update in graph using direct query
-            from datetime import datetime
-            timestamp = datetime.now().isoformat()
-
-            if step is not None:
-                result = self.graph_ops._query(
-                    "MATCH (n {id: $id}) "
-                    "SET n.last_heartbeat = $ts, n.current_step = $step "
-                    "RETURN n.id",
-                    {"id": actor_id, "ts": timestamp, "step": step}
-                )
-            else:
-                result = self.graph_ops._query(
-                    "MATCH (n {id: $id}) "
-                    "SET n.last_heartbeat = $ts "
-                    "RETURN n.id",
-                    {"id": actor_id, "ts": timestamp}
-                )
-
-            success = bool(result and result[0])
-
-            # Also update in-memory registry
-            registry = get_agent_registry()
-            if registry:
-                registry.heartbeat(actor_id, step)
-
-            if success:
-                msg = f"Heartbeat: {actor_id}"
-                if step is not None:
-                    msg += f" (step {step})"
-                return {"content": [{"type": "text", "text": msg}]}
-            else:
-                return {"content": [{"type": "text", "text": f"Heartbeat failed: actor not found"}]}
-
-        except Exception as e:
-            logger.exception("Heartbeat failed")
-            return {"content": [{"type": "text", "text": f"Error: {e}"}]}
-
-    def _format_response(self, response: Dict[str, Any]) -> Dict[str, Any]:
-        """Format runner response as MCP tool result."""
-        status = response.get("status", "unknown")
-
-        lines = [f"Status: {status}"]
-
-        if response.get("error"):
-            lines.append(f"Error: {response['error']}")
-
-        if response.get("session_id"):
-            lines.append(f"Session: {response['session_id']}")
-
-        step = response.get("step", {})
-        if step:
-            step_type = step.get("type", "")
-            lines.append(f"Step Type: {step_type}")
-
-            # Show context if provided
-            if step.get("context"):
-                lines.append(f"\n--- Context ---\n{step['context']}")
-
-            if step.get("question"):
-                lines.append(f"\n--- Question ---\n{step['question']}")
-                if step.get("question_name"):
-                    lines.append(f"(Answer will be stored as: {step['question_name']})")
-
-            if step.get("why_it_matters"):
-                lines.append(f"\nWhy it matters: {step['why_it_matters']}")
-
-            if step.get("good_answer"):
-                lines.append(f"Good answer example: {step['good_answer']}")
-
-            if step.get("bad_answer"):
-                lines.append(f"Bad answer example: {step['bad_answer']}")
-
-            if step.get("expects"):
-                expects = step["expects"]
-                lines.append(f"\nExpects: {expects.get('type', 'string')}")
-                if expects.get("options"):
-                    lines.append(f"Options: {expects['options']}")
-                if expects.get("min_length"):
-                    lines.append(f"Min Length: {expects['min_length']}")
-                if expects.get("min") is not None:
-                    lines.append(f"Min Items: {expects['min']}")
-
-            if step.get("question_count") and step["question_count"] > 1:
-                lines.append(f"Question {step.get('question_index', 0) + 1} of {step['question_count']}")
-
-            if step.get("results"):
-                lines.append(f"\nQuery Results: {len(step['results'])} items")
-                for r in step["results"][:5]:
-                    lines.append(f"  - {r}")
-
-        if status == "complete":
-            created = response.get("created", {})
-            nodes = created.get("nodes", [])
-            links = created.get("links", [])
-
-            lines.append(f"\nCreated: {len(nodes)} nodes, {len(links)} links")
-
-            if nodes:
-                lines.append("\nNodes:")
-                for n in nodes:
-                    lines.append(f"  - [{n.get('type')}] {n.get('id')}")
-
-            if links:
-                lines.append("\nLinks:")
-                for l in links:
-                    lines.append(f"  - {l.get('type')}: {l.get('from')} -> {l.get('to')}")
-
-        text = "\n".join(lines)
-        return {"content": [{"type": "text", "text": text}]}
+            return handler_fn(arguments)
 
     def _success_response(self, request_id: Any, result: Any) -> Dict[str, Any]:
-        """Build success response."""
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "result": result
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "result": result}
 
     def _error_response(self, request_id: Any, code: int, message: str) -> Dict[str, Any]:
-        """Build error response."""
-        return {
-            "jsonrpc": "2.0",
-            "id": request_id,
-            "error": {
-                "code": code,
-                "message": message
-            }
-        }
+        return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
 
 
 def main():
     """Run the MCP server on stdio."""
     server = MindServer()
-    logger.info("Mind MCP server started")
+    logger.info("Mind MCP server started (8 tools: THINK/ACT/SPEAK)")
 
-    # Read JSON-RPC messages from stdin
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -1946,10 +256,7 @@ def main():
             error_response = {
                 "jsonrpc": "2.0",
                 "id": None,
-                "error": {
-                    "code": -32700,
-                    "message": f"Parse error: {e}"
-                }
+                "error": {"code": -32700, "message": f"Parse error: {e}"},
             }
             print(json.dumps(error_response), flush=True)
 
