@@ -1,8 +1,11 @@
 """
 Dynamic Seed Brain Generator — builds universal brain JSON from source docs.
 
-Reads SYSTEM.md, VALUES_MANIFESTO.md, PRINCIPLES.md, and website content
-to generate the baseline cognitive nodes every citizen should have.
+Reads SYSTEM.md and MIND_MANIFESTO.md to generate the baseline cognitive
+nodes every citizen should have.
+
+MIND_MANIFESTO.md is fetched from the canonical source:
+  https://github.com/mind-protocol/mind-platform/blob/main/docs/manifesto/MIND_MANIFESTO.md
 
 The seed brain contains general thoughts: values, architecture concepts,
 project identity, social processes. No citizen-specific content.
@@ -20,10 +23,17 @@ import re
 import argparse
 from pathlib import Path
 from typing import Optional
+from urllib.request import urlopen, Request
+from urllib.error import URLError
 
 
 _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 _MIND_DIR = Path(__file__).parent.parent / ".mind"
+
+_MANIFESTO_URL = (
+    "https://raw.githubusercontent.com/mind-protocol/mind-platform"
+    "/main/docs/manifesto/MIND_MANIFESTO.md"
+)
 
 
 # ─── Source doc finders ───────────────────────────────────────────────
@@ -39,6 +49,21 @@ def _read_file(path: Optional[Path]) -> str:
     if path and path.exists():
         return path.read_text(encoding="utf-8", errors="replace")
     return ""
+
+
+def _fetch_manifesto() -> str:
+    """Fetch MIND_MANIFESTO.md from canonical GitHub source.
+
+    Source: mind-protocol/mind-platform/docs/manifesto/MIND_MANIFESTO.md
+    Returns empty string on network failure (caller handles gracefully).
+    """
+    try:
+        req = Request(_MANIFESTO_URL, headers={"User-Agent": "mind-mcp"})
+        with urlopen(req, timeout=10) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except (URLError, OSError, TimeoutError) as e:
+        print(f"  ⚠ Could not fetch MIND_MANIFESTO.md from source: {e}")
+        return ""
 
 
 # ─── Section extractor ───────────────────────────────────────────────
@@ -3154,13 +3179,8 @@ def generate_seed_brain(
         _TEMPLATES_DIR / "SYSTEM.md",
         Path(project_dir or ".") / ".mind" / "SYSTEM.md",
     )
-    manifesto_md = _find_file(
-        Path(project_dir or ".") / "docs" / "VALUES_MANIFESTO.md",
-        _MIND_DIR / "docs" / "VALUES_MANIFESTO.md",
-    )
-
     system_text = _read_file(system_md)
-    manifesto_text = _read_file(manifesto_md)
+    manifesto_text = _fetch_manifesto()
 
     # Generate all clusters
     all_nodes: list[dict] = []
@@ -3233,7 +3253,7 @@ def generate_seed_brain(
             "generator": "seed_brain_from_source_docs_dynamic_generator",
             "sources": [
                 str(system_md) if system_md else "SYSTEM.md (not found)",
-                str(manifesto_md) if manifesto_md else "VALUES_MANIFESTO.md (not found)",
+                _MANIFESTO_URL,
             ],
             "node_count": len(all_nodes),
             "link_count": len(valid_links),

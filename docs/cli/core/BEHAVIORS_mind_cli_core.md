@@ -3,7 +3,7 @@
 ```
 STATUS: CANONICAL
 CREATED: 2023-12-19
-UPDATED: 2025-12-29
+UPDATED: 2026-03-13
 ```
 
 ---
@@ -31,22 +31,24 @@ THIS:            BEHAVIORS_mind_cli_core.md
 ```
 GIVEN:  User runs 'mind init' in a directory without .mind/
 WHEN:   The command executes successfully
-THEN:   A .mind/ directory is created with 13 steps:
-        1. Ecosystem templates copied
-        2. Runtime package copied
-        3. AI config files created (CLAUDE.md, GEMINI.md, AGENTS.md)
-        4. Skills synced to AI tool directories
-        5. Database config created (falkordb or neo4j)
-        6. Database schema applied
-        7. Repository files ingested (Spaces and Things created)
-        8. Seed data injected (Actors linked to Spaces)
-        9. .env.example created
-        10. MCP config created
-        11. .gitignore updated
-        12. Overview generated (map.md files)
-        13. Embeddings generated (with progress bar)
-AND:    Human actor created from git config (user.name, user.email) if .git exists
-AND:    Repo Thing created from git remote with GitHub API metadata if public
+THEN:   A .mind/ directory is created with 15 steps:
+        1. Ecosystem templates copied (protocol docs, agents, procedures)
+        2. Capabilities copied (.mind/capabilities/)
+        3. Runtime package copied (.mind/mind/ — 186 files)
+        4. AI config files created (CLAUDE.md, GEMINI.md, AGENTS.md)
+        5. Skills synced to AI tool directories (.claude/skills/, $CODEX_HOME/skills/)
+        6. Database config created (database_config.yaml — falkordb or neo4j)
+        7. Database setup and schema applied
+        8. Repository files ingested (Spaces and Things created from repo tree)
+        9. Capabilities injected into graph (capability Spaces, Tasks, Skills, Procedures)
+        10. .env.mind.example created
+        11. MCP config created (.mind/mcp/cconfig.json)
+        12. .gitignore updated with .mind/ runtime entries
+        13. Repository overview generated (map.md files)
+        14. Embeddings generated for all graph nodes (with progress bar)
+        15. Health checks fired (init.after_scan capability trigger, task_runs created for issues)
+AND:    Version hash saved to .mind/version.txt
+AND:    SYNC file appended with init record (timestamp, version, database, graph, steps)
 AND:    All nodes with synthesis get embeddings
 AND:    Exit code is 0
 ```
@@ -62,6 +64,25 @@ GIVEN:  User runs 'mind init' in a directory with existing .mind/
 WHEN:   The command executes
 THEN:   Existing configuration is preserved or updated
 AND:    User is warned about existing installation
+```
+
+```
+GIVEN:  Step 15 (health checks) runs during init
+WHEN:   CapabilityManager fires init.after_scan trigger
+THEN:   All registered health checks execute
+AND:    Signals are classified (healthy, degraded, critical)
+AND:    task_run nodes are created in the graph for each issue found
+AND:    Summary is printed (X ok, Y degraded, Z critical, N tasks created)
+```
+
+```
+GIVEN:  Database connection fails during init (step 7)
+WHEN:   setup_database raises an error
+THEN:   Error is printed but init continues
+AND:    Steps 8-9 (graph ingestion) are skipped gracefully
+AND:    Steps 10-13 (config/overview) still execute
+AND:    Step 14 (embeddings) fails gracefully
+AND:    Overall init returns True (partial success)
 ```
 
 ### B2: mind status
@@ -128,11 +149,55 @@ THEN:   Output indicates 'No fixes needed'
 AND:    Exit code is 0
 ```
 
+### B5: mind export
+
+```
+GIVEN:  User runs 'mind export --target notebooklm'
+WHEN:   The command executes in an initialized project
+THEN:   Project data is exported in a format suitable for NotebookLM
+AND:    Exit code is 0
+```
+
+### B6: mind swarm
+
+```
+GIVEN:  User runs 'mind swarm --agents 3'
+WHEN:   The command executes
+THEN:   3 parallel agent processes are spawned
+AND:    Each agent claims and works on available tasks
+AND:    Agent heartbeats are maintained
+AND:    Exit code is 0
+```
+
+```
+GIVEN:  User runs 'mind swarm --status'
+WHEN:   A swarm is running
+THEN:   Status of all running agents is displayed (active, idle, task)
+```
+
+```
+GIVEN:  User runs 'mind swarm --stop'
+WHEN:   A swarm is running
+THEN:   All agent processes are terminated gracefully
+```
+
+```
+GIVEN:  User runs 'mind swarm --stream'
+WHEN:   A swarm is running
+THEN:   Moments from all agents are streamed live to stdout
+```
+
+```
+GIVEN:  User runs 'mind swarm --logs [--log-file PATH]'
+WHEN:   Agent log files exist
+THEN:   Log files are tailed live
+```
+
 ---
 
 ## BEHAVIORS — FUTURE COMMANDS (PROPOSED)
 
-### B5: mind validate [PROPOSED]
+### B7: mind validate [PROPOSED]
 
 ```
 GIVEN:  User runs 'mind validate'
@@ -146,7 +211,7 @@ AND:    Exit code is 0 if all pass, non-zero if any fail
 AND:    Output is CI-friendly (parseable, clear pass/fail)
 ```
 
-### B6: mind work [PROPOSED]
+### B8: mind work [PROPOSED]
 
 ```
 GIVEN:  User runs 'mind work [path] [objective]'
@@ -158,7 +223,7 @@ AND:    Changes are tracked in SYNC
 
 Note: This command needs redesign. Current implementation scope is TBD.
 
-### B7: mind context [PROPOSED]
+### B9: mind context [PROPOSED]
 
 ```
 GIVEN:  User runs 'mind context node_id'
@@ -191,7 +256,7 @@ THEN:   Context is deduced from current working directory/file
 AND:    Relevant graph context is displayed
 ```
 
-### B8: mind sync-files [PROPOSED]
+### B10: mind sync-files [PROPOSED]
 
 ```
 GIVEN:  User runs 'mind sync-files'
@@ -202,7 +267,7 @@ THEN:   SYNC files are scanned and updated:
         - Handoffs are surfaced
 ```
 
-### B9: mind human-review [PROPOSED]
+### B11: mind human-review [PROPOSED]
 
 ```
 GIVEN:  User runs 'mind human-review'
@@ -214,7 +279,7 @@ THEN:   Markers are presented for review:
 AND:    User can interactively resolve each marker
 ```
 
-### B10: mind talk [PROPOSED]
+### B12: mind talk [PROPOSED]
 
 ```
 GIVEN:  User runs 'mind talk'
@@ -235,7 +300,7 @@ AND:    Conversation is recorded in the graph
 
 ## GENERIC BEHAVIORS
 
-### B11: Display Help Information
+### B13: Display Help Information
 
 ```
 GIVEN:  User runs 'mind --help' or 'mind <command> --help'
@@ -244,7 +309,7 @@ THEN:   Usage instructions and available commands/arguments are displayed
 AND:    Exit code is 0
 ```
 
-### B12: Handle Invalid Command
+### B14: Handle Invalid Command
 
 ```
 GIVEN:  User runs 'mind invalid-command'
@@ -263,10 +328,12 @@ AND:    Exit code is 1
 | B1 | O1: Project Initialization | Enables new projects to use Mind Protocol |
 | B2 | O2: Health Monitoring | Gives visibility into project state |
 | B3, B4 | O3: Protocol Maintenance | Keeps projects up-to-date and healthy |
-| B5 | O4: Protocol Enforcement | Enables CI integration |
-| B6, B7, B10 | O5: AI-Assisted Workflows | Powers AI agent capabilities |
-| B9 | O6: Human-AI Collaboration | Bridges human and AI decision-making |
-| B8 | O7: State Synchronization | Maintains consistent state tracking |
+| B5 | O4: Export | Enables external tool integration (NotebookLM) |
+| B6 | O5: Agent Orchestration | Runs multiple agents in parallel on tasks |
+| B7 | O6: Protocol Enforcement | Enables CI integration |
+| B8, B9, B12 | O7: AI-Assisted Workflows | Powers AI agent capabilities |
+| B11 | O8: Human-AI Collaboration | Bridges human and AI decision-making |
+| B10 | O9: State Synchronization | Maintains consistent state tracking |
 
 ---
 

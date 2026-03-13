@@ -3,7 +3,7 @@
 ```
 STATUS: CANONICAL
 CREATED: 2023-12-19
-UPDATED: 2025-12-29
+UPDATED: 2026-03-13
 ```
 
 ---
@@ -118,20 +118,28 @@ else:
 ### init.run(directory, database)
 
 ```pseudocode
-1. Check if .mind/ already exists
-   - If yes, warn user and decide whether to update or abort
-2. Create .mind/ directory structure
-3. Create database.yaml with selected backend
-4. Create mcp-config.json
-5. Create .env.example
-6. Create AI config files (CLAUDE.md, etc.)
-7. Sync skills to AI tool directories
-8. Copy ecosystem templates
-9. Setup database and apply schema
-10. Inject seed YAML to graph
-11. Ingest repository files to graph
-12. Generate repository overview maps
-13. Return True on success, False on failure
+graph_name = directory.name.lower().replace("-", "_").replace(" ", "_")
+version = get_mcp_version()
+
+1.  copy_ecosystem_templates(target_dir)       # Protocol docs, agents, procedures
+2.  copy_capabilities(target_dir)              # Capability definitions
+3.  copy_runtime_package(target_dir)           # Python runtime (186 files)
+    save_version_hash(target_dir)              # Git hash to .mind/version.txt
+4.  create_ai_config_files(target_dir)         # CLAUDE.md, GEMINI.md, AGENTS.md
+5.  sync_skills_to_ai_tools(target_dir)        # Skills to .claude/skills/, $CODEX_HOME/
+6.  create_database_config(target_dir, db, graph_name)  # database_config.yaml
+7.  setup_database(target_dir, db, graph_name) # Connect + apply schema
+8.  ingest_repo_files(target_dir, graph_name)  # Repo tree -> Space/Thing nodes
+9.  ingest_capabilities(target_dir, graph_name)# Capabilities -> graph nodes
+10. create_env_example(target_dir, db)         # .env.mind.example
+11. create_mcp_config(target_dir)              # .mind/mcp/cconfig.json
+12. update_gitignore(target_dir)               # Add .mind/ runtime entries
+13. generate_overview(target_dir)              # map.md files
+14. generate_embeddings(graph_name)            # Embed all nodes (progress bar)
+15. CapabilityManager.fire_trigger("init.after_scan")  # Health checks + task creation
+    _update_sync_file(target_dir, version, db, graph_name, steps)
+
+Return True (always succeeds — individual steps handle errors gracefully)
 ```
 
 ### status.run(directory)
