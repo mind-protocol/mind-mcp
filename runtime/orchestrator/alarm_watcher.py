@@ -29,7 +29,7 @@ class AlarmWatcher:
         enqueue_fn: Optional[Callable] = None,
     ):
         self.citizens_dir = citizens_dir or (
-            Path(__file__).resolve().parent.parent.parent / ".mind" / "citizens"
+            Path(__file__).resolve().parent.parent.parent / "citizens"
         )
         self.enqueue_fn = enqueue_fn  # function to add items to orchestrator queue
         self._running = False

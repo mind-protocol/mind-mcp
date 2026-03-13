@@ -32,7 +32,7 @@ logger = logging.getLogger("bridge.telegram")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 STATE_DIR = PROJECT_ROOT / "shrine" / "state"
-CITIZENS_DIR = PROJECT_ROOT / ".mind" / "citizens"
+CITIZENS_DIR = PROJECT_ROOT / "citizens"
 MESSAGES_FILE = STATE_DIR / "telegram_messages.jsonl"
 OFFSET_FILE = STATE_DIR / "telegram_offset.txt"
 USERS_FILE = STATE_DIR / "telegram_users.jsonl"

@@ -2,7 +2,7 @@
 [ACT] Alarm — Citizens set their own alarms for autonomous wake.
 
 No cron. Citizens have agency over when they wake. Alarms are per-citizen,
-stored in .mind/citizens/{handle}/alarms.jsonl.
+stored in citizens/{handle}/alarms.jsonl.
 
 Usage via MCP:
     alarm(action="set", time="2026-03-14T08:00:00Z", reason="Check CI pipeline")
@@ -58,7 +58,7 @@ def _get_alarms_file(handle: str) -> Path:
     """Return the alarms file path for a citizen."""
     # Look for citizens dir in project root
     project_root = Path(__file__).resolve().parent.parent.parent
-    return project_root / ".mind" / "citizens" / handle / "alarms.jsonl"
+    return project_root / "citizens" / handle / "alarms.jsonl"
 
 
 def _parse_time(time_str: str) -> str:

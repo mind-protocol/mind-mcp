@@ -1,7 +1,7 @@
 """Citizen identity loading and permission management.
 
 Ported from manemus/scripts/orchestrator.py (lines 184-509, 4179-4213).
-Loads citizen profiles from .mind/citizens/{handle}/ directories.
+Loads citizen profiles from citizens/{handle}/ directories.
 """
 
 import json
@@ -11,7 +11,7 @@ from typing import Optional
 
 logger = logging.getLogger("citizens.identity")
 
-# Default: .mind/citizens/ relative to project root
+# Default: citizens/ at project root
 # Can be overridden via set_citizens_dir()
 _citizens_dir: Optional[Path] = None
 
@@ -20,8 +20,8 @@ def get_citizens_dir() -> Path:
     """Return the citizens base directory."""
     if _citizens_dir is not None:
         return _citizens_dir
-    # Default: .mind/citizens/ relative to this file's project root
-    return Path(__file__).resolve().parent.parent.parent / ".mind" / "citizens"
+    # Default: citizens/ at project root (where citizen directories live)
+    return Path(__file__).resolve().parent.parent.parent / "citizens"
 
 
 def set_citizens_dir(path: Path) -> None:
