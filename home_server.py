@@ -204,6 +204,20 @@ except ImportError:
 from runtime.membrane.http_endpoint import router as membrane_router
 app.include_router(membrane_router)
 
+# Phase 6: User-facing API routes (auth, chat, citizens, house, feed, DM)
+from runtime.api.auth_routes import router as auth_router
+from runtime.api.chat_routes import router as chat_router
+from runtime.api.house_routes import router as house_router
+from runtime.api.citizens_routes import router as citizens_router
+from runtime.api.feed_routes import router as feed_router
+from runtime.api.dm_routes import router as dm_router
+app.include_router(auth_router)
+app.include_router(chat_router)
+app.include_router(house_router)
+app.include_router(citizens_router)
+app.include_router(feed_router)
+app.include_router(dm_router)
+
 
 # ── Health ──────────────────────────────────────────────────────────────────
 
@@ -239,8 +253,27 @@ async def info():
             "health": "/health",
             "info": "/api/info",
             "citizens": "/api/citizens",
-            "chat": "/api/chat",
+            "citizen_search": "/api/citizens/search",
+            "brain_scores": "/api/brain-scores",
+            "house": "/api/house",
+            "house_v2": "/house/state",
+            "house_info": "/house/info",
+            "house_profile_me": "/house/profile/me",
+            "house_profile": "/house/profile/{user_id}",
+            "house_citizens": "/house/citizens",
+            "auth_register": "/auth/register",
+            "auth_login": "/auth/login",
+            "chat_send": "/chat/send",
+            "chat_messages": "/chat/messages/{thread_id}",
+            "feed_get": "/feed/{user_id}",
+            "feed_post": "/feed/",
+            "feed_me": "/feed/",
+            "dm_send": "/dm/send",
+            "dm_threads": "/dm/threads",
+            "dm_thread": "/dm/thread/{other_user_id}",
+            "dm_mark_read": "/dm/thread/{other_user_id}/read",
             "orchestrator": "/api/orchestrator/status",
+            "chat_direct": "/api/chat",
             "membrane_stimulus": "/membrane/stimulus",
             "membrane_info": "/membrane/info",
             "membrane_subscribe": "/membrane/subscribe",
@@ -250,38 +283,11 @@ async def info():
     }
 
 
-# ── Citizens ────────────────────────────────────────────────────────────────
-
-@app.get("/api/citizens")
-async def get_citizens():
-    """List all birthed citizens in this home."""
-    from runtime.citizens import list_available_citizens
-    return {"citizens": list_available_citizens()}
-
-
-@app.get("/api/citizens/{handle}")
-async def get_citizen(handle: str):
-    """Get full citizen identity and profile."""
-    from runtime.citizens import load_citizen_identity
-    citizen = load_citizen_identity(handle)
-    if not citizen:
-        raise HTTPException(status_code=404, detail=f"Citizen @{handle} not found")
-    # Don't expose full claude_md and memories in API — just profile and metadata
-    return {
-        "handle": citizen["handle"],
-        "dir": citizen["dir"],
-        "has_claude_md": bool(citizen.get("claude_md", "").strip()),
-        "profile": citizen.get("profile", {}),
-        "memory_count": len(citizen.get("memories", [])),
-        "has_memory_index": bool(citizen.get("memory_index", "").strip()),
-    }
-
-
-# ── Chat / Orchestrator ─────────────────────────────────────────────────────
+# ── Orchestrator status (kept inline — needs _state access) ────────────────
 
 @app.post("/api/chat")
 async def post_chat(request: Request):
-    """Submit a message for processing by the orchestrator."""
+    """Submit a message for processing by the orchestrator (direct dispatch)."""
     body = await request.json()
     text = body.get("text", "").strip()
     if not text:
