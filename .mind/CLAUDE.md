@@ -51,13 +51,12 @@ Templates come from `mind-platform/templates/` via `mind init`.
 
 ---
 
-## MCP Tools
+## MCP Tools (THINK / ACT / SPEAK)
 
-Use the Mind MCP server for:
-- `graph_query` — Semantic search across the project graph
-- `procedure_start` / `procedure_continue` — Structured dialogues
-- `doctor_check` — Health checks
-- `task_list` / `agent_run` — Task management
+7 tools organized by verb:
+- **THINK:** `graph_query`, `graph_write`, `procedure(action=list|start|continue|abort)`
+- **ACT:** `task(action=list|claim|complete|fail)`, `agent(action=list|run|status)`, `think`
+- **SPEAK:** `send(platform=telegram|...)`
 
 
 ---

@@ -2,7 +2,7 @@
 """
 Mind MCP Server — Membrane Dispatcher
 
-Exposes the mind graph system as 9 MCP tools organized by THINK / ACT / SPEAK.
+Exposes the mind graph system as 10 MCP tools organized by THINK / ACT / SPEAK.
 
 THINK (knowledge & reasoning):
   1. graph_query   — semantic search across the knowledge graph
@@ -15,7 +15,8 @@ ACT (work & coordination):
   6. think         — consult another LLM (Gemini)
 
 SPEAK (outward communication):
-  7. send          — send message to any platform (telegram, ...)
+  7. send          — send message to any platform (telegram/discord/whatsapp/twitter/email/sms)
+  8. read          — read messages/mentions from any platform
 
 Usage:
   python mcp/server.py
@@ -52,6 +53,7 @@ from mcp.tools.task_handler import TOOL_SCHEMA as TASK_SCHEMA, handle_task
 from mcp.tools.agent_handler import TOOL_SCHEMA as AGENT_SCHEMA, handle_agent
 from mcp.tools.think_handler import TOOL_SCHEMA as THINK_SCHEMA, handle_think
 from mcp.tools.send_handler import TOOL_SCHEMA as SEND_SCHEMA, handle_send
+from mcp.tools.read_handler import TOOL_SCHEMA as READ_SCHEMA, handle_read
 from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
 from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
 from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
@@ -75,6 +77,7 @@ TOOL_SCHEMAS = [
     THINK_SCHEMA,
     # SPEAK
     SEND_SCHEMA,
+    READ_SCHEMA,
     MEDIA_SCHEMA,
     # ACT (citizen autonomy)
     ALARM_SCHEMA,
@@ -92,6 +95,7 @@ TOOL_DISPATCH = {
     "agent":       (handle_agent,       True),
     "think":       (handle_think,       False),
     "send":        (handle_send,        False),
+    "read":        (handle_read,        False),
     "media":       (handle_media,       False),
     "alarm":       (handle_alarm,       False),
     "place":       (handle_place,       True),
