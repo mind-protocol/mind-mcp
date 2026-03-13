@@ -30,16 +30,22 @@ def compute_agent_score(
     return similarity * weight * energy
 
 
-def select_best_agent(task_id: str, task_synthesis: str, adapter) -> Optional[str]:
-    """Select best agent for a task using graph physics.
+def select_best_agent(
+    task_id: str,
+    task_synthesis: str,
+    adapter,
+    actor_type: Optional[str] = None,
+) -> Optional[str]:
+    """Select best agent/citizen for a task using graph physics.
 
     Args:
         task_id: Task narrative ID
         task_synthesis: Task description for embedding
         adapter: Database adapter
+        actor_type: Filter by actor type (e.g. 'AGENT', 'citizen'). None = all actors.
 
     Returns:
-        Best agent ID or None if no agents available
+        Best actor ID or None if no actors available
     """
     from runtime.infrastructure.embeddings import get_embedding
 
@@ -49,17 +55,23 @@ def select_best_agent(task_id: str, task_synthesis: str, adapter) -> Optional[st
         logger.warning(f"Could not embed task: {task_id}")
         return None
 
-    # Get available agents (not paused)
-    # Uses AGENT type (uppercase) for new-format agents with synthesis
+    # Get available actors (not paused)
+    # Filter by actor_type if provided, otherwise match all
     # No hard limit - load penalty handles distribution
-    result = adapter.query("""
+    params = {}
+    type_filter = "TRUE"
+    if actor_type:
+        type_filter = "a.type = $actor_type"
+        params["actor_type"] = actor_type
+
+    result = adapter.query(f"""
         MATCH (a:Actor)
-        WHERE a.type = 'AGENT' AND COALESCE(a.status, 'idle') <> 'paused'
-        OPTIONAL MATCH (a)<-[r:LINK {verb: 'claimed_by'}]-(t:Narrative {type: 'task_run'})
+        WHERE {type_filter} AND COALESCE(a.status, 'idle') <> 'paused'
+        OPTIONAL MATCH (a)<-[r:LINK {{verb: 'claimed_by'}}]-(t:Narrative {{type: 'task_run'}})
         WHERE t.status IN ['claimed', 'running']
         WITH a, count(t) as active_tasks
         RETURN a.id, a.synthesis, a.weight, a.energy, a.embedding, active_tasks
-    """)
+    """, params)
 
     if not result:
         logger.debug("No available agents")
@@ -133,14 +145,19 @@ def assign_task(task_id: str, agent_id: str, adapter, synthesis: str = "") -> bo
         return False
 
 
-def assign_single_task(task_id: str, task_synthesis: str, adapter) -> Optional[str]:
-    """Assign a single task to best available agent.
+def assign_single_task(
+    task_id: str,
+    task_synthesis: str,
+    adapter,
+    actor_type: Optional[str] = None,
+) -> Optional[str]:
+    """Assign a single task to best available agent/citizen.
 
     Call this on task creation.
 
-    Returns assigned agent ID or None.
+    Returns assigned actor ID or None.
     """
-    agent_id = select_best_agent(task_id, task_synthesis, adapter)
+    agent_id = select_best_agent(task_id, task_synthesis, adapter, actor_type=actor_type)
 
     if agent_id:
         if assign_task(task_id, agent_id, adapter, synthesis=task_synthesis):
@@ -195,6 +212,47 @@ def assign_pending_tasks(adapter, limit: int = 20) -> Tuple[int, int]:
         logger.info(f"Auto-assigned {assigned} tasks ({skipped} skipped)")
 
     return (assigned, skipped)
+
+
+def record_task_outcome(
+    actor_id: str,
+    task_id: str,
+    success: bool,
+    adapter,
+) -> None:
+    """Update actor energy based on task outcome. Physics drives reassignment.
+
+    On success: actor energy += 0.1 (more likely to be picked again)
+    On failure: task energy += 0.3 (unresolved problem gets louder)
+    The load penalty (0.5^active_tasks) naturally shifts selection away from
+    actors who have failed tasks still linked to them.
+    """
+    import time
+    timestamp = int(time.time())
+
+    try:
+        if success:
+            # Boost actor energy, mark task done
+            adapter.execute("""
+                MATCH (a:Actor {id: $actor_id})
+                SET a.energy = COALESCE(a.energy, 0.5) + 0.1
+            """, {"actor_id": actor_id})
+            adapter.execute("""
+                MATCH (t:Narrative {id: $task_id})
+                SET t.status = 'done', t.completed_at = $ts
+            """, {"task_id": task_id, "ts": timestamp})
+            logger.info(f"Task {task_id} completed by {actor_id} — energy boosted")
+        else:
+            # Increase task energy (makes it louder for next selection)
+            adapter.execute("""
+                MATCH (t:Narrative {id: $task_id})
+                SET t.energy = COALESCE(t.energy, 0.5) + 0.3,
+                    t.status = 'pending',
+                    t.last_failed_at = $ts
+            """, {"task_id": task_id, "ts": timestamp})
+            logger.info(f"Task {task_id} failed by {actor_id} — task energy increased")
+    except Exception as e:
+        logger.error(f"Failed to record outcome for {task_id}: {e}")
 
 
 def startup_assign(target_dir=None) -> Tuple[int, int]:

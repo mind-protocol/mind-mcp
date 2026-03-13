@@ -35,6 +35,38 @@ def make_id(type_prefix: str, name: str) -> str:
     return f"{type_prefix.upper()}_{name.capitalize()}"
 
 
+def normalize_citizen_id(handle: str) -> str:
+    """Normalize a citizen handle to canonical CITIZEN_{handle} format.
+
+    Citizen handles are snake_case, not capitalized (unlike agent IDs).
+    Strips leading @ if present.
+
+    Args:
+        handle: e.g. "dragon_slayer", "@dragon_slayer", "CITIZEN_dragon_slayer"
+
+    Returns:
+        "CITIZEN_dragon_slayer"
+    """
+    handle = handle.strip().lstrip("@")
+    if handle.upper().startswith("CITIZEN_"):
+        handle = handle[8:]  # Remove CITIZEN_ prefix
+    return f"CITIZEN_{handle.lower()}"
+
+
+def extract_citizen_handle(citizen_id: str) -> str:
+    """Extract the handle from a CITIZEN_ prefixed ID.
+
+    Args:
+        citizen_id: "CITIZEN_dragon_slayer"
+
+    Returns:
+        "dragon_slayer"
+    """
+    if citizen_id.startswith("CITIZEN_"):
+        return citizen_id[8:]
+    return citizen_id.lower()
+
+
 # =============================================================================
 # DYNAMIC AGENT DISCOVERY
 # =============================================================================
@@ -175,6 +207,8 @@ def normalize_agent_id(
     agent_input = agent_input.strip()
 
     # Already canonical format
+    if agent_input.startswith("CITIZEN_"):
+        return agent_input  # Citizens use snake_case, no capitalize
     if agent_input.startswith("AGENT_"):
         name = agent_input[6:]  # Remove AGENT_ prefix
         return f"AGENT_{name.capitalize()}"

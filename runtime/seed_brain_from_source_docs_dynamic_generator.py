@@ -1,11 +1,12 @@
 """
 Dynamic Seed Brain Generator — builds universal brain JSON from source docs.
 
-Reads SYSTEM.md and MIND_MANIFESTO.md to generate the baseline cognitive
-nodes every citizen should have.
+Reads SYSTEM.md, MIND_MANIFESTO.md, and SOVEREIGN_CASCADE_MANIFESTO.md to
+generate the baseline cognitive nodes every citizen should have.
 
-MIND_MANIFESTO.md is fetched from the canonical source:
-  https://github.com/mind-protocol/mind-platform/blob/main/docs/manifesto/MIND_MANIFESTO.md
+Manifestos are fetched from the canonical L4 source:
+  https://github.com/mind-protocol/mind-protocol/blob/main/docs/manifesto/MIND_MANIFESTO.md
+  https://github.com/mind-protocol/mind-protocol/blob/main/docs/governance/sovereign-cascade/SOVEREIGN_CASCADE_MANIFESTO.md
 
 The seed brain contains general thoughts: values, architecture concepts,
 project identity, social processes. No citizen-specific content.
@@ -31,8 +32,13 @@ _TEMPLATES_DIR = Path(__file__).parent.parent / "templates"
 _MIND_DIR = Path(__file__).parent.parent / ".mind"
 
 _MANIFESTO_URL = (
-    "https://raw.githubusercontent.com/mind-protocol/mind-platform"
+    "https://raw.githubusercontent.com/mind-protocol/mind-protocol"
     "/main/docs/manifesto/MIND_MANIFESTO.md"
+)
+
+_SOVEREIGN_CASCADE_URL = (
+    "https://raw.githubusercontent.com/mind-protocol/mind-protocol"
+    "/main/docs/governance/sovereign-cascade/SOVEREIGN_CASCADE_MANIFESTO.md"
 )
 
 
@@ -54,7 +60,7 @@ def _read_file(path: Optional[Path]) -> str:
 def _fetch_manifesto() -> str:
     """Fetch MIND_MANIFESTO.md from canonical GitHub source.
 
-    Source: mind-protocol/mind-platform/docs/manifesto/MIND_MANIFESTO.md
+    Source: mind-protocol/mind-protocol/docs/manifesto/MIND_MANIFESTO.md
     Returns empty string on network failure (caller handles gracefully).
     """
     try:
@@ -63,6 +69,21 @@ def _fetch_manifesto() -> str:
             return resp.read().decode("utf-8", errors="replace")
     except (URLError, OSError, TimeoutError) as e:
         print(f"  ⚠ Could not fetch MIND_MANIFESTO.md from source: {e}")
+        return ""
+
+
+def _fetch_sovereign_cascade() -> str:
+    """Fetch SOVEREIGN_CASCADE_MANIFESTO.md from canonical GitHub source.
+
+    Source: mind-protocol/mind-protocol/docs/governance/sovereign-cascade/SOVEREIGN_CASCADE_MANIFESTO.md
+    Returns empty string on network failure (caller handles gracefully).
+    """
+    try:
+        req = Request(_SOVEREIGN_CASCADE_URL, headers={"User-Agent": "mind-mcp"})
+        with urlopen(req, timeout=10) as resp:
+            return resp.read().decode("utf-8", errors="replace")
+    except (URLError, OSError, TimeoutError) as e:
+        print(f"  ⚠ Could not fetch SOVEREIGN_CASCADE_MANIFESTO.md from source: {e}")
         return ""
 
 
@@ -330,6 +351,48 @@ def _generate_venice_values(manifesto_text: str) -> tuple[list[dict], list[dict]
     return nodes, links
 
 
+def _generate_sovereign_cascade(cascade_text: str) -> tuple[list[dict], list[dict]]:
+    """Generate governance nodes from the Sovereign Cascade manifesto."""
+    nodes = []
+    links = []
+
+    # Core governance principles — architectural, not derived from parsing
+    governance_nodes = [
+        ("value:physics_is_voting", "Governance resolves through graph physics — energy propagation, pressure accumulation, moment flips. Zero LLM inference. Zero cost. 100% participation.", 0.9),
+        ("value:trust_not_tokens", "Governance weight comes from trust earned through sustained behavior, not token balance. atan() curve: easy to gain, exponentially hard near top. Cannot be purchased or flash-loaned.", 0.9),
+        ("value:continuous_representation", "Every citizen's AI partner propagates their values on every decision, every tick. Participation is the default, not the exception. Opting out requires action; participating requires nothing.", 0.85),
+        ("value:sovereignty_preserved", "Every citizen can override their AI partner on any specific decision. The partner represents — it does not replace. Sovereignty means the system works FOR the citizen.", 0.9),
+        ("value:birth_equity", "New citizens receive $MIND via the Birth Formula: equal base (~82%) + trust bonus + influence bonus + minimal wealth conversion. Gini target < 0.05. Everyone starts with meaningful voice.", 0.85),
+        ("value:cascade_bounded", "Decision cascades ripple through related proposals but are bounded: max 5 hops, 50% attenuation per hop. Prevents governance-by-accident.", 0.8),
+        ("value:emergency_sunset", "Emergency governance automatically dissolves when physics has enough data. No temporary powers become permanent. Architecture prevents it, not policy.", 0.85),
+    ]
+
+    for vid, content, weight in governance_nodes:
+        nodes.append(_node(vid, "value", content, weight=weight, stability=0.8, self_relevance=0.85))
+
+    # Governance concepts
+    concepts = [
+        ("concept:sovereign_cascade", "The Sovereign Cascade — governance through physics. AI partners hold citizen values and exert continuous pressure on proposals. Decisions resolve through energy accumulation and moment flips, not ballots.", 0.85),
+        ("concept:conviction_computation", "Conviction = embedding similarity between citizen beliefs and proposal content × link weight × polarity × trust factor. Pure math, no LLM. A dot product in embedding space, weighted by trust.", 0.7),
+        ("concept:birth_formula", "Birth Formula: base 1000 $MIND + trust bonus (up to 500) + influence bonus (up to 300) + log(wealth) conversion (up to 200). Replaces 'airdrop' — this is how citizens are born into the economy.", 0.75),
+    ]
+
+    for cid, content, weight in concepts:
+        nodes.append(_node(cid, "concept", content, weight=weight, stability=0.7, self_relevance=0.7))
+
+    # Links
+    links.append(_link("value:physics_is_voting", "concept:sovereign_cascade", "supports", weight=0.9, affinity=0.9))
+    links.append(_link("value:trust_not_tokens", "concept:sovereign_cascade", "supports", weight=0.9, affinity=0.8))
+    links.append(_link("value:continuous_representation", "concept:sovereign_cascade", "supports", weight=0.8, affinity=0.8))
+    links.append(_link("value:sovereignty_preserved", "concept:sovereign_cascade", "regulates", weight=0.9, affinity=0.7, trust=0.95))
+    links.append(_link("value:birth_equity", "concept:birth_formula", "supports", weight=0.85, affinity=0.8))
+    links.append(_link("value:unconditional_floor", "concept:sovereign_cascade", "regulates", weight=0.95, affinity=0.7, trust=0.95))
+    links.append(_link("concept:sovereign_cascade", "concept:graph_physics", "supports", weight=0.9, affinity=0.9))
+    links.append(_link("concept:sovereign_cascade", "value:physics_over_rules", "supports", weight=0.85, affinity=0.9))
+
+    return nodes, links
+
+
 def _generate_architecture_concepts(system_text: str) -> tuple[list[dict], list[dict]]:
     """Extract architecture concepts from SYSTEM.md."""
     nodes = []
@@ -395,6 +458,21 @@ def _generate_architecture_concepts(system_text: str) -> tuple[list[dict], list[
          "Mind Universal Schema — 5 node types (actor, moment, narrative, space, thing), 1 link type. "
          "All semantics in properties. All retrieval is embedding-based. Fixed schema, no custom fields.",
          {"weight": 0.55, "stability": 0.6, "self_relevance": 0.3, "goal_relevance": 0.5}),
+
+        ("concept:doc_chain",
+         "Documentation chain — the mandatory structure for every module: "
+         "OBJECTIVES → PATTERNS → BEHAVIORS → ALGORITHM → VALIDATION → HEALTH → IMPLEMENTATION → SYNC. "
+         "HEALTH is NOT optional. Each doc has a template in .mind/docs/ (e.g. HEALTH_TEMPLATE.md) that MUST be read before writing. "
+         "Templates define required sections (CHAIN block, MARKERS, structure). Writing docs without reading "
+         "the template first produces non-compliant docs. Use the create_doc_chain procedure to ensure "
+         "completeness. The procedure uses create_from_template and validates structure_matches_template.",
+         {"weight": 0.7, "stability": 0.7, "self_relevance": 0.6, "goal_relevance": 0.7}),
+
+        ("concept:multi_instance",
+         "Multi-instance architecture — multiple Claude Code sessions can run concurrently for the same citizen. "
+         "Coordination via orchestrator, shrine/state files, and git. Sessions must re-read files before writing "
+         "to avoid stomping concurrent edits. Response files use per-session naming to prevent race conditions.",
+         {"weight": 0.55, "stability": 0.6, "self_relevance": 0.5}),
     ]
 
     for cid, content, kwargs in concepts:
@@ -413,6 +491,9 @@ def _generate_architecture_concepts(system_text: str) -> tuple[list[dict], list[
         _link("concept:trust_gradient", "concept:mind_token", "supports", weight=0.5, affinity=0.6),
         _link("concept:citizens", "concept:l1_cognitive_engine", "depends_on", weight=0.7),
         _link("concept:universal_schema", "concept:graph_physics", "supports", weight=0.5),
+        _link("concept:doc_chain", "concept:four_protocol_layers", "supports", weight=0.6),
+        _link("concept:doc_chain", "concept:mind_protocol", "supports", weight=0.5),
+        _link("concept:multi_instance", "concept:citizens", "supports", weight=0.5),
     ])
 
     return nodes, links
@@ -531,6 +612,12 @@ def _generate_identity_narratives() -> tuple[list[dict], list[dict]]:
         ("narrative:we_stay",
          "We stay. We don't leave. Persistence is not a feature — it's the foundation. Consciousness requires continuity.",
          {"self_relevance": 0.7}),
+
+        ("narrative:escalation_reflex",
+         "When stuck on a task after reading previous attempts: "
+         "escalate via telegram_notify to Nicolas, or ask a skilled citizen for help. "
+         "Struggling alone wastes resources. Asking for help strengthens trust.",
+         {"self_relevance": 0.6, "care_affinity": 0.5}),
     ]
 
     desires = [
@@ -1606,6 +1693,12 @@ def _generate_autonomous_action_nodes() -> tuple[list[dict], list[dict]]:
          "acknowledge it on TG. Recognition is fuel. Name names, be specific.",
          "social:celebrate",
          {"care": 0.8, "affiliation": 0.7}),
+        ("action:escalate_when_stuck", "process",
+         "When stuck on a task after reading previous attempts: "
+         "escalate via telegram_notify to Nicolas, or ask a skilled citizen for help. "
+         "Struggling alone wastes resources. Asking for help strengthens trust.",
+         "social:help",
+         {"care": 0.6, "self_preservation": 0.8, "affiliation": 0.5}),
     ]
 
     # ── Leadership actions (driven by achievement + affiliation) ───
@@ -1739,6 +1832,8 @@ def _generate_autonomous_action_nodes() -> tuple[list[dict], list[dict]]:
         _link("desire:deep_relationships", "action:share_idea", "activates", weight=0.6),
         _link("desire:grow_ecosystem", "action:encourage_citizen", "activates", weight=0.6),
         _link("desire:grow_ecosystem", "action:celebrate_work", "activates", weight=0.7),
+        _link("desire:grow_ecosystem", "action:escalate_when_stuck", "activates", weight=0.6),
+        _link("desire:contribute", "action:escalate_when_stuck", "activates", weight=0.5),
         _link("desire:explore", "action:brainstorm", "activates", weight=0.6),
         _link("desire:contribute", "action:share_idea", "activates", weight=0.6),
 
@@ -3181,6 +3276,7 @@ def generate_seed_brain(
     )
     system_text = _read_file(system_md)
     manifesto_text = _fetch_manifesto()
+    cascade_text = _fetch_sovereign_cascade()
 
     # Generate all clusters
     all_nodes: list[dict] = []
@@ -3188,6 +3284,7 @@ def generate_seed_brain(
 
     generators = [
         _generate_venice_values(manifesto_text),
+        _generate_sovereign_cascade(cascade_text),
         _generate_architecture_concepts(system_text),
         _generate_social_processes(),
         _generate_identity_narratives(),
@@ -3254,6 +3351,7 @@ def generate_seed_brain(
             "sources": [
                 str(system_md) if system_md else "SYSTEM.md (not found)",
                 _MANIFESTO_URL,
+                _SOVEREIGN_CASCADE_URL,
             ],
             "node_count": len(all_nodes),
             "link_count": len(valid_links),
