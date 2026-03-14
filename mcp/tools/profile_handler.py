@@ -27,6 +27,7 @@ EDITABLE_FIELDS = {
     "display_name", "first_name", "last_name", "nickname", "bio",
     "tags", "links", "website", "spotify_track", "canvas_color",
     "telegram_id", "emoji", "profile_pic",
+    "human_partner", "parents",
 }
 
 # Profile field → (brain node type, content template)
@@ -101,6 +102,15 @@ TOOL_SCHEMA = {
             "profile_pic": {
                 "type": "string",
                 "description": "URL to your profile picture.",
+            },
+            "human_partner": {
+                "type": "string",
+                "description": "Handle of your human partner (bilateral bond).",
+            },
+            "parents": {
+                "type": "array",
+                "items": {"type": "object", "properties": {"parent_id": {"type": "string"}}},
+                "description": "Your parent citizens (who spawned you).",
             },
         },
         "required": ["action"],
@@ -229,6 +239,22 @@ def _profile_update(citizen_id: str, args: Dict[str, Any]) -> Dict[str, Any]:
                 return _err(f"Could not download profile pic from: {value}")
             continue
 
+        # Handle relationship fields
+        if key == "human_partner" and value:
+            relationships = profile.setdefault("relationships", {})
+            relationships["human_partner"] = value
+            updated.append(key)
+            continue
+
+        if key == "parents" and value:
+            relationships = profile.setdefault("relationships", {})
+            relationships["parents"] = [
+                p.get("parent_id", p) if isinstance(p, dict) else p
+                for p in value
+            ]
+            updated.append(key)
+            continue
+
         # Write to correct nested location
         if key in _IDENTITY_KEYS:
             identity[_IDENTITY_KEYS[key]] = value
@@ -251,6 +277,26 @@ def _profile_update(citizen_id: str, args: Dict[str, Any]) -> Dict[str, Any]:
     # Save profile
     profile_path.write_text(json.dumps(profile, indent=2, ensure_ascii=False))
     logger.info(f"Profile updated via MCP: {citizen_id} fields={updated}")
+
+    # Sync relationships to L4
+    human_partner = args.get("human_partner")
+    parents = args.get("parents")
+    if human_partner or parents:
+        try:
+            import os
+            from runtime.l4.citizen_l4_upsert import upsert_citizen_l4
+            upsert_citizen_l4(
+                handle=citizen_id,
+                name=identity.get("name", citizen_id),
+                org_id=identity.get("organization", ""),
+                human_partner=human_partner,
+                parents=parents,
+                description=identity.get("bio", ""),
+                falkordb_host=os.environ.get("FALKORDB_HOST"),
+                falkordb_port=int(os.environ.get("FALKORDB_PORT", "6379")),
+            )
+        except Exception as e:
+            logger.warning(f"L4 sync for {citizen_id} relationships: {e}")
 
     lines = [
         f"Updated @{citizen_id} profile:",

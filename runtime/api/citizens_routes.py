@@ -479,6 +479,7 @@ _EDITABLE_FIELDS = {
     "display_name", "first_name", "last_name", "nickname", "bio",
     "tags", "links", "website", "spotify_track", "canvas_color",
     "telegram_id", "emoji", "profile_pic",
+    "human_partner", "parents",
 }
 
 # Profile field → (brain node type, content template)
@@ -561,12 +562,47 @@ async def update_citizen(citizen_id: str, request: Request):
         # Upsert brain node
         _upsert_profile_field_to_brain(citizen_id, key, value)
 
+    # Handle relationship fields → L4 upsert
+    human_partner = updates.get("human_partner")
+    parents = updates.get("parents")
+
+    if human_partner:
+        relationships = profile.setdefault("relationships", {})
+        relationships["human_partner"] = human_partner
+        updated_fields.append("human_partner")
+
+    if parents:
+        relationships = profile.setdefault("relationships", {})
+        relationships["parents"] = [
+            p.get("parent_id", p) if isinstance(p, dict) else p
+            for p in parents
+        ]
+        updated_fields.append("parents")
+
     if not updated_fields:
         raise HTTPException(status_code=400, detail="No editable fields in request")
 
-    # Write back
+    # Write profile.json
     profile_path.write_text(json.dumps(profile, indent=2, ensure_ascii=False))
     logger.info(f"Profile updated: {citizen_id} fields={updated_fields}")
+
+    # Sync relationships to L4
+    if human_partner or parents:
+        try:
+            import os
+            from runtime.l4.citizen_l4_upsert import upsert_citizen_l4
+            upsert_citizen_l4(
+                handle=citizen_id,
+                name=identity.get("name", citizen_id),
+                org_id=identity.get("organization", ""),
+                human_partner=human_partner,
+                parents=parents,
+                description=identity.get("bio", ""),
+                falkordb_host=os.environ.get("FALKORDB_HOST"),
+                falkordb_port=int(os.environ.get("FALKORDB_PORT", "6379")),
+            )
+        except Exception as e:
+            logger.warning(f"L4 sync for {citizen_id} relationships: {e}")
 
     return {
         "ok": True,
