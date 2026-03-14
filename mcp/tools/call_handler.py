@@ -175,12 +175,6 @@ def _wake_citizen(target_handle: str, caller_id: str, message: str,
         logger.warning(f"State dir not found: {MIND_QUEUE.parent}")
         return False
 
-    # Verify citizen exists
-    citizen_dir = MIND_CITIZENS / target_handle
-    if not citizen_dir.is_dir():
-        logger.info(f"Citizen @{target_handle} not in {MIND_CITIZENS}, skipping wake")
-        return False
-
     caller_name = caller_id.replace("CITIZEN_", "").replace("AGENT_", "")
     task = (
         f"You have a call from @{caller_name}.\n"
