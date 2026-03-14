@@ -137,6 +137,11 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Your actor ID. Auto-detected if omitted.",
             },
+            "universe": {
+                "type": "string",
+                "description": "Which universe/graph to query. Default: 'lumina_prime'.",
+                "default": "lumina_prime",
+            },
             "output": {
                 "type": "string",
                 "description": (
@@ -1843,6 +1848,21 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     scenario = args.get("scenario", "manual")
     limbic_profile = SCENARIO_PROFILES.get(scenario, SCENARIO_PROFILES["manual"])
 
+    # Resolve universe — use a different graph if specified
+    universe = args.get("universe", "lumina_prime")
+    graph = ctx.graph_ops
+    if universe and graph:
+        try:
+            from runtime.physics.graph import GraphOps
+            graph = GraphOps(graph_name=universe)
+            logger.info(f"[Subcall] Using universe: {universe}")
+        except Exception as e:
+            logger.debug(f"[Subcall] Could not switch to universe '{universe}': {e}, using default")
+
+    # Replace ctx.graph_ops with universe-specific graph for this call
+    original_graph = ctx.graph_ops
+    ctx.graph_ops = graph
+
     try:
         # ── Cypher mode: custom query for target selection ──
         custom_cypher = args.get("cypher")
@@ -2098,6 +2118,9 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     except Exception as e:
         logger.exception("Subcall failed")
         return _err(f"Subconscious query failed: {e}")
+    finally:
+        # Restore original graph_ops
+        ctx.graph_ops = original_graph
 
 
 def _intention_line(args: Dict[str, Any]) -> str:
