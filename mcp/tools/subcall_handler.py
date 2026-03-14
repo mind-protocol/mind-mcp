@@ -102,7 +102,11 @@ TOOL_SCHEMA = {
             },
             "intention": {
                 "type": "string",
-                "description": "Why you're asking — the context behind the question. Not used for matching, but stored on the moment node and displayed in the response. Helps responders and future readers understand the purpose.",
+                "description": "Why you're asking — displayed in the response and stored on the moment node.",
+            },
+            "context": {
+                "type": "string",
+                "description": "Additional context prepended to the query in the moment node text. Helps future readers understand the situation (e.g. current task, repo, error message).",
             },
             "top_k": {
                 "type": "integer",
@@ -462,6 +466,7 @@ def _create_subcall_moment(
     graph_ops,
     trigger: str = "manual",
     intention_text: str = "",
+    context_text: str = "",
 ) -> Optional[str]:
     """Create a persistent subcall moment node in L3 with full linking topology.
 
@@ -484,10 +489,16 @@ def _create_subcall_moment(
         now_ts = int(datetime.now(timezone.utc).timestamp())
         moment_id = f"moment_subcall_{uuid.uuid4().hex[:10]}"
 
-        # 1. Create the moment node
+        # 1. Create the moment node (context prepended if provided)
+        text_parts = []
+        if context_text:
+            text_parts.append(context_text.strip())
+        text_parts.append(f"[subcall:{direction}] @{caller_name}: {query[:500]}")
+        moment_text = "\n".join(text_parts)
+
         graph_ops.add_moment(
             id=moment_id,
-            text=f"[subcall:{direction}] @{caller_name}: {query[:500]}",
+            text=moment_text,
             type="subcall",
             status="completed",
             speaker=caller_id,
@@ -1967,6 +1978,7 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             direction="pull",
             trigger="manual",
             intention_text=args.get("intention", ""),
+            context_text=args.get("context", ""),
             selected_responders=[{
                 "id": target_actor_id,
                 "name": target_handle,
