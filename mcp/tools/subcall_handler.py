@@ -439,7 +439,8 @@ def _create_subcall_moment(
     direction: str,
     selected_responders: List[Dict[str, Any]],
     graph_ops,
-    intention: str = "",
+    trigger: str = "manual",
+    intention_text: str = "",
 ) -> Optional[str]:
     """Create a persistent subcall moment node in L3 with full linking topology.
 
@@ -449,10 +450,11 @@ def _create_subcall_moment(
 
     Args:
         direction: "pull" (subcall) or "push" (broadcast) — the flow direction
-        intention: The thermodynamic trigger that caused this subcall.
+        trigger: What caused this subcall to fire. Stored on the moment for analytics.
             Physics-derived: "impasse", "serendipity", "generativity"
             Text-fallback:   "question", "verification", "frustration", "failure_cascade"
-            Explicit:        "explicit" (user typed /subcall manually)
+            Explicit:        "manual" (user typed /subcall)
+        intention_text: Human-written reason for asking (optional, from the intention field)
         selected_responders: list of {id, name, score} for citizens who resonated
 
     Returns moment_id or None on failure.
@@ -479,19 +481,39 @@ def _create_subcall_moment(
         #   question → curiosity (explicit query)
         #   broadcast → care (proactive sharing)
         drive_map = {
+            # Direction defaults
             "pull": "curiosity",
             "push": "care",
+            "manual": "curiosity",
+            # Physics triggers (from L1 limbic state)
             "impasse": "frustration",
             "serendipity": "affiliation",
             "generativity": "achievement",
+            # Text fallback triggers
             "question": "curiosity",
             "verification": "self_preservation",
+            "frustration": "frustration",
             "failure_cascade": "frustration",
+            # Extended scenario triggers (24 use cases)
+            "overload": "self_preservation",
+            "incompetence": "self_preservation",
+            "ambivalence": "curiosity",
+            "drive_storm": "anxiety",
+            "starvation": "affiliation",
+            "frontier": "curiosity",
+            "toxicity": "care",
+            "civic_duty": "care",
+            "investigation": "curiosity",
+            "critique": "anxiety",
+            "movement": "affiliation",
+            "tip_of_tongue": "curiosity",
+            "emergency": "care",
+            "paralysis": "anxiety",
+            "witness": "self_preservation",
+            "passive_learning": "curiosity",
         }
-        # Resolve the creating drive from the intention (what thermodynamic
-        # force pushed this subcall into existence)
-        resolved_intention = intention or direction
-        creating_drive = drive_map.get(resolved_intention, drive_map.get(direction, "curiosity"))
+        # Resolve the creating drive from the trigger
+        creating_drive = drive_map.get(trigger, drive_map.get(direction, "curiosity"))
 
         graph_ops._query(
             """
@@ -499,7 +521,8 @@ def _create_subcall_moment(
             SET m.created_at_s = $ts,
                 m.direction = $direction,
                 m.creating_drive = $drive,
-                m.intention = $intention,
+                m.trigger = $trigger,
+                m.intention = $intention_text,
                 m.resonance_count = $rc,
                 m.settlement_status = 'tracking',
                 m.origin_citizen = $caller
@@ -509,7 +532,8 @@ def _create_subcall_moment(
                 "ts": now_ts,
                 "direction": direction,
                 "drive": creating_drive,
-                "intention": resolved_intention,
+                "trigger": trigger,
+                "intention_text": intention_text or "",
                 "rc": len(selected_responders),
                 "caller": caller_name,
             },
@@ -1643,7 +1667,8 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             caller_name=caller_name,
             query=query,
             direction="pull",
-            intention="explicit",  # user typed /subcall manually
+            trigger="manual",
+            intention_text=args.get("intention", ""),
             selected_responders=[{
                 "id": target_actor_id,
                 "name": target_handle,
