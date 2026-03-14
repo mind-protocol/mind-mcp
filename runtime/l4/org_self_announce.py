@@ -84,7 +84,7 @@ def _claim_org(graph, org_id: str, endpoint_url: str, org_name: str = "", websit
 
     private_pem, public_pem = _generate_org_rsa_keypair(org_id)
 
-    display_name = org_name or org_id
+    display_name = org_name or org_id.replace("-", " ").replace("_", " ").title()
     now_s = int(time.time())
 
     # 1. Ensure org actor exists with name + website
@@ -220,7 +220,7 @@ def _update_org(graph, org_id: str, endpoint_url: str, stored_public_key: str, o
         }
 
     # Signature OK — update endpoint + name + website
-    display_name = org_name or org_id
+    display_name = org_name or org_id.replace("-", " ").replace("_", " ").title()
     now_s = int(time.time())
 
     # Update org actor name/website
