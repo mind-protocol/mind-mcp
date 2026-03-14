@@ -117,6 +117,15 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Save the full response to a file (e.g. 'reports/subcall_result.md'). Creates parent dirs if needed.",
             },
+            "cypher": {
+                "type": "string",
+                "description": (
+                    "Custom Cypher query for target selection. Must return columns: "
+                    "a.id, a.name. Replaces the built-in scoring formula entirely. "
+                    "Use $self for caller ID. Example: "
+                    "\"MATCH (a:Actor) WHERE a.weight > 5 RETURN a.id, a.name LIMIT 50\""
+                ),
+            },
         },
         "required": ["query"],
     },
@@ -1514,6 +1523,45 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         mode = "best"
 
     try:
+        # ── Cypher mode: custom query for target selection ──
+        custom_cypher = args.get("cypher")
+        if custom_cypher:
+            try:
+                cypher_results = ctx.graph_ops._query(
+                    custom_cypher,
+                    {"self": caller_id},
+                )
+                targets = []
+                for row in cypher_results:
+                    if isinstance(row, (list, tuple)):
+                        targets.append({"id": row[0], "name": row[1] if len(row) > 1 else row[0], "trust": None})
+                    elif isinstance(row, dict):
+                        aid = row.get("a.id") or row.get("id")
+                        targets.append({"id": aid, "name": row.get("a.name") or row.get("name") or aid, "trust": None})
+
+                if not targets:
+                    return _err("Cypher query returned no actors.")
+
+                query_embedding = _embed_query(query, ctx)
+                label = f"Cypher ({len(targets)} targets)"
+                formatted = _broadcast(
+                    targets=targets,
+                    query_text=query,
+                    query_embedding=query_embedding,
+                    mode=mode,
+                    top_k=top_k,
+                    graph_ops=ctx.graph_ops,
+                    label=label,
+                )
+                logger.info(f"Subcall cypher: @{caller_name} → {len(targets)} targets ({query[:60]})")
+                intent = _intention_line(args)
+                if intent:
+                    formatted = formatted.replace("\n\n", f"\n{intent}\n\n", 1)
+                _save_if_requested(args, formatted)
+                return _ok(formatted)
+            except Exception as e:
+                return _err(f"Cypher query failed: {e}")
+
         # ── Auto-select mode: no target specified ──
         # Scan ~50 citizens, pick 3-5 diverse viewpoints
         if not target_handle:
