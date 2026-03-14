@@ -336,6 +336,21 @@ def main():
         logger.info(f"Found {len(errors)} errors in Render logs for {org_id}")
         written = write_error_moments(errors, org_id, universe)
         logger.info(f"Wrote {written} error Moments to L3 graph '{universe}'")
+
+        # Auto-create task for critical/error level log errors
+        critical_errors = [e for e in errors if e["severity"] in ("critical", "error")]
+        if critical_errors:
+            try:
+                from falkordb import FalkorDB
+                db = FalkorDB(host=FALKORDB_HOST, port=FALKORDB_PORT)
+                graph = db.select_graph(universe)
+                now_s = int(time.time())
+                # Use first error moment as the linked health moment
+                first_id = f"error_{org_id}_{critical_errors[0]['hash']}"
+                issues = [{"severity": e["severity"], "component": "render_logs", "message": e["message"]} for e in critical_errors]
+                _auto_create_and_route_task(graph, org_id, first_id, issues, now_s)
+            except Exception as e:
+                logger.debug(f"Auto-task from log errors: {e}")
     else:
         logger.debug("No new errors in Render logs")
 
@@ -482,10 +497,15 @@ def check_orchestrator_health():
                 },
             )
             logger.info(f"Health moment created: {moment_id}")
+
+            # Auto-create task and route to best citizen
+            if worst_sev in ("critical", "error"):
+                _auto_create_and_route_task(graph, org_id, moment_id, issues, now_s)
+
         except Exception as e:
             logger.warning(f"Could not write health moment: {e}")
 
-        # 5. Attempt restart if critical
+        # 6. Attempt restart if critical
         if any(i["severity"] == "critical" for i in issues):
             logger.warning("Critical issue detected — attempting home_server restart")
             try:
@@ -508,6 +528,71 @@ def check_orchestrator_health():
                 logger.error(f"Restart failed: {e}")
 
     return issues
+
+
+def _auto_create_and_route_task(graph, org_id: str, health_moment_id: str, issues: list, now_s: int):
+    """Create a fix task from health issues and route to best available citizen.
+
+    The task is linked to the health moment (causes chain).
+    Assignment uses the physics-based task router (embedding similarity ×
+    weight × energy × load penalty).
+    """
+    task_id = f"fix_health_{org_id}_{now_s}"
+
+    # Build task content
+    issue_lines = "\n".join(
+        f"  - [{i['severity'].upper()}] {i['component']}: {i['message']}"
+        for i in issues
+    )
+    content = (
+        f"Auto-detected health issues on {org_id}. Fix needed:\n\n"
+        f"{issue_lines}\n\n"
+        f"This task was auto-created by the cron health monitor.\n"
+        f"Linked to health check: {health_moment_id}"
+    )
+    synthesis = f"Fix {len(issues)} health issues on {org_id}: {issues[0]['component']}"
+
+    # Create task Moment
+    graph.query(
+        "MERGE (t {id: $tid}) "
+        "SET t.node_type = 'moment', t.type = 'health_fix_task', "
+        "    t.name = $name, t.content = $content, "
+        "    t.synthesis = $syn, t.status = 'pending', "
+        "    t.priority = 'high', t.created_at_s = $ts "
+        "WITH t "
+        "MATCH (h {id: $hid}) "
+        "MERGE (h)-[r:link {nature: 'needs_fix'}]->(t) "
+        "SET r.friction = 0.5, r.polarity = -0.3",
+        {
+            "tid": task_id,
+            "name": f"Fix health: {org_id}",
+            "content": content,
+            "syn": synthesis,
+            "ts": now_s,
+            "hid": health_moment_id,
+        },
+    )
+    logger.info(f"Health fix task created: {task_id}")
+
+    # Route to best citizen via task_assignment
+    try:
+        sys.path.insert(0, str(PROJECT_ROOT))
+        from runtime.task_assignment import assign_single_task
+        from runtime.infrastructure.database import get_database_adapter
+
+        adapter = get_database_adapter()
+        assigned = assign_single_task(
+            task_id=task_id,
+            task_synthesis=synthesis,
+            adapter=adapter,
+            actor_type="citizen",
+        )
+        if assigned:
+            logger.info(f"Health fix task routed to @{assigned}")
+        else:
+            logger.info("Health fix task created but no citizen available for routing")
+    except Exception as e:
+        logger.debug(f"Task routing not available: {e}")
 
 
 if __name__ == "__main__":
