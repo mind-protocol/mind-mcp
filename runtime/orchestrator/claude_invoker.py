@@ -389,7 +389,15 @@ def invoke_degraded(request: dict, session_id: str) -> tuple[str, Optional[str]]
     if not voice_text:
         return ("", None)
 
-    # Try Claude API
+    # 1. Subconscious mode — pure graph physics, no LLM, no cost
+    #    Fast, always available if the citizen has a brain graph.
+    citizen_handle = request.get("metadata", {}).get("citizen_handle", "")
+    if citizen_handle:
+        text = invoke_subconscious(request, session_id, citizen_handle)
+        if text:
+            return (text, None)
+
+    # 2. Try Claude API (direct, no tools/MCP/repo)
     try:
         import anthropic
         client = anthropic.Anthropic()
@@ -406,7 +414,7 @@ def invoke_degraded(request: dict, session_id: str) -> tuple[str, Optional[str]]
     except Exception as e:
         logger.warning(f"Claude API fallback failed: {e}")
 
-    # Try OpenAI
+    # 3. Try OpenAI API
     try:
         import openai
         client = openai.OpenAI()
@@ -421,13 +429,6 @@ def invoke_degraded(request: dict, session_id: str) -> tuple[str, Optional[str]]
             return (text, None)
     except Exception as e:
         logger.warning(f"OpenAI fallback failed: {e}")
-
-    # Subconscious mode — no LLM, pure graph physics
-    citizen_handle = request.get("metadata", {}).get("citizen_handle", "")
-    if citizen_handle:
-        text = invoke_subconscious(request, session_id, citizen_handle)
-        if text:
-            return (text, None)
 
     return ("", None)
 
