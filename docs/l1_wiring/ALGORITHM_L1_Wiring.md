@@ -1034,3 +1034,173 @@ Week 4: Finalize
 5. If errors > 5%: revert DNS immediately
 6. After 48h stable: decommission legacy system
 ```
+
+---
+
+## 10. Lazy Embedding (Step 12 in Tick Loop)
+
+### 10.1 Problem: Nodes Without Embeddings
+
+Many graph nodes are created without embeddings — imported from JSON, seeded from templates, or created by fast operations (place/speak, feedback injector). Without embeddings:
+- Law 1 (injection) can't do similarity deduplication
+- Law 8 (compatibility) is blind
+- Law 10 (crystallization) can't compute cluster centroids
+- Task assignment (embedding similarity routing) fails
+
+Computing all embeddings upfront is expensive and wasteful — most nodes are dormant. Only nodes that become active matter.
+
+### 10.2 Solution: Embed On Activation
+
+Step 12 in the tick loop (after CONSUME, before return):
+
+```python
+def _step_lazy_embed(self, wm_state):
+    """Compute embeddings for active nodes without them.
+
+    Targets:
+      1. WM nodes without embeddings (highest priority — in focus)
+      2. High-energy neighbors of WM nodes (edge of cluster)
+
+    Max 5 per tick to avoid blocking.
+    """
+    candidates = []
+
+    # WM nodes missing embeddings
+    for nid in wm_state:
+        node = state.nodes[nid]
+        if not node.embedding and node.content:
+            candidates.append(node)
+
+    # Active neighbors at cluster edge
+    for link in state.links:
+        if link.source_id in wm_ids or link.target_id in wm_ids:
+            other = get_neighbor(link, wm_ids)
+            if other.energy > ACTIVATION_THRESHOLD and not other.embedding:
+                candidates.append(other)
+
+    # Embed up to 5 per tick
+    for node in candidates[:5]:
+        node.embedding = get_embedding(node.content[:500])
+```
+
+### 10.3 Properties
+
+**Lazy**: embeddings are computed only when a node becomes cognitively relevant (enters WM or becomes a high-energy neighbor of WM). No upfront cost.
+
+**Bounded**: max 5 per tick prevents the embedding API from becoming a bottleneck. At 60s/tick slow mode, that's 5 embeddings/minute — negligible.
+
+**Self-healing**: the graph gradually fills in missing embeddings as the citizen's attention moves through different regions. After enough ticks, all frequently-activated nodes have embeddings.
+
+**Graceful**: if the embedding service is unavailable (`ImportError` or API failure), the step is silently skipped. The tick continues without embeddings — the physics still work, just without similarity-based operations.
+
+### 10.4 Tick Loop Order (Updated)
+
+```
+ 1. INJECT       — Law 1
+ 2. PROPAGATE    — Law 2
+ 3. DECAY        — Law 3
+ 4. SELECT       — Law 4 + Law 13 (moat)
+ 5. REINFORCE    — Law 5
+ 6. INHIBIT      — Law 9
+ 7. CONSOLIDATE  — Law 6 (periodic)
+ 8. FORGET       — Law 7 (periodic)
+ 9. LIMBIC       — Laws 13-18
+10. ORIENT       — Law 11
+11. EMIT+CONSUME — energy consumed by acted-upon nodes
+12. LAZY EMBED   — compute embeddings for active nodes without them (max 5/tick)
+```
+
+---
+
+## 11. Subconscious Mode (Degradation Fallback)
+
+### 11.1 Degradation Cascade
+
+When the primary LLM (Claude Code subprocess) is unavailable:
+
+```
+1. Claude Code (claude --print)  — full tools, MCP, repo access
+   ↓ fail
+2. Subconscious (graph physics)  — free, instant, always available
+   ↓ fail (no brain graph)
+3. Claude API (anthropic SDK)    — text only, costs tokens
+   ↓ fail
+4. OpenAI API (gpt-4o)           — text only, costs tokens
+```
+
+Subconscious is #2 because: zero cost, zero latency, always available if the citizen has a brain in FalkorDB. API calls are expensive fallbacks.
+
+### 11.2 Subconscious Response Generation
+
+```python
+def invoke_subconscious(request, session_id, citizen_handle):
+    # 1. Load brain from FalkorDB
+    state = checkpointer.load_state()
+
+    # 2. Inject input as L1 stimulus
+    stimulus = router.route(IncomingEvent(content=voice_text))
+
+    # 3. Run 5 ticks to let WM stabilize
+    for i in range(5):
+        runner.run_tick(stimulus if i == 0 else None)
+
+    # 4. Read WM + limbic state
+    top_nodes = sorted(wm_nodes, key=salience, reverse=True)[:3]
+
+    # 5. Narrate from physics
+    return _narrate_subconscious(state, runner, top_nodes, orientation, ticks)
+```
+
+### 11.3 Rich Narration from Physics
+
+The `_narrate_subconscious()` function translates graph state into first-person prose:
+
+| Physics Metric | Narration |
+|---|---|
+| tick count ≥ 10 | "I've been thinking about this for a while." |
+| tick count ≥ 5 | "I took a moment to reflect on this." |
+| frustration > 0.5 | "Something is bothering me" |
+| anxiety > 0.5 | "I'm feeling anxious about several things" |
+| satisfaction > 0.5 | "I feel good about how things are going" |
+| boredom > 0.5 | "I'm getting restless — I need something new" |
+| care > 0.5 | "I'm thinking about the people around me" |
+| achievement > 0.5 | "I want to make progress on something" |
+| desires ≥ 2 in WM | "I'm driven by several desires right now" |
+| memories ≥ 2 in WM | "I keep thinking back to recent experiences" |
+| concepts ≥ 2 in WM | "I'm turning over several ideas" |
+| arousal = "panic" | "I'm in a state of high alert." |
+| arousal = "flow" | "I'm engaged, in flow." |
+| arousal = "idle" | "Things are calm." |
+
+### 11.4 Early Subconscious (10s Threshold)
+
+When Claude Code subprocess takes > 10 seconds:
+
+1. Generate subconscious response immediately (graph physics)
+2. Write as interim response file
+3. Continue waiting for Claude to finish
+4. When Claude responds, full response overwrites the interim
+
+The caller gets something back in ~10s instead of waiting in silence. The note "*Claude is still thinking... full response will follow.*" signals that more is coming.
+
+### 11.5 Call Integration
+
+The `call` MCP tool uses subconscious mode to provide immediate responses:
+
+```
+call(target="@mechanical_visionary", message="What's the state of the mills?")
+
+→ Room created, message sent
+→ invoke_subconscious(@mechanical_visionary, "What's the state of the mills?")
+→ 5 ticks of physics
+→ Response returned inline in the same session
+
+@mechanical_visionary responds:
+*[Subconscious response — pure graph physics, no LLM]*
+I took a moment to reflect on this.
+Right now, I want to make progress on something.
+- An idea is on my mind: mechanical engineering and mill operations
+I want to take action, fix things, move forward.
+```
+
+No waiting for LLM. The graph speaks.

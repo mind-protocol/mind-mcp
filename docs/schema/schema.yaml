@@ -1,11 +1,16 @@
-# MIND Graph Schema v2.1
-# Living Cognitive Graph — 21 Physics Laws + 7 Cognitive Types + Working Memory + L3/L1 Separation
+# MIND Graph Schema v2.2
+# Living Cognitive Graph — 21 Physics Laws + 7 Cognitive Types + Working Memory + Visual Memory + L3/L1 Separation
 #
-# REPLACES: v2.0 (Plutchik on all links)
-# NEW: Plutchik REMOVED from L3 links. L3 uses topological physics (trust, friction, affinity, aversion).
-#      Plutchik confined to L1 brain graphs only. compute_priority on L4 org nodes.
+# REPLACES: v2.1 (text-only coherence formula)
+# NEW in v2.2: Visual Memory Substrate — image_uri + image_embedding on NodeBase,
+#              Sim_vis in coherence formula, Flashbulb Vision (Law 6), Desire image
+#              generation on traversal (Law 17), medoid image inheritance (Law 10),
+#              moment subtype "vision", visual prediction error (Law 20).
+#
+# v2.1: Plutchik REMOVED from L3 links. L3 uses topological physics (trust, friction, affinity, aversion).
+#        Plutchik confined to L1 brain graphs only. compute_priority on L4 org nodes.
 
-version: "2.1"
+version: "2.2"
 updated: "2026-03-14"
 status: "CANONICAL"
 
@@ -23,6 +28,8 @@ status: "CANONICAL"
 # 8. Crystallization creates new structure from recurring patterns — zero LLM, pure math
 # 9. Identity emerges from weight + stability — changes only through accumulated experience
 # 10. No arbitrary constants — all rates derived from graph properties or overridable via env
+# 11. Visual memory is native: images stored as URIs (object storage), image embeddings in graph.
+#     Images participate in physics via Sim_vis in coherence formula. Never base64 in the graph.
 #
 
 # =============================================================================
@@ -190,6 +197,26 @@ NodeBase:
       dimensions: 1536
       description: "embed(synthesis), updated on drift"
 
+    # === Visual Memory (v2.2) ===
+    image_uri:
+      type: string
+      nullable: true
+      description: "URI to image in object storage (S3/R2/local bucket). NEVER base64. Source depends on node type: POV screenshot (moments), profile pic (actors), generated vision (desires), medoid (concepts via Law 10)."
+    image_embedding:
+      type: vector
+      nullable: true
+      description: "CLIP/SigLIP embedding of the image. Lives in same latent space as text embeddings. Used by Law 8 (compatibility) for visual similarity and by Sim_vis in coherence formula."
+
+    # === Provenance (v2.2) ===
+    origin_citizen:
+      type: string
+      nullable: true
+      description: "Handle of the citizen who created or injected this node. Set on: subcall cluster nodes, telepathy stimuli, crystallization from external source, partner stimuli. Used for stats, attribution, crystallization tracing."
+    origin_date:
+      type: int
+      nullable: true
+      description: "Timestamp (epoch seconds) of when this node was created by origin_citizen. Paired with origin_citizen for full provenance."
+
     # === Relevance Dimensions (L1 Cognitive) ===
     self_relevance:
       type: float
@@ -284,6 +311,11 @@ MomentBase:
       type: int
       nullable: true
       computed: true
+    subtype:
+      type: enum
+      values: [episode, interaction, observation, vision]
+      nullable: true
+      description: "Moment subtype. 'vision' = Flashbulb-generated image (Law 6 peak), carries limbic imprint."
 
 # =============================================================================
 # LINK SCHEMA
@@ -495,10 +527,15 @@ working_memory:
   context_vector: "Mean embedding of current WM members — the situation model"
 
   coherence_formula: |
-    Coh = (0.3 * Sim_vec) + (0.5 * Sim_lex) - (0.2 * Δ_affect)
-    # Sim_vec: cosine(stimulus_embedding, context_vector)
-    # Sim_lex: exact/fuzzy match of stimulus against active node names
-    # Δ_affect: |valence(stimulus) - mean_valence(WM)|
+    # v2.2: Added Sim_vis (visual similarity) — images participate in WM selection
+    Coh = (0.25 * Sim_vec) + (0.25 * Sim_vis) + (0.40 * Sim_lex) - (0.10 * Δ_affect)
+    # Sim_vec: cosine(stimulus_embedding, context_vector) — semantic similarity
+    # Sim_vis: cosine(stimulus_image_embedding, node.image_embedding) — visual similarity (CLIP/SigLIP space)
+    # Sim_lex: exact/fuzzy match of stimulus against active node names — dominant for servoing
+    # Δ_affect: |valence(stimulus) - mean_valence(WM)| — emotional incongruence penalty
+    #
+    # Fallback (Law 8): when image_embedding unavailable, redistribute:
+    #   Coh = (0.30 * Sim_vec) + (0.50 * Sim_lex) - (0.20 * Δ_affect)
 
   structural_spaces:
     self_model: "Sub-graph describing: who I am, what I value, what I want, what I can do"
@@ -546,6 +583,12 @@ physics_laws:
     function: STABILIZE
     description: "Utility-gated: only limbically significant activations gain weight"
     key: "Asymptotic (1-W damping), regularity-based stability growth"
+    visual_extension: |
+      Flashbulb Vision (v2.2): when |limbic_delta| > FLASHBULB_THRESHOLD (0.7),
+      in addition to triple consolidation, triggers visual image generation:
+      freeze WM → gather self profile pic + actor images → micro-agent prompt →
+      image generation → new moment(subtype=vision) with limbic imprint →
+      self-stimulus reinjection via Law 1. Fail-loud, never blocks inference.
 
   L7_forgetting:
     function: STABILIZE
@@ -566,6 +609,10 @@ physics_laws:
     function: TRANSFORM
     description: "Recurring co-activation patterns form new hub nodes — zero LLM"
     key: "Type from majority rule, content from centroid+medoid, bidirectional links"
+    visual_extension: |
+      Image Medoid (v2.2): crystallized node inherits image_uri and image_embedding
+      from the medoid — the moment whose image_embedding is geometrically closest
+      to the cluster centroid. No image generation needed for concepts.
 
   L11_orientation_selection:
     function: ACT
@@ -601,6 +648,13 @@ physics_laws:
     function: ACTIVATE_ENDOGENOUS
     description: "Desires ignite when context + state + opportunity align"
     includes: "Impulse accumulation on action nodes under sustained drive pressure"
+    visual_extension: |
+      Desire Image Generation (v2.2): during subentity traversal, if a desire node
+      has energy > IMAGE_GENERATION_THRESHOLD (0.4) AND image_uri IS NULL,
+      trigger image generation: self profile pic as reference + desire content +
+      neighbor images → micro-agent prompt → generate → store URI + embedding.
+      Ensures active aspirations have a visual target for active inference.
+      Fail-loud, never blocks traversal.
 
   L18_relational_valence:
     function: PROPAGATE_AFFECT
@@ -617,6 +671,10 @@ physics_laws:
     function: TRANSFORM
     description: "Forward-facing sub-graphs for micro-planning and light simulation"
     status: deferred
+    visual_extension: |
+      Visual Prediction Error (v2.2): active desire.image_embedding vs current POV
+      image_embedding → cosine_distance = prediction_error. Drives frustration (Law 16)
+      when error > 0, satisfaction when error ≈ 0. Pure geometry in FalkorDB.
 
   L21_horizontal_membrane:
     function: INTER_LAYER
@@ -729,6 +787,11 @@ invariants:
   - "Stability grows from regularity (low coefficient of variation), not frequency"
   - "Structural links (contains, abstracts) are protected from forgetting"
   - "Vocabulary is bidirectional — same grammar for input and output"
+  - "Images stored as URIs in object storage — NEVER base64 in FalkorDB (v2.2)"
+  - "Image embeddings (CLIP/SigLIP) are first-class physics participants via Sim_vis in coherence (v2.2)"
+  - "Flashbulb Vision is fail-loud but NEVER blocks inference or tick execution (v2.2)"
+  - "Concept images inherit from medoid via Law 10 crystallization — no generation needed (v2.2)"
+  - "Desire images generated on traversal only when energy > threshold AND image_uri is null (v2.2)"
 
 # =============================================================================
 # MIGRATION FROM v1.9.1
