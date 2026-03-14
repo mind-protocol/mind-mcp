@@ -30,9 +30,31 @@ from typing import Optional
 
 logger = logging.getLogger("l4.announce")
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-KEYS_DIR = PROJECT_ROOT / ".keys"
 L4_GRAPH_NAME = os.environ.get("L4_GRAPH_NAME", "mind_protocol")
+
+
+def _resolve_keys_dir() -> Path:
+    """Resolve the .keys/ directory for the current org.
+
+    Priority:
+      1. MIND_KEYS_DIR env var (explicit override)
+      2. cwd-based detection (the org project that's actually running)
+      3. __file__-based fallback (only if nothing else works)
+    """
+    env_dir = os.environ.get("MIND_KEYS_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    # Detect from cwd — the process is started from the org's project root
+    cwd_keys = Path.cwd() / ".keys"
+    if cwd_keys.exists() or not (Path(__file__).resolve().parent.parent.parent / ".keys").exists():
+        return cwd_keys
+
+    # Last resort: file-based (only correct when running from mind-mcp itself)
+    return Path(__file__).resolve().parent.parent.parent / ".keys"
+
+
+KEYS_DIR = _resolve_keys_dir()
 
 
 def announce_org(

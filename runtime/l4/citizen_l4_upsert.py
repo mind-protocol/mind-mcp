@@ -559,6 +559,27 @@ def _create_profile_task_if_new(graph, citizen_id, handle, name, now_s):
     logger.info(f"Profile setup task created for @{handle}")
 
 
+def _resolve_keys_base() -> "Path":
+    """Resolve the .keys/ directory for the current org.
+
+    Priority:
+      1. MIND_KEYS_DIR env var (explicit override)
+      2. cwd-based detection (the org project that's actually running)
+      3. __file__-based fallback (only if nothing else works)
+    """
+    from pathlib import Path
+
+    env_dir = os.environ.get("MIND_KEYS_DIR")
+    if env_dir:
+        return Path(env_dir)
+
+    cwd_keys = Path.cwd() / ".keys"
+    if cwd_keys.exists() or not (Path(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) / ".keys").exists():
+        return cwd_keys
+
+    return Path(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) / ".keys"
+
+
 def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
     """Ensure a citizen has wallet + RSA keys. Generate if missing.
 
@@ -569,7 +590,7 @@ def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
     """
     from pathlib import Path
 
-    keys_base = Path(keys_base_dir) if keys_base_dir else Path(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) / ".keys"
+    keys_base = Path(keys_base_dir) if keys_base_dir else _resolve_keys_base()
     keys_dir = keys_base / handle
     wallet_address = ""
     rsa_public_pem = ""
