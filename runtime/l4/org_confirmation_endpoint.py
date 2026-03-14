@@ -156,48 +156,107 @@ def _is_local_org(org_id: str) -> bool:
 
 
 def _list_org_citizens(org_id: str) -> list[dict]:
-    """List all citizens belonging to this org from profile.json files."""
+    """List all citizens belonging to this org.
+
+    Sources (merged, deduplicated):
+      1. L4 FalkorDB registry (MEMBER_OF links)
+      2. Local citizens/ directory (profile.json files)
+      3. data/citizens.json (venezia format)
+    """
+    seen = set()
     citizens = []
-    if not CITIZENS_DIR.exists():
-        return citizens
 
-    for citizen_dir in sorted(CITIZENS_DIR.iterdir()):
-        if not citizen_dir.is_dir():
-            continue
-        profile_path = citizen_dir / "profile.json"
-        if not profile_path.exists():
-            continue
+    # Source 1: L4 registry
+    try:
+        from falkordb import FalkorDB
+        host = os.environ.get("FALKORDB_HOST", "localhost")
+        port = int(os.environ.get("FALKORDB_PORT", "6379"))
+        graph_name = os.environ.get("L4_GRAPH", "mind_protocol")
+        db = FalkorDB(host=host, port=port)
+        graph = db.select_graph(graph_name)
+        result = graph.query(
+            "MATCH (c)-[r:link]->(o {id: $oid}) "
+            "WHERE r.type = 'MEMBER_OF' AND c.type = 'citizen' "
+            "RETURN c.handle, c.name, c.social_class",
+            {"oid": org_id},
+        )
+        for row in (result.result_set or []):
+            handle = row[0]
+            if handle and handle not in seen:
+                seen.add(handle)
+                citizens.append({
+                    "handle": handle,
+                    "name": row[1] or handle,
+                    "status": "registered",
+                })
+    except Exception as e:
+        logger.debug(f"L4 query failed for org citizens: {e}")
 
-        try:
-            profile = json.loads(profile_path.read_text())
-        except (OSError, json.JSONDecodeError):
-            continue
+    # Source 2: Local profile.json files
+    if CITIZENS_DIR.exists():
+        for citizen_dir in sorted(CITIZENS_DIR.iterdir()):
+            if not citizen_dir.is_dir() or citizen_dir.name in seen:
+                continue
+            profile_path = citizen_dir / "profile.json"
+            if not profile_path.exists():
+                continue
+            try:
+                profile = json.loads(profile_path.read_text())
+                identity = profile.get("identity", {})
+                citizen_org = identity.get("organization", "")
+                if citizen_org == org_id or not citizen_org:
+                    seen.add(citizen_dir.name)
+                    citizens.append({
+                        "handle": citizen_dir.name,
+                        "name": identity.get("name", citizen_dir.name),
+                        "status": profile.get("status", "active"),
+                    })
+            except (OSError, json.JSONDecodeError):
+                continue
 
-        identity = profile.get("identity", {})
-        citizen_org = identity.get("organization", "")
-
-        if citizen_org == org_id:
-            citizens.append({
-                "handle": citizen_dir.name,
-                "name": identity.get("name", citizen_dir.name),
-                "status": profile.get("status", "active"),
-            })
+    # Source 3: data/citizens.json (venezia format)
+    for data_path in [PROJECT_ROOT / "data" / "citizens.json",
+                      PROJECT_ROOT / "worlds" / "venezia" / "data" / "citizens.json"]:
+        if data_path.exists():
+            try:
+                data = json.loads(data_path.read_text())
+                for c in data:
+                    handle = c.get("id") or c.get("handle")
+                    if handle and handle not in seen:
+                        seen.add(handle)
+                        citizens.append({
+                            "handle": handle,
+                            "name": c.get("name", handle),
+                            "status": "data",
+                        })
+            except Exception:
+                pass
+            break
 
     return citizens
 
 
 def _ping_citizen(handle: str) -> bool:
-    """Check if a citizen's L1 engine is running (has a brain graph)."""
+    """Check if a citizen is reachable — has nodes in any known graph."""
     try:
         from falkordb import FalkorDB
         host = os.environ.get("FALKORDB_HOST", "localhost")
         port = int(os.environ.get("FALKORDB_PORT", "6379"))
-
         db = FalkorDB(host=host, port=port)
-        graph = db.select_graph(f"brain_{handle}")
-        result = graph.query("MATCH (n) RETURN count(n) LIMIT 1")
-        if result.result_set and result.result_set[0][0] > 0:
-            return True
+
+        citizen_id = f"CITIZEN_{handle}"
+        for graph_name in [f"brain_{handle}", "venezia", "cities_of_light",
+                           os.environ.get("L4_GRAPH", "mind_protocol")]:
+            try:
+                g = db.select_graph(graph_name)
+                result = g.query(
+                    "MATCH (a {id: $id}) RETURN a.name",
+                    {"id": citizen_id},
+                )
+                if result.result_set:
+                    return True
+            except Exception:
+                continue
     except Exception:
         pass
     return False
@@ -205,10 +264,52 @@ def _ping_citizen(handle: str) -> bool:
 
 def _has_brain(handle: str) -> bool:
     """Check if citizen has a brain graph in FalkorDB."""
-    return _ping_citizen(handle)
+    try:
+        from falkordb import FalkorDB
+        host = os.environ.get("FALKORDB_HOST", "localhost")
+        port = int(os.environ.get("FALKORDB_PORT", "6379"))
+        db = FalkorDB(host=host, port=port)
+
+        citizen_id = f"CITIZEN_{handle}"
+        for graph_name in [f"brain_{handle}", "venezia",
+                           os.environ.get("L4_GRAPH", "mind_protocol")]:
+            try:
+                g = db.select_graph(graph_name)
+                result = g.query(
+                    "MATCH (a {id: $id})-[:link]->(n) RETURN count(n)",
+                    {"id": citizen_id},
+                )
+                if result.result_set and result.result_set[0][0] > 0:
+                    return True
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return False
 
 
 def _has_keys(handle: str) -> bool:
-    """Check if citizen has keys on disk."""
-    keys_dir = KEYS_DIR / handle
-    return (keys_dir / "solana_private_key.json").exists() or (keys_dir / "rsa_private_key.pem").exists()
+    """Check if citizen has keys on disk or in L4."""
+    # Check local disk
+    for keys_dir in [KEYS_DIR / handle, KEYS_DIR / "citizens" / handle]:
+        if (keys_dir / "rsa_private_key.pem").exists():
+            return True
+        if (keys_dir / "solana_private_key.json").exists():
+            return True
+
+    # Check L4 registry
+    try:
+        from falkordb import FalkorDB
+        host = os.environ.get("FALKORDB_HOST", "localhost")
+        port = int(os.environ.get("FALKORDB_PORT", "6379"))
+        db = FalkorDB(host=host, port=port)
+        g = db.select_graph(os.environ.get("L4_GRAPH", "mind_protocol"))
+        result = g.query(
+            "MATCH (k {id: $kid}) RETURN k.content",
+            {"kid": f"{handle}_public_key"},
+        )
+        if result.result_set and result.result_set[0][0]:
+            return True
+    except Exception:
+        pass
+    return False
