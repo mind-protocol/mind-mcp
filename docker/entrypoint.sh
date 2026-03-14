@@ -134,5 +134,9 @@ fi
 # ── 6. Create log directory ─────────────────────────────────────────────
 mkdir -p "$APP_DIR/logs"
 
+# ── 7. Post-deploy: TOFU announce + citizen registration + deploy report ──
+echo "[entrypoint] Running post-deploy script..."
+python3 scripts/post_deploy.py || echo "[entrypoint] Post-deploy had errors (non-fatal, continuing)"
+
 echo "[entrypoint] Setup complete. Starting uvicorn on port $PORT..."
 exec python3 -m uvicorn home_server:app --host 0.0.0.0 --port "$PORT" --log-level info
