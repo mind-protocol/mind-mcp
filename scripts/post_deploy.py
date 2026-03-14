@@ -195,17 +195,31 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
         content = "\n".join(content_lines)
         synthesis = f"Deploy {org_id}: {status_line} | {active} active, {pending} pending, {citizen_count} registered"
 
+        # Link dimensions vary with deploy health
+        # Clean deploy: high trust, high affinity, low friction
+        # Errored deploy: low trust, high friction, negative valence
+        error_ratio = len(errors) / max(citizen_count, 1) if errors else 0.0
+        link_trust = max(0.1, 0.9 - error_ratio * 2)
+        link_affinity = max(0.1, 0.8 - error_ratio * 2)
+        link_friction = min(0.9, error_ratio * 3)
+        link_valence = max(-1.0, 0.8 - error_ratio * 4)
+        link_polarity = 0.8 if not errors else max(-0.5, 0.5 - error_ratio * 3)
+
         graph.query(
             "MERGE (m {id: $mid}) "
             "SET m.node_type = 'moment', m.type = 'deploy_report', "
             "    m.name = $name, m.content = $content, "
             "    m.synthesis = $syn, m.status = $status, "
             "    m.citizens_active = $active, m.citizens_pending = $pending, "
-            "    m.citizens_registered = $registered, m.error_count = $errors, "
+            "    m.citizens_registered = $registered, m.error_count = $errcnt, "
             "    m.created_at_s = $ts "
             "WITH m "
             "MATCH (o {id: $org_id}) "
-            "MERGE (o)-[:link {nature: 'deployed'}]->(m)",
+            "MERGE (o)-[r:link {nature: 'deployed'}]->(m) "
+            "SET r.trust = $trust, r.affinity = $affinity, "
+            "    r.friction = $friction, r.valence = $valence, "
+            "    r.polarity = $polarity, r.permanence = 0.3, "
+            "    r.weight = 0.6, r.energy = 0.5",
             {
                 "mid": moment_id,
                 "name": f"Deploy: {org_id} @ {deploy_time}",
@@ -215,19 +229,83 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
                 "active": active,
                 "pending": pending,
                 "registered": citizen_count,
-                "errors": len(errors),
+                "errcnt": len(errors),
                 "ts": now_s,
                 "org_id": org_id,
+                "trust": round(link_trust, 3),
+                "affinity": round(link_affinity, 3),
+                "friction": round(link_friction, 3),
+                "valence": round(link_valence, 3),
+                "polarity": round(link_polarity, 3),
             },
         )
 
         log("3_report", f"  Deploy moment created: {moment_id}")
+        log("3_report", f"  Link: trust={link_trust:.2f} affinity={link_affinity:.2f} friction={link_friction:.2f} valence={link_valence:.2f}")
         log("3_report", f"  Citizens: {active} active, {pending} pending, {no_profile} no profile")
+
+        # If errors, create a fix task and assign it to best available citizen
         if errors:
-            log("3_report", f"  Errors in report: {len(errors)}", level="WARN")
+            log("3_report", f"  {len(errors)} errors — creating fix task", level="WARN")
+            _create_fix_task(graph, org_id, moment_id, errors, now_s)
 
     except Exception as e:
         log("3_report", f"  Could not write deploy report: {e}", level="WARN")
+
+
+def _create_fix_task(graph, org_id: str, deploy_moment_id: str, errors: list, now_s: int):
+    """Create a task for fixing deploy errors and assign to best citizen."""
+    task_id = f"fix_deploy_{org_id}_{now_s}"
+
+    error_list = "\n".join(f"  - {e}" for e in errors)
+    content = (
+        f"Deploy of {org_id} had {len(errors)} error(s). Fix needed:\n\n"
+        f"{error_list}\n\n"
+        f"This task was auto-created by the post-deploy script.\n"
+        f"Linked to deploy report: {deploy_moment_id}"
+    )
+
+    # Create task moment
+    graph.query(
+        "MERGE (t {id: $tid}) "
+        "SET t.node_type = 'moment', t.type = 'deploy_fix_task', "
+        "    t.name = $name, t.content = $content, "
+        "    t.synthesis = $syn, t.status = 'pending', "
+        "    t.priority = 'high', t.error_count = $errcnt, "
+        "    t.created_at_s = $ts "
+        "WITH t "
+        "MATCH (d {id: $did}) "
+        "MERGE (d)-[:link {nature: 'needs_fix'}]->(t) "
+        "SET d.friction = 0.5",
+        {
+            "tid": task_id,
+            "name": f"Fix deploy errors: {org_id}",
+            "content": content,
+            "syn": f"Fix {len(errors)} deploy errors for {org_id}",
+            "errcnt": len(errors),
+            "ts": now_s,
+            "did": deploy_moment_id,
+        },
+    )
+
+    # Assign to best citizen using task_assignment
+    try:
+        from runtime.task_assignment import assign_single_task
+        from runtime.infrastructure.database import get_database_adapter
+
+        adapter = get_database_adapter()
+        assigned = assign_single_task(
+            task_id=task_id,
+            task_synthesis=f"Fix deploy errors for {org_id}: {', '.join(errors[:3])}",
+            adapter=adapter,
+            actor_type="citizen",
+        )
+        if assigned:
+            log("3_report", f"  Fix task assigned to @{assigned}")
+        else:
+            log("3_report", f"  Fix task created but no citizen available for assignment", level="WARN")
+    except Exception as e:
+        log("3_report", f"  Could not auto-assign fix task: {e}", level="WARN")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────
