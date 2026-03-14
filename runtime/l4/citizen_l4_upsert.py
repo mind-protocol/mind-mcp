@@ -147,7 +147,7 @@ def upsert_citizen_l4(
     return True
 
 
-def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=None, falkordb_port=None):
+def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=None, falkordb_port=None, pubkeys=None):
     """Register all citizens from a directory to L4.
 
     Supports:
@@ -180,6 +180,7 @@ def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=No
                             endpoint_url=f"{endpoint_base}/{handle}",
                             social_class=c.get("social_class"),
                             description=(c.get("description") or "")[:200],
+                        rsa_public_key=(pubkeys or {}).get(handle),
                             falkordb_host=falkordb_host,
                             falkordb_port=falkordb_port,
                         )
@@ -225,6 +226,7 @@ def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=No
                     endpoint_url=f"{endpoint_base}/{handle}",
                     social_class=social_class,
                     description=description,
+                    rsa_public_key=(pubkeys or {}).get(handle),
                     falkordb_host=falkordb_host,
                     falkordb_port=falkordb_port,
                 )
