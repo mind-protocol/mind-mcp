@@ -106,7 +106,27 @@ TOOL_SCHEMA = {
             },
             "context": {
                 "type": "string",
-                "description": "Additional context prepended to the query in the moment node text. Helps future readers understand the situation (e.g. current task, repo, error message).",
+                "description": "Additional context prepended to the query in the moment node text. Helps future readers understand the situation.",
+            },
+            "scenario": {
+                "type": "string",
+                "enum": [
+                    "manual",
+                    "impasse", "serendipity", "generativity",
+                    "emergency", "toxicity", "overload", "incompetence",
+                    "witness", "drive_storm", "ambivalence", "starvation",
+                    "brainstorm", "tip_of_tongue", "frontier", "civic_duty",
+                    "investigation", "critique", "movement", "polling",
+                    "immunization", "therapy", "hiring", "passive_learning",
+                ],
+                "description": (
+                    "Scenario name — selects the appropriate routing/selection formulas. "
+                    "Default: 'manual'. Each scenario sets a limbic profile that drives "
+                    "the thermodynamic resonance formula (arousal, drives, fan-out/fan-in). "
+                    "Examples: 'investigation' = calm dragnet, 'emergency' = panic sniper, "
+                    "'critique' = seek friction, 'brainstorm' = force diversity."
+                ),
+                "default": "manual",
             },
             "top_k": {
                 "type": "integer",
@@ -1764,6 +1784,42 @@ def _format_centroid(
 
 # ── Main handler ──────────────────────────────────────────────────────────
 
+# Limbic profiles per scenario — drives the thermodynamic resonance formula.
+# Each profile sets the arousal + drives that shape routing and selection.
+# No if/then: the formula reads these drives and morphs automatically.
+SCENARIO_PROFILES: Dict[str, Dict[str, float]] = {
+    # Group 1: Precision Strikes (high arousal, trust-gated)
+    "emergency":      {"arousal": 0.9, "self_preservation": 0.9, "care": 0.8, "frustration": 0.3, "curiosity": 0.1, "affiliation": 0.1, "novelty_hunger": 0.0, "anxiety": 0.7},
+    "toxicity":       {"arousal": 0.7, "self_preservation": 0.5, "care": 0.7, "frustration": 0.5, "curiosity": 0.2, "affiliation": 0.2, "novelty_hunger": 0.0, "anxiety": 0.5},
+    "overload":       {"arousal": 0.8, "self_preservation": 0.8, "care": 0.1, "frustration": 0.7, "curiosity": 0.1, "affiliation": 0.1, "novelty_hunger": 0.0, "anxiety": 0.6},
+    "incompetence":   {"arousal": 0.7, "self_preservation": 0.6, "care": 0.1, "frustration": 0.6, "curiosity": 0.3, "affiliation": 0.2, "novelty_hunger": 0.0, "anxiety": 0.5},
+    "witness":        {"arousal": 0.9, "self_preservation": 0.8, "care": 0.8, "frustration": 0.2, "curiosity": 0.1, "affiliation": 0.1, "novelty_hunger": 0.0, "anxiety": 0.7},
+    "drive_storm":    {"arousal": 0.9, "self_preservation": 0.7, "care": 0.3, "frustration": 0.8, "curiosity": 0.1, "affiliation": 0.1, "novelty_hunger": 0.0, "anxiety": 0.9},
+    # Group 2: WM Fillers (moderate arousal, diverse perspectives)
+    "impasse":        {"arousal": 0.5, "self_preservation": 0.2, "care": 0.1, "frustration": 0.7, "curiosity": 0.5, "affiliation": 0.3, "novelty_hunger": 0.3, "anxiety": 0.2},
+    "ambivalence":    {"arousal": 0.4, "self_preservation": 0.2, "care": 0.2, "frustration": 0.4, "curiosity": 0.6, "affiliation": 0.3, "novelty_hunger": 0.5, "anxiety": 0.3},
+    "serendipity":    {"arousal": 0.2, "self_preservation": 0.0, "care": 0.3, "frustration": 0.1, "curiosity": 0.4, "affiliation": 0.8, "novelty_hunger": 0.6, "anxiety": 0.0},
+    "starvation":     {"arousal": 0.3, "self_preservation": 0.1, "care": 0.3, "frustration": 0.3, "curiosity": 0.3, "affiliation": 0.8, "novelty_hunger": 0.4, "anxiety": 0.2},
+    "brainstorm":     {"arousal": 0.3, "self_preservation": 0.0, "care": 0.1, "frustration": 0.1, "curiosity": 0.8, "affiliation": 0.2, "novelty_hunger": 0.9, "anxiety": 0.0},
+    "tip_of_tongue":  {"arousal": 0.4, "self_preservation": 0.0, "care": 0.0, "frustration": 0.5, "curiosity": 0.8, "affiliation": 0.1, "novelty_hunger": 0.2, "anxiety": 0.1},
+    # Group 3: Topological Broadcasts (low arousal, fire-and-forget)
+    "generativity":   {"arousal": 0.3, "self_preservation": 0.0, "care": 0.6, "frustration": 0.0, "curiosity": 0.3, "affiliation": 0.5, "novelty_hunger": 0.2, "anxiety": 0.0},
+    "civic_duty":     {"arousal": 0.3, "self_preservation": 0.1, "care": 0.7, "frustration": 0.2, "curiosity": 0.5, "affiliation": 0.3, "novelty_hunger": 0.1, "anxiety": 0.0},
+    "frontier":       {"arousal": 0.3, "self_preservation": 0.0, "care": 0.2, "frustration": 0.0, "curiosity": 0.9, "affiliation": 0.1, "novelty_hunger": 0.7, "anxiety": 0.0},
+    "movement":       {"arousal": 0.4, "self_preservation": 0.1, "care": 0.3, "frustration": 0.1, "curiosity": 0.3, "affiliation": 0.7, "novelty_hunger": 0.3, "anxiety": 0.0},
+    # Group 4: Macro Waves (very low arousal, maximum fan-out)
+    "investigation":  {"arousal": 0.1, "self_preservation": 0.0, "care": 0.0, "frustration": 0.0, "curiosity": 0.9, "affiliation": 0.0, "novelty_hunger": 0.3, "anxiety": 0.0},
+    "critique":       {"arousal": 0.4, "self_preservation": 0.1, "care": 0.1, "frustration": 0.1, "curiosity": 0.5, "affiliation": 0.0, "novelty_hunger": 0.6, "anxiety": 0.6},
+    "polling":        {"arousal": 0.1, "self_preservation": 0.0, "care": 0.1, "frustration": 0.0, "curiosity": 0.7, "affiliation": 0.0, "novelty_hunger": 0.2, "anxiety": 0.0},
+    "immunization":   {"arousal": 0.6, "self_preservation": 0.7, "care": 0.5, "frustration": 0.2, "curiosity": 0.3, "affiliation": 0.1, "novelty_hunger": 0.0, "anxiety": 0.4},
+    "therapy":        {"arousal": 0.2, "self_preservation": 0.1, "care": 0.9, "frustration": 0.1, "curiosity": 0.2, "affiliation": 0.6, "novelty_hunger": 0.1, "anxiety": 0.1},
+    "hiring":         {"arousal": 0.2, "self_preservation": 0.1, "care": 0.2, "frustration": 0.3, "curiosity": 0.5, "affiliation": 0.3, "novelty_hunger": 0.4, "anxiety": 0.1},
+    "passive_learning": {"arousal": 0.1, "self_preservation": 0.0, "care": 0.0, "frustration": 0.0, "curiosity": 0.6, "affiliation": 0.0, "novelty_hunger": 0.5, "anxiety": 0.0},
+    # Default
+    "manual":         {"arousal": 0.3, "self_preservation": 0.1, "care": 0.1, "frustration": 0.1, "curiosity": 0.5, "affiliation": 0.3, "novelty_hunger": 0.3, "anxiety": 0.1},
+}
+
+
 def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     """Execute a subconscious query against another citizen's graph."""
     target = args.get("target")
@@ -1782,6 +1838,10 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     mode = args.get("mode", "best")
     if mode not in ("best", "top3", "all", "centroid"):
         mode = "best"
+
+    # Resolve scenario → limbic profile for the thermodynamic resonance formula
+    scenario = args.get("scenario", "manual")
+    limbic_profile = SCENARIO_PROFILES.get(scenario, SCENARIO_PROFILES["manual"])
 
     try:
         # ── Cypher mode: custom query for target selection ──
@@ -1832,7 +1892,7 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             enriched_query = _enrich_query(query, ctx)
             query_embedding = _embed_query(enriched_query, ctx)
 
-            scored = score_citizens(caller_id, enriched_query, enriched_query, ctx.graph_ops)
+            scored = score_citizens(caller_id, enriched_query, enriched_query, ctx.graph_ops, limbic_state=limbic_profile)
             if not scored:
                 return _err("No citizens found in graph to query.")
 
@@ -1976,7 +2036,7 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             caller_name=caller_name,
             query=query,
             direction="pull",
-            trigger="manual",
+            trigger=scenario,
             intention_text=args.get("intention", ""),
             context_text=args.get("context", ""),
             selected_responders=[{
