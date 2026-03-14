@@ -23,10 +23,11 @@ RUN useradd -m -u 1000 -s /bin/bash mind
 
 WORKDIR /app
 
-# Python dependencies (cached layer)
-COPY pyproject.toml .
-RUN pip install --no-cache-dir hatchling && \
-    pip install --no-cache-dir ".[dev]" uvicorn python-dotenv
+# Python dependencies (install directly, no package build needed at runtime)
+RUN pip install --no-cache-dir \
+    falkordb>=1.0.0 neo4j>=5.0.0 numpy>=1.24.0 httpx>=0.24.0 \
+    websockets>=11.0 pydantic>=2.0.0 pyyaml>=6.0 fastapi>=0.100.0 \
+    uvicorn>=0.30.0 python-dotenv>=1.0.0 PyJWT>=2.8.0 bcrypt>=4.0.0
 
 # Application code
 COPY --chown=mind:mind . /app/
