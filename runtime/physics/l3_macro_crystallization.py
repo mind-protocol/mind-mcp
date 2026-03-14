@@ -141,11 +141,35 @@ def detect_crystallization_candidates(
         if component:
             components.append(component)
 
+    def _extract_dense_core(component: set[str], min_degree: int = 2) -> set[str]:
+        """Prune fringe nodes from a connected component.
+
+        Connected components often include low-degree attachment nodes (e.g. a
+        single external neighbor) that should not be crystallized into the hub.
+        We iteratively remove nodes whose internal degree is below min_degree
+        and keep the resulting dense core.
+        """
+        core = set(component)
+        changed = True
+        while changed and core:
+            changed = False
+            to_remove = []
+            for node_id in core:
+                degree = sum(1 for n in adjacency.get(node_id, set()) if n in core)
+                if degree < min_degree:
+                    to_remove.append(node_id)
+            if to_remove:
+                core.difference_update(to_remove)
+                changed = True
+        return core
+
     # Evaluate each component
     candidates = []
 
     for component in components:
-        if len(component) < min_size:
+        core = _extract_dense_core(component)
+
+        if len(core) < min_size:
             continue
 
         # Count internal links and compute avg weight
@@ -153,7 +177,7 @@ def detect_crystallization_candidates(
         internal_weight_sum = 0.0
 
         for (a, b), link in link_index.items():
-            if a in component and b in component:
+            if a in core and b in core:
                 internal_links.append(link)
                 internal_weight_sum += link.weight
 
@@ -162,7 +186,7 @@ def detect_crystallization_candidates(
             continue
 
         # Density = internal_links / max_possible_links
-        n = len(component)
+        n = len(core)
         max_possible = n * (n - 1) / 2
         density = internal_count / max_possible if max_possible > 0 else 0.0
 
@@ -174,25 +198,25 @@ def detect_crystallization_candidates(
         # Find external links
         external_links = []
         for (a, b), link in link_index.items():
-            a_in = a in component
-            b_in = b in component
+            a_in = a in core
+            b_in = b in core
             if a_in != b_in:  # One inside, one outside
                 external_links.append(link)
         # Also check links not in link_index (links to nodes outside our set)
         for link in links:
-            a_in = link.node_a in component
-            b_in = link.node_b in component
+            a_in = link.node_a in core
+            b_in = link.node_b in core
             if a_in != b_in:
                 if (link.node_a, link.node_b) not in link_index:
                     external_links.append(link)
 
         candidate = CrystallizationCandidate(
-            node_ids=list(component),
+            node_ids=list(core),
             density=density,
             avg_co_activation=avg_weight,
             internal_link_count=internal_count,
             external_links=external_links,
-            nodes=[node_map[nid] for nid in component],
+            nodes=[node_map[nid] for nid in core],
             internal_links=internal_links,
         )
         candidates.append(candidate)

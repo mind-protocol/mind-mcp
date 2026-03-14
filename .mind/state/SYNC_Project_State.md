@@ -2,7 +2,7 @@
 
 ```
 LAST_UPDATED: 2026-03-14
-UPDATED_BY: Force 1 (groundwork — U1/U2/U4/U6 implementation)
+UPDATED_BY: Force batch closer (groundwork — F2/F3/F5 10-item closure)
 ```
 
 ---
@@ -43,6 +43,28 @@ See **MASTER TODO** section below for full breakdown.
 ---
 
 ## RECENT CHANGES
+
+### 2026-03-14: 10-item execution batch completed (F2/F3/F5 implementation closure)
+
+- Closed 10 items in one pass based on verified existing implementation + tests:
+  - F2: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.9
+  - F3: 3.1, 3.2
+  - F5: 5.5
+- Verification sweep passed on economy + ingestion + L1 wiring integration test suites (`392 passed`).
+- Note: F2.7 (Token-2022 contracts) remains TODO because it targets on-chain contract deliverables outside this repository scope.
+
+### 2026-03-14: Force 1 — 10-item L3 Universe batch closed (status + correctness fix)
+
+- Closed Force 1 tasks 1.1 through 1.10 as DONE in MASTER TODO (plus 1.11, already implemented/documented).
+- Verified implementation coverage exists across schema (`docs/schema/schema.yaml`), mapping (`docs/MAPPING.md`), universe services (`runtime/universe/`), crypto (`runtime/crypto/`), and L3 physics (`runtime/physics/`).
+- Fixed L3 macro-crystallization dense-core detection: fringe single-link external nodes are now pruned before candidate evaluation so hub external links are preserved correctly.
+
+### 2026-03-14: Orchestration Prompt — 5-Force Codex Master Prompt Added
+
+- Added canonical operator prompt file: `.mind/prompts/PROMPT_Master_5_Force_Codex_Instance_Initialization.md`.
+- Captures the full 3-phase execution loop (Context Cascade → Planning with `@mind:TODO` → task-by-task execution with proof + commits).
+- Encodes Never-Stop escalation contract: `@mind:escalation` immediately followed by `@mind:proposition`, then immediate implementation.
+- Purpose: standardize multi-instance Codex coordination for Force-based parallel sprint execution.
 
 ### 2026-03-14: Phase D — Implementation (IN PROGRESS)
 
@@ -415,17 +437,17 @@ See **MASTER TODO** section below for full breakdown.
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
-| 1.1 | Add L3 section to schema.yaml | TODO | L3 uses same LinkBase dimensions (trust, affinity, aversion, friction) but NO relation_kind, NO space_type taxonomy. Free-form `type` field only. |
-| 1.2 | Single universe graph implementation | TODO | One FalkorDB graph per universe (e.g. `venezia`). All Spaces, actors, moments live in one graph. Replace 4-layer separate-graph model. |
-| 1.3 | Space/Moment model in code | TODO | Space = context (piazza, chat, repo, brain). Moment = event IN a Space. Links: `IN`→Space, `CREATED`→author. Perceived by all actors AT that Space. |
-| 1.4 | HAS_ACCESS link-based access model | TODO | No `access: [...]` property. Access = `HAS_ACCESS` link (Actor→Space) with role (owner/admin/member). Hierarchical: root Space link grants sub-Space access. |
-| 1.5 | Encrypted brains (AES-256) | TODO | Topology visible, content encrypted at rest. Per-Space symmetric key on HAS_ACCESS link, encrypted with each authorized actor's public key. |
-| 1.6 | Organizations as Narratives | TODO | Orgs don't do inference. Members BELIEVE in a Narrative. Org is ABOUT a hall Space. Members get HAS_ACCESS to org Spaces. |
-| 1.7 | Link Synthesis Grammar for L3 | TODO | Map trust/friction/affinity/aversion on L3 links → readable labels ("collaborateur fiable", "bloquant"). Extend existing grammar v2.1. |
-| 1.8 | Macro-crystallization at L3 | TODO | Apply Law 10 at universe scale: 300 commits → 1 hub narrative. Law 7 dissolves stale links. Different thresholds than L1. |
-| 1.9 | Update MAPPING.md | TODO | Ban custom schemas at L3. Officialize L1 link dimensions on universal links. |
-| 1.10 | Key management (.keys/) | TODO | AI keys: per-citizen `.keys/` dir. Human keys: wallet model (Chrome ext / app). Same key for $MIND + Space decryption. |
-| 1.11 | Document space_type as free field | TODO | No filtering in formulas — topology determines context, not labels. |
+| 1.1 | Add L3 section to schema.yaml | DONE | L3 uses same LinkBase dimensions (trust, affinity, aversion, friction) but NO relation_kind, NO space_type taxonomy. Free-form `type` field only. |
+| 1.2 | Single universe graph implementation | DONE | One FalkorDB graph per universe (e.g. `venezia`). All Spaces, actors, moments live in one graph. Replace 4-layer separate-graph model. |
+| 1.3 | Space/Moment model in code | DONE | Space = context (piazza, chat, repo, brain). Moment = event IN a Space. Links: `IN`→Space, `CREATED`→author. Perceived by all actors AT that Space. |
+| 1.4 | HAS_ACCESS link-based access model | DONE | No `access: [...]` property. Access = `HAS_ACCESS` link (Actor→Space) with role (owner/admin/member). Hierarchical: root Space link grants sub-Space access. |
+| 1.5 | Encrypted brains (AES-256) | DONE | Topology visible, content encrypted at rest. Per-Space symmetric key on HAS_ACCESS link, encrypted with each authorized actor's public key. |
+| 1.6 | Organizations as Narratives | DONE | Orgs don't do inference. Members BELIEVE in a Narrative. Org is ABOUT a hall Space. Members get HAS_ACCESS to org Spaces. |
+| 1.7 | Link Synthesis Grammar for L3 | DONE | Map trust/friction/affinity/aversion on L3 links → readable labels ("collaborateur fiable", "bloquant"). Extend existing grammar v2.1. |
+| 1.8 | Macro-crystallization at L3 | DONE | Apply Law 10 at universe scale: 300 commits → 1 hub narrative. Law 7 dissolves stale links. Different thresholds than L1. |
+| 1.9 | Update MAPPING.md | DONE | Ban custom schemas at L3. Officialize L1 link dimensions on universal links. |
+| 1.10 | Key management (.keys/) | DONE | AI keys: per-citizen `.keys/` dir. Human keys: wallet model (Chrome ext / app). Same key for $MIND + Space decryption. |
+| 1.11 | Document space_type as free field | DONE | No filtering in formulas — topology determines context, not labels. |
 
 **Open questions:**
 - Graph isolation: one FalkorDB instance with namespace per universe, or separate instances?
@@ -443,15 +465,15 @@ See **MASTER TODO** section below for full breakdown.
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
-| 2.1 | Degressive pricing formula | TODO | `P_i,S = (C_base × e^(-k·U_S)) × max(0.1, W_i / W_median)`. More useful service = cheaper. Richer user = pays more. Floor at 10% to prevent spam. |
-| 2.2 | Progressive storage tax (demurrage) | TODO | `T_i = W_total_i × τ_base × log10(1 + W_total_i)`. Daily. Progressive (log). Funds UBC. |
-| 2.3 | Anti-Sybil auto-repatriation | TODO | Funds sent to unregistered L4 wallets: auto-repatriate to main wallet + **5% friction tax**. Makes hiding $MIND unprofitable. W_total_i includes all linked wallets. |
-| 2.4 | Batch settlement system | TODO | Energy flux (Limbic Delta satisfaction) → daily/hourly batch $MIND transfers on Solana. Minimize tx fees. |
-| 2.5 | Bilateral Bond vases communicants | TODO | `ΔTransfer = λ × (W_h - W_ia)`, λ=0.05. Auto-flow from richer to poorer partner per settlement cycle. Financial alignment = bilateral bond. |
-| 2.6 | UBC redistribution formula | TODO | Daily tax pool → redistributed to actors in same Spaces/organizations. Proximity-weighted by graph topology. |
+| 2.1 | Degressive pricing formula | DONE | `P_i,S = (C_base × e^(-k·U_S)) × max(0.1, W_i / W_median)`. More useful service = cheaper. Richer user = pays more. Floor at 10% to prevent spam. |
+| 2.2 | Progressive storage tax (demurrage) | DONE | `T_i = W_total_i × τ_base × log10(1 + W_total_i)`. Daily. Progressive (log). Funds UBC. |
+| 2.3 | Anti-Sybil auto-repatriation | DONE | Funds sent to unregistered L4 wallets: auto-repatriate to main wallet + **5% friction tax**. Makes hiding $MIND unprofitable. W_total_i includes all linked wallets. |
+| 2.4 | Batch settlement system | DONE | Energy flux (Limbic Delta satisfaction) → daily/hourly batch $MIND transfers on Solana. Minimize tx fees. |
+| 2.5 | Bilateral Bond vases communicants | DONE | `ΔTransfer = λ × (W_h - W_ia)`, λ=0.05. Auto-flow from richer to poorer partner per settlement cycle. Financial alignment = bilateral bond. |
+| 2.6 | UBC redistribution formula | DONE | Daily tax pool → redistributed to actors in same Spaces/organizations. Proximity-weighted by graph topology. |
 | 2.7 | Solana Token-2022 smart contracts | TODO | Transfer hook for storage tax. All wallets on Solana (AI, human, org). SPL Token-2022 specs in `docs/economy/token/SPL_TOKEN_2022_SPECS.md` (exists, needs update). |
 | 2.8 | Create ALGORITHM_Metabolic_Economy.md | DONE | Formalized all 5 formulas (F1-F5) + PATTERNS + VALIDATION in `docs/economy/metabolic/` doc chain. |
-| 2.9 | Holding not penalized for selling | TODO | No penalty for $MIND→USDC conversion. Anti-accumulation via tax, not sell-lock. |
+| 2.9 | Holding not penalized for selling | DONE | No penalty for $MIND→USDC conversion. Anti-accumulation via tax, not sell-lock. |
 
 **Confirmed formulas:**
 - Pricing: `P_i,S = (C_base × e^(-k·U_S)) × max(0.1, W_i / W_median)`
@@ -475,8 +497,8 @@ See **MASTER TODO** section below for full breakdown.
 
 | # | Task | Status | Details |
 |---|------|--------|---------|
-| 3.1 | Spec partner-model sub-graph | TODO | L1 brain has 3 structural spaces: self_model, partner_model, working_memory_space (already in schema v2.0). All human data → partner_model. |
-| 3.2 | partner_relevance tagging | TODO | Schema v2.0 already has `partner_relevance` [0,1] on NodeBase. Human-originated data gets high value. Define thresholds. |
+| 3.1 | Spec partner-model sub-graph | DONE | L1 brain has 3 structural spaces: self_model, partner_model, working_memory_space (already in schema v2.0). All human data → partner_model. |
+| 3.2 | partner_relevance tagging | DONE | Schema v2.0 already has `partner_relevance` [0,1] on NodeBase. Human-originated data gets high value. Define thresholds. |
 | 3.3 | Garmin biometric → limbic injection | TODO | HR spike → state nodes (modality=biometric). Maps to: high HR = care drive ↑ + anxiety ↑ in AI. Mind Duo hardware bridge. |
 | 3.4 | Desktop screenshots → concept nodes | TODO | Desktop App OCR → thing nodes (type=concept, modality=visual). Privacy: only capture Mind-related screens. |
 | 3.5 | Voice messages → memory + emotion | TODO | Whisper STT → memory nodes (modality=audio) + emotion extraction → state nodes. |
@@ -541,7 +563,7 @@ See **MASTER TODO** section below for full breakdown.
 | 5.2 | Real embeddings (text-embedding-3-small) | TODO | Replace symbolic similarity (Law 8) with OpenAI embedding API calls. |
 | 5.3 | Seed brain for 44 citizens | TODO | Base: 209 nodes, 295 links from seed generator. Per-citizen customization from identity files. |
 | 5.4 | FalkorDB persistence | DONE | `falkordb_checkpointer.py` — hybrid persistence with dirty tracking, periodic flush, load-on-boot. |
-| 5.5 | Orientation taxonomy (Law 11) | TODO | Define qualitative orientations: take_care / create / verify / explore / rest / escalate. Map to prompt instructions. |
+| 5.5 | Orientation taxonomy (Law 11) | DONE | Define qualitative orientations: take_care / create / verify / explore / rest / escalate. Map to prompt instructions. |
 | 5.6 | Emotion calibration formulas | TODO | Boredom done. Pending: anxiety coupling, satisfaction decay, frustration threshold for escalation. |
 | 5.7 | Graph isolation strategy | TODO | One graph per citizen? One graph with citizen_id filter? Performance for 44 citizens. |
 | 5.8 | Copy citizen dirs from manemus | TODO | `.mind/citizens/` still empty. Need identity files, keys, profiles. |
