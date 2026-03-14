@@ -223,6 +223,81 @@ from runtime.l4.org_confirmation_endpoint import router as l4_router
 app.include_router(l4_router)
 
 
+# ── Citizen Ping ───────────────────────────────────────────────────────────
+
+@app.get("/ping/{handle}")
+async def ping_citizen(handle: str):
+    """Ping a citizen hosted on this server.
+
+    Called by L4 or other orgs to verify a citizen is alive.
+    Returns: status, brain node count, last tick, orientation.
+    """
+    import os
+
+    # 1. Check citizen dir exists
+    citizens_dir = Path(__file__).resolve().parent / "citizens"
+    citizen_dir = citizens_dir / handle
+    has_profile = (citizen_dir / "profile.json").exists()
+
+    # 2. Check brain in FalkorDB
+    brain_nodes = 0
+    brain_links = 0
+    try:
+        from falkordb import FalkorDB
+        host = os.environ.get("FALKORDB_HOST", "localhost")
+        port = int(os.environ.get("FALKORDB_PORT", "6379"))
+        db = FalkorDB(host=host, port=port)
+        graph = db.select_graph(f"brain_{handle}")
+        result = graph.query("MATCH (n) RETURN count(n)")
+        if result.result_set:
+            brain_nodes = result.result_set[0][0]
+        result2 = graph.query("MATCH ()-[r]->() RETURN count(r)")
+        if result2.result_set:
+            brain_links = result2.result_set[0][0]
+    except Exception:
+        pass
+
+    # 3. Check L1 engine running in dispatcher
+    engine_running = False
+    orientation = None
+    tick_count = 0
+    dispatcher = _state.get("dispatcher")
+    if dispatcher and hasattr(dispatcher, '_citizen_engines'):
+        engine = dispatcher._citizen_engines.get(handle)
+        if engine:
+            engine_running = True
+            orientation = getattr(engine, '_current_orientation', None)
+            state = dispatcher._citizen_states.get(handle)
+            if state:
+                tick_count = state.tick_count
+
+    # 4. Check keys
+    keys_dir = Path(__file__).resolve().parent / ".keys" / handle
+    has_wallet = (keys_dir / "solana_private_key.json").exists()
+    has_rsa = (keys_dir / "rsa_private_key.pem").exists()
+
+    alive = has_profile and brain_nodes > 0
+
+    return {
+        "handle": handle,
+        "alive": alive,
+        "profile": has_profile,
+        "brain": {
+            "nodes": brain_nodes,
+            "links": brain_links,
+        },
+        "engine": {
+            "running": engine_running,
+            "orientation": orientation,
+            "tick_count": tick_count,
+        },
+        "keys": {
+            "wallet": has_wallet,
+            "rsa": has_rsa,
+        },
+    }
+
+
 # ── Health ──────────────────────────────────────────────────────────────────
 
 @app.get("/health")
