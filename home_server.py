@@ -218,6 +218,10 @@ app.include_router(citizens_router)
 app.include_router(feed_router)
 app.include_router(dm_router)
 
+# L4: Org confirmation endpoint
+from runtime.l4.org_confirmation_endpoint import router as l4_router
+app.include_router(l4_router)
+
 
 # ── Health ──────────────────────────────────────────────────────────────────
 
