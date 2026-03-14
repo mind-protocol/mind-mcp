@@ -113,9 +113,21 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Your actor ID. Auto-detected if omitted.",
             },
+            "output": {
+                "type": "string",
+                "description": (
+                    "Output format(s), comma-separated. Default: 'inline'.\n"
+                    "  'inline' — return full briefing in MCP response (default)\n"
+                    "  'background' — inject into your graph silently, no response text\n"
+                    "  'md' — save as markdown (requires save_to path)\n"
+                    "  'csv' — save as CSV table (requires save_to path)\n"
+                    "Examples: 'inline', 'inline,md', 'background,csv', 'inline,md,csv'"
+                ),
+                "default": "inline",
+            },
             "save_to": {
                 "type": "string",
-                "description": "Save the full response to a file (e.g. 'reports/subcall_result.md'). Creates parent dirs if needed.",
+                "description": "Folder or file path for md/csv output (e.g. 'reports/'). Creates dirs if needed.",
             },
             "cypher": {
                 "type": "string",
@@ -1987,12 +1999,28 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         if inner_voice:
             combined += "\n\n---\n\n" + inner_voice
 
-        # Insert intention line after "Question:" if provided
+        # Insert intention line
         intent = _intention_line(args)
         if intent:
             combined = combined.replace("\n\n", f"\n{intent}\n\n", 1)
 
-        _save_if_requested(args, combined)
+        # Save in requested formats
+        saved = _save_if_requested(args, combined, resonance)
+
+        # Handle output modes
+        output_modes = [m.strip().lower() for m in args.get("output", "inline").split(",")]
+
+        if "background" in output_modes and "inline" not in output_modes:
+            # Background mode: no inline response, just confirm what was saved
+            bg_msg = f"Subcall to @{target_handle} completed silently (background mode)."
+            if saved:
+                bg_msg += f" Saved: {', '.join(saved)}"
+            bg_msg += f" {len(resonance.get('nodes', []))} nodes injected into your graph."
+            return _ok(bg_msg)
+
+        if saved:
+            combined += f"\n\nSaved: {', '.join(saved)}"
+
         return _ok(combined)
 
     except Exception as e:
@@ -2008,19 +2036,75 @@ def _intention_line(args: Dict[str, Any]) -> str:
     return ""
 
 
-def _save_if_requested(args: Dict[str, Any], content: str) -> None:
-    """Save subcall response to file if save_to is specified."""
-    save_to = args.get("save_to")
+def _save_if_requested(args: Dict[str, Any], content: str, resonance: Optional[Dict] = None) -> List[str]:
+    """Save subcall response in requested formats. Returns list of saved paths."""
+    from pathlib import Path
+    from datetime import datetime, timezone
+
+    output_modes = [m.strip().lower() for m in args.get("output", "inline").split(",")]
+    save_to = args.get("save_to", "")
+    saved = []
+
     if not save_to:
-        return
-    try:
-        from pathlib import Path
-        path = Path(save_to)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(content, encoding="utf-8")
-        logger.info(f"[Subcall] Response saved to {path}")
-    except Exception as e:
-        logger.warning(f"[Subcall] Failed to save to {save_to}: {e}")
+        return saved
+
+    base_path = Path(save_to)
+    # If save_to is a directory (ends with / or has no extension), auto-name the files
+    if save_to.endswith("/") or save_to.endswith("\\") or not base_path.suffix:
+        base_path.mkdir(parents=True, exist_ok=True)
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        stem = f"subcall_{ts}"
+    else:
+        base_path.parent.mkdir(parents=True, exist_ok=True)
+        stem = base_path.stem
+        base_path = base_path.parent
+
+    # Markdown
+    if "md" in output_modes:
+        try:
+            md_path = base_path / f"{stem}.md"
+            md_path.write_text(content, encoding="utf-8")
+            saved.append(str(md_path))
+            logger.info(f"[Subcall] Saved MD: {md_path}")
+        except Exception as e:
+            logger.warning(f"[Subcall] MD save failed: {e}")
+
+    # CSV
+    if "csv" in output_modes and resonance:
+        try:
+            csv_path = base_path / f"{stem}.csv"
+            nodes = resonance.get("nodes", [])
+            lines = ["name,type,content,weight,energy,image_uri,relation,distance"]
+            for n in nodes:
+                row = [
+                    str(n.get("name", "")).replace(",", ";"),
+                    str(n.get("type", "")),
+                    str(n.get("content", ""))[:200].replace(",", ";").replace("\n", " "),
+                    str(n.get("weight", "")),
+                    str(n.get("energy", "")),
+                    str(n.get("image_uri", "")),
+                    str(n.get("relation", "")),
+                    str(n.get("distance", "")),
+                ]
+                lines.append(",".join(row))
+            csv_path.write_text("\n".join(lines), encoding="utf-8")
+            saved.append(str(csv_path))
+            logger.info(f"[Subcall] Saved CSV: {csv_path}")
+        except Exception as e:
+            logger.warning(f"[Subcall] CSV save failed: {e}")
+
+    # Legacy: if save_to has an extension and no explicit format, save as that type
+    if not saved and save_to and not any(m in output_modes for m in ("md", "csv")):
+        try:
+            p = Path(save_to)
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(content, encoding="utf-8")
+            saved.append(str(p))
+            logger.info(f"[Subcall] Saved: {p}")
+        except Exception as e:
+            logger.warning(f"[Subcall] Save failed: {e}")
+
+    return saved
 
 
 def _ok(text: str) -> Dict[str, Any]:
