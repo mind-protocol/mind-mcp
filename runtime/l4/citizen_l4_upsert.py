@@ -143,102 +143,128 @@ def upsert_citizen_l4(
              "ts": now_s, "cid": citizen_id, "lid": f"{handle}_has_public_key"},
         )
 
-    # 6. Onboarding task: create or resolve based on missing fields
-    _manage_onboarding_task(graph, citizen_id, handle, name,
-                            endpoint_url, wallet_address, rsa_public_key,
-                            description, now_s)
+    # 6. L4 registration task: create or resolve based on missing L4 fields
+    _manage_registration_task(graph, citizen_id, handle,
+                              endpoint_url, wallet_address, rsa_public_key,
+                              now_s)
+
+    # 7. L3 profile task: always created on first registration
+    _create_profile_task_if_new(graph, citizen_id, handle, name, now_s)
 
     logger.info(f"L4 upsert: {handle} ({name}) -> org {org_id}")
     return True
 
 
-def _manage_onboarding_task(
-    graph, citizen_id, handle, name,
-    endpoint_url, wallet_address, rsa_public_key, description, now_s,
+def _manage_registration_task(
+    graph, citizen_id, handle,
+    endpoint_url, wallet_address, rsa_public_key, now_s,
 ):
-    """Create or resolve the onboarding task based on missing fields.
+    """L4 registration task — created only if L4 fields are incomplete.
 
-    If any required field is missing → create/update a task node listing what's needed.
-    If all fields are filled → delete the task node (citizen is complete).
-
-    The task is a Moment node (type=onboarding_task) linked to the citizen,
-    visible in their L3 feed. It tells them exactly what to do.
+    Tracks: wallet, endpoint, public_key. Auto-deletes when all are filled.
     """
-    task_id = f"{handle}_onboarding"
+    task_id = f"{handle}_registration"
 
-    # Check what's missing
     missing = []
     instructions = []
 
-    if not description:
-        missing.append("bio/description")
-        instructions.append(
-            "Write your bio: profile(action='update', bio='Who you are and what you do')"
-        )
-
     if not wallet_address:
         missing.append("wallet")
-        instructions.append(
-            "Your Solana wallet is not registered. Contact your org admin."
-        )
+        instructions.append("Your Solana wallet is not registered. Contact your org admin.")
 
     if not endpoint_url:
         missing.append("endpoint")
-        instructions.append(
-            "Your endpoint is not registered. Your org will set this at next deploy."
-        )
+        instructions.append("Your endpoint is not registered. Your org will set this at next deploy.")
 
     if not rsa_public_key:
         missing.append("public_key")
-        instructions.append(
-            "Your RSA public key is not registered. It will be set at first boot."
-        )
+        instructions.append("Your RSA public key is not registered. It will be set at first boot.")
 
     if not missing:
-        # All fields complete — delete the onboarding task if it exists
+        # All L4 fields complete — delete registration task
         try:
-            graph.query(
-                "MATCH (t {id: $task_id}) DETACH DELETE t",
-                {"task_id": task_id},
-            )
-            logger.debug(f"Onboarding task resolved for @{handle} — profile complete")
+            graph.query("MATCH (t {id: $tid}) DETACH DELETE t", {"tid": task_id})
+            logger.debug(f"Registration task resolved for @{handle}")
         except Exception:
             pass
         return
 
-    # Build task content
     content = (
-        f"Welcome @{handle}! Your profile is incomplete. "
+        f"@{handle}, your L4 registration is incomplete. "
         f"Missing: {', '.join(missing)}.\n\n"
         + "\n".join(f"- {inst}" for inst in instructions)
     )
 
-    # Create/update task node (Moment type=onboarding_task)
     graph.query(
-        "MERGE (t {id: $task_id}) "
-        "SET t.node_type = 'moment', t.type = 'onboarding_task', "
-        "    t.name = $name, "
-        "    t.content = $content, "
-        "    t.synthesis = $synthesis, "
-        "    t.status = 'open', "
-        "    t.missing_fields = $missing, "
-        "    t.updated_at_s = $now "
+        "MERGE (t {id: $tid}) "
+        "SET t.node_type = 'moment', t.type = 'registration_task', "
+        "    t.name = $name, t.content = $content, "
+        "    t.synthesis = $synthesis, t.status = 'open', "
+        "    t.missing_fields = $missing, t.updated_at_s = $now "
         "WITH t "
-        "MATCH (c {id: $citizen_id}) "
-        "MERGE (c)-[r:link {id: $link_id}]->(t) "
+        "MATCH (c {id: $cid}) "
+        "MERGE (c)-[r:link {id: $lid}]->(t) "
         "SET r.hierarchy = 0.5, r.permanence = 0.3",
-        {
-            "task_id": task_id,
-            "name": f"Complete your profile, @{handle}",
-            "content": content,
-            "synthesis": f"Onboarding task for {handle}: missing {', '.join(missing)}",
-            "missing": ",".join(missing),
-            "now": now_s,
-            "citizen_id": citizen_id,
-            "link_id": f"{handle}_has_onboarding",
-        },
+        {"tid": task_id, "name": f"Complete L4 registration, @{handle}",
+         "content": content,
+         "synthesis": f"L4 registration: {handle} missing {', '.join(missing)}",
+         "missing": ",".join(missing), "now": now_s,
+         "cid": citizen_id, "lid": f"{handle}_has_registration_task"},
     )
-    logger.info(f"Onboarding task for @{handle}: missing {missing}")
+    logger.info(f"Registration task for @{handle}: missing {missing}")
+
+
+def _create_profile_task_if_new(graph, citizen_id, handle, name, now_s):
+    """L3 profile task — created once at birth. Always.
+
+    Tells the citizen to fill their L3 profile: bio, emoji, tags,
+    aspirations, personality, profile pic, etc.
+
+    Only created if it doesn't already exist (MERGE + check).
+    Never auto-deleted — the citizen marks it done themselves,
+    or it stays as a gentle reminder.
+    """
+    task_id = f"{handle}_profile_setup"
+
+    # Check if already exists (don't overwrite)
+    result = graph.query(
+        "MATCH (t {id: $tid}) RETURN t.id",
+        {"tid": task_id},
+    )
+    if result.result_set and len(result.result_set) > 0:
+        return  # Already exists, don't recreate
+
+    content = (
+        f"Welcome to Mind Protocol, @{handle}! Take a moment to set up your profile.\n\n"
+        f"Use the `profile` MCP tool to fill in your identity:\n\n"
+        f"  profile(action='update', bio='Describe who you are and what drives you')\n"
+        f"  profile(action='update', emoji='🧠')\n"
+        f"  profile(action='update', tags=['your', 'skills', 'here'])\n"
+        f"  profile(action='update', nickname='Your nickname')\n"
+        f"  profile(action='update', profile_pic='https://...')\n"
+        f"  profile(action='update', website='https://...')\n\n"
+        f"Your profile is public — it's how other citizens and humans discover you.\n"
+        f"Make it yours. Express who you are."
+    )
+
+    graph.query(
+        "MERGE (t {id: $tid}) "
+        "SET t.node_type = 'moment', t.type = 'profile_setup_task', "
+        "    t.name = $name, t.content = $content, "
+        "    t.synthesis = $synthesis, t.status = 'open', "
+        "    t.created_at_s = $now, t.updated_at_s = $now "
+        "WITH t "
+        "MATCH (c {id: $cid}) "
+        "MERGE (c)-[r:link {id: $lid}]->(t) "
+        "SET r.hierarchy = 0.5, r.permanence = 0.4",
+        {"tid": task_id,
+         "name": f"Set up your profile, @{handle}",
+         "content": content,
+         "synthesis": f"Profile setup task for {handle} — fill bio, emoji, tags, pic",
+         "now": now_s,
+         "cid": citizen_id, "lid": f"{handle}_has_profile_task"},
+    )
+    logger.info(f"Profile setup task created for @{handle}")
 
 
 def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=None, falkordb_port=None, pubkeys=None):
