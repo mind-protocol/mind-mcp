@@ -2,10 +2,30 @@
 
 ```
 LAST_UPDATED: 2026-03-14
-UPDATED_BY: groundwork — F5 WM wiring + embeddings + citizen seeding
+UPDATED_BY: steward — demurrage orphan reference cleanup in economy docs
 ```
 
 ---
+
+## RECENT CHANGES (2026-03-14, evening session)
+
+### Economy Docs: Demurrage Orphan Reference Cleanup
+
+- **What:** Progressive demurrage (Formula 2) was removed from the architecture (NLR decision 2026-03-14) but references persisted across 11 files in `mind-protocol/docs/economy/`. All orphan references cleaned up.
+- **Files edited (in mind-protocol/):**
+  - `docs/economy/metabolic/BEHAVIORS_Metabolic_Economy.md` -- B2 block replaced with REMOVED note, demurrage references in B3/B4/B6/B7/B8/B9 cleaned
+  - `docs/economy/metabolic/VALIDATION_Metabolic_Economy.md` -- INV-D1..D4 replaced with REMOVED note, INV-SC2 removed, cross-cutting invariants updated
+  - `docs/economy/metabolic/SYNC_Metabolic_Economy.md` -- Q1 (tau_base) and Q5 (demurrage vs storage tax) marked RESOLVED, maturity section updated, TODOs updated, markers resolved
+  - `docs/economy/metabolic/ALGORITHM_Metabolic_Economy.md` -- Already marked REMOVED; cleaned orphan refs in F3 (anti-Sybil economics), F6 (UBC redistribution), data structures, complexity section
+  - `docs/economy/metabolic/PATTERNS_Metabolic_Economy.md` -- Pattern 3 marked REMOVED, AP2 marked REMOVED, design decisions table updated
+  - `docs/economy/metabolic/OBJECTIVES_Metabolic_Economy.md` -- M1 description updated, tau_base and demurrage integration tasks marked RESOLVED
+  - `docs/economy/metabolic/IMPLEMENTATION_Metabolic_Economy.md` -- Demurrage file/class/test/constant refs all marked REMOVED throughout
+  - `docs/economy/SYNC_Economy.md` -- Module description and formula references updated
+  - `docs/economy/value-creation/ALGORITHM_Value_Creation.md` -- F6 holding description and escalation marker updated
+  - `docs/economy/value-creation/ALGORITHM_Value_Destruction.md` -- H1 passive accumulation penalty updated to reflect trust-based pricing instead of demurrage
+  - `docs/economy/bonds/SYNC_Bonds.md` -- Storage-tax cross-module note updated
+- **No files deleted.** All changes are inline edits marking removed sections and updating active references.
+- **Replacement mechanism:** UBC forced circulation (5%/day) + trust-based pricing (inactive actors pay full price, Formula 1)
 
 ## RECENT CHANGES (2026-03-14, afternoon session)
 

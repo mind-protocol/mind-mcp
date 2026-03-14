@@ -216,8 +216,17 @@ class Link:
 
     @property
     def effective_transfer(self) -> float:
-        """How much energy actually flows through this link."""
-        return self.weight * self.activation_gain * (1.0 - self.friction)
+        """How much energy actually flows through this link.
+
+        Trust acts as a routing bias: high-trust links conduct
+        proportionally more energy.  The (1 + trust) factor ranges
+        from 1.0 (trust=0) to 2.0 (trust=1), so trusted paths are
+        favoured without zeroing out untrusted ones.  Because Law 2
+        normalizes flows per source (F̂_ij = F_ij / Σ|F_ij|), total
+        outflow still equals surplus and the V4 conservation invariant
+        is preserved.
+        """
+        return self.weight * self.activation_gain * (1.0 - self.friction) * (1.0 + self.trust)
 
 
 # --- Limbic State ---
