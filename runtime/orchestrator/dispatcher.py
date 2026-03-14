@@ -50,7 +50,7 @@ logger = logging.getLogger("orchestrator.dispatcher")
 NEURON_CLEANUP_INTERVAL = 60  # seconds between neuron cleanups
 NEURON_RELAUNCH_INTERVAL = 30  # seconds between relaunch checks
 HEALTH_CHECK_INTERVAL = 10  # seconds between degradation checks
-PHYSICS_TICK_INTERVAL = float(os.environ.get("PHYSICS_TICK_INTERVAL", "60"))  # seconds between L1 ticks
+PHYSICS_TICK_INTERVAL = 60  # seconds — adaptive per citizen arousal state (see ALGORITHM_L1_Wiring)
 
 # Suppress infrastructure errors from reaching users
 SUPPRESS_PATTERNS = [
@@ -83,8 +83,8 @@ class Dispatcher:
             notify_callback: fn(message) for sending notifications (e.g., Telegram)
         """
         self.budget = budget or ComputeBudget(
-            mode=os.environ.get("BUDGET_MODE", "subscription"),
-            monthly_budget_usd=float(os.environ.get("MONTHLY_BUDGET_USD", "300")),
+            mode="subscription",
+            monthly_budget_usd=300,
         )
         self.response_callback = response_callback
         self.notify_callback = notify_callback

@@ -596,7 +596,7 @@ def _nature_to_physics(nature: str) -> Dict[str, Any]:
     """
     Convert nature string to physics floats.
 
-    Returns dict with: hierarchy, polarity, permanence, trust_disgust, etc.
+    Returns dict with: hierarchy, polarity, permanence, etc.
     """
     try:
         from .physics.nature import nature_to_floats

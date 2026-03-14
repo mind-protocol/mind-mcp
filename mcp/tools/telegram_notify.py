@@ -20,10 +20,10 @@ import requests
 
 logger = logging.getLogger("mind.telegram_notify")
 
-# Paths — manemus is the source of truth for TG config
-MANEMUS_ROOT = Path(os.getenv("MANEMUS_ROOT", "/home/mind-protocol/manemus"))
-CONFIG_FILE = MANEMUS_ROOT / "shrine" / "state" / "telegram_config.json"
-MESSAGES_FILE = MANEMUS_ROOT / "shrine" / "state" / "telegram_messages.jsonl"
+# Paths — project root for TG config
+PROJECT_ROOT = Path(os.getenv("MIND_PROJECT_ROOT", Path(__file__).parent.parent.parent))
+CONFIG_FILE = PROJECT_ROOT / "shrine" / "state" / "telegram_config.json"
+MESSAGES_FILE = PROJECT_ROOT / "shrine" / "state" / "telegram_messages.jsonl"
 
 # Nicolas's Telegram chat ID
 NICOLAS_CHAT_ID = "1864364329"
@@ -65,7 +65,7 @@ TOOL_SCHEMA = {
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _load_tg_config() -> Dict[str, Any]:
-    """Load Telegram config from manemus state."""
+    """Load Telegram config from project state directory."""
     try:
         if CONFIG_FILE.exists():
             return json.loads(CONFIG_FILE.read_text())

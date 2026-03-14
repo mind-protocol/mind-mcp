@@ -36,7 +36,7 @@ IMPL:            runtime/task_assignment.py, runtime/citizens/seed.py
 
 ## THE PROBLEM
 
-The manemus orchestrator dispatches backlog tasks to anonymous Claude Code sessions. These sessions have no identity, no memories, no escalation awareness. When a task fails, the next session starts from scratch. Result: zombie tasks retry 300+ times because each session is amnesiac.
+The orchestrator dispatches backlog tasks to anonymous Claude Code sessions. These sessions have no identity, no memories, no escalation awareness. When a task fails, the next session starts from scratch. Result: zombie tasks retry 300+ times because each session is amnesiac.
 
 Meanwhile, mind-mcp already has a complete membrane-based task routing system (`select_best_agent()` with embedding similarity x weight x energy x load penalty) that was never connected to the orchestrator.
 
@@ -78,7 +78,7 @@ JSONL backlog = creation layer (simple, file-based, human-editable). Graph = rou
 
 ### Principle 3: Reusable Components
 
-`seed_citizen_actors()` and `select_best_agent(actor_type=...)` live in mind-mcp. Any project can seed its own citizen actors and route tasks through them. Only the orchestrator integration is manemus-specific.
+`seed_citizen_actors()` and `select_best_agent(actor_type=...)` live in mind-mcp. Any project can seed its own citizen actors and route tasks through them. The orchestrator integration is in `runtime/orchestrator/`.
 
 ---
 
@@ -86,9 +86,9 @@ JSONL backlog = creation layer (simple, file-based, human-editable). Graph = rou
 
 | Source | Type | Purpose |
 |--------|------|---------|
-| `manemus/config/citizens.json` | FILE | Source of citizen metadata for seeding Actor nodes |
-| `manemus/shrine/state/backlog.jsonl` | FILE | Source of tasks for routing |
-| FalkorDB `manemus` graph | DB | Actor nodes, task nodes, claimed_by links |
+| `config/citizens.json` | FILE | Source of citizen metadata for seeding Actor nodes |
+| `shrine/state/backlog.jsonl` | FILE | Source of tasks for routing |
+| FalkorDB `mind` graph | DB | Actor nodes, task nodes, claimed_by links |
 
 ---
 
@@ -115,4 +115,4 @@ JSONL backlog = creation layer (simple, file-based, human-editable). Graph = rou
 
 - Task creation/management (owned by shrine/backlog.py)
 - Citizen identity/prompt building (owned by runtime/citizens/)
-- Orchestrator dispatch mechanics (owned by manemus/scripts/orchestrator.py)
+- Orchestrator dispatch mechanics (owned by runtime/orchestrator/dispatcher.py)

@@ -323,7 +323,6 @@ async def _ask_single(
                 weight=alignment,
                 energy=alignment,
                 permanence=0.5,
-                trust_disgust=0.0,
             ))
 
         raw_cluster = RawCluster(

@@ -9,7 +9,6 @@ Schema v1.2 core physics primitives:
 EVERY energy transfer must use energy_flows_through() to ensure:
 1. Link energy is updated (attention)
 2. Link weight grows (accumulated depth)
-3. Emotions are blended (Hebbian coloring)
 
 DOCS: docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md
 """
@@ -20,38 +19,7 @@ from math import sqrt
 from runtime.physics.constants import (
     COLD_THRESHOLD,
     TOP_N_LINKS,
-    EMOTION_BASELINE_INTENSITY,
-    EMOTION_BASELINE_PROXIMITY,
-    PLUTCHIK_AXES,
-    plutchik_intensity,
 )
-from runtime.models.links import blend_emotion_axis
-
-
-def blend_plutchik_axes(
-    current: Dict[str, float],
-    incoming: Dict[str, float],
-    blend_rate: float,
-) -> Dict[str, float]:
-    """
-    Blend incoming Plutchik axes into current.
-
-    v1.9: Uses axis-based blending instead of list-based emotions.
-
-    Args:
-        current: Current axes {joy_sadness: float, ...}
-        incoming: Incoming axes to blend
-        blend_rate: How much to blend (0-1), typically flow/(flow+1)
-
-    Returns:
-        Blended axes dict
-    """
-    result = {}
-    for axis in PLUTCHIK_AXES:
-        curr_val = current.get(axis, 0.0)
-        inc_val = incoming.get(axis, 0.0)
-        result[axis] = blend_emotion_axis(curr_val, inc_val, blend_rate)
-    return result
 
 
 def target_weight_factor(weight: float) -> float:
@@ -74,9 +42,9 @@ def target_weight_factor(weight: float) -> float:
 def energy_flows_through(
     link: Dict[str, Any],
     amount: float,
-    flow_axes: Dict[str, float],
-    origin_weight: float,
-    target_weight: float,
+    flow_axes: Optional[Dict[str, float]] = None,
+    origin_weight: float = 1.0,
+    target_weight: float = 1.0,
 ) -> Dict[str, Any]:
     """
     Unified traversal function — MUST be called on EVERY energy transfer.
@@ -84,12 +52,11 @@ def energy_flows_through(
     Updates link state:
     1. energy: link.energy += amount × link.weight (attention)
     2. weight: grows based on formula (accumulated depth)
-    3. Plutchik axes: blended with flow_axes (Hebbian coloring)
 
     Args:
-        link: Link dict with energy, weight, Plutchik axis fields
+        link: Link dict with energy, weight fields
         amount: Energy amount flowing through
-        flow_axes: Plutchik axes from the flow {joy_sadness: float, ...}
+        flow_axes: Deprecated, ignored
         origin_weight: Weight of the origin node
         target_weight: Weight of the target node
 
@@ -98,13 +65,8 @@ def energy_flows_through(
 
     Formula:
         link.energy += amount × link.weight
-
-        emotion_intensity = plutchik_intensity(link axes)
-        growth = (amount × emotion_intensity × origin_weight) / ((1 + link.weight) × target_weight)
+        growth = (amount × origin_weight) / ((1 + link.weight) × target_weight)
         link.weight += growth
-
-        blend_rate = amount / (amount + link.energy + 1)
-        link.axes = blend(link.axes, flow_axes, blend_rate)
     """
     if amount <= 0:
         return link
@@ -112,31 +74,15 @@ def energy_flows_through(
     link_weight = link.get('weight', 1.0)
     current_energy = link.get('energy', 0.0)
 
-    # Get current Plutchik axes from link
-    current_axes = {
-        'joy_sadness': link.get('joy_sadness', 0.0),
-        'trust_disgust': link.get('trust_disgust', 0.0),
-        'fear_anger': link.get('fear_anger', 0.0),
-        'surprise_anticipation': link.get('surprise_anticipation', 0.0),
-    }
-
     # 1. Energy transfer (attention)
     link['energy'] = current_energy + amount * link_weight
 
     # 2. Weight growth (accumulated depth)
-    emotion_intensity = plutchik_intensity(current_axes)
     if target_weight <= 0:
         target_weight = 1.0
 
-    growth = (amount * emotion_intensity * origin_weight) / ((1 + link_weight) * target_weight)
+    growth = (amount * origin_weight) / ((1 + link_weight) * target_weight)
     link['weight'] = link_weight + growth
-
-    # 3. Plutchik axis coloring (Hebbian)
-    if flow_axes:
-        blend_rate = amount / (amount + current_energy + 1)
-        blended = blend_plutchik_axes(current_axes, flow_axes, blend_rate)
-        for axis, value in blended.items():
-            link[axis] = value
 
     return link
 
@@ -246,14 +192,6 @@ def cool_link(
     current_energy = link.get('energy', 0.0)
     link_weight = link.get('weight', 1.0)
 
-    # Get Plutchik axes from link
-    current_axes = {
-        'joy_sadness': link.get('joy_sadness', 0.0),
-        'trust_disgust': link.get('trust_disgust', 0.0),
-        'fear_anger': link.get('fear_anger', 0.0),
-        'surprise_anticipation': link.get('surprise_anticipation', 0.0),
-    }
-
     if current_energy <= 0:
         return link, 0.0, 0.0
 
@@ -269,7 +207,6 @@ def cool_link(
     node_b['energy'] = node_b.get('energy', 0.0) + energy_to_b
 
     # Convert to weight growth
-    emotion_intensity = plutchik_intensity(current_axes)
     node_a_weight = node_a.get('weight', 1.0)
     node_b_weight = node_b.get('weight', 1.0)
 
@@ -277,44 +214,13 @@ def cool_link(
         node_b_weight = 1.0
 
     weight_energy = current_energy * weight_rate
-    growth = (weight_energy * emotion_intensity * node_a_weight) / ((1 + link_weight) * node_b_weight)
+    growth = (weight_energy * node_a_weight) / ((1 + link_weight) * node_b_weight)
     link['weight'] = link_weight + growth
 
     # Reduce energy
     link['energy'] = current_energy - drain - weight_energy
 
     return link, energy_to_a, energy_to_b
-
-
-def get_weighted_average_axes(links: List[Dict[str, Any]]) -> Dict[str, float]:
-    """
-    Calculate weighted average Plutchik axes from a list of links.
-
-    Used to get a moment's combined emotional state from its connected links.
-
-    Args:
-        links: List of link dicts with Plutchik axis fields and weight
-
-    Returns:
-        Weighted average axes {joy_sadness: float, ...}
-    """
-    if not links:
-        return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    axis_sums = {axis: 0.0 for axis in PLUTCHIK_AXES}
-    total_weight = 0.0
-
-    for link in links:
-        link_weight = link.get('weight', 1.0)
-        total_weight += link_weight
-
-        for axis in PLUTCHIK_AXES:
-            axis_sums[axis] += link.get(axis, 0.0) * link_weight
-
-    if total_weight <= 0:
-        return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    return {axis: axis_sums[axis] / total_weight for axis in PLUTCHIK_AXES}
 
 
 # =============================================================================
@@ -746,122 +652,6 @@ def accumulate_path_energy(
         current_energy *= decay_per_hop
 
     return path_links
-
-
-# =============================================================================
-# QUERY EMOTION COMPUTATION (v1.6.1)
-# =============================================================================
-
-def compute_query_axes(
-    query_embedding: Optional[List[float]],
-    links: List[Dict[str, Any]],
-    alignment_threshold: float = 0.3,
-) -> Dict[str, float]:
-    """
-    Compute weighted Plutchik axes from aligned links.
-
-    v1.9: When querying the graph (e.g., for SubEntity exploration),
-    compute the emotional context from links aligned with the query.
-
-    Algorithm:
-    1. For each link, compute alignment = cosine(query, link.embedding)
-    2. If alignment > threshold, include link's axes weighted by alignment
-    3. Return consolidated axes
-
-    Args:
-        query_embedding: Embedding of the query/intention
-        links: List of link dicts with 'embedding' and Plutchik axis fields
-        alignment_threshold: Minimum alignment to include (default 0.3)
-
-    Returns:
-        Weighted average axes {joy_sadness: float, ...}
-    """
-    if not query_embedding or not links:
-        return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    # Import here to avoid circular dependency
-    from runtime.physics.link_scoring import cosine_similarity
-
-    axis_sums = {axis: 0.0 for axis in PLUTCHIK_AXES}
-    total_weight = 0.0
-
-    for link in links:
-        link_embedding = link.get('embedding')
-        if not link_embedding:
-            continue
-
-        # Compute alignment
-        alignment = cosine_similarity(query_embedding, link_embedding)
-
-        if alignment < alignment_threshold:
-            continue
-
-        total_weight += alignment
-
-        for axis in PLUTCHIK_AXES:
-            axis_sums[axis] += link.get(axis, 0.0) * alignment
-
-    if total_weight <= 0:
-        return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    return {axis: axis_sums[axis] / total_weight for axis in PLUTCHIK_AXES}
-
-
-def compute_path_axes(
-    path_links: List[Dict[str, Any]],
-    decay_per_hop: float = 0.9,
-) -> Dict[str, float]:
-    """
-    Compute combined Plutchik axes along a traversal path.
-
-    Later links (closer to destination) contribute more.
-
-    Args:
-        path_links: Links in traversal order
-        decay_per_hop: Decay factor per hop backward (default 0.9)
-
-    Returns:
-        Combined axes {joy_sadness: float, ...}
-    """
-    if not path_links:
-        return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    axis_sums = {axis: 0.0 for axis in PLUTCHIK_AXES}
-    total_weight = 0.0
-
-    # Weight increases as we get closer to the end
-    weight = 1.0
-    for link in reversed(path_links):
-        total_weight += weight
-
-        for axis in PLUTCHIK_AXES:
-            axis_sums[axis] += link.get(axis, 0.0) * weight
-
-        weight *= decay_per_hop
-
-    if total_weight <= 0:
-        return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    return {axis: axis_sums[axis] / total_weight for axis in PLUTCHIK_AXES}
-
-
-def blend_query_axes(
-    base_axes: Dict[str, float],
-    query_axes: Dict[str, float],
-    query_weight: float = 0.3,
-) -> Dict[str, float]:
-    """
-    Blend base axes with query-derived axes.
-
-    Args:
-        base_axes: Existing Plutchik axes
-        query_axes: Axes from query alignment
-        query_weight: Weight for query axes (default 0.3)
-
-    Returns:
-        Blended axes dict
-    """
-    return blend_plutchik_axes(base_axes, query_axes, query_weight)
 
 
 # =============================================================================

@@ -417,7 +417,7 @@ class CanonHolder:
         # Update moment status
         update_query = """
         MATCH (m:Moment {id: $id})
-        SET m.status: "failed",
+        SET m.status = "failed",
             m.tick_resolved = $tick,
             m.energy = 0
         RETURN m.id

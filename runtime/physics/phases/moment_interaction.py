@@ -1,10 +1,8 @@
 """
 Phase 4: Moment Interaction — Active moments support or contradict each other.
 
-If proximity > 0.7: support (m1 feeds m2)
-If proximity < 0.3: contradict (m1 drains m2)
-
 Only between moments sharing narratives.
+Uses weight-based proximity instead of emotion proximity.
 
 DOCS: docs/physics/IMPLEMENTATION_Physics.md
 """
@@ -14,7 +12,7 @@ import math
 from typing import List, Dict
 from runtime.physics.graph import GraphOps
 from runtime.physics.constants import (
-    SUPPORT_THRESHOLD, CONTRADICT_THRESHOLD, INTERACTION_RATE, plutchik_proximity, PLUTCHIK_AXES
+    SUPPORT_THRESHOLD, CONTRADICT_THRESHOLD, INTERACTION_RATE
 )
 
 logger = logging.getLogger(__name__)
@@ -41,12 +39,6 @@ def phase_moment_interaction(
     if len(active_moments) < 2:
         return 0.0
 
-    # Get Plutchik axes for each moment
-    moment_axes = {}
-    for m in active_moments:
-        mid = m.get('id')
-        moment_axes[mid] = queries.get_moment_axes(mid)
-
     for i, m1 in enumerate(active_moments):
         m1_id = m1.get('id')
         m1_energy = m1.get('energy', 0.0) or 0.0
@@ -64,12 +56,8 @@ def phase_moment_interaction(
                 if not shared:
                     continue
 
-                # Calculate Plutchik proximity
-                default_axes = {axis: 0.0 for axis in PLUTCHIK_AXES}
-                proximity = plutchik_proximity(
-                    moment_axes.get(m1_id, default_axes),
-                    moment_axes.get(m2_id, default_axes)
-                )
+                # Use weight-based proximity: shared narrative count as a factor
+                proximity = min(1.0, len(shared) * 0.3)
 
                 if proximity > SUPPORT_THRESHOLD:
                     # Support: m1 feeds m2

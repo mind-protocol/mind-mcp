@@ -1,6 +1,6 @@
 """Compute budget manager — trust-based compute allocation and tick speed control.
 
-NEW: Not ported from manemus. Controls orchestrator tick speed based on:
+Controls orchestrator tick speed based on:
   - Payment mode (subscription, own_compute, ubc, paygo)
   - Monthly budget with configurable margin
   - Trust-based citizen share allocation

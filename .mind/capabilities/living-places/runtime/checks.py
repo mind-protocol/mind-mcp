@@ -24,7 +24,7 @@ log = logging.getLogger("mind.capability.living_places")
 def _get_graph():
     """Get a database adapter for graph queries."""
     from runtime.infrastructure.database.factory import get_database_adapter
-    return get_database_adapter(graph_name="manemus")
+    return get_database_adapter(graph_name="mind")
 
 
 # =============================================================================

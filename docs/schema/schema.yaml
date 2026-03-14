@@ -801,10 +801,8 @@ invariants:
 #    No algorithm, formula, or physics law reads space_type for branching.
 #    No taxonomy. No prescribed values. Free text or null.
 #
-# 5. NO EMOTIONS / NO POLITICS AT L3.
-#    The Plutchik axes (joy_sadness, trust_disgust, fear_anger,
-#    surprise_anticipation) exist on LinkBase but are ALWAYS 0.0 at L3.
-#    All affect lives in L1 only — each brain colors the universe differently.
+# 5. NO EMOTIONS AT L3.
+#    Emotions are handled by the limbic system (valence, arousal, drives) at L1 only.
 #    The universe itself has no feelings.
 #
 # 6. TRUST LIVES ON LINKS, NEVER ON NODES.
@@ -854,7 +852,7 @@ l3_universe:
 
   link_at_l3:
     relation_kind: null  # ALWAYS null at L3
-    plutchik_axes: 0.0   # ALWAYS zero — joy_sadness, trust_disgust, fear_anger, surprise_anticipation
+    # Plutchik axes removed in v2.1 — emotions handled by limbic system at L1
     active_dimensions:
       # These carry structural meaning at L3:
       - weight        # Consolidated importance of the relationship
@@ -1031,7 +1029,7 @@ l3_universe:
 l3_invariants:
   - "5 universal node types only — no L3-specific types"
   - "relation_kind is always null at L3"
-  - "Plutchik emotion axes are always 0.0 at L3"
+  - "Emotions handled by limbic system at L1 only — no emotion fields on L3 links"
   - "space_type is free text, optional, never used in algorithmic branching"
   - "Trust lives on links only — no node-level trust field"
   - "Actor reputation is always computed, never stored"

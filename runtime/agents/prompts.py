@@ -48,15 +48,10 @@ def get_agent_system_prompt(name: str, target_dir: Path) -> str:
 
     parts = []
 
-    # 1. Load root CLAUDE.md system prompt (fallback to .mind/CLAUDE.md)
+    # 1. Load root CLAUDE.md system prompt (no fallback — fail loud)
     claude_path = target_dir / "CLAUDE.md"
     if claude_path.exists():
         parts.append(claude_path.read_text())
-    else:
-        fallback_path = target_dir / ".mind" / "CLAUDE.md"
-        if fallback_path.exists():
-            logger.warning(f"Root CLAUDE.md not found, using fallback: {fallback_path}")
-            parts.append(fallback_path.read_text())
 
     # 2. Load actor-specific prompt from .mind/actors/{name}/
     name_lower = name.lower()

@@ -8,7 +8,7 @@ In the new architecture:
   - Thread ID is deterministic: sorted(user_a, user_b) joined with "__"
 
 Storage: JSONL files at shrine/state/dms/{thread_id}.jsonl (one file per conversation).
-Same append-only pattern as chat_routes.py and the manemus DM import script.
+Same append-only pattern as chat_routes.py.
 """
 
 import json

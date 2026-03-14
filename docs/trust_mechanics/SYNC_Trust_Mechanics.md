@@ -162,7 +162,7 @@ These thresholds are speculative. The tier system may also be an L3/L4 concept (
 ### 2026-03-14: Phase C Implementation Plan Created
 - Created `IMPLEMENTATION_Trust_Mechanics.md` with full architecture and file plan
 - 8 implementation phases (T1-T8) with function signatures and file paths
-- 10 new files in `manemus/runtime/cognition/trust/`
+- 10 new files in `runtime/cognition/trust/`
 - 4 existing files modified (models.py, constants.py, tick_runner, law_13_to_18)
 - 14 invariant tests mapped to test files
 - 7 behavioral scenario tests from BEHAVIORS mapped

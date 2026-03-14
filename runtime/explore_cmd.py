@@ -287,10 +287,6 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                     'h': data.get('hierarchy', 0.0),
                     'p': data.get('permanence', 0.5),
                     'pab': polarity[0], 'pba': polarity[1] if len(polarity) > 1 else polarity[0],
-                    'js': data.get('joy_sadness', 0.0),
-                    'td': data.get('trust_disgust', 0.0),
-                    'fa': data.get('fear_anger', 0.0),
-                    'sa': data.get('surprise_anticipation', 0.0),
                 }
                 if embedding:
                     params['emb'] = embedding
@@ -300,8 +296,6 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                             id: $id, weight: $w, energy: $e,
                             hierarchy: $h, permanence: $p,
                             polarity_ab: $pab, polarity_ba: $pba,
-                            joy_sadness: $js, trust_disgust: $td,
-                            fear_anger: $fa, surprise_anticipation: $sa,
                             embedding: $emb
                         }]->(b)
                     """, params)
@@ -311,9 +305,7 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                         CREATE (a)-[r:link {
                             id: $id, weight: $w, energy: $e,
                             hierarchy: $h, permanence: $p,
-                            polarity_ab: $pab, polarity_ba: $pba,
-                            joy_sadness: $js, trust_disgust: $td,
-                            fear_anger: $fa, surprise_anticipation: $sa
+                            polarity_ab: $pab, polarity_ba: $pba
                         }]->(b)
                     """, params)
             except Exception as e:

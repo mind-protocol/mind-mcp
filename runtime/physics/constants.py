@@ -13,7 +13,6 @@ v1.2 CHANGES:
 
 v1.1 CHANGES:
     - Added GENERATION_RATE, MOMENT_DRAW_RATE, FLOW_RATE
-    - Added emotion proximity and Hebbian coloring constants
     - Added moment completion thresholds
 
 TESTS:
@@ -140,7 +139,7 @@ DRAW_RATE = 0.3
 # Rate at which narratives backflow to connected actors
 BACKFLOW_RATE = 0.1
 
-# Unified flow formula: flow = source.energy × rate × weight × emotion_factor
+# Unified flow formula: flow = source.energy × rate × weight
 # received = flow × sqrt(target.weight)
 
 # --- Hot/Cold Link Filter (v1.2) ---
@@ -158,10 +157,10 @@ LINK_DRAIN_RATE = 0.3
 LINK_TO_WEIGHT_RATE = 0.1
 
 # --- Moment Interaction (v1.2) ---
-# Emotion proximity threshold for support (>0.7 = support)
+# Threshold for support (>0.7 = support)
 SUPPORT_THRESHOLD = 0.7
 
-# Emotion proximity threshold for contradict (<0.3 = contradict)
+# Threshold for contradict (<0.3 = contradict)
 CONTRADICT_THRESHOLD = 0.3
 
 # Rate of support/contradict energy transfer
@@ -178,18 +177,6 @@ TICK_DURATION_SECONDS = 5
 # Ticks per minute (for radiation rate calculation)
 TICKS_PER_MINUTE = 12
 
-# --- Emotion Mechanics ---
-# Maximum emotions per link
-MAX_EMOTIONS_PER_LINK = 7
-
-# Minimum emotion intensity to keep (below this, emotion is pruned)
-MIN_EMOTION_INTENSITY = 0.01
-
-# Baseline emotion intensity when list is empty
-EMOTION_BASELINE_INTENSITY = 0.5
-
-# Baseline emotion proximity when lists are empty
-EMOTION_BASELINE_PROXIMITY = 0.2
 
 # --- Link Crystallization ---
 # Initial weight for crystallized links (controls flow rate)
@@ -202,85 +189,7 @@ MAX_PATH_HOPS = 5
 # Default resistance for blocked paths
 BLOCKED_PATH_RESISTANCE = 100.0
 
-# Resistance formula: resistance = 1 / (weight × emotion_factor)
-# If any factor is 0, resistance is BLOCKED_PATH_RESISTANCE
-
-
-# =============================================================================
-# PLUTCHIK AXES (v1.9)
-# =============================================================================
-# 4 bipolar emotion axes, each in [-1, +1]:
-#   joy_sadness:          -1 = sadness, +1 = joy
-#   trust_disgust:        -1 = disgust, +1 = trust
-#   fear_anger:           -1 = fear, +1 = anger
-#   surprise_anticipation: -1 = surprise, +1 = anticipation
-
-PLUTCHIK_AXES = ['joy_sadness', 'trust_disgust', 'fear_anger', 'surprise_anticipation']
-
-
-def plutchik_proximity(axes_a: dict, axes_b: dict) -> float:
-    """
-    Calculate emotion similarity between two Plutchik axis dicts.
-
-    v1.9: Returns value in [0, 1]:
-        1.0 = identical axes
-        0.0 = maximally different (all axes opposite)
-
-    Uses normalized Euclidean distance.
-
-    Args:
-        axes_a: {joy_sadness: float, trust_disgust: float, ...}
-        axes_b: {joy_sadness: float, trust_disgust: float, ...}
-
-    Returns:
-        Proximity in [0.0, 1.0] range
-    """
-    if not axes_a and not axes_b:
-        return EMOTION_BASELINE_PROXIMITY
-
-    # Calculate squared differences
-    total_sq_diff = 0.0
-    for axis in PLUTCHIK_AXES:
-        val_a = axes_a.get(axis, 0.0)
-        val_b = axes_b.get(axis, 0.0)
-        diff = val_a - val_b
-        total_sq_diff += diff * diff
-
-    # Max possible distance: 4 axes × (2.0)^2 = 16
-    # Normalized distance: sqrt(total) / sqrt(16) = sqrt(total) / 4
-    # Proximity = 1 - normalized_distance
-    import math
-    normalized_dist = math.sqrt(total_sq_diff) / 4.0
-    return max(0.0, 1.0 - normalized_dist)
-
-
-def plutchik_intensity(axes: dict) -> float:
-    """
-    Calculate overall intensity from Plutchik axes.
-
-    v1.9: Returns average absolute value of axes.
-    0.0 = neutral on all axes
-    1.0 = maximum intensity on all axes
-
-    Args:
-        axes: {joy_sadness: float, trust_disgust: float, ...}
-
-    Returns:
-        Intensity in [0.0, 1.0] range
-    """
-    if not axes:
-        return EMOTION_BASELINE_INTENSITY
-
-    total = 0.0
-    count = 0
-    for axis in PLUTCHIK_AXES:
-        if axis in axes:
-            total += abs(axes[axis])
-            count += 1
-
-    if count == 0:
-        return EMOTION_BASELINE_INTENSITY
-
-    return total / count
+# Resistance formula: resistance = 1 / (weight)
+# If weight is 0, resistance is BLOCKED_PATH_RESISTANCE
 
 

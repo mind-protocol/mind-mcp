@@ -379,7 +379,7 @@ class MomentOperationsMixin:
         decayed_cypher = """
         MATCH (m:Moment)
         WHERE m.status = 'possible' AND m.weight < $threshold
-        SET m.status: "failed", m.tick_resolved = $tick
+        SET m.status = "failed", m.tick_resolved = $tick
         RETURN count(m)
         """
         result = self._query(decayed_cypher, {
@@ -422,7 +422,7 @@ class MomentOperationsMixin:
         dormant_cypher = """
         MATCH (m:Moment)-[a:ATTACHED_TO]->(p:Space {id: $location_id})
         WHERE a.persistent = true AND m.status IN ['possible', 'active']
-        SET m.status: "possible"
+        SET m.status = "possible"
         RETURN count(m)
         """
         result = self._query(dormant_cypher, {"location_id": location_id})
@@ -466,7 +466,7 @@ class MomentOperationsMixin:
         """
         reactivate_cypher = """
         MATCH (m:Moment)-[a:ATTACHED_TO]->(p:Space {id: $location_id})
-        WHERE m.status: "possible"
+        WHERE m.status = "possible"
         SET m.status = 'possible'
         RETURN count(m)
         """
@@ -503,7 +503,7 @@ class MomentOperationsMixin:
 
         gc_cypher = """
         MATCH (m:Moment)
-        WHERE m.status: "failed" AND m.tick_resolved < $threshold
+        WHERE m.status = "failed" AND m.tick_resolved < $threshold
         DETACH DELETE m
         RETURN count(m)
         """

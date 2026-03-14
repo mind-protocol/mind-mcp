@@ -50,12 +50,6 @@ from .flow import (
     backward_color_path,
     color_link_from_node,
     accumulate_path_energy,
-    # v1.9: Plutchik axis functions
-    blend_plutchik_axes,
-    compute_query_axes,
-    compute_path_axes,
-    blend_query_axes,
-    get_weighted_average_axes,
 )
 from .crystallization import (
     compute_crystallization_embedding,
@@ -176,10 +170,6 @@ __all__ = [
     'backward_color_path',
     'color_link_from_node',
     'accumulate_path_energy',
-    # Query emotions (v1.6.1)
-    'compute_query_emotion',
-    'compute_path_emotion',
-    'blend_query_emotions',
     # Crystallization (v1.6.1)
     'compute_crystallization_embedding',
     'check_novelty',

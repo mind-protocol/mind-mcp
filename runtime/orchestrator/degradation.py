@@ -6,7 +6,7 @@ Levels:
   2 = degraded    (MAX_PARALLEL → 1, Claude API only)
   3 = minimal     (MAX_PARALLEL → 1, OpenAI fallback)
 
-Ported from manemus/scripts/orchestrator.py (lines 1620-1871).
+4-level resilience system with auto-recovery and degradation management.
 """
 
 import time

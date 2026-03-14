@@ -24,7 +24,7 @@ STATUS: CANONICAL
 
 **What's proposed (v2+):**
 - Task type affinity tracking per citizen (which task categories they succeed at)
-- Cross-project citizen routing (routing tasks from mind-ops to manemus citizens)
+- Cross-project citizen routing (routing tasks from mind-ops to mind-mcp citizens)
 
 ---
 
@@ -34,7 +34,7 @@ All code is implemented and syntax-verified. The system is ready for production 
 
 Key changes across two repos:
 - **mind-mcp**: Generalized `select_best_agent()` with `actor_type` param, added citizen seed module, added `record_task_outcome()`, added escalation reflex to brain seed, added CITIZEN_ prefix handling to mapping.py
-- **manemus**: Modified `pick_autonomous_task()` to route through citizens, added citizen seeding on startup, added energy feedback on session completion
+- **orchestrator**: Modified `pick_autonomous_task()` to route through citizens, added citizen seeding on startup, added energy feedback on session completion
 
 The JSONL backlog remains the source of truth for task creation. The graph is the routing layer. The orchestrator bridges them.
 
@@ -52,7 +52,7 @@ The JSONL backlog remains the source of truth for task creation. The graph is th
   - `mind-mcp/runtime/citizens/seed.py` — new file
   - `mind-mcp/runtime/citizens/__init__.py` — export seed_citizen_actors
   - `mind-mcp/runtime/seed_brain_from_source_docs_dynamic_generator.py` — escalation nodes
-  - `manemus/scripts/orchestrator.py` — citizen routing in pick_autonomous_task
+  - `runtime/orchestrator/dispatcher.py` — citizen routing in pick_autonomous_task
 
 ---
 
@@ -66,8 +66,7 @@ The JSONL backlog remains the source of truth for task creation. The graph is th
 The orchestrator seeds citizen actors on startup in a background thread. This means the first task dispatch after startup might not find citizens yet (race window ~5-10s while embeddings compute). The fallback to anonymous dispatch handles this.
 
 **Watch out for:**
-- `get_database_adapter(target_dir=...)` needs the manemus root, not the scripts dir
-- The `sys.path.insert(0, str(Path.home() / "mind-mcp"))` in orchestrator is necessary because orchestrator.py runs from manemus, not mind-mcp
+- `get_database_adapter(target_dir=...)` needs the project root, not the scripts dir
 
 **Open questions I had:**
 - Should we also route incident-triggered tasks through citizens? Currently only backlog tasks go through this path.
@@ -110,8 +109,8 @@ Task routing via citizen graph physics is implemented. Every backlog task will b
 |------|-------|
 | Task scoring | `mind-mcp/runtime/task_assignment.py:select_best_agent()` |
 | Citizen seeding | `mind-mcp/runtime/citizens/seed.py:seed_citizen_actors()` |
-| Orchestrator bridge | `manemus/scripts/orchestrator.py:_select_citizen_for_task()` |
-| Energy feedback | `manemus/scripts/orchestrator.py:_record_citizen_task_outcome()` |
-| Brain escalation | `mind-mcp/runtime/seed_brain_from_source_docs_dynamic_generator.py:narrative:escalation_reflex` |
-| Citizens config | `manemus/config/citizens.json` |
-| Backlog source | `manemus/shrine/state/backlog.jsonl` |
+| Orchestrator bridge | `runtime/orchestrator/dispatcher.py:_select_citizen_for_task()` |
+| Energy feedback | `runtime/orchestrator/dispatcher.py:_record_citizen_task_outcome()` |
+| Brain escalation | `runtime/seed_brain_from_source_docs_dynamic_generator.py:narrative:escalation_reflex` |
+| Citizens config | `config/citizens.json` |
+| Backlog source | `shrine/state/backlog.jsonl` |

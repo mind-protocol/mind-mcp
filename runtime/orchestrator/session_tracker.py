@@ -4,7 +4,7 @@ Neurons are YAML files in shrine/state/neurons/{session_id}.yaml that track
 active, busy, idle, and timed-out sessions. The dispatcher uses these for
 routing decisions and stale session recovery.
 
-Ported from manemus/scripts/orchestrator.py (lines 2197-2456).
+Manages neuron profiles for active Claude Code sessions.
 """
 
 import json

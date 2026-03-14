@@ -1,9 +1,9 @@
 """
 Phase 3: Moment Flow — Active moments radiate energy based on duration.
 
-Radiation rate = 1 / (duration_minutes × 12)
-Flow = energy × radiation_rate × share × weight × emotion_factor
-Received = flow × sqrt(target.weight)
+Radiation rate = 1 / (duration_minutes x 12)
+Flow = energy x radiation_rate x share x weight
+Received = flow x sqrt(target.weight)
 
 DOCS: docs/physics/IMPLEMENTATION_Physics.md
 """
@@ -13,15 +13,10 @@ import math
 from typing import List, Dict
 from runtime.physics.graph import GraphQueries, GraphOps
 from runtime.physics.constants import (
-    TICKS_PER_MINUTE, TOP_N_LINKS, plutchik_proximity, PLUTCHIK_AXES
+    TICKS_PER_MINUTE, TOP_N_LINKS
 )
 
 logger = logging.getLogger(__name__)
-
-
-def _get_link_axes(link: Dict) -> Dict[str, float]:
-    """Extract Plutchik axes from link dict."""
-    return {axis: link.get(axis, 0.0) for axis in PLUTCHIK_AXES}
 
 
 def phase_moment_flow(
@@ -46,7 +41,7 @@ def phase_moment_flow(
     """
     total_flowed = 0.0
 
-    # Sort by energy × weight
+    # Sort by energy x weight
     sorted_moments = sorted(
         active_moments,
         key=lambda m: (m.get('energy', 0.0) or 0.0) * (m.get('weight', 1.0) or 1.0),
@@ -76,9 +71,6 @@ def phase_moment_flow(
             radiation_rate = 1.0 / (duration * TICKS_PER_MINUTE)
             radiation = moment_energy * radiation_rate
 
-            # Get moment Plutchik axes
-            moment_axes = queries.get_moment_axes(moment_id)
-
             # Get top 20 outgoing links
             links = queries.get_hot_links_from_moment(moment_id, TOP_N_LINKS)
 
@@ -95,13 +87,11 @@ def phase_moment_flow(
                 target_weight = link.get('target_weight', 1.0) or 1.0
                 target_energy = link.get('target_energy', 0.0) or 0.0
                 link_weight = link.get('weight', 1.0) or 1.0
-                link_axes = _get_link_axes(link)
 
-                # Calculate share and flow (v1.2: no conductivity)
+                # Calculate share and flow
                 share = link_weight / total_weight
-                emotion_factor = plutchik_proximity(link_axes, moment_axes)
 
-                flow = radiation * share * link_weight * emotion_factor
+                flow = radiation * share * link_weight
                 received = flow * math.sqrt(target_weight)
 
                 if flow > 0.001:
@@ -112,7 +102,7 @@ def phase_moment_flow(
 
                     # Apply unified traversal
                     energy_flows_through_func(
-                        link, flow, moment_axes,
+                        link, flow, None,
                         moment_id, moment_energy,
                         target_id, target_energy
                     )

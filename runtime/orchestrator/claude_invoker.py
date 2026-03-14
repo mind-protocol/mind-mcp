@@ -4,7 +4,7 @@ Citizens MUST use Claude Code subprocess (`claude --print`), NOT direct API.
 Direct API loses tools, MCP, repo access, safety layers — kills all capabilities.
 The `invoke_degraded()` path is fallback ONLY.
 
-Ported from manemus/scripts/orchestrator.py (lines 2543-3568).
+Invokes Claude Code subprocess for citizen sessions.
 """
 
 import os

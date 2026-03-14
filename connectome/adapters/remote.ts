@@ -98,10 +98,6 @@ export class RemoteAdapter implements ConnectomeAdapter {
               polarity
               hierarchy
               permanence
-              joy_sadness
-              trust_disgust
-              fear_anger
-              surprise_anticipation
               synthesis
             }
           }

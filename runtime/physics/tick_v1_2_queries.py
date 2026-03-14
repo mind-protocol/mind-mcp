@@ -6,8 +6,7 @@ DOCS: docs/physics/IMPLEMENTATION_Physics.md
 
 from typing import List, Dict, Any, Tuple
 from runtime.physics.graph import GraphQueries
-from runtime.physics.flow import get_weighted_average_axes
-from runtime.physics.constants import COLD_THRESHOLD, PLUTCHIK_AXES
+from runtime.physics.constants import COLD_THRESHOLD
 
 
 class TickQueries:
@@ -28,37 +27,6 @@ class TickQueries:
         except:
             return []
 
-    def get_moment_axes(self, moment_id: str) -> Dict[str, float]:
-        """Get weighted average Plutchik axes from moment's links."""
-        try:
-            links = self.read.query(f"""
-            MATCH (m:Moment {{id: '{moment_id}'}})-[r]->()
-            RETURN r.weight AS weight,
-                   r.joy_sadness AS joy_sadness,
-                   r.trust_disgust AS trust_disgust,
-                   r.fear_anger AS fear_anger,
-                   r.surprise_anticipation AS surprise_anticipation
-            """)
-            return get_weighted_average_axes(links)
-        except:
-            return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
-    def get_narrative_axes(self, narrative_id: str) -> Dict[str, float]:
-        """Get Plutchik axes associated with a narrative."""
-        try:
-            result = self.read.query(f"""
-            MATCH (n:Narrative {{id: '{narrative_id}'}})
-            RETURN n.joy_sadness AS joy_sadness,
-                   n.trust_disgust AS trust_disgust,
-                   n.fear_anger AS fear_anger,
-                   n.surprise_anticipation AS surprise_anticipation
-            """)
-            if result:
-                return {axis: result[0].get(axis, 0.0) for axis in PLUTCHIK_AXES}
-            return {axis: 0.0 for axis in PLUTCHIK_AXES}
-        except:
-            return {axis: 0.0 for axis in PLUTCHIK_AXES}
-
     def get_hot_links_to_moment(self, moment_id: str, n: int = 20) -> List[Dict]:
         """Get top N hot links from actors to a moment."""
         try:
@@ -66,7 +34,7 @@ class TickQueries:
             MATCH (a:Actor)-[r]->(m:Moment {{id: '{moment_id}'}})
             WHERE type(r) IN ['EXPRESSES', 'CAN_SPEAK', 'SAID']
             RETURN a.id AS actor_id, a.energy AS actor_energy, a.weight AS actor_weight,
-                   r.weight AS weight, r.energy AS link_energy, r.emotions AS emotions
+                   r.weight AS weight, r.energy AS link_energy
             ORDER BY coalesce(r.energy, 0) * coalesce(r.weight, 1) DESC
             LIMIT {n}
             """)
@@ -81,7 +49,7 @@ class TickQueries:
             WHERE NOT t:Actor
             RETURN t.id AS target_id, labels(t)[0] AS target_type,
                    t.energy AS target_energy, t.weight AS target_weight,
-                   r.weight AS weight, r.energy AS link_energy, r.emotions AS emotions
+                   r.weight AS weight, r.energy AS link_energy
             ORDER BY coalesce(r.energy, 0) * coalesce(r.weight, 1) DESC
             LIMIT {n}
             """)
@@ -94,7 +62,7 @@ class TickQueries:
             return self.read.query(f"""
             MATCH (a:Actor)-[r:BELIEVES]->(n:Narrative {{id: '{narrative_id}'}})
             RETURN a.id AS actor_id, a.energy AS actor_energy, a.weight AS actor_weight,
-                   r.weight AS weight, r.energy AS link_energy, r.emotions AS emotions
+                   r.weight AS weight, r.energy AS link_energy
             ORDER BY coalesce(r.energy, 0) * coalesce(r.weight, 1) DESC
             LIMIT {n}
             """)

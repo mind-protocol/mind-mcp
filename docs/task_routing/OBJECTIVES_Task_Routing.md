@@ -29,7 +29,7 @@ IMPL:           runtime/task_assignment.py
 ## PRIMARY OBJECTIVES (ranked)
 1. **Route every backlog task through a citizen** — Citizens have identity, memories, escalation awareness. Anonymous sessions are amnesiac and retry forever.
 2. **Physics-driven assignment, no hardcoded limits** — Embedding similarity x weight x energy x load penalty selects the best citizen. No max_attempts, no manual routing.
-3. **Reusable across ecosystem** — The citizen actor graph and routing generalization live in mind-mcp, usable by any project. Only the orchestrator integration is manemus-specific.
+3. **Reusable across ecosystem** — The citizen actor graph and routing generalization live in mind-mcp, usable by any project. The orchestrator integration is in `runtime/orchestrator/`.
 
 ## NON-OBJECTIVES
 - Building a separate task management system (JSONL backlog stays as creation layer)

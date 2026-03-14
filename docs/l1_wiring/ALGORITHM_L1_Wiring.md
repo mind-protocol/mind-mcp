@@ -991,32 +991,29 @@ else:
 ### 10.1 Parallel Run Strategy
 
 ```
-Week 1: Deploy mind-mcp to Render alongside manemus
-  - Both systems run simultaneously
-  - mind-mcp handles a subset of citizens (5 low-risk ones)
+Week 1: Deploy mind-mcp to Render
+  - Start with a subset of citizens (5 low-risk ones)
   - Monitor: response quality, latency, error rates
 
 Week 2: Expand to all citizens
   - Route all 44 citizens through mind-mcp
-  - manemus stays up as fallback
-  - Compare outputs: same stimuli → both systems → diff responses
+  - Compare outputs: same stimuli → diff responses
 
 Week 3: DNS cutover
   - Point production DNS to mind-mcp
-  - manemus enters read-only mode
   - Monitor for 48 hours
 
-Week 4: Decommission manemus
+Week 4: Finalize
   - Final data export (citizen states, conversation history)
-  - Shut down manemus compute
+  - Shut down legacy compute
 ```
 
 ### 10.2 Bot Migration Checklist
 
 ```
-[ ] Copy citizen directories from manemus to .mind/citizens/
+[ ] Verify citizen directories in citizens/
 [ ] Copy conversation history (JSONL logs)
-[ ] Export citizen graph state from manemus FalkorDB
+[ ] Export citizen graph state from FalkorDB
 [ ] Seed all 44 citizen brains in mind-mcp
 [ ] Verify Telegram bot token works with new server
 [ ] Verify WhatsApp webhook URL updated
@@ -1035,5 +1032,5 @@ Week 4: Decommission manemus
 3. Verify propagation (dig, nslookup from multiple locations)
 4. Monitor error rates for 2 hours
 5. If errors > 5%: revert DNS immediately
-6. After 48h stable: decommission manemus
+6. After 48h stable: decommission legacy system
 ```

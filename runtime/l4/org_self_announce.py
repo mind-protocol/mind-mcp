@@ -13,7 +13,7 @@ Usage:
     from runtime.l4.org_self_announce import announce_org
     result = announce_org(
         org_id="mind-protocol",
-        endpoint_url="wss://manemus.onrender.com",
+        endpoint_url="wss://mind-mcp.onrender.com",
         falkordb_host="mind-protocol-falkordb",
         falkordb_port=6379,
     )

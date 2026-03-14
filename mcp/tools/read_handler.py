@@ -24,8 +24,8 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("mind.read")
 
-MANEMUS_ROOT = Path(os.getenv("MANEMUS_ROOT", "/home/mind-protocol/manemus"))
-STATE_DIR = MANEMUS_ROOT / "shrine" / "state"
+PROJECT_ROOT = Path(os.getenv("MIND_PROJECT_ROOT", Path(__file__).parent.parent.parent))
+STATE_DIR = PROJECT_ROOT / "shrine" / "state"
 
 # JSONL log files per platform
 PLATFORM_LOGS = {
@@ -174,7 +174,7 @@ def _read_discord_api(args: Dict[str, Any]) -> Dict[str, Any]:
     limit = min(args.get("limit") or 20, 100)
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from discord_bridge import read_channel_sync
 
         messages = read_channel_sync(channel_id=int(channel_id), limit=limit)
@@ -286,7 +286,7 @@ def _read_email_inbox(args: Dict[str, Any]) -> Dict[str, Any]:
     direction = args.get("direction", "all")
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from citizen_email_service import list_inbox, list_sent
 
         messages = []
@@ -327,7 +327,7 @@ def _read_email_inbox(args: Dict[str, Any]) -> Dict[str, Any]:
 
         return _ok("\n".join(lines))
     except ImportError:
-        return _err("Email service not available. Check MANEMUS_ROOT.")
+        return _err("Email service not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"Email read failed: {e}")
 
@@ -401,12 +401,12 @@ def _resolve_handle(args: Dict[str, Any]) -> Optional[str]:
     return None
 
 
-def _ensure_manemus_path(subdir: str):
-    """Add manemus subdirectory to sys.path if not already present."""
-    path = str(MANEMUS_ROOT / subdir)
+def _ensure_project_path(subdir: str):
+    """Add project subdirectory to sys.path if not already present."""
+    path = str(PROJECT_ROOT / subdir)
     if path not in sys.path:
         sys.path.insert(0, path)
-    root = str(MANEMUS_ROOT)
+    root = str(PROJECT_ROOT)
     if root not in sys.path:
         sys.path.insert(0, root)
 

@@ -11,7 +11,7 @@ import logging
 import math
 from runtime.physics.graph import GraphQueries, GraphOps
 from runtime.physics.constants import (
-    BACKFLOW_RATE, COLD_THRESHOLD, TOP_N_LINKS, plutchik_proximity, PLUTCHIK_AXES
+    BACKFLOW_RATE, COLD_THRESHOLD, TOP_N_LINKS
 )
 
 logger = logging.getLogger(__name__)
@@ -19,11 +19,6 @@ logger = logging.getLogger(__name__)
 # Limit narratives per tick to prevent O(N) query explosion
 # Only the hottest narratives backflow each tick
 MAX_NARRATIVES_PER_TICK = 50
-
-
-def _get_link_axes(link: dict) -> dict:
-    """Extract Plutchik axes from link dict."""
-    return {axis: link.get(axis, 0.0) for axis in PLUTCHIK_AXES}
 
 
 def phase_narrative_backflow(
@@ -61,9 +56,6 @@ def phase_narrative_backflow(
             narr_id = narr.get('id')
             narr_energy = narr.get('energy', 0.0) or 0.0
 
-            # Get narrative Plutchik axes
-            narr_axes = queries.get_narrative_axes(narr_id)
-
             # Get top 20 actor links
             links = queries.get_hot_links_to_actors(narr_id, TOP_N_LINKS)
 
@@ -78,11 +70,9 @@ def phase_narrative_backflow(
                 actor_energy = link.get('actor_energy', 0.0) or 0.0
                 actor_weight = link.get('actor_weight', 1.0) or 1.0
                 link_weight = link.get('weight', 1.0) or 1.0
-                link_axes = _get_link_axes(link)
 
-                # Backflow formula includes link.energy (v1.2: no conductivity)
-                emotion_factor = plutchik_proximity(link_axes, narr_axes)
-                backflow = narr_energy * BACKFLOW_RATE * link_weight * emotion_factor * link_energy
+                # Backflow formula (v1.2: no conductivity)
+                backflow = narr_energy * BACKFLOW_RATE * link_weight * link_energy
                 received = backflow * math.sqrt(actor_weight)
 
                 if backflow > 0.001:
@@ -92,7 +82,7 @@ def phase_narrative_backflow(
 
                     # Apply traversal
                     energy_flows_through_func(
-                        link, backflow, narr_axes,
+                        link, backflow, None,
                         narr_id, narr_energy,
                         actor_id, actor_energy
                     )

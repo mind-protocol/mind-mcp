@@ -18,7 +18,7 @@ Usage:
     # Same function for nodes
     node_floats = nature_to_floats("urgent, with confidence")
 
-    # Both return: {permanence, trust_disgust, energy, ...}
+    # Both return: {permanence, energy, ...}
     # Entity interprets floats in its context
 """
 
@@ -388,16 +388,13 @@ def get_nature_reference() -> str:
         "## Pre-Modifiers",
         "",
         f"**Certainty:** {', '.join(k for k in pre_mods if 'permanence' in pre_mods[k])}",
-        f"**Surprise:** {', '.join(k for k in pre_mods if 'surprise' in str(pre_mods[k]))}",
         f"**Intensity:** {', '.join(k for k in pre_mods if 'energy' in pre_mods[k])}",
         "",
         "---",
         "",
         "## Post-Modifiers",
         "",
-        f"**Anger/Fear:** {', '.join(k for k in post_mods if 'fear_anger' in post_mods[k])}",
-        f"**Trust/Disgust:** {', '.join(k for k in post_mods if 'trust_disgust' in post_mods[k])}",
-        f"**Joy/Sadness:** {', '.join(k for k in post_mods if 'joy_sadness' in post_mods[k])}",
+        f"{', '.join(post_mods.keys()) if post_mods else '(none)'}",
     ])
 
     return '\n'.join(lines)

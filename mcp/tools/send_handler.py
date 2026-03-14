@@ -24,9 +24,9 @@ from typing import Any, Dict, Optional
 
 logger = logging.getLogger("mind.send")
 
-# Paths — manemus is the source of truth for bridge configs
-MANEMUS_ROOT = Path(os.getenv("MANEMUS_ROOT", "/home/mind-protocol/manemus"))
-STATE_DIR = MANEMUS_ROOT / "shrine" / "state"
+# Paths — project root for bridge configs
+PROJECT_ROOT = Path(os.getenv("MIND_PROJECT_ROOT", Path(__file__).parent.parent.parent))
+STATE_DIR = PROJECT_ROOT / "shrine" / "state"
 
 # Nicolas's Telegram chat ID
 NICOLAS_CHAT_ID = "1864364329"
@@ -168,7 +168,7 @@ def _send_discord(args: Dict[str, Any]) -> Dict[str, Any]:
     message = (args.get("message") or "").strip()
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from discord_bridge import send_as_citizen
 
         result = send_as_citizen(
@@ -182,7 +182,7 @@ def _send_discord(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             return _err("Discord send returned no result. Check webhook config.")
     except ImportError:
-        return _err("Discord bridge not available. Check MANEMUS_ROOT.")
+        return _err("Discord bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"Discord send failed: {e}")
 
@@ -202,7 +202,7 @@ def _send_whatsapp(args: Dict[str, Any]) -> Dict[str, Any]:
     text = f"[@{handle}] {message}" if handle else message
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from whatsapp_bridge import send_text
 
         result = send_text(chat_id=chat_id, text=text)
@@ -212,7 +212,7 @@ def _send_whatsapp(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             return _err("WhatsApp send failed. Is WAHA running?")
     except ImportError:
-        return _err("WhatsApp bridge not available. Check MANEMUS_ROOT.")
+        return _err("WhatsApp bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"WhatsApp send failed: {e}")
 
@@ -228,7 +228,7 @@ def _send_twitter(args: Dict[str, Any]) -> Dict[str, Any]:
         return _err(f"Tweet too long ({len(message)} chars). Max 280.")
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from twitter_bridge import post_tweet
 
         result = post_tweet(text=message, reply_to=reply_to)
@@ -240,7 +240,7 @@ def _send_twitter(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             return _err("Twitter post returned no result. Check API config.")
     except ImportError:
-        return _err("Twitter bridge not available. Check MANEMUS_ROOT.")
+        return _err("Twitter bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"Twitter send failed: {e}")
 
@@ -261,7 +261,7 @@ def _send_email(args: Dict[str, Any]) -> Dict[str, Any]:
         return _err("Could not detect citizen handle. Required for email sender identity.")
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from citizen_email_service import send_email
 
         result = send_email(
@@ -275,7 +275,7 @@ def _send_email(args: Dict[str, Any]) -> Dict[str, Any]:
         _log_message("email", f"[{subject}] {message[:100]}", to)
         return _ok(f"Email {status} via {provider} from {handle}@mindprotocol.ai to {to}.")
     except ImportError:
-        return _err("Email service not available. Check MANEMUS_ROOT.")
+        return _err("Email service not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"Email send failed: {e}")
 
@@ -294,7 +294,7 @@ def _send_sms(args: Dict[str, Any]) -> Dict[str, Any]:
     text = f"[@{handle}] {message}" if handle else message
 
     try:
-        _ensure_manemus_path("scripts")
+        _ensure_project_path("scripts")
         from sms_bridge import send_message
 
         result = send_message(text=text, phone=phone)
@@ -304,7 +304,7 @@ def _send_sms(args: Dict[str, Any]) -> Dict[str, Any]:
         else:
             return _err("SMS send failed. Check Twilio config.")
     except ImportError:
-        return _err("SMS bridge not available. Check MANEMUS_ROOT.")
+        return _err("SMS bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"SMS send failed: {e}")
 
@@ -344,13 +344,13 @@ def _detect_handle() -> Optional[str]:
     return None
 
 
-def _ensure_manemus_path(subdir: str):
-    """Add manemus subdirectory to sys.path if not already present."""
-    path = str(MANEMUS_ROOT / subdir)
+def _ensure_project_path(subdir: str):
+    """Add project subdirectory to sys.path if not already present."""
+    path = str(PROJECT_ROOT / subdir)
     if path not in sys.path:
         sys.path.insert(0, path)
     # Also add root for internal imports within bridges
-    root = str(MANEMUS_ROOT)
+    root = str(PROJECT_ROOT)
     if root not in sys.path:
         sys.path.insert(0, root)
 

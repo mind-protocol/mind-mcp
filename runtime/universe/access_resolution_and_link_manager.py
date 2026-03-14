@@ -221,10 +221,6 @@ class AccessResolver:
             valence: 0.0,
             content: $content,
             relation_kind: NULL,
-            joy_sadness: 0.0,
-            trust_disgust: 0.0,
-            fear_anger: 0.0,
-            surprise_anticipation: 0.0,
             created_at_s: $now_s,
             updated_at_s: $now_s
         }]->(s)

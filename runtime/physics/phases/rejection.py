@@ -41,7 +41,7 @@ def phase_rejection(
         # Get moments marked for rejection
         rejected = read.query("""
         MATCH (m:Moment)
-        WHERE m.status: "failed" AND m.energy > 0
+        WHERE m.status = "failed" AND m.energy > 0
         RETURN m.id AS id, m.energy AS energy
         """)
 

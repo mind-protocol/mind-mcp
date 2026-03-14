@@ -70,33 +70,9 @@ PRE_MODIFIERS = {
     'actively': (5.0, 8.0, 'energy'),
     'weakly': (0.5, 2.0, 'energy'),
     'barely': (0.0, 0.5, 'energy'),
-
-    # From surprise
-    'suddenly': (0.7, 1.0, 'surprise'),
-    'unexpectedly': (0.4, 0.7, 'surprise'),
-    'inevitably': (-1.0, -0.7, 'surprise'),
-    'as expected': (-0.7, -0.4, 'surprise'),
 }
 
-POST_MODIFIERS = {
-    # From fear_anger
-    'with rage': (-1.0, -0.7, 'fear_anger'),
-    'with hostility': (-0.7, -0.4, 'fear_anger'),
-    'with apprehension': (0.4, 0.7, 'fear_anger'),
-    'with terror': (0.7, 1.0, 'fear_anger'),
-
-    # From trust_disgust
-    'with disgust': (-1.0, -0.7, 'trust_disgust'),
-    'with distrust': (-0.7, -0.4, 'trust_disgust'),
-    'with confidence': (0.4, 0.7, 'trust_disgust'),
-    'with admiration': (0.7, 1.0, 'trust_disgust'),
-
-    # From joy_sadness
-    'with despair': (-1.0, -0.7, 'joy_sadness'),
-    'with sadness': (-0.7, -0.4, 'joy_sadness'),
-    'with satisfaction': (0.4, 0.7, 'joy_sadness'),
-    'with euphoria': (0.7, 1.0, 'joy_sadness'),
-}
+POST_MODIFIERS = {}
 
 WEIGHT_ANNOTATIONS = {
     'fundamental': (5.0, float('inf')),
@@ -130,10 +106,6 @@ class LinkPhysics:
     permanence: float = 0.5
     energy: float = 1.0
     weight: float = 1.0
-    fear_anger: float = 0.0
-    trust_disgust: float = 0.0
-    joy_sadness: float = 0.0
-    surprise: float = 0.0
 
 
 def get_base_verb_key(hierarchy: float, polarity_ab: float, polarity_ba: float) -> str:
@@ -194,16 +166,6 @@ def get_pre_modifiers(physics: LinkPhysics) -> List[str]:
     elif physics.energy < 0.5:
         modifiers.append('barely')
 
-    # Surprise
-    if physics.surprise > 0.7:
-        modifiers.append('suddenly')
-    elif physics.surprise < -0.7:
-        modifiers.append('inevitably')
-    elif physics.surprise > 0.4:
-        modifiers.append('unexpectedly')
-    elif physics.surprise < -0.4:
-        modifiers.append('as expected')
-
     # Permanence
     if physics.permanence > 0.8:
         modifiers.append('definitely')
@@ -219,39 +181,7 @@ def get_pre_modifiers(physics: LinkPhysics) -> List[str]:
 
 def get_post_modifiers(physics: LinkPhysics) -> List[str]:
     """Get post-modifiers based on physics values."""
-    modifiers = []
-
-    # Fear-anger
-    if physics.fear_anger < -0.7:
-        modifiers.append('with rage')
-    elif physics.fear_anger > 0.7:
-        modifiers.append('with terror')
-    elif physics.fear_anger < -0.4:
-        modifiers.append('with hostility')
-    elif physics.fear_anger > 0.4:
-        modifiers.append('with apprehension')
-
-    # Trust-disgust
-    if physics.trust_disgust < -0.7:
-        modifiers.append('with disgust')
-    elif physics.trust_disgust > 0.7:
-        modifiers.append('with admiration')
-    elif physics.trust_disgust < -0.4:
-        modifiers.append('with distrust')
-    elif physics.trust_disgust > 0.4:
-        modifiers.append('with confidence')
-
-    # Joy-sadness
-    if physics.joy_sadness < -0.7:
-        modifiers.append('with despair')
-    elif physics.joy_sadness > 0.7:
-        modifiers.append('with euphoria')
-    elif physics.joy_sadness < -0.4:
-        modifiers.append('with sadness')
-    elif physics.joy_sadness > 0.4:
-        modifiers.append('with satisfaction')
-
-    return modifiers[:2]  # Max 2
+    return []
 
 
 def get_weight_annotation(weight: float) -> Optional[str]:
@@ -329,10 +259,6 @@ def synthesize_from_dict(link_dict: Dict[str, Any]) -> str:
         permanence=link_dict.get('permanence', link_dict.get('weight', 1.0) / (link_dict.get('weight', 1.0) + 1)),
         energy=link_dict.get('energy', 1.0),
         weight=link_dict.get('weight', 1.0),
-        fear_anger=link_dict.get('fear_anger', 0.0),
-        trust_disgust=link_dict.get('trust_disgust', 0.0),
-        joy_sadness=link_dict.get('joy_sadness', 0.0),
-        surprise=link_dict.get('surprise_anticipation', link_dict.get('surprise', 0.0)),
     )
     return synthesize_link(physics)
 
@@ -350,10 +276,6 @@ class ParsedPhysics:
     permanence: float = 0.5
     energy: float = 1.0
     weight: float = 1.0
-    fear_anger: float = 0.0
-    trust_disgust: float = 0.0
-    joy_sadness: float = 0.0
-    surprise: float = 0.0
     confidence: float = 0.0  # 0-1 how confident in parse
 
 
@@ -372,20 +294,20 @@ VERB_TO_PHYSICS = {
     'coexists with': {'polarity_ab': 0.2, 'polarity_ba': 0.2},
 
     # Intensified forms
-    'firmly believes': {'polarity_ab': 0.9, 'trust_disgust': 0.8, 'permanence': 0.9},
-    'believes in': {'polarity_ab': 0.8, 'trust_disgust': 0.6},
-    'tends to believe': {'polarity_ab': 0.6, 'trust_disgust': 0.4, 'permanence': 0.3},
-    'doubts': {'polarity_ab': 0.7, 'trust_disgust': -0.6},
-    'rejects': {'polarity_ab': 0.9, 'trust_disgust': -0.8, 'permanence': 0.9},
-    'contradicts': {'trust_disgust': -0.6, 'permanence': 0.8},
-    'radically contradicts': {'trust_disgust': -0.9, 'permanence': 0.95},
-    'confirms': {'trust_disgust': 0.6, 'permanence': 0.8},
-    'absolutely confirms': {'trust_disgust': 0.9, 'permanence': 0.95},
-    'supports': {'trust_disgust': 0.5, 'permanence': 0.6},
+    'firmly believes': {'polarity_ab': 0.9, 'permanence': 0.9},
+    'believes in': {'polarity_ab': 0.8},
+    'tends to believe': {'polarity_ab': 0.6, 'permanence': 0.3},
+    'doubts': {'polarity_ab': 0.7},
+    'rejects': {'polarity_ab': 0.9, 'permanence': 0.9},
+    'contradicts': {'permanence': 0.8},
+    'radically contradicts': {'permanence': 0.95},
+    'confirms': {'permanence': 0.8},
+    'absolutely confirms': {'permanence': 0.95},
+    'supports': {'permanence': 0.6},
     'dominates': {'polarity_ab': 0.95, 'hierarchy': 0.6},
     'touches': {'polarity_ab': 0.5, 'permanence': 0.3},
-    'demonstrates': {'trust_disgust': 0.9, 'permanence': 0.95},
-    'suggests': {'trust_disgust': 0.4, 'permanence': 0.5},
+    'demonstrates': {'permanence': 0.95},
+    'suggests': {'permanence': 0.5},
     'proclaims': {'polarity_ab': 0.9, 'permanence': 0.9},
     'expresses': {'polarity_ab': 0.8},
     'sketches': {'polarity_ab': 0.5, 'permanence': 0.3},
@@ -400,26 +322,9 @@ PRE_MODIFIER_TO_PHYSICS = {
     'actively': {'energy': 6.0},
     'weakly': {'energy': 1.0},
     'barely': {'energy': 0.3},
-    'suddenly': {'surprise': 0.85},
-    'unexpectedly': {'surprise': 0.55},
-    'inevitably': {'surprise': -0.85},
-    'as expected': {'surprise': -0.55},
 }
 
-POST_MODIFIER_TO_PHYSICS = {
-    'with rage': {'fear_anger': -0.85},
-    'with hostility': {'fear_anger': -0.55},
-    'with apprehension': {'fear_anger': 0.55},
-    'with terror': {'fear_anger': 0.85},
-    'with disgust': {'trust_disgust': -0.85},
-    'with distrust': {'trust_disgust': -0.55},
-    'with confidence': {'trust_disgust': 0.55},
-    'with admiration': {'trust_disgust': 0.85},
-    'with despair': {'joy_sadness': -0.85},
-    'with sadness': {'joy_sadness': -0.55},
-    'with satisfaction': {'joy_sadness': 0.55},
-    'with euphoria': {'joy_sadness': 0.85},
-}
+POST_MODIFIER_TO_PHYSICS = {}
 
 WEIGHT_TO_PHYSICS = {
     'fundamental': 6.0,
@@ -504,10 +409,6 @@ def parse_and_merge(
         'permanence': parsed.permanence,
         'energy': parsed.energy,
         'weight': parsed.weight,
-        'fear_anger': parsed.fear_anger,
-        'trust_disgust': parsed.trust_disgust,
-        'joy_sadness': parsed.joy_sadness,
-        'surprise': parsed.surprise,
     }
 
     if existing:

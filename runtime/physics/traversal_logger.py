@@ -330,12 +330,6 @@ class StepRecord:
     children_ids: List[str] = field(default_factory=list)
     active_siblings: int = 0
 
-    # Emotions
-    joy_sadness: float = 0.0
-    trust_disgust: float = 0.0
-    fear_anger: float = 0.0
-    surprise_anticipation: float = 0.0
-
     # Agent-comprehensible additions
     progress_narrative: str = ""
     anomalies: List[Anomaly] = field(default_factory=list)
@@ -392,13 +386,6 @@ class StepRecord:
             "sibling_ids": self.sibling_ids,
             "children_ids": self.children_ids,
             "active_siblings": self.active_siblings,
-        }
-
-        d["emotions"] = {
-            "joy_sadness": round(self.joy_sadness, 3),
-            "trust_disgust": round(self.trust_disgust, 3),
-            "fear_anger": round(self.fear_anger, 3),
-            "surprise_anticipation": round(self.surprise_anticipation, 3),
         }
 
         if self.anomalies:
@@ -1073,10 +1060,6 @@ class TraversalLogger:
             sibling_ids=sibling_ids,
             children_ids=children_ids,
             active_siblings=active_siblings,
-            joy_sadness=emotions.get("joy_sadness", 0.0),
-            trust_disgust=emotions.get("trust_disgust", 0.0),
-            fear_anger=emotions.get("fear_anger", 0.0),
-            surprise_anticipation=emotions.get("surprise_anticipation", 0.0),
         )
 
         # Get history

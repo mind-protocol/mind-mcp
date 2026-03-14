@@ -40,7 +40,7 @@ mind-mcp/runtime/
     ├── embeddings/                # get_embedding(), cosine_similarity()
     └── database/                  # get_database_adapter()
 
-manemus/scripts/
+runtime/orchestrator/
 └── orchestrator.py                # Integration: _select_citizen_for_task(), _seed_citizen_actors_on_startup(), _record_citizen_task_outcome()
 
 mind-mcp/runtime/
@@ -54,7 +54,7 @@ mind-mcp/runtime/
 | `runtime/task_assignment.py` | Score, select, assign, record outcome | `select_best_agent()`, `record_task_outcome()` | OK |
 | `runtime/citizens/seed.py` | Seed citizen actors into graph | `seed_citizen_actors()` | OK |
 | `runtime/agents/mapping.py` | ID normalization for all actor types | `normalize_citizen_id()`, `extract_citizen_handle()` | OK |
-| `manemus/scripts/orchestrator.py` | Bridge: backlog → graph routing → citizen dispatch | `_select_citizen_for_task()`, `pick_autonomous_task()` | WATCH |
+| `runtime/orchestrator/dispatcher.py` | Bridge: backlog → graph routing → citizen dispatch | `_select_citizen_for_task()`, `pick_autonomous_task()` | WATCH |
 
 ---
 
@@ -65,7 +65,7 @@ mind-mcp/runtime/
 | `select_best_agent()` | `runtime/task_assignment.py:33` | Orchestrator's `_select_citizen_for_task()` |
 | `seed_citizen_actors()` | `runtime/citizens/seed.py:39` | Orchestrator startup (background thread) |
 | `record_task_outcome()` | `runtime/task_assignment.py:217` | Orchestrator session completion |
-| `_select_citizen_for_task()` | `manemus/scripts/orchestrator.py` | `pick_autonomous_task()` |
+| `_select_citizen_for_task()` | `runtime/orchestrator/dispatcher.py` | `pick_autonomous_task()` |
 
 ---
 
@@ -80,11 +80,11 @@ flow:
   steps:
     - id: pick_task
       description: Select next autonomous task from JSONL backlog
-      file: manemus/scripts/orchestrator.py
+      file: runtime/orchestrator/dispatcher.py
       function: pick_autonomous_task
     - id: select_citizen
       description: Query graph for best citizen match
-      file: manemus/scripts/orchestrator.py
+      file: runtime/orchestrator/dispatcher.py
       function: _select_citizen_for_task
     - id: graph_routing
       description: Score all citizen actors against task embedding
@@ -92,11 +92,11 @@ flow:
       function: select_best_agent
     - id: build_request
       description: Build citizen request with handle, mode, attempt history
-      file: manemus/scripts/orchestrator.py
+      file: runtime/orchestrator/dispatcher.py
       function: pick_autonomous_task
     - id: dispatch
       description: Queue citizen request for main loop
-      file: manemus/scripts/orchestrator.py
+      file: runtime/orchestrator/dispatcher.py
       function: orchestrate (main loop)
 ```
 
@@ -109,11 +109,11 @@ flow:
   steps:
     - id: session_complete
       description: Citizen session finishes
-      file: manemus/scripts/orchestrator.py
+      file: runtime/orchestrator/dispatcher.py
       function: invoke_claude
     - id: check_outcome
       description: Check if backlog task was marked done
-      file: manemus/scripts/orchestrator.py
+      file: runtime/orchestrator/dispatcher.py
       function: _record_citizen_task_outcome
     - id: update_graph
       description: Boost citizen or task energy

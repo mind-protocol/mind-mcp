@@ -1,6 +1,6 @@
 """Citizen prompt building for Claude Code sessions.
 
-Ported from manemus/scripts/orchestrator.py (lines 240-484).
+Citizen prompt building for Claude Code sessions.
 Constructs the operational prompt that tells a citizen what to DO.
 The citizen's CLAUDE.md is loaded automatically by Claude Code via cwd.
 """

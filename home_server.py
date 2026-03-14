@@ -111,8 +111,8 @@ async def lifespan(app: FastAPI):
             from runtime.orchestrator.dispatcher import Dispatcher
             from runtime.orchestrator.compute_budget import ComputeBudget
             budget = ComputeBudget(
-                mode=os.environ.get("BUDGET_MODE", "subscription"),
-                monthly_budget_usd=float(os.environ.get("MONTHLY_BUDGET_USD", "300")),
+                mode="subscription",
+                monthly_budget_usd=300,
             )
             _dispatcher = Dispatcher(budget=budget)
             _dispatcher.start()
@@ -120,6 +120,16 @@ async def lifespan(app: FastAPI):
             logger.info(f"Orchestrator started (mode={budget.mode})")
         except Exception as e:
             logger.warning(f"Orchestrator failed to start: {e}")
+
+    # Phase 2b: Initialize all citizen L1 engines at startup
+    if _dispatcher:
+        try:
+            from runtime.l4.citizen_l1_ensure import bulk_ensure_citizens
+            citizens_dir = Path(__file__).parent / "citizens"
+            results = bulk_ensure_citizens(str(citizens_dir))
+            logger.info(f"L1 boot: initialized {len(results)} citizens")
+        except Exception as e:
+            logger.warning(f"Citizen L1 boot failed: {e}")
 
     # Phase 3: Start bridges
     _telegram_bridge = None

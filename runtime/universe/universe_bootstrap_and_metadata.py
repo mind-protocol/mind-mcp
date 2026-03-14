@@ -131,10 +131,6 @@ class UniverseBootstrap:
             polarity: '[0.5, 0.5]',
             valence: 0.0,
             relation_kind: NULL,
-            joy_sadness: 0.0,
-            trust_disgust: 0.0,
-            fear_anger: 0.0,
-            surprise_anticipation: 0.0,
             created_at_s: $now_s,
             updated_at_s: $now_s
         }]->(s)
@@ -287,10 +283,6 @@ class UniverseBootstrap:
                 polarity: '[0.5, 0.5]',
                 valence: 0.0,
                 relation_kind: NULL,
-                joy_sadness: 0.0,
-                trust_disgust: 0.0,
-                fear_anger: 0.0,
-                surprise_anticipation: 0.0,
                 created_at_s: $now_s,
                 updated_at_s: $now_s
             }]->(n)

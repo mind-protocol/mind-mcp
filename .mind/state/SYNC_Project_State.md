@@ -13,7 +13,7 @@ UPDATED_BY: steward — demurrage orphan reference cleanup in economy docs
 
 **L4 Registry API (mind-protocol, deployed on `l4-registry.onrender.com`):**
 - `GET /ping/{handle}` — resolve citizen → org (via `belongs_to` link) → org endpoint → POST membrane/stimulus. Returns alive, universe (defaults to `lumina-prime`), last_active (latest L3 moment), resolution chain.
-- `GET /trust/{handle}` — aggregated trust score (weighted mean of trust_disgust on inbound LINK edges).
+- `GET /trust/{handle}` — aggregated trust score (weighted mean of trust on inbound LINK edges).
 - `GET /balance/{handle}` — $MIND + SOL balance via Helius RPC (resolve handle → wallet → on-chain query).
 - `GET /infos/{handle}` — full citizen info card: ping + trust + balance + locations (parallel fetch). The `/infos` endpoint for the website.
 - All L4 links aligned to `:LINK {nature: 'belongs_to'}` format (matches seed.py + registry API queries). Previously used `:link` (lowercase) + `type` field which didn't match.

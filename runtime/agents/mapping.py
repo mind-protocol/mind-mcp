@@ -158,6 +158,45 @@ def get_name_description(name: str) -> str:
     return descriptions.get(name, "general agent")
 
 
+def detect_citizen_id(target_dir: Optional[Path] = None) -> Optional[str]:
+    """Detect current citizen from env var, cwd path, or target_dir config.
+
+    Priority:
+    1. MIND_CITIZEN_ID env var (explicit override)
+    2. cwd within a citizens/ directory
+    3. .mind/citizen_id file in target_dir (written by session setup)
+
+    Returns CITIZEN_{handle} if detected, None otherwise.
+    """
+    import os
+
+    # 1. Explicit env var
+    citizen = os.environ.get("MIND_CITIZEN_ID")
+    if citizen:
+        return normalize_citizen_id(citizen)
+
+    # 2. cwd within a citizens/ directory
+    cwd = Path.cwd()
+    parts = cwd.parts
+    if "citizens" in parts:
+        idx = parts.index("citizens")
+        if idx + 1 < len(parts):
+            return normalize_citizen_id(parts[idx + 1])
+
+    # 3. .mind/citizen_id file (project-level config)
+    if target_dir:
+        cid_file = Path(target_dir) / ".mind" / "citizen_id"
+        if cid_file.exists():
+            try:
+                handle = cid_file.read_text().strip()
+                if handle:
+                    return normalize_citizen_id(handle)
+            except OSError:
+                pass
+
+    return None
+
+
 def normalize_agent_id(
     agent_input: str,
     target_dir: Optional[Path] = None,
@@ -173,7 +212,7 @@ def normalize_agent_id(
         - "WITNESS" → "AGENT_Witness"
         - "agent_witness" → "AGENT_Witness"
         - "agent-witness" → "AGENT_Witness"
-        - "" or None → Best HUMAN actor from graph, or AGENT_Fixer fallback
+        - "" or None → Citizen from env/cwd, or HUMAN from graph, or AGENT_Fixer
 
     Args:
         agent_input: Any agent name/ID format
@@ -181,10 +220,15 @@ def normalize_agent_id(
         graph_ops: Optional graph ops for HUMAN lookup
 
     Returns:
-        Canonical actor ID (e.g., "AGENT_Witness" or "HUMAN_Nicolas")
+        Canonical actor ID (e.g., "AGENT_Witness", "CITIZEN_dragon_slayer", or "HUMAN_Nicolas")
     """
     if not agent_input:
-        # Default: find best HUMAN actor from graph
+        # 1. Check for citizen context (env var, cwd, or target_dir config)
+        citizen_id = detect_citizen_id(target_dir)
+        if citizen_id:
+            return citizen_id
+
+        # 2. Find best HUMAN actor from graph
         if graph_ops:
             try:
                 result = graph_ops._query(
@@ -200,7 +244,8 @@ def normalize_agent_id(
                     return result[0][0]
             except Exception:
                 pass
-        # Fallback to default agent
+
+        # 3. Fallback to default agent
         return f"AGENT_{DEFAULT_NAME.capitalize()}"
 
     # Strip whitespace

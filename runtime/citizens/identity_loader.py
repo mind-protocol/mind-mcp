@@ -1,6 +1,6 @@
 """Citizen identity loading and permission management.
 
-Ported from manemus/scripts/orchestrator.py (lines 184-509, 4179-4213).
+Citizen identity loading and permission management.
 Loads citizen profiles from citizens/{handle}/ directories.
 """
 

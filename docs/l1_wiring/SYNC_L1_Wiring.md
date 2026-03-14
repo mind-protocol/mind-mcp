@@ -20,12 +20,12 @@
 - Orientation taxonomy: 6 orientations defined (take_care/create/verify/explore/rest/escalate)
 - **Cognitive landscape serializer**: Natural language output (~5000 chars) with metric-to-language engine, formulation variation, emotion-to-node grounding, episodic memory creation
 - **Perception-action loop**: Fully closed — stimulus → tick → WM → prompt → LLM → feedback → memory creation → stimulus
-- **245 citizen directories**: Copied from manemus, brain seeder reads profile.json + CLAUDE.md
+- **245 citizen directories**: Brain seeder reads profile.json + CLAUDE.md
 - L1 engine: 5,230 lines, 118/118 tests passing
 
 ### What remains (deployment):
 - Phase 7: Deploy to Render (Dockerfile + render.yaml ready)
-- Parallel validation: manemus + mind-mcp side by side
+- Parallel validation with production
 - DNS cutover
 - Production cutover plan (parallel run, DNS, bot migration)
 
@@ -40,17 +40,15 @@
 
 ## Current State
 
-### RESOLVED: L1 Engine Located in manemus (2026-03-14)
+### RESOLVED: L1 Engine Ported (2026-03-14)
 
-The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and never ported to mind-mcp. Confirmed: 7,256 lines of code, 19/19 tests passing.
+The L1 engine has been ported to `runtime/cognition/`. 7,256 lines of code, 19/19 tests passing.
 
-**Source:** `/home/mind-protocol/manemus/runtime/cognition/`
+**Location:** `runtime/cognition/`
 **Core engine:** 14 files (models, constants, tick runner, 9 law files, tests)
 **Integration files:** 5 additional files (live bridge, action dispatcher, health calculator, brain loader, doc converter)
 
-**Blocker #1 is CLEARED.** The engine does not need to be rebuilt — it needs to be ported. Estimated effort: 1-2 hours for copy + tick step reorder + test validation. See IMPLEMENTATION_L1_Wiring.md Phase A for the detailed porting plan.
-
-**Remaining blocker:** Citizen directories (`.mind/citizens/`) are still empty. Copy from manemus.
+**Blocker #1 is CLEARED.** Engine ported with tick step reorder + test validation. See IMPLEMENTATION_L1_Wiring.md Phase A.
 
 ### Phase B Cross-Review Complete (2026-03-14)
 
@@ -67,7 +65,7 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 |-----------|------|--------|-------|
 | L1 spec (ALGORITHM) | `docs/cognition/l1/ALGORITHM_L1_Physics.md` | CANONICAL | ~2000 |
 | Schema v2.0 | `docs/schema/schema.yaml` | CANONICAL | ~800 |
-| **L1 engine (in manemus)** | `manemus/runtime/cognition/` | **WORKING, 19/19 tests** | **7,256** |
+| **L1 engine** | `runtime/cognition/` | **WORKING, 19/19 tests** | **7,256** |
 | v1.x physics engine | `runtime/physics/` | WORKING (but wrong model) | ~11,700 |
 | Orchestrator dispatcher | `runtime/orchestrator/dispatcher.py` | WORKING | 273 |
 | Claude invoker | `runtime/orchestrator/claude_invoker.py` | WORKING | ~200 |
@@ -82,9 +80,9 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 
 | Component | Expected Path | Status |
 |-----------|--------------|--------|
-| L1 engine (laws, models, tick runner) | `runtime/cognition/` | **PORT FROM MANEMUS** |
-| L1 tests | `runtime/cognition/tests/` | **PORT FROM MANEMUS** |
-| Citizen identity files | `.mind/citizens/*/` | COPY FROM MANEMUS |
+| L1 engine (laws, models, tick runner) | `runtime/cognition/` | **PORTED** |
+| L1 tests | `runtime/cognition/tests/` | **PORTED** |
+| Citizen identity files | `citizens/*/` | **POPULATED** |
 | Stimulus router | `runtime/cognition/stimulus_router.py` | NOT BUILT |
 | WM prompt serializer | `runtime/cognition/wm_prompt_serializer.py` | NOT BUILT |
 | FalkorDB checkpointer for brains | `runtime/cognition/falkordb_checkpointer.py` | NOT BUILT |
@@ -122,16 +120,15 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 | `runtime/infrastructure/embeddings/` | YES | Both adapters work, just wire them |
 | `runtime/infrastructure/database/` | YES | FalkorDB adapter works, instantiate per citizen |
 
-### What Must Be Built New (engine ports from manemus)
+### What Must Be Built New
 
-1. ~~L1 cognitive engine~~ **PORTS FROM MANEMUS** (7,256 lines, tick step reorder needed)
-2. Stimulus router (event to Law 1 translation) — adapt from manemus bridge
+1. ~~L1 cognitive engine~~ **PORTED** (7,256 lines, tick step reorder done)
+2. Stimulus router (event to Law 1 translation) — adapt from bridge patterns
 3. WM prompt serializer — new
 4. Orientation taxonomy + prompt mapping — new (reconcile 7 vs 6 orientations)
-5. Feedback injector (self-stimulus + CONSUME) — adapt from manemus action dispatcher
-6. FalkorDB checkpointer (brain-specific) — new (replaces manemus JSON persistence)
-7. Per-citizen brain seeding pipeline — new orchestration, adapt manemus JSON loader
-8. Migration scripts (manemus to mind-mcp) — new
+5. Feedback injector (self-stimulus + CONSUME) — adapt from action dispatcher
+6. FalkorDB checkpointer (brain-specific) — new (replaces JSON persistence)
+7. Per-citizen brain seeding pipeline — new orchestration, adapt JSON loader
 
 ---
 
@@ -139,7 +136,7 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 
 ### Technical
 
-1. ~~**Where is the L1 engine code?**~~ **ANSWERED.** Located at `manemus/runtime/cognition/`. 7,256 lines, 19/19 tests. Needs porting to mind-mcp with tick step reorder.
+1. ~~**Where is the L1 engine code?**~~ **ANSWERED.** Located at `runtime/cognition/`. 7,256 lines, 19/19 tests. Ported with tick step reorder.
 
 2. **Graph isolation strategy.** Decided: one graph per citizen (`brain_{handle}`). But: single FalkorDB instance with 44 graphs? Or separate instances? FalkorDB supports multiple graphs in one instance -- use that.
 
@@ -151,9 +148,9 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 
 5. **Budget: how many Claude accounts for 44 citizens?** Current setup: round-robin across `~/.claude-accounts/{a,b,c}`. Three accounts may be insufficient. Need to calculate: if each citizen gets 1 session/hour, that's 44 sessions/hour across 3 accounts = ~15 sessions/hour/account. Claude Code can handle this if sessions are short (< 2 min each).
 
-6. **manemus decommission timeline.** Proposed: 4-week plan (1 week parallel subset, 1 week parallel all, 1 week DNS cut, 1 week decommission). Depends on validation results.
+6. **Production deployment timeline.** Proposed: 4-week plan (1 week parallel subset, 1 week parallel all, 1 week DNS cut, 1 week finalize). Depends on validation results.
 
-7. **Citizen dir structure.** What files need copying from manemus? At minimum: identity.yaml (or equivalent), any persona/personality config, conversation history (if desired).
+7. **Citizen dir structure.** At minimum: identity.yaml (or equivalent), any persona/personality config, conversation history (if desired).
 
 ### Design
 
@@ -169,8 +166,8 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 
 | Dependency | Status | Blocker? |
 |-----------|--------|----------|
-| L1 engine code (`runtime/cognition/`) | **LOCATED in manemus** | **NO** -- port needed (1-2 hours) |
-| Citizen directories from manemus | MISSING | YES -- no identity data to seed brains |
+| L1 engine code (`runtime/cognition/`) | **PORTED** | **NO** |
+| Citizen directories | **POPULATED** (245 citizens) | **NO** |
 | FalkorDB running | ASSUMED | NO -- dev can run locally |
 | OpenAI API key | ASSUMED | NO -- exists in env |
 | Render deployment config | EXISTS | NO |
@@ -189,22 +186,22 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 
 ### Immediate (Phase A — unblocked)
 
-1. **Port L1 engine from manemus.** Copy core files, reorder tick steps to match schema canonical ordering, run 19 tests. Estimated: 1-2 hours.
-2. **Copy citizen directories from manemus.** Still a blocker for brain seeding (Phase G).
+1. ~~**Port L1 engine.**~~ DONE. Core files ported, tick steps reordered to match schema canonical ordering, 19 tests passing.
+2. ~~**Populate citizen directories.**~~ DONE. 245 citizens in `citizens/`.
 
 ### Wiring (Phases B-D)
 
-3. Build stimulus router (event to Law 1) — adapt from manemus bridge
+3. Build stimulus router (event to Law 1) — adapt from bridge patterns
 4. Wire tick loop into dispatcher
 5. Build WM prompt serializer
 6. Wire WM into `build_citizen_prompt()`
-7. Build feedback injector — adapt from manemus action dispatcher
+7. Build feedback injector — adapt from action dispatcher
 8. Wire feedback into `_collect_completed_futures()`
 
 ### Integration (Phases E-H)
 
 9. Switch from pseudo-embeddings to OpenAI adapter
-10. Build FalkorDB checkpointer (replaces manemus JSON persistence)
+10. Build FalkorDB checkpointer (replaces JSON persistence)
 11. Build brain seeding pipeline
 12. Seed all 44 citizens
 13. Calibrate anxiety, satisfaction, frustration formulas
@@ -214,7 +211,7 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 14. Deploy to Render
 15. Parallel run validation
 16. DNS cutover
-17. manemus decommission
+17. Legacy system decommission
 
 ---
 
@@ -222,18 +219,18 @@ The L1 engine was built in the manemus repo at `manemus/runtime/cognition/` and 
 
 **For:** groundwork agent (implementation)
 
-**Context:** This doc chain (6 files) fully specifies how to wire the L1 physics engine into the orchestrator. The physics design is complete (ALGORITHM_L1_Physics.md). The wiring design is in ALGORITHM_L1_Wiring.md. The implementation plan is in IMPLEMENTATION_L1_Wiring.md (updated v0.2 with manemus porting plan).
+**Context:** This doc chain (6 files) fully specifies how to wire the L1 physics engine into the orchestrator. The physics design is complete (ALGORITHM_L1_Physics.md). The wiring design is in ALGORITHM_L1_Wiring.md. The implementation plan is in IMPLEMENTATION_L1_Wiring.md.
 
-**Blocker #1: CLEARED.** L1 engine located at `manemus/runtime/cognition/` (7,256 lines, 19/19 tests). Port to mind-mcp with tick step reorder. No rebuild needed.
+**Blocker #1: CLEARED.** L1 engine ported to `runtime/cognition/` (7,256 lines, 19/19 tests). Tick step reorder done. No rebuild needed.
 
-**Blocker #2:** Citizen directories (`.mind/citizens/`) are still empty. Copy from manemus. Only blocks Phase G (brain seeding), not Phases A-F.
+**Blocker #2: CLEARED.** Citizen directories populated (245 citizens in `citizens/`).
 
 **What to do first:** Phase A — port the engine (1-2 hours). Then Phase B — stimulus router + tick integration. This is the minimum viable wiring.
 
 **Key files to read:**
-- `manemus/runtime/cognition/tick_runner_l1_cognitive_engine.py` -- the engine to port (824 lines)
-- `manemus/runtime/cognition/models.py` -- data structures (290 lines)
-- `manemus/runtime/cognition/l1_live_integration_bridge.py` -- integration patterns to adapt (509 lines)
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py` -- the engine (824 lines)
+- `runtime/cognition/models.py` -- data structures (290 lines)
+- `runtime/cognition/l1_live_integration_bridge.py` -- integration patterns to adapt (509 lines)
 - `docs/l1_wiring/ALGORITHM_L1_Wiring.md` -- the wiring spec
 - `docs/reviews/REVIEW_F4_F5_Coherence.md` -- cross-review corrections to apply during porting
 - `runtime/orchestrator/dispatcher.py` -- where tick integration happens

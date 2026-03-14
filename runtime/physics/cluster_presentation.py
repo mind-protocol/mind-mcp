@@ -87,7 +87,6 @@ class ClusterLink:
     weight: float = 1.0
     energy: float = 0.0
     permanence: float = 0.0
-    trust_disgust: float = 0.0
 
 
 @dataclass
@@ -211,9 +210,8 @@ def find_tensions(
     links: List[ClusterLink],
 ) -> List[ClusterNode]:
     """
-    Find nodes with contradictory incoming links (trust_disgust opposition).
+    Find nodes with contradictory incoming links (weight opposition).
     """
-    node_map = {n.id: n for n in nodes}
     tensions = []
 
     for node in nodes:
@@ -221,9 +219,13 @@ def find_tensions(
         if len(incoming) < 2:
             continue
 
-        trusts = [l.trust_disgust for l in incoming]
-        if trusts and max(trusts) > 0.4 and min(trusts) < -0.4:
-            tensions.append(node)
+        # Detect tension via weight variance (high variance = tension)
+        weights = [l.weight for l in incoming]
+        if weights and len(weights) >= 2:
+            avg = sum(weights) / len(weights)
+            variance = sum((w - avg) ** 2 for w in weights) / len(weights)
+            if variance > 0.2:
+                tensions.append(node)
 
     return tensions
 
@@ -924,7 +926,6 @@ def cluster_from_dicts(
             weight=l.get('weight', 1.0),
             energy=l.get('energy', 0.0),
             permanence=l.get('permanence', 0.0),
-            trust_disgust=l.get('trust_disgust', 0.0),
         )
         for l in links
     ]
@@ -1030,7 +1031,6 @@ async def render_cluster(
                     weight=link.get('weight', 1.0),
                     energy=link.get('energy', 0.0),
                     permanence=link.get('permanence', 0.0),
-                    trust_disgust=link.get('trust_disgust', 0.0),
                 ))
 
     # === MODE: COMPACT ===

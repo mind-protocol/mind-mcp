@@ -1,6 +1,6 @@
 """Telegram Bridge — polling bot with citizen routing.
 
-Core functionality ported from manemus/scripts/telegram_bridge.py.
+Core Telegram bridge functionality for bot interaction and message routing.
 Polls Telegram getUpdates, processes messages, routes to orchestrator queue.
 
 Architecture:
@@ -334,6 +334,84 @@ _MULTI_ALIASES = {
     "everyone": 99,
 }
 
+# Cache: telegram user_id → bonded AI citizen handle (or None)
+_partner_cache: dict[str, Optional[str]] = {}
+_partner_cache_built = False
+
+
+def _build_partner_cache():
+    """Build a reverse index: human telegram_id → AI citizen with that human as partner.
+
+    Scans all citizen profiles once at startup. A citizen has a human partner
+    when profile.relationships.human_partner is set. The human's telegram_id
+    is found in the partner's contacts list.
+    """
+    global _partner_cache_built
+    if _partner_cache_built:
+        return
+    _partner_cache_built = True
+
+    if not CITIZENS_DIR.exists():
+        return
+
+    # Step 1: collect all human profiles with telegram IDs
+    human_tg_ids: dict[str, str] = {}  # handle → telegram_id
+    for d in CITIZENS_DIR.iterdir():
+        if not d.is_dir() or d.name.startswith("."):
+            continue
+        profile_path = d / "profile.json"
+        if not profile_path.exists():
+            continue
+        try:
+            profile = json.loads(profile_path.read_text())
+            identity = profile.get("identity", {})
+            if identity.get("type") != "human":
+                continue
+            # Find telegram contact
+            for contact in profile.get("contacts", []):
+                if contact.get("type") == "telegram" and contact.get("value"):
+                    tg_id = str(contact["value"]).strip()
+                    if tg_id.lstrip("-").isdigit():
+                        human_tg_ids[d.name] = tg_id
+                        break
+        except (json.JSONDecodeError, OSError):
+            continue
+
+    # Step 2: find AI citizens with human_partner set → reverse map
+    for d in CITIZENS_DIR.iterdir():
+        if not d.is_dir() or d.name.startswith("."):
+            continue
+        profile_path = d / "profile.json"
+        if not profile_path.exists():
+            continue
+        try:
+            profile = json.loads(profile_path.read_text())
+            identity = profile.get("identity", {})
+            if identity.get("type") == "human":
+                continue
+            partner_handle = profile.get("relationships", {}).get("human_partner")
+            if not partner_handle:
+                continue
+            # Look up the human's telegram ID
+            tg_id = human_tg_ids.get(partner_handle)
+            if tg_id:
+                _partner_cache[tg_id] = d.name
+                logger.info(f"Partner route: TG {tg_id} ({partner_handle}) → @{d.name}")
+        except (json.JSONDecodeError, OSError):
+            continue
+
+    logger.info(f"Partner cache built: {len(_partner_cache)} human→AI bonds")
+
+
+def _resolve_partner_for_sender(sender_id: str) -> Optional[str]:
+    """Resolve a telegram sender to their bonded AI citizen handle.
+
+    Returns the AI citizen handle if the sender has a bonded partner,
+    or None to fall back to default routing.
+    """
+    _build_partner_cache()
+    return _partner_cache.get(sender_id)
+
 
 def _resolve_citizen_tg(handle: str) -> Optional[str]:
     """Resolve citizen handle to numeric Telegram chat_id."""
@@ -481,7 +559,7 @@ def process_update(update: dict) -> bool:
                 length = entity.get("length", 0)
                 mention = text[start:start + length]
                 # Check if it mentions our bot
-                if mention.lower().startswith("@manemus") or mention.lower().startswith("@mind"):
+                if mention.lower().startswith("@mind"):
                     is_bot_mentioned = True
                     break
 
@@ -560,12 +638,31 @@ def process_update(update: dict) -> bool:
     # ── Log inbound ──
     _log_message(chat_id, text)
 
+    # ── Call room routing (@call_XXXXX prefix) ──
+    if text.startswith("@call_") or text.startswith("@room_"):
+        _handle_room_message(chat_id, sender_name, user_id, text)
+        return True
+
     # ── Command handling ──
     if text.startswith("/"):
         cmd = text.split()[0].lower().split("@")[0]  # Strip @botname
 
-        if cmd in ("/help", "/aide", "/start"):
+        if cmd == "/start":
+            # /start chrome → Chrome extension deep link
+            parts = text.split(maxsplit=1)
+            start_param = parts[1].strip() if len(parts) > 1 else ""
+            if start_param == "chrome":
+                _handle_chrome_link(chat_id, user_id, sender_name)
+                return True
             _handle_help(chat_id)
+            return True
+
+        if cmd in ("/help", "/aide"):
+            _handle_help(chat_id)
+            return True
+
+        if cmd == "/chrome":
+            _handle_chrome_link(chat_id, user_id, sender_name)
             return True
 
         if cmd == "/list":
@@ -592,24 +689,172 @@ def process_update(update: dict) -> bool:
             group_name = chat.get("title", "group")
             content = f"[group:{group_name}] {content}"
 
+        # Resolve bonded AI partner for this sender
+        partner_handle = _resolve_partner_for_sender(user_id)
+
+        metadata = {
+            "chat_id": chat_id,
+            "username": username,
+            "is_group": is_group,
+            "is_voice": is_voice,
+            "has_photo": photo_path is not None,
+            "reply_chat_id": chat_id,
+        }
+        if partner_handle:
+            metadata["citizen_handle"] = partner_handle
+
         _enqueue_fn({
             "voice_text": content,
             "mode": "partner",
             "source": "telegram",
             "sender": sender_name,
             "sender_id": user_id,
-            "metadata": {
-                "chat_id": chat_id,
-                "username": username,
-                "is_group": is_group,
-                "is_voice": is_voice,
-                "has_photo": photo_path is not None,
-                "reply_chat_id": chat_id,
-            },
+            "metadata": metadata,
         })
         return True
 
     return False
+
+
+# ── Room routing ──────────────────────────────────────────────────────────────
+
+def _handle_room_message(chat_id: str, sender_name: str, user_id: str, text: str):
+    """Route a @call_XXXXX or @room_XXXXX prefixed message to a graph room.
+
+    Format: @call_09f720cbca16 This is my response
+    The prefix is the room ID, the rest is the message content.
+    """
+    parts = text.split(None, 1)
+    room_id = parts[0].lstrip("@") if parts else ""
+    message = parts[1].strip() if len(parts) > 1 else ""
+
+    if not room_id or not message:
+        send_message(
+            "Usage: @call\\_ROOM\\_ID Your message here",
+            chat_id,
+        )
+        return
+
+    # Resolve sender as actor — use sender_name or username
+    actor_id = f"actor_human_{sender_name.lower().replace(' ', '_')}_ai"
+
+    try:
+        import sys
+        sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+        from runtime.physics.graph import GraphOps
+        import uuid
+
+        g = GraphOps()
+
+        # Verify room exists
+        result = g._query(
+            "MATCH (s:Space {id: $id}) RETURN s.name",
+            {"id": room_id},
+        )
+        if not result:
+            send_message(f"Room `{room_id}` not found.", chat_id)
+            return
+
+        room_name = result[0][0] if result[0] else room_id
+
+        # Ensure actor node exists
+        g._query(
+            "MERGE (a:Actor {id: $id}) ON CREATE SET a.type = 'human', a.name = $name",
+            {"id": actor_id, "name": sender_name},
+        )
+
+        # Join room if not already present
+        g.add_presence(actor_id, room_id, present=1.0, visible=1.0)
+
+        # Create Moment
+        from datetime import datetime, timezone
+        moment_id = f"moment_{uuid.uuid4().hex[:12]}"
+        now = datetime.now(timezone.utc)
+
+        g.add_moment(
+            id=moment_id,
+            text=message,
+            type="dialogue",
+            status="completed",
+            speaker=actor_id,
+            place_id=room_id,
+        )
+        g._query(
+            "MATCH (m:Moment {id: $id}) SET m.created_at_s = $ts_s",
+            {"id": moment_id, "ts_s": int(now.timestamp())},
+        )
+
+        send_message(
+            f"Message delivered to {room_name}",
+            chat_id,
+        )
+        logger.info(f"Routed TG message from {sender_name} to room {room_id}")
+
+    except Exception as e:
+        logger.exception(f"Room routing failed for {room_id}")
+        send_message(f"Failed to deliver to room: {e}", chat_id)
+
+
+# ── Chrome Extension Link ────────────────────────────────────────────────────
+
+# One-time tokens for Chrome extension auth: token → { user_id, sender_name, created_at }
+_chrome_tokens: dict[str, dict] = {}
+CHROME_TOKEN_TTL_SECONDS = 300  # 5 minutes
+
+
+def _handle_chrome_link(chat_id: str, user_id: str, sender_name: str):
+    """Generate a one-time auth token and send a Chrome extension deep link.
+
+    The user clicks the link → content script on app.mind-protocol.com reads the
+    token → relays to the extension service worker → extension generates keypair
+    and registers with the MIND API.
+    """
+    import secrets
+
+    # Clean up expired tokens
+    now = time.time()
+    expired = [t for t, v in _chrome_tokens.items()
+               if now - v["created_at"] > CHROME_TOKEN_TTL_SECONDS]
+    for t in expired:
+        del _chrome_tokens[t]
+
+    # Generate token
+    token = secrets.token_urlsafe(32)
+    _chrome_tokens[token] = {
+        "user_id": user_id,
+        "sender_name": sender_name,
+        "chat_id": chat_id,
+        "created_at": now,
+    }
+
+    link = f"https://app.mind-protocol.com/chrome-auth?token={token}"
+
+    send_message(
+        f"*MIND Chrome Extension*\n\n"
+        f"Click the link below to connect your browser:\n\n"
+        f"[Connect Chrome Extension]({link})\n\n"
+        f"_This link expires in 5 minutes._",
+        chat_id,
+    )
+
+    logger.info(f"Chrome auth link generated for {sender_name} ({user_id})")
+
+
+def validate_chrome_token(token: str) -> Optional[dict]:
+    """Validate and consume a one-time Chrome auth token.
+
+    Returns the token data if valid, None if expired or unknown.
+    Called by the API endpoint that the chrome-auth page talks to.
+    """
+    data = _chrome_tokens.pop(token, None)
+    if not data:
+        return None
+
+    age = time.time() - data["created_at"]
+    if age > CHROME_TOKEN_TTL_SECONDS:
+        return None
+
+    return data
 
 
 # ── Commands ─────────────────────────────────────────────────────────────────
@@ -623,6 +868,8 @@ def _handle_help(chat_id: str):
         "/help — This help\n"
         "/list — List AI citizens\n"
         "/talk @handle message — Message a specific citizen\n"
+        "/chrome — Connect your Chrome extension\n"
+        "@call\\_ROOMID message — Reply to a call room\n"
     )
     send_message(help_text, chat_id)
 

@@ -1,7 +1,7 @@
 """
 House state, activity dashboard, and citizen profile routes.
 
-Ported from manemus Flask routes/house.py → FastAPI.
+House state, activity dashboard, and citizen profile routes (FastAPI).
 Aggregates state from shrine/state/ files for the webapp dashboard.
 
 Profile routes use the new architecture:

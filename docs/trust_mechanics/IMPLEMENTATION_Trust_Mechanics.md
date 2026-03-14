@@ -22,7 +22,7 @@ VALIDATION:      ./VALIDATION_Trust_Mechanics.md
 THIS:            IMPLEMENTATION_Trust_Mechanics.md
 SYNC:            ./SYNC_Trust_Mechanics.md
 
-IMPL:            manemus/runtime/cognition/trust/
+IMPL:            runtime/cognition/trust/
 ```
 
 > **Contract:** Read docs before modifying. After changes: update SYNC. Run tests.
@@ -31,16 +31,16 @@ IMPL:            manemus/runtime/cognition/trust/
 
 ## Architecture
 
-Trust mechanics lives at L1 (brain-level), implemented inside the manemus cognition runtime. It is NOT a standalone system. It extends the existing tick cycle by:
+Trust mechanics lives at L1 (brain-level), implemented inside the cognition runtime. It is NOT a standalone system. It extends the existing tick cycle by:
 
 1. **Enhancing Law 18** (`_law_18_relational_valence` in `law_13_to_18_limbic_engine.py`) with trust-specific update logic driven by limbic delta.
-2. **Adding a trust module** (`manemus/runtime/cognition/trust/`) that houses limbic delta computation, trust score aggregation, value type detection, and destruction pathology detection.
+2. **Adding a trust module** (`runtime/cognition/trust/`) that houses limbic delta computation, trust score aggregation, value type detection, and destruction pathology detection.
 3. **Hooking into the tick runner** (`tick_runner_l1_cognitive_engine.py`) at existing steps -- no new steps added.
 
 ### Layer Boundaries
 
 ```
-L1 (manemus/runtime/cognition/)
+L1 (runtime/cognition/)
 ├── trust/                          ← NEW: Trust mechanics module
 │   ├── limbic_delta_from_drive_snapshots.py
 │   ├── trust_update_on_link.py
@@ -91,7 +91,7 @@ No new steps. Five hooks into existing steps.
 ## CODE STRUCTURE
 
 ```
-manemus/runtime/cognition/
+runtime/cognition/
 ├── trust/
 │   ├── __init__.py                                    # Public API exports
 │   ├── limbic_delta_from_drive_snapshots.py            # Compute limbic delta scalar
@@ -1209,7 +1209,7 @@ def assess_agent(
 
 ### Unit Tests (per phase)
 
-Tests live at `manemus/runtime/cognition/tests/test_trust_mechanics/`.
+Tests live at `runtime/cognition/tests/test_trust_mechanics/`.
 
 ```
 tests/test_trust_mechanics/

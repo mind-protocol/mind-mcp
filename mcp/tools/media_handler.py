@@ -23,7 +23,7 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger("mind.media")
 
-MANEMUS_ROOT = Path(os.getenv("MANEMUS_ROOT", "/home/mind-protocol/manemus"))
+PROJECT_ROOT = Path(os.getenv("MIND_PROJECT_ROOT", Path(__file__).parent.parent.parent))
 
 
 TOOL_SCHEMA = {
@@ -139,19 +139,19 @@ def _imagine(args: Dict[str, Any]) -> Dict[str, Any]:
     resolution = args.get("resolution", "1K")
     num_images = args.get("num_images", 1)
 
-    # Lazy import from manemus
-    image_gen_path = MANEMUS_ROOT / "scripts" / "image_gen.py"
+    # Lazy import from project scripts
+    image_gen_path = PROJECT_ROOT / "scripts" / "image_gen.py"
     if not image_gen_path.exists():
-        return _err(f"image_gen.py not found at {image_gen_path}. Is MANEMUS_ROOT set?")
+        return _err(f"image_gen.py not found at {image_gen_path}. Is MIND_PROJECT_ROOT set?")
 
     try:
-        scripts_dir = str(MANEMUS_ROOT / "scripts")
+        scripts_dir = str(PROJECT_ROOT / "scripts")
         if scripts_dir not in sys.path:
             sys.path.insert(0, scripts_dir)
-        # Also add manemus root for any internal imports
-        manemus_str = str(MANEMUS_ROOT)
-        if manemus_str not in sys.path:
-            sys.path.insert(0, manemus_str)
+        # Also add project root for any internal imports
+        project_str = str(PROJECT_ROOT)
+        if project_str not in sys.path:
+            sys.path.insert(0, project_str)
 
         from image_gen import generate_image
 
@@ -276,7 +276,7 @@ def _send_file_telegram(file_path: str, caption: str, chat_id: str) -> Dict[str,
         return _err(f"File not found: {file_path}")
 
     # Load TG config
-    config_file = MANEMUS_ROOT / "shrine" / "state" / "telegram_config.json"
+    config_file = PROJECT_ROOT / "shrine" / "state" / "telegram_config.json"
     try:
         config = json.loads(config_file.read_text()) if config_file.exists() else {}
     except (json.JSONDecodeError, OSError):
@@ -321,7 +321,7 @@ def _send_file_discord(file_path: str, file_url: str, caption: str, channel_id: 
         return _err("'chat_id' (Discord channel ID) is required for Discord file sending.")
 
     try:
-        scripts_dir = str(MANEMUS_ROOT / "scripts")
+        scripts_dir = str(PROJECT_ROOT / "scripts")
         if scripts_dir not in sys.path:
             sys.path.insert(0, scripts_dir)
 
@@ -341,7 +341,7 @@ def _send_file_discord(file_path: str, file_url: str, caption: str, channel_id: 
             return _err("Discord file send returned no result.")
 
     except ImportError:
-        return _err("Discord bridge not available. Check MANEMUS_ROOT.")
+        return _err("Discord bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"Discord file send failed: {e}")
 
@@ -352,7 +352,7 @@ def _send_file_whatsapp(file_path: str, file_url: str, caption: str, chat_id: st
         return _err("'chat_id' is required for WhatsApp file sending.")
 
     try:
-        scripts_dir = str(MANEMUS_ROOT / "scripts")
+        scripts_dir = str(PROJECT_ROOT / "scripts")
         if scripts_dir not in sys.path:
             sys.path.insert(0, scripts_dir)
 
@@ -387,7 +387,7 @@ def _send_file_whatsapp(file_path: str, file_url: str, caption: str, chat_id: st
             return _err("WhatsApp send returned no result.")
 
     except ImportError:
-        return _err("WhatsApp bridge not available. Check MANEMUS_ROOT.")
+        return _err("WhatsApp bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
         return _err(f"WhatsApp send failed: {e}")
 

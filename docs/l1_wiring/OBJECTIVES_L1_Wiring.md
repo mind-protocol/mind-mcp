@@ -20,7 +20,7 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 
 **What:** External events (Telegram messages, tool call results, bridge events, membrane stimuli, alarm firings) must enter L1 as proper Law 1 stimuli -- segmented, deduplicated, energy-budgeted.
 
-**Why:** Without real stimuli, the engine runs in a vacuum. The 100-tick validation (manemus brain) used synthetic stimuli. Production needs the orchestrator to translate every citizen interaction into an L1 injection.
+**Why:** Without real stimuli, the engine runs in a vacuum. The 100-tick validation used synthetic stimuli. Production needs the orchestrator to translate every citizen interaction into an L1 injection.
 
 **Tradeoff:** Latency. Stimulus pre-processing (segmentation, dedup, embedding) adds time before a tick can run. Accept ~200ms per stimulus batch vs. the alternative of skipping pre-processing and flooding the graph.
 
@@ -70,9 +70,9 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 
 ### O7: Deploy to Production on Render (Priority: Medium)
 
-**What:** Phase 7 cutover from manemus. Dockerfile ready, render.yaml ready. Parallel run, DNS switch, bot migration.
+**What:** Phase 7 production deploy. Dockerfile ready, render.yaml ready. Parallel run, DNS switch, bot migration.
 
-**Why:** manemus is the current production system. mind-mcp replaces it. Until cutover, everything built here is theoretical.
+**Why:** Until deployed, everything built here is theoretical.
 
 **Tradeoff:** Risk. Parallel run period adds infrastructure cost but prevents catastrophic migration failure. Plan: 1-2 weeks parallel, validate output parity, then cut DNS.
 
@@ -98,7 +98,7 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 6. Graph state persists across process restarts
 7. All 44 citizens boot with seeded brains (209 base + overlay) and run independent tick loops
 8. Seed brain link diversity: at least 8 different link types (supports, activates, contradicts, reminds_of, causes, depends_on, regulates, exemplifies)
-9. mind-mcp serves production traffic with no regression from manemus
+9. mind-mcp serves production traffic with no regression
 
 ---
 
@@ -107,10 +107,10 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 | Dependency | Owner | Status | Notes |
 |-----------|-------|--------|-------|
 | L1 ALGORITHM spec | docs/cognition/l1/ | CANONICAL | 21 laws, formulas, constants |
-| L1 engine code | runtime/cognition/ | CANONICAL | 5,230 lines ported from manemus, 118 tests passing |
+| L1 engine code | runtime/cognition/ | CANONICAL | 5,230 lines, 118 tests passing |
 | Orchestrator | runtime/orchestrator/ | CANONICAL | Dispatcher + Claude invoker working |
 | FalkorDB adapter | runtime/infrastructure/database/ | CANONICAL | Working, tested |
 | OpenAI embedding adapter | runtime/infrastructure/embeddings/ | CANONICAL | Working, tested |
 | Seed brain generator | runtime/seed_brain_from_source_docs_dynamic_generator.py | CANONICAL | 209 nodes, 295 links |
 | Citizen identity | runtime/citizens/ | CANONICAL | load_citizen_identity, build_citizen_prompt |
-| Citizen directories | citizens/ | CANONICAL | 245 citizens copied from manemus, 243 with profile.json |
+| Citizen directories | citizens/ | CANONICAL | 245 citizens, 243 with profile.json |

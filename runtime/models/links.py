@@ -2,22 +2,21 @@
 Link Models — Generic Schema Types
 
 The universal link type that connects nodes.
-Based on schema.yaml v1.8.1
+Based on schema.yaml v2.1
 
-v1.8.1 CHANGES:
+v2.1 CHANGES:
+    - Removed Plutchik emotion axes (replaced by limbic system: valence, arousal, drives)
     - Single link type: `linked` — all semantics in properties
-    - Removed LinkType enum — no more type field on links
     - Semantic axes: hierarchy, polarity, permanence
-    - Plutchik emotion axes: joy_sadness, trust_disgust, fear_anger, surprise_anticipation
     - synthesis: natural language description of relationship
 
-MIGRATION (old type → v1.8.1):
+MIGRATION (old type → v2.1):
     contains → hierarchy: -0.7, synthesis: "contains"
     expresses → hierarchy: 0.3, synthesis: "expresses"
     about → hierarchy: 0.2, synthesis: "is about"
     relates → hierarchy: 0.0, synthesis: "{verb}"
-    supports → hierarchy: 0.3, trust_disgust: 0.5, synthesis: "supports"
-    contradicts → hierarchy: 0.3, trust_disgust: -0.5, synthesis: "contradicts"
+    supports → hierarchy: 0.3, synthesis: "supports"
+    contradicts → hierarchy: 0.3, synthesis: "contradicts"
 
 TESTS:
     engine/tests/test_models.py::TestActorNarrativeLink
@@ -53,13 +52,12 @@ class LinkBase(BaseModel):
         - polarity: [a→b, b→a] directional flow strength
         - hierarchy: -1 (contains) to +1 (elaborates)
         - permanence: 0 (speculative) to 1 (definitive)
-        - 4 Plutchik emotion axes: joy_sadness, trust_disgust, fear_anger, surprise_anticipation
         - synthesis: computed natural language description (regenerated on drift)
         - embedding: from embed(synthesis)
 
     Nature Input Flow:
         1. Agent provides 'nature' string (e.g., "suddenly proves, with admiration")
-        2. link_vocab.parse_nature() → floats (hierarchy, polarity, permanence, emotions)
+        2. link_vocab.parse_nature() → floats (hierarchy, polarity, permanence)
         3. synthesis regenerated from floats when embedding drifts
 
     Hot vs Cold:
@@ -92,24 +90,6 @@ class LinkBase(BaseModel):
     permanence: float = Field(
         default=0.5, ge=0.0, le=1.0,
         description="0 = speculative, 1 = definitive"
-    )
-
-    # === Emotions (Plutchik 4 bipolar axes) ===
-    joy_sadness: float = Field(
-        default=0.0, ge=-1.0, le=1.0,
-        description="-1 = sadness, +1 = joy"
-    )
-    trust_disgust: float = Field(
-        default=0.0, ge=-1.0, le=1.0,
-        description="-1 = disgust, +1 = trust"
-    )
-    fear_anger: float = Field(
-        default=0.0, ge=-1.0, le=1.0,
-        description="-1 = fear, +1 = anger"
-    )
-    surprise_anticipation: float = Field(
-        default=0.0, ge=-1.0, le=1.0,
-        description="-1 = surprise, +1 = anticipation"
     )
 
     # === Semantics ===
@@ -206,26 +186,6 @@ class LinkBase(BaseModel):
     def mark_traversed(self) -> None:
         """Mark as traversed by energy flow."""
         self.last_traversed_at_s = _now_s()
-
-
-# =============================================================================
-# EMOTION UTILITIES (v1.8.1 - Plutchik axes)
-# =============================================================================
-
-def blend_emotion_axis(current: float, incoming: float, blend_rate: float) -> float:
-    """
-    Blend an emotion axis value with incoming value.
-
-    Args:
-        current: Current axis value [-1, +1]
-        incoming: Incoming axis value [-1, +1]
-        blend_rate: How much to blend (typically flow/(flow+1))
-
-    Returns:
-        Blended value clamped to [-1, +1]
-    """
-    result = current + (incoming - current) * blend_rate
-    return max(-1.0, min(1.0, result))
 
 
 class ActorNarrative(BaseModel):

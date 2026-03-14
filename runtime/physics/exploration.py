@@ -242,12 +242,7 @@ class ExplorationRunner:
             sibling_ids=se.sibling_ids,
             children_ids=se.children_ids,
             active_siblings=len([s for s in se.siblings if s and s.is_active]),
-            emotions={
-                'joy_sadness': se.joy_sadness,
-                'trust_disgust': se.trust_disgust,
-                'fear_anger': se.fear_anger,
-                'surprise_anticipation': se.surprise_anticipation,
-            },
+            emotions={},
             intention=se.intention,
         )
 
@@ -1088,7 +1083,6 @@ def present_exploration_result(
             weight=alignment,
             energy=alignment,
             permanence=0.0,
-            trust_disgust=0.0,
         ))
 
     raw_cluster = RawCluster(

@@ -147,30 +147,6 @@ def test_permanence_range():
     assert len(result) == 0, f"Found links with invalid permanence: {result}"
 
 
-# VALIDATES: V11
-def test_emotion_ranges():
-    """V11: Emotion fields must be in [-1.0, +1.0]."""
-    adapter = get_database_adapter()
-
-    emotion_fields = [
-        'joy_sadness',
-        'trust_disgust',
-        'fear_anger',
-        'surprise_anticipation'
-    ]
-
-    for field in emotion_fields:
-        result = adapter.query(f"""
-            MATCH ()-[r]->()
-            WHERE r.{field} IS NOT NULL
-              AND (r.{field} < -1.0 OR r.{field} > 1.0)
-            RETURN id(r), r.{field}
-            LIMIT 5
-        """)
-
-        assert len(result) == 0, f"Found links with invalid {field}: {result}"
-
-
 # VALIDATES: V16
 def test_found_narratives_structure():
     """V16: SubEntity found_narratives must be dict with alignments in [0,1]."""

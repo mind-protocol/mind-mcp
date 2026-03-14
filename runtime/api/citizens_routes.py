@@ -1,7 +1,7 @@
 """
 Citizens registry + DMs — unified citizen API with search, filters, brain scores.
 
-Ported from manemus Flask routes/citizens.py → FastAPI.
+Citizens registry + DMs API (FastAPI).
 Adapted for mind-mcp citizen directory structure.
 """
 

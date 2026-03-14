@@ -1,7 +1,7 @@
 """
 Webapp live chat routes — FAQ cache, fast-path Anthropic API, orchestrator queue.
 
-Ported from manemus Flask routes/chat.py → FastAPI.
+Webapp live chat routes (FastAPI).
 """
 
 import json
@@ -24,10 +24,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 WEBAPP_CHATS_DIR = PROJECT_ROOT / "shrine" / "state" / "webapp_chats"
 
 # Fast-path config
-CHAT_FAST_PATH = os.environ.get("CHAT_FAST_PATH", "true").lower() != "false"
-CHAT_FAQ_CACHE = os.environ.get("CHAT_FAQ_CACHE", "true").lower() != "false"
+CHAT_FAST_PATH = True
+CHAT_FAQ_CACHE = True
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-FAST_PATH_MODEL = os.environ.get("FAST_PATH_MODEL", "claude-sonnet-4-20250514")
+FAST_PATH_MODEL = "claude-sonnet-4-20250514"
 FAST_PATH_MAX_TOKENS = 300
 FAST_PATH_MAX_TOKENS_PRESSURE = 150
 

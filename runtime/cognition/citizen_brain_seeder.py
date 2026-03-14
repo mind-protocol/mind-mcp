@@ -38,7 +38,7 @@ logger = logging.getLogger("cognition.brain_seeder")
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent
 _CITIZENS_DIRS = [
-    _PROJECT_ROOT / "citizens",           # primary: copied from manemus
+    _PROJECT_ROOT / "citizens",           # primary: citizen identity dirs
     _PROJECT_ROOT / ".mind" / "citizens",  # fallback: protocol template
 ]
 
@@ -47,7 +47,7 @@ def _find_citizen_identity(citizen_handle: str) -> Optional[dict]:
     """Load citizen identity from citizens/{handle}/ or .mind/citizens/{handle}/.
 
     Searches for identity data in order:
-    1. profile.json (manemus format with id, display_name, bio, etc.)
+    1. profile.json (format with id, display_name, bio, etc.)
     2. identity.json (structured identity)
     3. identity.md / CLAUDE.md (markdown identity)
 
@@ -65,7 +65,7 @@ def _find_citizen_identity(citizen_handle: str) -> Optional[dict]:
         logger.debug(f"No citizen directory found for {citizen_handle}")
         return None
 
-    # Try profile.json (manemus format)
+    # Try profile.json (structured format)
     profile_path = citizen_dir / "profile.json"
     if profile_path.exists():
         try:
@@ -96,21 +96,51 @@ def _find_citizen_identity(citizen_handle: str) -> Optional[dict]:
 
 
 def _normalize_profile(profile: dict, citizen_dir: Path) -> dict:
-    """Convert manemus profile.json format to brain seeder identity format."""
+    """Convert profile.json format to brain seeder identity format.
+
+    Supports two profile.json formats:
+    - Flat: {display_name, bio, class_, aspirations, ...}
+    - Nested: {identity: {name, handle, bio, class_, ...}, aspirations: [...], ...}
+    """
     identity: dict = {"_source": str(citizen_dir / "profile.json")}
 
-    # Map profile fields to identity fields
-    identity["name"] = profile.get("display_name") or profile.get("id", "")
-    identity["role"] = profile.get("class_", "citizen")
+    # Handle nested format: unwrap identity block, keep root-level fields
+    id_block = profile.get("identity", {})
+    if id_block and isinstance(id_block, dict):
+        # Nested format — identity fields live under "identity" key
+        flat = {**profile}
+        flat.update(id_block)  # identity fields override root
+    else:
+        flat = profile
 
-    bio = profile.get("bio", "")
-    tagline = profile.get("tagline", "")
+    # Map profile fields to identity fields
+    identity["name"] = (
+        flat.get("display_name")
+        or flat.get("name")
+        or flat.get("id", "")
+    )
+    identity["role"] = flat.get("class_", "citizen")
+
+    bio = flat.get("bio", "")
+    tagline = flat.get("tagline", "")
     identity["personality"] = f"{tagline}. {bio}".strip(". ")
 
-    # Extract goals from aspirations if present
-    aspirations = profile.get("aspirations", [])
-    if aspirations:
+    # Extract goals from aspirations if present (root-level or nested)
+    aspirations = profile.get("aspirations") or flat.get("aspirations", [])
+    if aspirations and isinstance(aspirations, list):
         identity["goals"] = "\n".join(f"- {a}" for a in aspirations)
+
+    # Extract values if present
+    values = profile.get("values") or flat.get("values", [])
+    if values and isinstance(values, list):
+        identity["values"] = "\n".join(f"- {v}" for v in values)
+
+    # Extract relationships if present (dict format: handle -> description)
+    relationships = profile.get("relationships") or flat.get("relationships", {})
+    if relationships and isinstance(relationships, dict):
+        identity["relationships"] = "\n".join(
+            f"- {handle}: {desc}" for handle, desc in relationships.items()
+        )
 
     # Try to load CLAUDE.md for richer identity context
     claude_path = citizen_dir / "CLAUDE.md"

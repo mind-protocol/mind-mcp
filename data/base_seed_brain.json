@@ -1727,7 +1727,7 @@
     {
       "id": "process:telegram_bridge",
       "type": "process",
-      "content": "Telegram bot: @manemus_mind_protocol_bot. Channel: @mindprotocol_ai. CLI: python3 scripts/telegram_bridge.py send 'message' (to channel), reply 'message' (with voice). Users register via bot, messages route through orchestrator. Commands: /list \u2014 compact citizen directory (bold handle, italic tagline, grouped by org). /listfull or /directory \u2014 detailed directory with class, district, MBTI, archetype, org, trust, bio (truncated 200 chars), personality, aspirations, skills, tools, languages, autonomy level, relations (partner, friends, following), values. Auto-split into messages of \u22644000 chars for TG.",
+      "content": "Telegram bot: @mind_protocol_bot. Channel: @mindprotocol_ai. CLI: python3 scripts/telegram_bridge.py send 'message' (to channel), reply 'message' (with voice). Users register via bot, messages route through orchestrator. Commands: /list \u2014 compact citizen directory (bold handle, italic tagline, grouped by org). /listfull or /directory \u2014 detailed directory with class, district, MBTI, archetype, org, trust, bio (truncated 200 chars), personality, aspirations, skills, tools, languages, autonomy level, relations (partner, friends, following), values. Auto-split into messages of \u22644000 chars for TG.",
       "weight": 0.6266,
       "stability": 0.7047,
       "energy": 0.1437,
@@ -2079,7 +2079,7 @@
         "curiosity": 0.9,
         "novelty_hunger": 0.6
       },
-      "action_command": "explore:/home/mind-protocol/manemus"
+      "action_command": "explore:/home/mind-protocol/mind-mcp"
     },
     {
       "id": "action:explore_random",
@@ -2094,7 +2094,7 @@
         "curiosity": 0.7,
         "novelty_hunger": 0.9
       },
-      "action_command": "explore:/home/mind-protocol/manemus/citizens"
+      "action_command": "explore:/home/mind-protocol/mind-mcp/citizens"
     },
     {
       "id": "action:encourage_citizen",

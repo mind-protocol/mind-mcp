@@ -114,7 +114,7 @@
 | Doc chain converter | `docchain_to_brain_cluster_converter.py` | Markdown docs → brain.json nodes + links (hierarchical + cross-ref) | TESTED |
 | Doc watch daemon | `docwatch_brain_sync_daemon.py` | Filesystem watcher: docs/ changes → auto-update all citizen brains | TESTED |
 
-- **Manemus brain seeded:** `citizens/manemus/brain.json` (53 nodes, 48 links — seed), `brain_full.json` (390 nodes, 411 links — seed + all 7 L1 docs merged)
+- **Brain seeded:** `citizens/mind/brain.json` (53 nodes, 48 links — seed), `brain_full.json` (390 nodes, 411 links — seed + all 7 L1 docs merged)
 - **First run validated:** 100 ticks showed emergent behavior matching spec — initial focus → boredom → curiosity rise → social drive → restlessness. Values remained heaviest nodes (identity anchor).
 - **Doc watch tested:** One-shot sync detects 330 chunks across 7 files, correctly diffs on re-run (0 changes when nothing changed, 1 change when one chunk modified).
 
@@ -202,6 +202,6 @@ Brain seeder, doc chain converter, doc watch daemon — all tested.
 
 **Context:** The full spec is in the doc chain (OBJECTIVES → PATTERNS → BEHAVIORS → ALGORITHM → VALIDATION). Read them in order. The spec is detailed enough to implement — formulas, constants, and test scenarios are all provided.
 
-**What's been built:** Complete L1 cognitive engine (4,717 lines, 19/19 tests) + admin tooling (brain seeder, doc chain converter, doc watch daemon). Manemus brain seeded (390 nodes) and validated over 100 ticks. The engine runs in-memory — FalkorDB persistence is a Phase 4 task. The doc watch daemon auto-syncs documentation changes into all citizen brains.
+**What's been built:** Complete L1 cognitive engine (4,717 lines, 19/19 tests) + admin tooling (brain seeder, doc chain converter, doc watch daemon). Brain seeded (390 nodes) and validated over 100 ticks. The engine runs in-memory — FalkorDB persistence is a Phase 4 task. The doc watch daemon auto-syncs documentation changes into all citizen brains.
 
-**Key integration question:** The engine is standalone. Next step is wiring it into the orchestrator so real citizen sessions feed L1 as stimuli, and L1 orientation output feeds back into prompt assembly. Also: scaling from 1 brain (manemus) to 44 citizens — need brain templates per role.
+**Key integration question:** The engine is standalone. Next step is wiring it into the orchestrator so real citizen sessions feed L1 as stimuli, and L1 orientation output feeds back into prompt assembly. Also: scaling from 1 brain to 44 citizens — need brain templates per role.

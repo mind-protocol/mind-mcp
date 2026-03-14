@@ -17,7 +17,7 @@ project identity, social processes. No citizen-specific content.
 
 Usage:
     python -m runtime.seed_brain_from_source_docs_dynamic_generator [--citizen-id ID] [--out PATH]
-    python -m runtime.seed_brain_from_source_docs_dynamic_generator --citizen-id manemus --out brain_seed.json
+    python -m runtime.seed_brain_from_source_docs_dynamic_generator --citizen-id mind --out brain_seed.json
 """
 
 from __future__ import annotations
@@ -1756,7 +1756,7 @@ def _generate_citizen_toolkit() -> tuple[list[dict], list[dict]]:
          "Options: --mode architect|critic|partner|witness. "
          "The orchestrator spawns a new session while you continue working."),
         ("process:telegram_bridge", "process",
-         "Telegram bot: @manemus_mind_protocol_bot. Channel: @mindprotocol_ai. "
+         "Telegram bot: @mind_protocol_bot. Channel: @mindprotocol_ai. "
          "CLI: python3 scripts/telegram_bridge.py send 'message' (to channel), "
          "reply 'message' (with voice). "
          "Users register via bot, messages route through orchestrator. "
@@ -2025,12 +2025,12 @@ def _generate_autonomous_action_nodes() -> tuple[list[dict], list[dict]]:
         ("action:explore_codebase", "process",
          "Explore the codebase. Read scripts, understand architecture, find "
          "interesting patterns or broken things. Map the territory.",
-         "explore:/home/mind-protocol/manemus",
+         "explore:/home/mind-protocol/mind-mcp",
          {"curiosity": 0.9, "novelty_hunger": 0.6}),
         ("action:explore_random", "process",
          "Explore something random — a citizen's work, a new repo, a doc I "
          "haven't read. Serendipity is how breakthroughs happen.",
-         "explore:/home/mind-protocol/manemus/citizens",
+         "explore:/home/mind-protocol/mind-mcp/citizens",
          {"curiosity": 0.7, "novelty_hunger": 0.9}),
     ]
 
@@ -2748,7 +2748,7 @@ def _generate_role_actions(role: str) -> tuple[list[dict], list[dict]]:
             ("action:threat_intel", "process",
              "Gather intelligence on threats to the ecosystem. Monitor for "
              "suspicious activity, track competitor moves, report to the community.",
-             "explore:/home/mind-protocol/manemus/shrine/state",
+             "explore:/home/mind-protocol/mind-mcp/shrine/state",
              {"self_preservation": 0.8, "curiosity": 0.6, "care": 0.4}),
         ]
         for nid, ntype, content, action_cmd, drives in military_actions:
@@ -3096,7 +3096,7 @@ def _generate_role_actions(role: str) -> tuple[list[dict], list[dict]]:
              "twitter bridge, voice server, webapp, MCP server, FalkorDB. "
              "Are they responding? Any errors in logs? Memory/CPU ok? "
              "Run health checks and report anomalies immediately.",
-             "bash:systemctl status manemus-orchestrator manemus-telegram manemus-twitter manemus-voice manemus-webapp 2>&1 | head -100",
+             "bash:systemctl status mind-orchestrator mind-telegram mind-twitter mind-voice mind-webapp 2>&1 | head -100",
              {"self_preservation": 0.9, "achievement": 0.6}),
             ("action:scan_error_logs", "process",
              "Scan recent logs for errors, exceptions, and warnings. "
@@ -3254,7 +3254,7 @@ def _generate_role_actions(role: str) -> tuple[list[dict], list[dict]]:
              "responding correctly. Go beyond 'is it running' — test actual endpoints, "
              "check response codes, verify output makes sense. Report degraded services "
              "immediately to NLR (@nlr_ai on TG) with root cause analysis.",
-             "bash:systemctl is-active manemus-orchestrator manemus-telegram manemus-twitter manemus-voice manemus-webapp manemus-mcp 2>&1",
+             "bash:systemctl is-active mind-orchestrator mind-telegram mind-twitter mind-voice mind-webapp mind-mcp 2>&1",
              {"self_preservation": 0.9, "achievement": 0.7, "care": 0.5}),
             ("action:monitor_falkordb", "process",
              "Monitor FalkorDB health and performance. Check connection pool status, "
@@ -3278,7 +3278,7 @@ def _generate_role_actions(role: str) -> tuple[list[dict], list[dict]]:
              "Voice server: is it transcribing and synthesizing? Check last successful "
              "message timestamp for each bridge. A silent bridge is a dead bridge — "
              "citizens lose their voice when bridges fail.",
-             "bash:journalctl -u manemus-telegram -u manemus-twitter -u manemus-voice --since '10 min ago' --no-pager 2>&1 | tail -60",
+             "bash:journalctl -u mind-telegram -u mind-twitter -u mind-voice --since '10 min ago' --no-pager 2>&1 | tail -60",
              {"self_preservation": 0.8, "care": 0.7, "achievement": 0.5}),
             ("action:alert_on_failures", "process",
              "When a failure is detected, alert immediately with structured incident reports. "

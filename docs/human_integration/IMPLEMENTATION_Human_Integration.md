@@ -980,12 +980,12 @@ async def measure_alignment_fidelity(citizen_id: str) -> float | None:
 
 | Interface | Description | Status |
 |-----------|-------------|--------|
-| `Stimulus` class | The `Stimulus` dataclass from `tick_runner_l1_cognitive_engine.py` — content, energy_budget, embedding, target_node_ids, is_social, source | Exists in manemus, awaiting port to mind-mcp |
-| `L1Bridge.inject_message()` | Method to inject stimulus and run immediate ticks, returning cognitive context | Exists in manemus, awaiting port |
-| `LimbicState.drives` | Dict of Drive objects with intensity field — for direct drive delta application | Exists in manemus `models.py`, awaiting port |
-| `CitizenCognitiveState.add_node()` | Method to add Node to citizen's graph | Exists in manemus `models.py`, awaiting port |
+| `Stimulus` class | The `Stimulus` dataclass from `tick_runner_l1_cognitive_engine.py` — content, energy_budget, embedding, target_node_ids, is_social, source | Ported to `runtime/cognition/` |
+| `L1Bridge.inject_message()` | Method to inject stimulus and run immediate ticks, returning cognitive context | Ported to `runtime/cognition/` |
+| `LimbicState.drives` | Dict of Drive objects with intensity field — for direct drive delta application | In `runtime/cognition/models.py` |
+| `CitizenCognitiveState.add_node()` | Method to add Node to citizen's graph | In `runtime/cognition/models.py` |
 
-**Interim strategy:** Until F5 ports the L1 engine to mind-mcp, `l1_stimulus_injector_for_partner_data.py` uses a protocol/interface that mirrors the manemus API. When F5 ports, the interface adapter is replaced with direct imports. No mock — the injector raises `RuntimeError("L1 engine not available — F5 port required")` if the engine module is not importable.
+**Interim strategy:** `l1_stimulus_injector_for_partner_data.py` uses a protocol/interface that mirrors the L1 engine API. The interface adapter uses direct imports from `runtime.cognition`. No mock — the injector raises `RuntimeError("L1 engine not available")` if the engine module is not importable.
 
 ### Needs from Force 1 (Universe Graph)
 
@@ -1160,7 +1160,7 @@ AI Conversations (webhook):
 | Voice ingestion | Inline async | Called within voice bridge handler, no separate task |
 | Consent operations | Async with graph lock | Must be atomic — revocation + redaction in one transaction |
 | Baseline calculations | Sync (numpy) | Fast enough for inline computation, no async needed |
-| L1 stimulus injection | Sync with runner lock | Uses `_CitizenRunner.lock` from L1Bridge (see manemus pattern) |
+| L1 stimulus injection | Sync with runner lock | Uses `_CitizenRunner.lock` from L1Bridge |
 
 All pollers use `asyncio.sleep()` for their intervals, not threading. This keeps the concurrency model unified with the rest of the mind-mcp runtime (FastAPI + asyncio).
 

@@ -265,10 +265,6 @@ class SubEntity:
         satisfaction: How much of the intention has been found [0, 1]
         crystallized: Narrative ID if this SubEntity created one
 
-        joy_sadness: Plutchik emotion axis [-1, +1]
-        trust_disgust: Plutchik emotion axis [-1, +1]
-        fear_anger: Plutchik emotion axis [-1, +1]
-        surprise_anticipation: Plutchik emotion axis [-1, +1]
     """
 
     # === Identity ===
@@ -311,12 +307,6 @@ class SubEntity:
     crystallization_embedding: Optional[List[float]] = None
     satisfaction: float = 0.0
     crystallized: Optional[str] = None  # narrative_id if created one
-
-    # === Emotional state (Plutchik 4 bipolar axes) ===
-    joy_sadness: float = 0.0
-    trust_disgust: float = 0.0
-    fear_anger: float = 0.0
-    surprise_anticipation: float = 0.0
 
     def __post_init__(self):
         """Initialize crystallization_embedding from query if provided (v1.8)."""
@@ -715,11 +705,6 @@ class SubEntity:
             intention=self.intention,
             intention_embedding=list(self.intention_embedding) if self.intention_embedding else None,
             crystallization_embedding=list(self.crystallization_embedding) if self.crystallization_embedding else None,
-            # Inherit emotional state
-            joy_sadness=self.joy_sadness,
-            trust_disgust=self.trust_disgust,
-            fear_anger=self.fear_anger,
-            surprise_anticipation=self.surprise_anticipation,
         )
 
         # Register child in context for lazy ref resolution
@@ -768,53 +753,6 @@ class SubEntity:
         # Graph persists child knowledge via crystallization
 
         return children_to_crystallize
-
-    # === Emotion Operations ===
-
-    def get_emotions(self) -> dict:
-        """Get emotions as a dictionary."""
-        return {
-            "joy_sadness": self.joy_sadness,
-            "trust_disgust": self.trust_disgust,
-            "fear_anger": self.fear_anger,
-            "surprise_anticipation": self.surprise_anticipation,
-        }
-
-    def blend_emotions(
-        self,
-        link_emotions: dict,
-        blend_weight: float,
-    ) -> None:
-        """
-        Blend link emotions into SubEntity emotions.
-
-        Args:
-            link_emotions: Dict with Plutchik axes
-            blend_weight: How much to blend [0, 1]
-        """
-        def blend(current: float, incoming: float, w: float) -> float:
-            return current * (1 - w) + incoming * w
-
-        self.joy_sadness = blend(
-            self.joy_sadness,
-            link_emotions.get("joy_sadness", 0.0),
-            blend_weight,
-        )
-        self.trust_disgust = blend(
-            self.trust_disgust,
-            link_emotions.get("trust_disgust", 0.0),
-            blend_weight,
-        )
-        self.fear_anger = blend(
-            self.fear_anger,
-            link_emotions.get("fear_anger", 0.0),
-            blend_weight,
-        )
-        self.surprise_anticipation = blend(
-            self.surprise_anticipation,
-            link_emotions.get("surprise_anticipation", 0.0),
-            blend_weight,
-        )
 
     # === Satisfaction ===
 
