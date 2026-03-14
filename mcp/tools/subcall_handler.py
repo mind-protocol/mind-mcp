@@ -109,6 +109,10 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Your actor ID. Auto-detected if omitted.",
             },
+            "save_to": {
+                "type": "string",
+                "description": "Save the full response to a file (e.g. 'reports/subcall_result.md'). Creates parent dirs if needed.",
+            },
         },
         "required": ["query"],
     },
@@ -1561,7 +1565,9 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             lines.append(f"\nCost: 0 LLM tokens ({len(candidates)} graphs scanned)")
 
             logger.info(f"Subcall auto-select: @{caller_name} → {len(selected)}/{len(candidates)} diverse targets")
-            return _ok("\n".join(lines))
+            auto_result = "\n".join(lines)
+            _save_if_requested(args, auto_result)
+            return _ok(auto_result)
 
         # ── Multi-target modes: team / trade:X / random:N ──
         if target_handle == "team" or target_handle.startswith("trade:") or target_handle.startswith("random:"):
@@ -1596,6 +1602,7 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                 label=label,
             )
             logger.info(f"Subcall {label}: @{caller_name} → {len(targets)} targets ({query[:60]})")
+            _save_if_requested(args, formatted)
             return _ok(formatted)
 
         # ── Single target mode: @handle ──
@@ -1655,11 +1662,29 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         if inner_voice:
             combined += "\n\n---\n\n" + inner_voice
 
+        # Save to file if requested
+        _save_if_requested(args, combined)
+
         return _ok(combined)
 
     except Exception as e:
         logger.exception("Subcall failed")
         return _err(f"Subconscious query failed: {e}")
+
+
+def _save_if_requested(args: Dict[str, Any], content: str) -> None:
+    """Save subcall response to file if save_to is specified."""
+    save_to = args.get("save_to")
+    if not save_to:
+        return
+    try:
+        from pathlib import Path
+        path = Path(save_to)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        logger.info(f"[Subcall] Response saved to {path}")
+    except Exception as e:
+        logger.warning(f"[Subcall] Failed to save to {save_to}: {e}")
 
 
 def _ok(text: str) -> Dict[str, Any]:
