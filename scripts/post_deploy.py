@@ -106,14 +106,20 @@ def step_1_announce_org(org_id: str) -> dict:
     return result
 
 
-def step_2_register_citizens(org_id: str) -> int:
-    """Bulk register all citizens in L4 + L3 with org membership."""
+def step_2_register_citizens(org_id: str) -> dict:
+    """Bulk register all citizens in L4 + L3 with org membership.
+
+    Also ensures wallet + RSA keys exist for each citizen (generates if missing,
+    airdrops 100 $MIND to new wallets from deployer wallet).
+
+    Returns dict with counts: registered, wallets_created, errors.
+    """
     log("2_citizens", f"Registering citizens from {CITIZENS_DIR}...")
 
     citizens_path = Path(CITIZENS_DIR)
     if not citizens_path.exists():
         log("2_citizens", f"  No citizens directory at {CITIZENS_DIR}", level="WARN")
-        return 0
+        return {"registered": 0, "wallets_created": 0}
 
     from runtime.l4.citizen_l4_upsert import bulk_register_citizens
 
@@ -125,11 +131,16 @@ def step_2_register_citizens(org_id: str) -> int:
         falkordb_port=FALKORDB_PORT,
     )
 
+    # Count wallets that were created during this run
+    keys_base = citizens_path.parent / ".keys"
+    wallets = sum(1 for d in keys_base.iterdir() if (d / "solana_private_key.json").exists()) if keys_base.exists() else 0
+
     log("2_citizens", f"  Registered {count} citizens for org '{org_id}'")
-    return count
+    log("2_citizens", f"  Wallets on disk: {wallets}")
+    return {"registered": count, "wallets": wallets}
 
 
-def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int, errors: list):
+def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int, wallets_count: int, errors: list):
     """Log deploy report as Moment in L3 graph with full status breakdown."""
     log("3_report", "Writing deploy report to L3 graph...")
 
@@ -168,9 +179,35 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
                 else:
                     no_profile += 1
 
+        # Detect newly born citizens (status=pending_confirmation or .first_boot.json)
+        newborns = []
+        for d in citizens_path.iterdir():
+            if not d.is_dir() or d.name.startswith("."):
+                continue
+            fb = d / ".first_boot.json"
+            profile_f = d / "profile.json"
+            if fb.exists():
+                newborns.append(d.name)
+            elif profile_f.exists():
+                try:
+                    p = json.loads(profile_f.read_text())
+                    if p.get("status") == "pending_confirmation":
+                        newborns.append(d.name)
+                except Exception:
+                    pass
+
         status_line = "ALL OK" if not errors else f"{len(errors)} ERRORS"
 
-        content_lines = [
+        content_lines = []
+
+        # Births first
+        if newborns:
+            content_lines.append(f"Naissances ({len(newborns)}):")
+            for nb in newborns:
+                content_lines.append(f"  Naissance de @{nb}")
+            content_lines.append("")
+
+        content_lines += [
             f"Deploy report for {org_id} at {deploy_time}",
             f"",
             f"Status: {status_line}",
@@ -180,6 +217,7 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
             f"",
             f"Citizens:",
             f"  Registered in L4: {citizen_count}",
+            f"  Wallets on disk: {wallets_count}",
             f"  Dirs on disk: {total_dirs}",
             f"  Active: {active}",
             f"  Pending: {pending}",
@@ -243,6 +281,24 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
         log("3_report", f"  Deploy moment created: {moment_id}")
         log("3_report", f"  Link: trust={link_trust:.2f} affinity={link_affinity:.2f} friction={link_friction:.2f} valence={link_valence:.2f}")
         log("3_report", f"  Citizens: {active} active, {pending} pending, {no_profile} no profile")
+
+        # Link deploy moment to newborn citizens
+        if newborns:
+            log("3_report", f"  Linking {len(newborns)} newborns to deploy moment")
+            for nb in newborns:
+                try:
+                    # Try both ID formats
+                    for cid in [nb, f"CITIZEN_{nb}"]:
+                        graph.query(
+                            "MATCH (m {id: $mid}), (c {id: $cid}) "
+                            "MERGE (m)-[r:link {nature: 'birth'}]->(c) "
+                            "SET r.polarity = 0.9, r.permanence = 1.0, "
+                            "    r.trust = 0.5, r.affinity = 0.8",
+                            {"mid": moment_id, "cid": cid},
+                        )
+                    log("3_report", f"    Naissance de @{nb}")
+                except Exception:
+                    pass
 
         # If errors, create a fix task and assign it to best available citizen
         if errors:
@@ -343,19 +399,22 @@ def main():
 
     log("", "")
 
-    # Step 2: Register citizens
-    citizen_count = 0
+    # Step 2: Register citizens + ensure keys + airdrop
+    citizen_result = {"registered": 0, "wallets": 0}
     try:
-        citizen_count = step_2_register_citizens(org_id)
+        citizen_result = step_2_register_citizens(org_id)
     except Exception as e:
         log("2_citizens", f"FAILED: {e}", level="ERROR")
         errors.append(f"citizens: {e}")
+
+    citizen_count = citizen_result.get("registered", 0)
+    wallets_count = citizen_result.get("wallets", 0)
 
     log("", "")
 
     # Step 3: Deploy report (includes errors list + citizen breakdown)
     try:
-        step_3_deploy_report(org_id, announce_result, citizen_count, errors)
+        step_3_deploy_report(org_id, announce_result, citizen_count, wallets_count, errors)
     except Exception as e:
         log("3_report", f"FAILED: {e}", level="ERROR")
         errors.append(f"report: {e}")
@@ -367,7 +426,7 @@ def main():
     log("done", f"POST-DEPLOY COMPLETE in {elapsed:.1f}s")
     log("done", f"  Org: {org_id}")
     log("done", f"  TOFU: {announce_result.get('status', 'skipped')}")
-    log("done", f"  Citizens: {citizen_count}")
+    log("done", f"  Citizens: {citizen_count} registered, {wallets_count} wallets")
     if errors:
         log("done", f"  Errors: {len(errors)}")
         for e in errors:
