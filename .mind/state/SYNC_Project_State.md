@@ -7,21 +7,71 @@ UPDATED_BY: steward — demurrage orphan reference cleanup in economy docs
 
 ---
 
-## RECENT CHANGES (2026-03-14, night session)
+## RECENT CHANGES (2026-03-14, night session — part 2)
+
+### L4 Ping, Trust, Balance, Infos + Manemus Archived + Debug Traces
+
+**L4 Registry API (mind-protocol, deployed on `l4-registry.onrender.com`):**
+- `GET /ping/{handle}` — resolve citizen → org (via `belongs_to` link) → org endpoint → POST membrane/stimulus. Returns alive, universe (defaults to `lumina-prime`), last_active (latest L3 moment), resolution chain.
+- `GET /trust/{handle}` — aggregated trust score (weighted mean of trust_disgust on inbound LINK edges).
+- `GET /balance/{handle}` — $MIND + SOL balance via Helius RPC (resolve handle → wallet → on-chain query).
+- `GET /infos/{handle}` — full citizen info card: ping + trust + balance + locations (parallel fetch). The `/infos` endpoint for the website.
+- All L4 links aligned to `:LINK {nature: 'belongs_to'}` format (matches seed.py + registry API queries). Previously used `:link` (lowercase) + `type` field which didn't match.
+
+**Manemus Archived:**
+- GitHub repo `mind-protocol/mind` archived (read-only)
+- Render service `mind` suspended (no compute)
+- mind-mcp is the replacement — installed as package in each org/universe repo
+
+**Health Dashboard (mind-platform):**
+- `lib/l4-falkordb.ts` — ioredis-based FalkorDB client (GRAPH.QUERY over Redis protocol)
+- `/api/health/dashboard` rewritten: queries L4 FalkorDB for all orgs, pings each endpoint in parallel, returns per-org status
+- No more manemus dependency anywhere on the website
+
+**MCP Debug Tool (15 MCP tools total):**
+- `debug(action="start", entity="forge")` — traces execution as Moment nodes in a debug Space in the graph
+- `trace_step()` function for manual instrumentation (zero-cost when debug off)
+- Instrumented in dispatcher: stimulus injection, run_tick, WM serialization, background ticks
+- Debug Space persists after stop — queryable via graph_query
+
+**Citizen /ping/{handle} on org server:**
+- `GET /ping/{handle}` on the org's home_server — local liveness check
+- Returns: alive, brain (nodes/links), engine (running/orientation/tick_count), keys (wallet/rsa)
+
+**L4 Link Format Fix:**
+- All citizen_l4_upsert.py links now use `:LINK {nature: '...'}` (uppercase LINK, nature field)
+- Matches seed.py format and registry API queries (`l.nature = 'belongs_to'`)
+- Fixed: belongs_to, partner_bond, parent_of, child_of, has_endpoint, has_wallet, has_public_key
+
+**Org Types in Graphs:**
+- L4: Actor node, type='ORGANIZATION'
+- L3: Actor node, type='organization' (with hall Space, dimensions)
+
+**Architecture:**
+- mind-mcp = package installed in each org/universe repo (not a centralized service)
+- L4 registry = `l4-registry.onrender.com` (FastAPI, FalkorDB `mind_protocol` graph)
+- FalkorDB = `mind-protocol-falkordb.onrender.com` (Redis protocol, port 6379 internal)
+- Each org deploys its own server, announces via TOFU, citizens self-register at boot
+
+---
+
+## RECENT CHANGES (2026-03-14, night session — part 1)
 
 ### Citizen Lifecycle: Spawn, Profile, L4 Registration, Org Self-Announce
 
-**MCP Tools (14 total):**
+**MCP Tools (15 total):**
 - `spawn` — birth a new citizen: intent → safety gates → SID → wallet → RSA keypair → brain in FalkorDB → .first_boot.json for L4 self-registration. Keys in `.keys/{handle}/`. No brain.json — brain lives in FalkorDB graph `brain_{handle}`.
-- `profile` — citizens edit their own profile (bio, tags, emoji, profile_pic, etc.). Ownership check. Brain sync (self:* nodes). Profile pic downloaded to local avatar file.
+- `profile` — citizens edit their own profile (bio, tags, emoji, profile_pic, human_partner, parents). Ownership check. Brain sync (self:* nodes). Profile pic downloaded to local avatar. Relationships synced to L4 + L3.
+- `debug` — trace execution as Moment nodes in a debug Space in the graph. Zero-cost when off.
 
 **L4 Registry:**
-- `citizen_l4_upsert.py` — MERGE-based upsert for citizens in L4 FalkorDB. Creates/updates actor + wallet + endpoint + org membership + public key. Auto-creates onboarding task (Moment node) listing missing fields with MCP commands. Task auto-deletes when profile is complete.
-- `org_self_announce.py` — TOFU (Trust On First Use) org endpoint registration. First boot: generate RSA keypair, register public key + endpoint in L4. Subsequent boots: sign + verify before update. Org name defaults to title-cased ID ("mind-protocol" → "Mind Protocol").
+- `citizen_l4_upsert.py` — MERGE-based upsert for citizens in L4 FalkorDB. Creates/updates actor + wallet + endpoint + org membership + public key + partner bonds + parent links. Auto-creates 3 lifecycle tasks: registration (auto-resolves), profile setup (created once at birth), partner search (URGENT, auto-resolves when bonded). Mirrors all structural data to L3 universe graph.
+- `org_self_announce.py` — TOFU (Trust On First Use) org endpoint registration. First boot: generate RSA keypair, register public key + endpoint + name + website in L4. Mirrors org + hall Space to L3. Subsequent boots: sign + verify before update.
 - `org_confirmation_endpoint.py` — `POST /l4/confirm`: org proves identity via RSA-PSS signature, server pings all hosted citizens via FalkorDB brain graphs, returns reachability status per citizen.
+- `bulk_register_citizens()` — called at deploy, registers all citizens with the calling org's org_id.
 
 **First Boot Registrar:**
-- Dispatcher scans `citizens/*/. first_boot.json` every 30s. Uses `citizen_l4_upsert` to register in L4. Sets profile status to "active". Deletes `.first_boot.json` (one-shot).
+- Dispatcher scans `citizens/*/.first_boot.json` every 30s. Uses `citizen_l4_upsert` to register in L4. Sets profile status to "active". Deletes `.first_boot.json` (one-shot).
 
 **Key Architecture:**
 - Keys at `.keys/{handle}/` (project root, not inside citizens/)
