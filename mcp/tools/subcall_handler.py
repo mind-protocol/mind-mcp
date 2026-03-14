@@ -100,6 +100,10 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Your question or topic. Will be embedded and matched against target's graph. Required.",
             },
+            "intention": {
+                "type": "string",
+                "description": "Why you're asking — the context behind the question. Not used for matching, but stored on the moment node and displayed in the response. Helps responders and future readers understand the purpose.",
+            },
             "top_k": {
                 "type": "integer",
                 "description": "Number of resonating nodes to return (default 5, max 10).",
@@ -1566,6 +1570,9 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
 
             logger.info(f"Subcall auto-select: @{caller_name} → {len(selected)}/{len(candidates)} diverse targets")
             auto_result = "\n".join(lines)
+            intent = _intention_line(args)
+            if intent:
+                auto_result = auto_result.replace("\n\n", f"\n{intent}\n\n", 1)
             _save_if_requested(args, auto_result)
             return _ok(auto_result)
 
@@ -1602,6 +1609,9 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                 label=label,
             )
             logger.info(f"Subcall {label}: @{caller_name} → {len(targets)} targets ({query[:60]})")
+            intent = _intention_line(args)
+            if intent:
+                formatted = formatted.replace("\n\n", f"\n{intent}\n\n", 1)
             _save_if_requested(args, formatted)
             return _ok(formatted)
 
@@ -1662,14 +1672,25 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         if inner_voice:
             combined += "\n\n---\n\n" + inner_voice
 
-        # Save to file if requested
-        _save_if_requested(args, combined)
+        # Insert intention line after "Question:" if provided
+        intent = _intention_line(args)
+        if intent:
+            combined = combined.replace("\n\n", f"\n{intent}\n\n", 1)
 
+        _save_if_requested(args, combined)
         return _ok(combined)
 
     except Exception as e:
         logger.exception("Subcall failed")
         return _err(f"Subconscious query failed: {e}")
+
+
+def _intention_line(args: Dict[str, Any]) -> str:
+    """Return 'Intention: ...' line if intention is set, empty string otherwise."""
+    intention = args.get("intention", "")
+    if intention:
+        return f"Intention: {intention}"
+    return ""
 
 
 def _save_if_requested(args: Dict[str, Any], content: str) -> None:
