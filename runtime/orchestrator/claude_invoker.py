@@ -382,8 +382,8 @@ If the response has a voice-friendly version, add it after a ---VOICE--- separat
 def invoke_degraded(request: dict, session_id: str) -> tuple[str, Optional[str]]:
     """Fallback invocation via direct API when Claude Code is unavailable.
 
-    Tries Claude API first, then OpenAI. Returns (response_text, None).
-    This is the FALLBACK ONLY path — citizens lose all tool/MCP/repo access.
+    Tries Claude API first, then OpenAI, then subconscious mode.
+    Returns (response_text, None).
     """
     voice_text = request.get("voice_text", "")
     if not voice_text:
@@ -422,4 +422,105 @@ def invoke_degraded(request: dict, session_id: str) -> tuple[str, Optional[str]]
     except Exception as e:
         logger.warning(f"OpenAI fallback failed: {e}")
 
+    # Subconscious mode — no LLM, pure graph physics
+    citizen_handle = request.get("metadata", {}).get("citizen_handle", "")
+    if citizen_handle:
+        text = invoke_subconscious(request, session_id, citizen_handle)
+        if text:
+            return (text, None)
+
     return ("", None)
+
+
+def invoke_subconscious(
+    request: dict, session_id: str, citizen_handle: str,
+) -> str:
+    """Subconscious mode — respond using pure graph physics, no LLM.
+
+    Flow:
+      1. Inject the input as a stimulus into the L1 graph
+      2. Run N ticks to let the WM stabilize
+      3. Read the most salient WM nodes
+      4. Return them as a "subconscious response"
+
+    This is the last resort when ALL LLMs are unavailable.
+    The citizen still "thinks" — just without language generation.
+    """
+    voice_text = request.get("voice_text", "")
+
+    try:
+        from runtime.cognition.stimulus_router import StimulusRouter, IncomingEvent
+        from runtime.cognition.tick_runner_l1_cognitive_engine import L1CognitiveTickRunner, Stimulus
+        from runtime.cognition.wm_prompt_serializer import serialize_wm_to_prompt
+        from runtime.cognition.citizen_brain_seeder import load_brain_into_state
+        from runtime.cognition.falkordb_checkpointer import FalkorDBBrainCheckpointer
+
+        # Load or get existing engine state
+        checkpointer = FalkorDBBrainCheckpointer(citizen_handle)
+        if checkpointer.connect():
+            state = checkpointer.load_state()
+        else:
+            state = None
+
+        if not state:
+            logger.warning(f"Subconscious: no brain state for {citizen_handle}")
+            return ""
+
+        runner = L1CognitiveTickRunner(state)
+        router = StimulusRouter(citizen_handle)
+
+        # Inject stimulus
+        event = IncomingEvent(
+            content=voice_text,
+            source="external",
+            citizen_handle=citizen_handle,
+            is_social=True,
+        )
+        stimulus = router.route(event)
+
+        # Run ticks to let WM stabilize
+        SUBCONSCIOUS_TICKS = 5
+        for i in range(SUBCONSCIOUS_TICKS):
+            result = runner.run_tick(stimulus=stimulus if i == 0 else None)
+
+        # Read WM state
+        orientation = runner._current_orientation
+        wm_text = serialize_wm_to_prompt(state, orientation)
+
+        # Get top WM nodes content
+        wm_nodes = state.get_wm_nodes()
+        top_nodes = sorted(wm_nodes, key=lambda n: n.salience, reverse=True)[:3]
+
+        # Build subconscious response
+        lines = [
+            f"*[Subconscious response — no LLM available, pure graph physics]*",
+            f"",
+            f"After processing your message through {SUBCONSCIOUS_TICKS} physics ticks,",
+            f"here is what surfaced in my working memory:",
+            f"",
+        ]
+
+        for node in top_nodes:
+            lines.append(f"**{node.node_type.value}** (salience {node.salience:.3f}):")
+            lines.append(f"  {node.content}")
+            lines.append(f"")
+
+        lines.append(f"*Orientation: {orientation}*")
+        lines.append(f"*This is an automatic response from the cognitive graph.*")
+        lines.append(f"*Full conversational ability will resume when LLM access is restored.*")
+
+        response = "\n".join(lines)
+
+        # Checkpoint the updated state
+        if checkpointer._connected:
+            checkpointer.flush_all(state)
+
+        logger.info(
+            f"Subconscious response for {citizen_handle}: "
+            f"{len(top_nodes)} nodes, orientation={orientation}"
+        )
+        return response
+
+    except Exception as e:
+        logger.warning(f"Subconscious mode failed for {citizen_handle}: {e}")
+        return ""
