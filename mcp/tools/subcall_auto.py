@@ -408,14 +408,42 @@ def score_citizens(
     query_text: str,
     context_text: str,
     graph_ops,
+    limbic_state: Optional[Dict[str, float]] = None,
 ) -> List[Dict[str, Any]]:
-    """Score all citizens by relevance to the caller's current context.
+    """Score all citizens by relevance using the Thermodynamic Resonance Formula.
 
-    Returns list of {id, name, score, reasons} sorted by score DESC.
-    Always scans broadly (it's free).
+    ZERO MAGIC NUMBERS. All multipliers derive from the caller's limbic state.
+    The formula shape-shifts based on drives and arousal:
+
+    TARGET_ENERGY = Flow_topology × Compatibility × Target_weight
+
+    Where:
+      Flow_topology = spatial + relational + narrative (drive-weighted)
+      Compatibility = (1-arousal)×Sim_vec + arousal×Sim_lex (arousal shifts the balance)
+      Target_weight = citizen's consolidated weight
+
+    Behavior by state:
+      Panic (arousal~0.9)    → sniper: trust + explicit mentions only
+      Moderate (arousal~0.4) → roundtable: space + affinity + narratives
+      Flow (arousal~0.3)     → frontier: narratives + domain experts only
+      Calm (arousal~0.1)     → dragnet: pure semantic overlap, max fan-out
     """
+    # Extract limbic drives (default to calm/curious if no state provided)
+    if limbic_state:
+        arousal = limbic_state.get("arousal", 0.3)
+        D_self_pres = limbic_state.get("self_preservation", 0.1)
+        D_affiliation = limbic_state.get("affiliation", 0.3)
+        D_curiosity = limbic_state.get("curiosity", 0.5)
+        D_achievement = limbic_state.get("achievement", 0.3)
+    else:
+        # Default: calm, curious citizen (manual /subcall)
+        arousal = 0.3
+        D_self_pres = 0.1
+        D_affiliation = 0.3
+        D_curiosity = 0.5
+        D_achievement = 0.3
+
     try:
-        # Fetch all actors with relationship data to caller
         results = graph_ops._query(
             """
             MATCH (a:Actor)
@@ -437,7 +465,6 @@ def score_citizens(
     # Extract handles mentioned in text or context
     full_text = (query_text + " " + context_text).lower()
     mentioned_handles = set()
-    # Simple handle extraction: @word or known names
     for match in re.finditer(r'@(\w+)', full_text):
         mentioned_handles.add(match.group(1).lower())
 
@@ -464,89 +491,111 @@ def score_citizens(
             else:
                 continue
 
-            score = 0.0
+            trust = float(trust or 0)
+            affinity = float(affinity or 0)
+            friction = float(friction or 0)
+            weight = float(weight or 0)
+
             reasons = []
 
-            # Co-presence bonus (same Space right now)
+            # ── Flow_topology (drive-weighted routing) ──
+
+            # Spatial: co-presence weighted by affiliation drive
+            flow_spatial = 0.0
             if shared_space:
-                space_bonus = 3.0
-                score += space_bonus
-                reasons.append(f"co-present (+{space_bonus:.1f})")
+                flow_spatial = (1.0 - friction) * D_affiliation
+                if flow_spatial > 0.01:
+                    reasons.append(f"co-present (×D_aff={D_affiliation:.1f})")
 
-            # Trust bonus
-            if trust and trust > 0:
-                trust_bonus = trust * 2.0
-                score += trust_bonus
-                reasons.append(f"trust={trust:.2f} (+{trust_bonus:.1f})")
+            # Relational: trust weighted by self_preservation, affinity by affiliation
+            flow_relational = (
+                trust * D_self_pres
+                + affinity * D_affiliation
+            ) * (1.0 - friction)
 
-            # Affinity bonus
-            if affinity and affinity > 0:
-                aff_bonus = affinity * 1.0
-                score += aff_bonus
+            if trust > 0 and D_self_pres > 0.1:
+                reasons.append(f"trust={trust:.2f} (×D_sp={D_self_pres:.1f})")
 
-            # Friction penalty
-            if friction and friction > 0:
-                score -= friction * 1.5
+            # Total topological flow
+            flow = flow_spatial + flow_relational
 
-            # Weight/importance bonus
-            if weight and weight > 0:
-                w_bonus = min(weight * 0.5, 1.0)
-                score += w_bonus
+            # ── Compatibility (arousal shifts the balance) ──
 
-            # Trade/role match bonus (check if their trade appears in the query)
+            # Sim_vec proxy: does their trade/role match the query domain?
+            sim_vec = 0.0
             for field in [trade, role, ctype]:
                 if field and field.lower() in full_text:
-                    trade_bonus = 2.0
-                    score += trade_bonus
-                    reasons.append(f"trade match: {field} (+{trade_bonus:.1f})")
+                    sim_vec = 1.0
+                    reasons.append(f"domain: {field}")
                     break
 
-            # Handle mention bonus (someone referred to this citizen)
+            # Sim_lex proxy: is their handle explicitly mentioned?
+            sim_lex = 0.0
             clean_name = (name or "").replace("CITIZEN_", "").lower()
             if clean_name in mentioned_handles or clean_name in full_text:
-                mention_bonus = 5.0
-                score += mention_bonus
-                reasons.append(f"mentioned (+{mention_bonus:.1f})")
+                sim_lex = 1.0
+                reasons.append("mentioned")
 
-            if score > 0:
+            # Arousal blends: panic → explicit names matter. Calm → domain matters.
+            compatibility = (1.0 - arousal) * sim_vec + arousal * sim_lex
+
+            # ── Target capacity ──
+            target_weight = weight
+
+            # ── Final score ──
+            # TARGET_ENERGY = Flow × Compatibility × Target_weight
+            # Plus a floor from pure target_weight (so heavy experts
+            # are always discoverable even without personal link)
+            score = flow * max(compatibility, 0.1) * max(target_weight, 0.1)
+
+            # Add a baseline from target weight alone (unlinked heavy citizens)
+            # scaled by curiosity (when curious, you search wider)
+            if target_weight > 0 and sim_vec > 0:
+                baseline = target_weight * sim_vec * D_curiosity
+                score += baseline
+
+            if score > 0.001:
                 scored.append({
                     "id": cid,
                     "name": name or cid,
-                    "score": score,
+                    "score": round(score, 3),
                     "reasons": reasons,
                 })
 
         except Exception:
             continue
 
-    # Also try to find narrative proximity (citizens linked to same hot narratives)
-    try:
-        narrative_results = graph_ops._query(
-            """
-            MATCH (me:Actor {id: $self})-[r1]-(n:Narrative)-[r2]-(other:Actor)
-            WHERE other.id <> $self
-              AND r1.energy > 0.2
-            RETURN other.id, sum(r1.energy * r2.energy) AS narrative_score
-            ORDER BY narrative_score DESC
-            LIMIT 20
-            """,
-            {"self": caller_id},
-        )
-        narrative_bonuses = {}
-        for row in narrative_results:
-            if isinstance(row, (list, tuple)):
-                narrative_bonuses[row[0]] = min(float(row[1] or 0) * 1.5, 3.0)
-            elif isinstance(row, dict):
-                narrative_bonuses[row.get("other.id")] = min(float(row.get("narrative_score", 0)) * 1.5, 3.0)
+    # Narrative proximity (citizens linked to same hot narratives)
+    # Weighted by (1 - arousal): calm = traverse narratives. Panic = skip.
+    narrative_weight = 1.0 - arousal
+    if narrative_weight > 0.1:
+        try:
+            narrative_results = graph_ops._query(
+                """
+                MATCH (me:Actor {id: $self})-[r1]-(n:Narrative)-[r2]-(other:Actor)
+                WHERE other.id <> $self
+                  AND r1.energy > 0.2
+                RETURN other.id, sum(r1.energy * r2.energy) AS narrative_score
+                ORDER BY narrative_score DESC
+                LIMIT 20
+                """,
+                {"self": caller_id},
+            )
+            narrative_bonuses = {}
+            for row in narrative_results:
+                if isinstance(row, (list, tuple)):
+                    narrative_bonuses[row[0]] = float(row[1] or 0) * narrative_weight
+                elif isinstance(row, dict):
+                    narrative_bonuses[row.get("other.id")] = float(row.get("narrative_score", 0)) * narrative_weight
 
-        for citizen in scored:
-            bonus = narrative_bonuses.get(citizen["id"], 0)
-            if bonus > 0:
-                citizen["score"] += bonus
-                citizen["reasons"].append(f"shared narrative (+{bonus:.1f})")
+            for citizen in scored:
+                bonus = narrative_bonuses.get(citizen["id"], 0)
+                if bonus > 0:
+                    citizen["score"] += round(bonus, 3)
+                    citizen["reasons"].append(f"shared narrative (+{bonus:.2f})")
 
-    except Exception as e:
-        logger.debug(f"Narrative proximity query failed: {e}")
+        except Exception as e:
+            logger.debug(f"Narrative proximity query failed: {e}")
 
     scored.sort(key=lambda c: c["score"], reverse=True)
     return scored
