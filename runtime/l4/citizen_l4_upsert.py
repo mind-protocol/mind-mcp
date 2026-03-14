@@ -559,8 +559,129 @@ def _create_profile_task_if_new(graph, citizen_id, handle, name, now_s):
     logger.info(f"Profile setup task created for @{handle}")
 
 
+def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
+    """Ensure a citizen has wallet + RSA keys. Generate if missing.
+
+    Returns (wallet_address, rsa_public_pem) — both may be empty if
+    generation fails (missing crypto libraries).
+
+    Keys are stored in {keys_base_dir}/{handle}/ with 0400 permissions.
+    """
+    from pathlib import Path
+
+    keys_base = Path(keys_base_dir) if keys_base_dir else Path(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))) / ".keys"
+    keys_dir = keys_base / handle
+    wallet_address = ""
+    rsa_public_pem = ""
+
+    # Wallet
+    wallet_path = keys_dir / "solana_private_key.json"
+    if wallet_path.exists():
+        # Read existing public key from private key
+        try:
+            import json as _json
+            secret = _json.loads(wallet_path.read_text())
+            # Derive public key from 64-byte secret (last 32 bytes = pubkey)
+            if len(secret) == 64:
+                import base64
+                pk_bytes = bytes(secret[32:])
+                # Base58 encode
+                try:
+                    import base58
+                    wallet_address = base58.b58encode(pk_bytes).decode()
+                except ImportError:
+                    wallet_address = base64.b32encode(pk_bytes).decode().rstrip("=")[:44]
+        except Exception:
+            pass
+    else:
+        # Generate new wallet
+        try:
+            from nacl.signing import SigningKey
+            sk = SigningKey.generate()
+            pk_bytes = bytes(sk.verify_key)
+            secret_key = list(bytes(sk) + pk_bytes)
+
+            keys_dir.mkdir(parents=True, exist_ok=True)
+            import json as _json
+            wallet_path.write_text(_json.dumps(secret_key) + "\n")
+            os.chmod(wallet_path, 0o400)
+
+            try:
+                import base58
+                wallet_address = base58.b58encode(pk_bytes).decode()
+            except ImportError:
+                import base64
+                wallet_address = base64.b32encode(pk_bytes).decode().rstrip("=")[:44]
+
+            logger.info(f"Wallet generated for {handle}: {wallet_address[:12]}...")
+        except ImportError:
+            # Try solders
+            try:
+                from solders.keypair import Keypair as SoldersKeypair
+                kp = SoldersKeypair()
+                wallet_address = str(kp.pubkey())
+                import json as _json
+                keys_dir.mkdir(parents=True, exist_ok=True)
+                wallet_path.write_text(_json.dumps(list(bytes(kp))) + "\n")
+                os.chmod(wallet_path, 0o400)
+                logger.info(f"Wallet generated for {handle}: {wallet_address[:12]}...")
+            except ImportError:
+                logger.debug(f"No crypto library for wallet generation ({handle})")
+
+    # RSA
+    rsa_priv_path = keys_dir / "rsa_private_key.pem"
+    rsa_pub_path = keys_dir / "rsa_public_key.pem"
+    if rsa_pub_path.exists():
+        rsa_public_pem = rsa_pub_path.read_text()
+    elif not rsa_priv_path.exists():
+        try:
+            from cryptography.hazmat.primitives.asymmetric import rsa
+            from cryptography.hazmat.primitives import serialization
+
+            private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+            priv_pem = private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.PKCS8,
+                encryption_algorithm=serialization.NoEncryption(),
+            ).decode()
+            pub_pem = private_key.public_key().public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            ).decode()
+
+            keys_dir.mkdir(parents=True, exist_ok=True)
+            rsa_priv_path.write_text(priv_pem)
+            os.chmod(rsa_priv_path, 0o400)
+            rsa_pub_path.write_text(pub_pem)
+
+            rsa_public_pem = pub_pem
+            logger.info(f"RSA keypair generated for {handle}")
+        except ImportError:
+            logger.debug(f"No cryptography library for RSA generation ({handle})")
+    else:
+        # Private exists but no public — derive it
+        try:
+            from cryptography.hazmat.primitives import serialization
+            priv_pem = rsa_priv_path.read_text().encode()
+            private_key = serialization.load_pem_private_key(priv_pem, password=None)
+            pub_pem = private_key.public_key().public_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PublicFormat.SubjectPublicKeyInfo,
+            ).decode()
+            rsa_pub_path.write_text(pub_pem)
+            rsa_public_pem = pub_pem
+        except Exception:
+            pass
+
+    return wallet_address, rsa_public_pem
+
+
 def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=None, falkordb_port=None, pubkeys=None):
     """Register all citizens from a directory to L4.
+
+    For each citizen:
+      1. Ensure wallet + RSA keys exist (generate if missing)
+      2. Upsert in L4 with org membership + wallet address + public key
 
     Supports:
       - data/citizens.json (venezia-style: array of citizen objects)
@@ -572,7 +693,9 @@ def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=No
     from pathlib import Path
 
     cdir = Path(citizens_dir)
+    keys_base = cdir.parent / ".keys"
     registered = 0
+    wallets_created = 0
 
     # Try data/citizens.json first
     for candidate in [cdir / "citizens.json", cdir.parent / "data" / "citizens.json", cdir / "data" / "citizens.json"]:
@@ -584,28 +707,35 @@ def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=No
                     name = c.get("name", handle)
                     if not handle:
                         continue
+
+                    # Ensure keys
+                    wallet, rsa_pub = _ensure_citizen_keys(handle, str(keys_base))
+                    if wallet and not c.get("wallet"):
+                        wallets_created += 1
+
                     try:
                         upsert_citizen_l4(
                             handle=handle,
                             name=name,
                             org_id=org_id,
-                            endpoint_url=f"{endpoint_base}/{handle}",
+                            endpoint_url=f"{endpoint_base}/{handle}" if endpoint_base else "",
+                            wallet_address=wallet or c.get("wallet", ""),
                             social_class=c.get("social_class"),
                             description=(c.get("description") or "")[:200],
-                        rsa_public_key=(pubkeys or {}).get(handle),
+                            rsa_public_key=rsa_pub or (pubkeys or {}).get(handle, ""),
                             falkordb_host=falkordb_host,
                             falkordb_port=falkordb_port,
                         )
                         registered += 1
                     except Exception as e:
                         logger.warning(f"Failed to register {handle}: {e}")
-                print(f"  L4: {registered}/{len(citizens)} citizens registered")
+                print(f"  L4: {registered}/{len(citizens)} citizens registered, {wallets_created} wallets created")
                 return registered
 
     # Try subdirectories
     if cdir.is_dir():
         for subdir in sorted(cdir.iterdir()):
-            if not subdir.is_dir():
+            if not subdir.is_dir() or subdir.name.startswith("."):
                 continue
             handle = subdir.name
             entity = subdir / "entity.json"
@@ -624,21 +754,27 @@ def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=No
                 identity = data.get("identity", data)
                 name = identity.get("name", name)
                 social_class = identity.get("social_class")
-                description = (identity.get("description") or "")[:200]
+                description = (identity.get("description") or identity.get("bio") or "")[:200]
 
             if not description and claude_md.exists():
                 text = claude_md.read_text()[:500]
                 description = text[:200]
+
+            # Ensure keys
+            wallet, rsa_pub = _ensure_citizen_keys(handle, str(keys_base))
+            if wallet:
+                wallets_created += 1
 
             try:
                 upsert_citizen_l4(
                     handle=handle,
                     name=name,
                     org_id=org_id,
-                    endpoint_url=f"{endpoint_base}/{handle}",
+                    endpoint_url=f"{endpoint_base}/{handle}" if endpoint_base else "",
+                    wallet_address=wallet,
                     social_class=social_class,
                     description=description,
-                    rsa_public_key=(pubkeys or {}).get(handle),
+                    rsa_public_key=rsa_pub or (pubkeys or {}).get(handle, ""),
                     falkordb_host=falkordb_host,
                     falkordb_port=falkordb_port,
                 )
@@ -646,5 +782,5 @@ def bulk_register_citizens(citizens_dir, org_id, endpoint_base, falkordb_host=No
             except Exception as e:
                 logger.warning(f"Failed to register {handle}: {e}")
 
-        print(f"  L4: {registered} citizens registered from directories")
+        print(f"  L4: {registered} citizens registered, {wallets_created} wallets created")
     return registered
