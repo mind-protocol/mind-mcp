@@ -28,20 +28,28 @@ logger = logging.getLogger("mind.l4")
 L4_HOST = os.environ.get("L4_FALKORDB_HOST", os.environ.get("FALKORDB_HOST", "mind-protocol-falkordb"))
 L4_PORT = int(os.environ.get("L4_FALKORDB_PORT", os.environ.get("FALKORDB_PORT", "6379")))
 L4_GRAPH = os.environ.get("L4_GRAPH", "mind_protocol")
+L3_GRAPH = os.environ.get("L3_GRAPH", os.environ.get("FALKORDB_GRAPH", "universe"))
 
 
-def _connect(host=None, port=None):
+def _connect(host=None, port=None, graph_name=None):
     from falkordb import FalkorDB
     h = host or L4_HOST
     p = port or L4_PORT
+    g = graph_name or L4_GRAPH
     client = FalkorDB(host=h, port=p)
-    return client.select_graph(L4_GRAPH)
+    return client.select_graph(g)
+
+
+def _connect_l3(host=None, port=None):
+    """Connect to the L3 universe graph."""
+    return _connect(host, port, graph_name=L3_GRAPH)
 
 
 def upsert_citizen_l4(
     handle,
     name,
     org_id,
+    universe=None,
     endpoint_url=None,
     wallet_address=None,
     rsa_public_key=None,
@@ -52,7 +60,12 @@ def upsert_citizen_l4(
     falkordb_host=None,
     falkordb_port=None,
 ):
-    """Upsert a citizen's identity in the L4 protocol registry."""
+    """Upsert a citizen's identity in L4 registry + mirror to L3 universe graph.
+
+    Args:
+        universe: Name of the L3 universe graph (e.g. 'venezia', 'lumina_prime').
+                  If None, uses L3_GRAPH env var. Required for L3 mirroring.
+    """
     now_s = int(time.time())
     citizen_id = f"CITIZEN_{handle}"
 
@@ -164,8 +177,133 @@ def upsert_citizen_l4(
     # 10. Partner bond task: if no human partner, create urgent task
     _manage_partner_task(graph, citizen_id, handle, human_partner, now_s)
 
+    # 11. Mirror structural data to L3 universe graph
+    l3_graph = universe or L3_GRAPH
+    if l3_graph:
+        try:
+            l3 = _connect(falkordb_host, falkordb_port, graph_name=l3_graph)
+            _mirror_to_l3(l3, handle, name, org_id, human_partner, parents,
+                           social_class, description, now_s)
+        except Exception as e:
+            logger.debug(f"L3 mirror to '{l3_graph}' skipped for {handle}: {e}")
+
     logger.info(f"L4 upsert: {handle} ({name}) -> org {org_id}")
     return True
+
+
+def _mirror_to_l3(l3, handle, name, org_id, human_partner, parents,
+                   social_class, description, now_s):
+    """Mirror citizen structural data to the L3 universe graph.
+
+    L4 = protocol registry (identity, keys, endpoints).
+    L3 = living universe graph (physics, energy, trust, relationships).
+
+    Both need the same structural nodes/links, but L3 links carry
+    dimensional floats (trust, affinity, friction, etc.) that evolve
+    through physics. L4 links are static metadata.
+    """
+    # 1. Actor node in L3
+    synthesis = name
+    if description:
+        synthesis += f" — {description[:150]}"
+
+    l3.query(
+        "MERGE (a {id: $handle}) "
+        "SET a.node_type = 'actor', a.type = 'citizen', "
+        "    a.name = $name, a.synthesis = $synthesis, "
+        "    a.weight = 1.0, a.energy = 0.0, "
+        "    a.updated_at_s = $now",
+        {"handle": handle, "name": name, "synthesis": synthesis, "now": now_s},
+    )
+
+    # 2. Org membership in L3 (with dimensional link)
+    if org_id:
+        l3.query(
+            "MERGE (o {id: $org_id}) "
+            "SET o.node_type = 'actor', o.type = 'organization' "
+            "WITH o "
+            "MATCH (a {id: $handle}) "
+            "MERGE (a)-[r:link {id: $lid}]->(o) "
+            "SET r.hierarchy = -0.5, r.permanence = 0.9, "
+            "    r.trust = 0.3, r.affinity = 0.3, r.friction = 0.0, "
+            "    r.polarity = 0.5, "
+            "    r.weight = 0.5, r.energy = 0.1, "
+            "    r.updated_at_s = $now",
+            {"org_id": org_id, "handle": handle,
+             "lid": f"{handle}_member_of_{org_id}", "now": now_s},
+        )
+
+    # 3. Partner bond in L3 (with dimensional link — high affinity, permanence)
+    if human_partner:
+        l3.query(
+            "MERGE (h {id: $hid}) "
+            "SET h.node_type = 'actor', h.type = 'human', "
+            "    h.name = $hname "
+            "WITH h "
+            "MATCH (a {id: $handle}) "
+            "MERGE (a)-[r:link {id: $lid}]->(h) "
+            "SET r.hierarchy = 0.0, r.permanence = 1.0, "
+            "    r.trust = 0.5, r.affinity = 0.6, r.friction = 0.0, "
+            "    r.polarity = 0.8, "
+            "    r.weight = 0.8, r.energy = 0.2, "
+            "    r.valence = 0.6, r.ambivalence = 0.0, "
+            "    r.updated_at_s = $now",
+            {"hid": human_partner, "hname": human_partner,
+             "handle": handle, "lid": f"{handle}_bond_{human_partner}",
+             "now": now_s},
+        )
+        # Reverse bond
+        l3.query(
+            "MATCH (h {id: $hid}), (a {id: $handle}) "
+            "MERGE (h)-[r:link {id: $lid}]->(a) "
+            "SET r.hierarchy = 0.0, r.permanence = 1.0, "
+            "    r.trust = 0.5, r.affinity = 0.6, r.friction = 0.0, "
+            "    r.polarity = 0.8, "
+            "    r.weight = 0.8, r.energy = 0.2, "
+            "    r.valence = 0.6, r.ambivalence = 0.0, "
+            "    r.updated_at_s = $now",
+            {"hid": human_partner, "handle": handle,
+             "lid": f"{human_partner}_bond_{handle}", "now": now_s},
+        )
+
+    # 4. Parent links in L3 (with dimensional links)
+    if parents:
+        n = max(len(parents), 1)
+        trust_w = round(1.0 / n, 3)
+        for p in parents:
+            pid = p.get("parent_id", p) if isinstance(p, dict) else p
+
+            # Parent → Child
+            l3.query(
+                "MATCH (p {id: $pid}), (c {id: $handle}) "
+                "MERGE (p)-[r:link {id: $lid}]->(c) "
+                "SET r.hierarchy = 0.3, r.permanence = 1.0, "
+                "    r.trust = $trust, r.affinity = 0.4, r.friction = 0.0, "
+                "    r.polarity = 0.7, "
+                "    r.weight = 0.6, r.energy = 0.1, "
+                "    r.valence = 0.4, r.ambivalence = 0.0, "
+                "    r.updated_at_s = $now",
+                {"pid": pid, "handle": handle,
+                 "lid": f"{pid}_parent_of_{handle}",
+                 "trust": trust_w, "now": now_s},
+            )
+
+            # Child → Parent
+            l3.query(
+                "MATCH (c {id: $handle}), (p {id: $pid}) "
+                "MERGE (c)-[r:link {id: $lid}]->(p) "
+                "SET r.hierarchy = -0.3, r.permanence = 1.0, "
+                "    r.trust = $trust, r.affinity = 0.4, r.friction = 0.0, "
+                "    r.polarity = 0.5, "
+                "    r.weight = 0.5, r.energy = 0.1, "
+                "    r.valence = 0.4, r.ambivalence = 0.0, "
+                "    r.updated_at_s = $now",
+                {"handle": handle, "pid": pid,
+                 "lid": f"{handle}_child_of_{pid}",
+                 "trust": trust_w, "now": now_s},
+            )
+
+    logger.info(f"L3 mirror: @{handle} → org={org_id}, partner={human_partner}, parents={parents}")
 
 
 def _upsert_partner_bond(graph, citizen_id, handle, human_partner, now_s):
