@@ -7,6 +7,39 @@ UPDATED_BY: steward — demurrage orphan reference cleanup in economy docs
 
 ---
 
+## RECENT CHANGES (2026-03-14, night session)
+
+### Citizen Lifecycle: Spawn, Profile, L4 Registration, Org Self-Announce
+
+**MCP Tools (14 total):**
+- `spawn` — birth a new citizen: intent → safety gates → SID → wallet → RSA keypair → brain in FalkorDB → .first_boot.json for L4 self-registration. Keys in `.keys/{handle}/`. No brain.json — brain lives in FalkorDB graph `brain_{handle}`.
+- `profile` — citizens edit their own profile (bio, tags, emoji, profile_pic, etc.). Ownership check. Brain sync (self:* nodes). Profile pic downloaded to local avatar file.
+
+**L4 Registry:**
+- `citizen_l4_upsert.py` — MERGE-based upsert for citizens in L4 FalkorDB. Creates/updates actor + wallet + endpoint + org membership + public key. Auto-creates onboarding task (Moment node) listing missing fields with MCP commands. Task auto-deletes when profile is complete.
+- `org_self_announce.py` — TOFU (Trust On First Use) org endpoint registration. First boot: generate RSA keypair, register public key + endpoint in L4. Subsequent boots: sign + verify before update. Org name defaults to title-cased ID ("mind-protocol" → "Mind Protocol").
+- `org_confirmation_endpoint.py` — `POST /l4/confirm`: org proves identity via RSA-PSS signature, server pings all hosted citizens via FalkorDB brain graphs, returns reachability status per citizen.
+
+**First Boot Registrar:**
+- Dispatcher scans `citizens/*/. first_boot.json` every 30s. Uses `citizen_l4_upsert` to register in L4. Sets profile status to "active". Deletes `.first_boot.json` (one-shot).
+
+**Key Architecture:**
+- Keys at `.keys/{handle}/` (project root, not inside citizens/)
+- `.keys/org/` for org RSA keypair (TOFU)
+- `.keys/` in .gitignore — never in repo
+
+**Wallet Generation:**
+- `scripts/generate_solana_wallets_for_existing_citizens.js` — rewritten to check endpoint health, use FalkorDB (not Neo4j), register in L4. 244 wallets generated.
+
+**Other:**
+- Trust routing: `effective_transfer` now includes `(1 + trust)` factor in Law 2 propagation
+- UBC: `hours_present` → `moment_weight_sum` + `log10` envelope (anti-spam)
+- Demurrage: orphan references cleaned across 11 docs
+- L3 Emotional Coloring: 8-file doc chain in mind-protocol
+- `data/registry.json` deleted (source of truth is FalkorDB, not JSON)
+
+---
+
 ## RECENT CHANGES (2026-03-14, evening session)
 
 ### Economy Docs: Demurrage Orphan Reference Cleanup
@@ -610,13 +643,13 @@ See **MASTER TODO** section below for full breakdown.
 | # | Task | Status | Details |
 |---|------|--------|---------|
 | 5.1 | Wire physics to orchestrator | DONE | Dispatcher has per-citizen L1 engines, stimulus injection, physics ticks, feedback loop. `stimulus_router.py`, `wm_prompt_serializer.py`, `feedback_injector.py` created + tested. |
-| 5.2 | Real embeddings (text-embedding-3-small) | TODO | Replace symbolic similarity (Law 8) with OpenAI embedding API calls. |
-| 5.3 | Seed brain for 44 citizens | TODO | Base: 209 nodes, 295 links from seed generator. Per-citizen customization from identity files. |
+| 5.2 | Real embeddings (text-embedding-3-small) | DONE | Activated in .env, 1536 dims |
+| 5.3 | Seed brain for 44 citizens | DONE | 209 nodes, 399 links (11 types). Seeder reads profile.json + CLAUDE.md |
 | 5.4 | FalkorDB persistence | DONE | `falkordb_checkpointer.py` — hybrid persistence with dirty tracking, periodic flush, load-on-boot. |
 | 5.5 | Orientation taxonomy (Law 11) | DONE | Define qualitative orientations: take_care / create / verify / explore / rest / escalate. Map to prompt instructions. |
-| 5.6 | Emotion calibration formulas | TODO | Boredom done. Pending: anxiety coupling, satisfaction decay, frustration threshold for escalation. |
-| 5.7 | Graph isolation strategy | TODO | One graph per citizen? One graph with citizen_id filter? Performance for 44 citizens. |
-| 5.8 | Copy citizen dirs from manemus | TODO | `.mind/citizens/` still empty. Need identity files, keys, profiles. |
+| 5.6 | Emotion calibration formulas | DONE | Anxiety, satisfaction, frustration — all in constants.py + tick_runner |
+| 5.7 | Graph isolation strategy | DONE | One graph per citizen `brain_{handle}`, decided and in code |
+| 5.8 | Copy citizen dirs from manemus | DONE | 245 citizens in `citizens/`, keys in `.keys/{handle}/` |
 | 5.9 | Phase 7: Deploy to Render | TODO | Dockerfile ready. render.yaml ready. Parallel run with manemus. |
 | 5.10 | Phase 7: DNS cutover | TODO | Switch DNS from manemus to mind-mcp. Bot migration. |
 | 5.11 | Phase 7: Parallel validation | TODO | Both systems running. Compare outputs. Verify no regression. |
