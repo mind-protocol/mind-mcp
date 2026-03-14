@@ -40,6 +40,8 @@ def announce_org(
     endpoint_url: str,
     org_name: str = "",
     website: str = "",
+    universe: str = "",
+    description: str = "",
     falkordb_host: str = "localhost",
     falkordb_port: int = 6379,
 ) -> dict:
@@ -53,6 +55,8 @@ def announce_org(
     """
     from falkordb import FalkorDB
 
+    display_name = org_name or org_id.replace("-", " ").replace("_", " ").title()
+
     # Connect to L4 graph
     db = FalkorDB(host=falkordb_host, port=falkordb_port)
     graph = db.select_graph(L4_GRAPH_NAME)
@@ -61,9 +65,69 @@ def announce_org(
     existing_key = _get_org_public_key(graph, org_id)
 
     if existing_key is None:
-        return _claim_org(graph, org_id, endpoint_url, org_name, website)
+        result = _claim_org(graph, org_id, endpoint_url, org_name, website)
     else:
-        return _update_org(graph, org_id, endpoint_url, existing_key, org_name, website)
+        result = _update_org(graph, org_id, endpoint_url, existing_key, org_name, website)
+
+    # Mirror org to L3 universe graph
+    l3_graph = universe or os.environ.get("L3_GRAPH", "universe")
+    if l3_graph:
+        try:
+            db_l3 = FalkorDB(host=falkordb_host, port=falkordb_port)
+            l3 = db_l3.select_graph(l3_graph)
+            _mirror_org_to_l3(l3, org_id, display_name, website, description, int(time.time()))
+            result["l3_mirrored"] = l3_graph
+        except Exception as e:
+            logger.debug(f"L3 mirror for org {org_id}: {e}")
+
+    return result
+
+
+def _mirror_org_to_l3(l3, org_id, display_name, website, description, now_s):
+    """Mirror org to L3 universe graph as a Space node (org = hall Space).
+
+    In L3, an org is a Narrative that members BELIEVE in, with a hall Space
+    that members get HAS_ACCESS to. The org actor in L3 carries dimensions
+    that evolve through physics.
+    """
+    synthesis = display_name
+    if description:
+        synthesis += f" — {description[:150]}"
+
+    # Org as actor node in L3
+    l3.query(
+        "MERGE (o {id: $org_id}) "
+        "SET o.node_type = 'actor', o.type = 'organization', "
+        "    o.name = $name, o.synthesis = $synthesis, "
+        "    o.website = $website, "
+        "    o.weight = 1.0, o.energy = 0.0, "
+        "    o.stability = 0.5, o.recency = 1.0, "
+        "    o.updated_at_s = $now",
+        {"org_id": org_id, "name": display_name,
+         "synthesis": synthesis, "website": website or "", "now": now_s},
+    )
+
+    # Org hall Space (the org's main space where members interact)
+    hall_id = f"{org_id}_hall"
+    l3.query(
+        "MERGE (s {id: $sid}) "
+        "SET s.node_type = 'space', s.type = 'hall', "
+        "    s.name = $name, "
+        "    s.synthesis = $synthesis, "
+        "    s.weight = 0.8, s.energy = 0.0, "
+        "    s.updated_at_s = $now "
+        "WITH s "
+        "MATCH (o {id: $org_id}) "
+        "MERGE (o)-[r:link {id: $lid}]->(s) "
+        "SET r.hierarchy = 0.8, r.permanence = 0.9, "
+        "    r.polarity = 0.5, "
+        "    r.weight = 0.8, r.energy = 0.1",
+        {"sid": hall_id, "name": f"{display_name} Hall",
+         "synthesis": f"Main space for org {display_name}",
+         "org_id": org_id, "lid": f"{org_id}_has_hall", "now": now_s},
+    )
+
+    logger.info(f"L3 mirror: org {org_id} ({display_name}) + hall space")
 
 
 def _get_org_public_key(graph, org_id: str) -> Optional[str]:
