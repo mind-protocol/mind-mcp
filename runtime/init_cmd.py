@@ -493,17 +493,14 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     else:
         print(f"○ Capabilities not found: {capabilities_source}")
 
-    # Copy schema.yaml from docs/schema/ to .mind/ (authoritative schema)
-    schema_source = target_dir / "docs" / "schema" / "schema.yaml"
+    # Schema comes from templates (protocol-level, FIXED).
+    # The authoritative source is mind-mcp/docs/schema/schema.yaml,
+    # distributed via templates/schema.yaml. Projects never override it.
     schema_dest = protocol_dest / "schema.yaml"
-    if schema_source.exists():
-        try:
-            shutil.copy2(schema_source, schema_dest)
-            print(f"✓ Copied: {schema_dest}")
-        except PermissionError:
-            print(f"  ○ Skipped (permission): {schema_dest}")
+    if schema_dest.exists():
+        print(f"✓ Schema: {schema_dest} (from templates)")
     else:
-        print(f"○ Schema not found: {schema_source}")
+        print(f"○ Schema not found in templates")
 
     # Copy modules.yaml to project root (if not exists or force)
     if not modules_yaml_dest.exists() or force:
