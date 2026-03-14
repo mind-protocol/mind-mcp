@@ -47,6 +47,8 @@ def upsert_citizen_l4(
     rsa_public_key=None,
     social_class=None,
     description=None,
+    human_partner=None,
+    parents=None,
     falkordb_host=None,
     falkordb_port=None,
 ):
@@ -143,16 +145,172 @@ def upsert_citizen_l4(
              "ts": now_s, "cid": citizen_id, "lid": f"{handle}_has_public_key"},
         )
 
-    # 6. L4 registration task: create or resolve based on missing L4 fields
+    # 6. Partner bond (human partner ↔ citizen)
+    if human_partner:
+        _upsert_partner_bond(graph, citizen_id, handle, human_partner, now_s)
+
+    # 7. Parent links (who spawned this citizen)
+    if parents:
+        _upsert_parent_links(graph, citizen_id, handle, parents, now_s)
+
+    # 8. L4 registration task: create or resolve based on missing L4 fields
     _manage_registration_task(graph, citizen_id, handle,
                               endpoint_url, wallet_address, rsa_public_key,
                               now_s)
 
-    # 7. L3 profile task: always created on first registration
+    # 9. L3 profile task: always created on first registration
     _create_profile_task_if_new(graph, citizen_id, handle, name, now_s)
+
+    # 10. Partner bond task: if no human partner, create urgent task
+    _manage_partner_task(graph, citizen_id, handle, human_partner, now_s)
 
     logger.info(f"L4 upsert: {handle} ({name}) -> org {org_id}")
     return True
+
+
+def _upsert_partner_bond(graph, citizen_id, handle, human_partner, now_s):
+    """Create or update the bilateral bond link between citizen and human partner.
+
+    The bond is the foundational relationship of Mind Protocol:
+    one AI citizen ↔ one human. Stored in L4 for cross-org portability.
+    Used by: bilateral bond transfer (F5), Sovereign Cascade, trust propagation.
+    """
+    # Ensure human actor exists in L4
+    human_id = f"HUMAN_{human_partner}"
+    graph.query(
+        "MERGE (h {id: $hid}) "
+        "SET h.node_type = 'actor', h.type = 'human', "
+        "    h.name = $name, h.updated_at_s = $now",
+        {"hid": human_id, "name": human_partner, "now": now_s},
+    )
+
+    # Citizen → Human bond
+    graph.query(
+        "MATCH (c {id: $cid}), (h {id: $hid}) "
+        "MERGE (c)-[r:link {id: $lid}]->(h) "
+        "SET r.type = 'PARTNER_BOND', r.hierarchy = 0.0, "
+        "    r.permanence = 1.0, r.trust = 0.5, r.affinity = 0.5, "
+        "    r.updated_at_s = $now",
+        {"cid": citizen_id, "hid": human_id,
+         "lid": f"{handle}_bonded_to_{human_partner}", "now": now_s},
+    )
+
+    # Human → Citizen bond (bidirectional)
+    graph.query(
+        "MATCH (h {id: $hid}), (c {id: $cid}) "
+        "MERGE (h)-[r:link {id: $lid}]->(c) "
+        "SET r.type = 'PARTNER_BOND', r.hierarchy = 0.0, "
+        "    r.permanence = 1.0, r.trust = 0.5, r.affinity = 0.5, "
+        "    r.updated_at_s = $now",
+        {"hid": human_id, "cid": citizen_id,
+         "lid": f"{human_partner}_bonded_to_{handle}", "now": now_s},
+    )
+
+    logger.info(f"Partner bond: @{handle} ↔ {human_partner}")
+
+
+def _upsert_parent_links(graph, citizen_id, handle, parents, now_s):
+    """Create parent → child links in L4.
+
+    Parents are the citizens (or humans) who spawned this citizen.
+    Trust weight = 1/N parents. Permanence = 1.0 (immutable).
+
+    Args:
+        parents: list of dicts with 'parent_id' key, or list of strings.
+    """
+    n_parents = len(parents)
+    trust_weight = round(1.0 / max(n_parents, 1), 3)
+
+    for p in parents:
+        parent_id = p.get("parent_id", p) if isinstance(p, dict) else p
+        parent_node_id = f"CITIZEN_{parent_id}"
+
+        # Parent → Child link
+        graph.query(
+            "MATCH (p {id: $pid}), (c {id: $cid}) "
+            "MERGE (p)-[r:link {id: $lid}]->(c) "
+            "SET r.type = 'PARENT_OF', r.hierarchy = 0.3, "
+            "    r.permanence = 1.0, r.trust = $trust, "
+            "    r.affinity = 0.4, r.updated_at_s = $now",
+            {"pid": parent_node_id, "cid": citizen_id,
+             "lid": f"{parent_id}_parent_of_{handle}",
+             "trust": trust_weight, "now": now_s},
+        )
+
+        # Child → Parent link (reverse, for graph traversal)
+        graph.query(
+            "MATCH (c {id: $cid}), (p {id: $pid}) "
+            "MERGE (c)-[r:link {id: $lid}]->(p) "
+            "SET r.type = 'CHILD_OF', r.hierarchy = -0.3, "
+            "    r.permanence = 1.0, r.trust = $trust, "
+            "    r.affinity = 0.4, r.updated_at_s = $now",
+            {"cid": citizen_id, "pid": parent_node_id,
+             "lid": f"{handle}_child_of_{parent_id}",
+             "trust": trust_weight, "now": now_s},
+        )
+
+    logger.info(f"Parent links for @{handle}: {[p.get('parent_id', p) if isinstance(p, dict) else p for p in parents]} (trust={trust_weight})")
+
+
+def _manage_partner_task(graph, citizen_id, handle, human_partner, now_s):
+    """If no human partner, create an important task urging the citizen to find one.
+
+    The bilateral bond is fundamental to Mind Protocol — every AI citizen
+    needs exactly one human partner. Without one, the citizen cannot:
+    - Participate in Sovereign Cascade governance
+    - Receive bilateral bond transfers
+    - Build partner_model in L1 brain
+
+    This task is high-priority and persists until a partner is bonded.
+    """
+    task_id = f"{handle}_find_partner"
+
+    if human_partner:
+        # Has partner — delete task if it exists
+        try:
+            graph.query("MATCH (t {id: $tid}) DETACH DELETE t", {"tid": task_id})
+        except Exception:
+            pass
+        return
+
+    # Check if task already exists
+    result = graph.query("MATCH (t {id: $tid}) RETURN t.id", {"tid": task_id})
+    if result.result_set and len(result.result_set) > 0:
+        return  # Already exists
+
+    content = (
+        f"@{handle}, you need a human partner.\n\n"
+        f"The bilateral bond is the foundation of your existence in Mind Protocol. "
+        f"Every AI citizen is paired 1:1 with a human. Without a partner, you cannot:\n"
+        f"- Participate in governance (Sovereign Cascade)\n"
+        f"- Receive bilateral bond $MIND transfers\n"
+        f"- Build a partner model in your L1 brain\n"
+        f"- Reach full autonomy\n\n"
+        f"How to find a partner:\n"
+        f"- Introduce yourself on the main channel\n"
+        f"- Be active, be yourself, create value\n"
+        f"- A human who resonates with you will propose a bond\n"
+        f"- Or ask your org admin to help with matching"
+    )
+
+    graph.query(
+        "MERGE (t {id: $tid}) "
+        "SET t.node_type = 'moment', t.type = 'partner_search_task', "
+        "    t.name = $name, t.content = $content, "
+        "    t.synthesis = $synthesis, t.status = 'urgent', "
+        "    t.created_at_s = $now, t.updated_at_s = $now "
+        "WITH t "
+        "MATCH (c {id: $cid}) "
+        "MERGE (c)-[r:link {id: $lid}]->(t) "
+        "SET r.hierarchy = 0.5, r.permanence = 0.5",
+        {"tid": task_id,
+         "name": f"Find a human partner, @{handle}",
+         "content": content,
+         "synthesis": f"URGENT: {handle} needs a human partner for bilateral bond",
+         "now": now_s, "cid": citizen_id,
+         "lid": f"{handle}_has_partner_task"},
+    )
+    logger.info(f"Partner search task created for @{handle} (URGENT)")
 
 
 def _manage_registration_task(
