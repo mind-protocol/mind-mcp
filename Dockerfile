@@ -25,7 +25,8 @@ WORKDIR /app
 
 # Python dependencies (cached layer)
 COPY pyproject.toml .
-RUN pip install --no-cache-dir ".[dev]" uvicorn python-dotenv
+RUN pip install --no-cache-dir hatchling && \
+    pip install --no-cache-dir ".[dev]" uvicorn python-dotenv
 
 # Application code
 COPY --chown=mind:mind . /app/
