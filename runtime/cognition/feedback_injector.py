@@ -19,11 +19,17 @@ import logging
 import time
 from typing import Optional
 
-from .models import CitizenCognitiveState
+from .models import CitizenCognitiveState, Node, NodeType, Link, LinkType
 from .tick_runner_l1_cognitive_engine import Stimulus
 from .stimulus_router import StimulusRouter
 
 logger = logging.getLogger("cognition.feedback")
+
+# Memory creation thresholds
+_MEMORY_WEIGHT = 0.35          # Memories born heavier than newborn (0.05)
+_MEMORY_STABILITY = 0.3       # Moderate stability — resists some decay
+_MEMORY_MIN_LENGTH = 30        # Don't memorize trivial outputs
+_MEMORY_MAX_PER_SESSION = 3    # Cap memory creation per feedback call
 
 
 def inject_post_action_feedback(
@@ -35,8 +41,10 @@ def inject_post_action_feedback(
 ) -> Optional[Stimulus]:
     """Inject post-action feedback into the L1 engine.
 
-    Called after a citizen's LLM session produces output. Converts the
-    output into a self-stimulus and updates limbic state based on outcome.
+    Called after a citizen's LLM session produces output. Does three things:
+    1. Creates episodic memory nodes for significant actions
+    2. Converts output into self-stimulus (routed through Law 1)
+    3. Updates limbic state based on outcome
 
     Args:
         state: Citizen's cognitive state
@@ -50,6 +58,10 @@ def inject_post_action_feedback(
     """
     # Record that an action was taken (anti-loop tracking)
     router.record_action()
+
+    # Create episodic memory nodes for significant outputs
+    if len(action_output) >= _MEMORY_MIN_LENGTH:
+        _create_episodic_memories(state, action_output, success)
 
     # Build self-stimulus from action output
     # Truncate long outputs — the citizen doesn't need to re-read everything
@@ -80,6 +92,111 @@ def inject_post_action_feedback(
         )
 
     return stimulus
+
+
+def _create_episodic_memories(
+    state: CitizenCognitiveState,
+    action_output: str,
+    success: bool,
+) -> list[str]:
+    """Create episodic memory nodes from significant action output.
+
+    Episodic memories are born with higher weight than Law 1 newborns
+    (0.35 vs 0.05) so they survive forgetting cycles. They represent
+    "I did this" — the citizen's autobiographical trace.
+
+    Returns list of created memory node IDs.
+    """
+    created = []
+    tick = state.tick_count
+
+    # Extract memory-worthy segments from output
+    segments = _extract_memory_segments(action_output)
+
+    for i, (summary, significance) in enumerate(segments[:_MEMORY_MAX_PER_SESSION]):
+        node_id = f"memory:tick_{tick}_action_{i}"
+
+        # Don't create if a very similar memory already exists (by content prefix)
+        prefix = summary[:60].lower()
+        if any(
+            n.node_type == NodeType.MEMORY
+            and n.content[:60].lower() == prefix
+            for n in state.nodes.values()
+        ):
+            continue
+
+        node = Node(
+            id=node_id,
+            node_type=NodeType.MEMORY,
+            content=summary,
+            weight=_MEMORY_WEIGHT * significance,
+            energy=0.3,
+            stability=_MEMORY_STABILITY,
+            recency=1.0,
+            self_relevance=0.6,
+            partner_relevance=0.3 if success else 0.1,
+            achievement_affinity=0.5 if success else 0.2,
+            activation_count=1,
+            last_activated_at=time.time(),
+        )
+        state.add_node(node)
+        created.append(node_id)
+
+        # Link memory to currently active WM nodes
+        for wm_id in state.wm.node_ids[:3]:
+            if wm_id in state.nodes:
+                state.add_link(Link(
+                    source_id=node_id,
+                    target_id=wm_id,
+                    link_type=LinkType.REMINDS_OF,
+                    weight=0.4,
+                    affinity=0.3,
+                    trust=0.5,
+                ))
+
+    if created:
+        logger.info(f"Created {len(created)} episodic memories at tick {tick}")
+
+    return created
+
+
+def _extract_memory_segments(output: str) -> list[tuple[str, float]]:
+    """Extract memory-worthy segments from action output.
+
+    Returns list of (summary, significance) tuples.
+    Significance is 0.0-1.0 indicating how important this is to remember.
+    """
+    segments = []
+
+    # Look for commit-like patterns
+    for line in output.split("\n"):
+        line = line.strip()
+        if not line or len(line) < 20:
+            continue
+
+        # Commits, file changes, task completions
+        significance = 0.5  # default
+        if any(kw in line.lower() for kw in ["commit", "pushed", "merged", "deployed"]):
+            significance = 0.9
+        elif any(kw in line.lower() for kw in ["created", "fixed", "implemented", "wrote", "built"]):
+            significance = 0.8
+        elif any(kw in line.lower() for kw in ["error", "failed", "broken", "bug"]):
+            significance = 0.7
+        elif any(kw in line.lower() for kw in ["learned", "discovered", "realized", "understood"]):
+            significance = 0.85
+        else:
+            continue  # skip non-significant lines
+
+        # Cap content length
+        summary = line[:400]
+        segments.append((summary, significance))
+
+    # If no structured segments found, create one from the whole output
+    if not segments and len(output) > _MEMORY_MIN_LENGTH:
+        summary = output[:400] if len(output) > 400 else output
+        segments.append((summary, 0.5))
+
+    return segments
 
 
 def _update_limbic_from_outcome(

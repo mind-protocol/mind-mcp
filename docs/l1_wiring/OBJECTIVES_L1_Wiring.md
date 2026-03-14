@@ -24,13 +24,17 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 
 **Tradeoff:** Latency. Stimulus pre-processing (segmentation, dedup, embedding) adds time before a tick can run. Accept ~200ms per stimulus batch vs. the alternative of skipping pre-processing and flooding the graph.
 
-### O2: Inject Working Memory into Citizen Prompts (Priority: Critical)
+### O2: Inject Cognitive Landscape into Citizen Prompts (Priority: Critical)
 
-**What:** The 5-7 nodes selected by Law 4 (attentional competition) must appear in the Claude Code system prompt as contextual priming. The WM bridges graph state to LLM awareness.
+**What:** The full cognitive landscape — WM nodes, peripheral high-salience nodes, limbic state, active connections, episodic memories — must appear in the Claude Code system prompt as first-person natural language. Not a data dump but an inner monologue the LLM can internalize.
 
-**Why:** Without WM injection, the citizen has no memory, no emotional context, no active concerns. It's a blank slate every invocation. WM is the entire point of the cognitive substrate -- saliency-selected awareness.
+**Why:** Without cognitive injection, the citizen has no memory, no emotional context, no active concerns. It's a blank slate every invocation. The cognitive context is the entire point of the substrate — saliency-selected awareness that shapes the citizen's tone, focus, and priorities.
 
-**Tradeoff:** Token budget. WM injection consumes prompt tokens. A 7-node WM with full synthesis fields could consume 500-1500 tokens. Accept the cost: WM IS the value. Budget allocation should be weight-proportional (Law 12 spec).
+**Design decision: Natural language over structured data.** The LLM is a language model. Feeding it `energy: 0.4, weight: 0.58, self_relevance: 0.92` wastes tokens on data the model can't use. Instead, we translate metrics into felt experience: "A deeply personal, established desire, central to what I'm working toward." The model processes this as meaning, not as numbers.
+
+**Design decision: Metric-to-language engine.** Node dimensions (self_relevance, weight, stability, partner_relevance, goal_relevance, care_affinity, achievement_affinity, activation_count) and link dimensions (trust, affinity, friction, weight) combine into qualifying words woven naturally into sentences. This enriches the prompt without adding a data section. See ALGORITHM Section 3.
+
+**Tradeoff:** Token budget. Cognitive injection consumes ~1200-1500 tokens (~5000 chars). Accept the cost: this IS the value. The budget covers WM nodes with full content, peripheral nodes, emotional landscape, active connections, drive narration, and mood shifts.
 
 ### O3: Map Orientation to Action (Priority: High)
 
@@ -87,12 +91,14 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 ## Success Criteria
 
 1. A citizen receives a Telegram message, and the corresponding L1 graph shows new nodes with injected energy within one tick
-2. The citizen's Claude prompt contains WM nodes reflecting the current cognitive state
-3. Law 11 orientation visibly changes the citizen's behavioral posture in responses
-4. Embeddings are real (1536-dim, from OpenAI), not pseudo-random vectors
-5. Graph state persists across process restarts
-6. All 44 citizens boot with seeded brains and run independent tick loops
-7. mind-mcp serves production traffic with no regression from manemus
+2. The citizen's Claude prompt contains a ~5000 char first-person narrative of their cognitive state — orientation, emotions connected to specific nodes, WM nodes with relationship context, peripheral awareness, metric-derived qualifiers, and mood shifts
+3. Significant actions (commits, fixes, learnings) create persistent episodic memory nodes with weight ≥ 0.28 that survive Law 7 forgetting cycles
+4. Law 11 orientation visibly changes the citizen's behavioral posture in responses
+5. Embeddings are real (1536-dim, from OpenAI), not pseudo-random vectors
+6. Graph state persists across process restarts
+7. All 44 citizens boot with seeded brains (209 base + overlay) and run independent tick loops
+8. Seed brain link diversity: at least 8 different link types (supports, activates, contradicts, reminds_of, causes, depends_on, regulates, exemplifies)
+9. mind-mcp serves production traffic with no regression from manemus
 
 ---
 
@@ -101,10 +107,10 @@ This module does not redesign the physics. The physics design is complete (ALGOR
 | Dependency | Owner | Status | Notes |
 |-----------|-------|--------|-------|
 | L1 ALGORITHM spec | docs/cognition/l1/ | CANONICAL | 21 laws, formulas, constants |
-| L1 engine code | runtime/cognition/ (claimed) | MISSING from repo | SYNC says 4,717 lines built but directory absent -- needs locating or rebuilding |
+| L1 engine code | runtime/cognition/ | CANONICAL | 5,230 lines ported from manemus, 118 tests passing |
 | Orchestrator | runtime/orchestrator/ | CANONICAL | Dispatcher + Claude invoker working |
 | FalkorDB adapter | runtime/infrastructure/database/ | CANONICAL | Working, tested |
 | OpenAI embedding adapter | runtime/infrastructure/embeddings/ | CANONICAL | Working, tested |
 | Seed brain generator | runtime/seed_brain_from_source_docs_dynamic_generator.py | CANONICAL | 209 nodes, 295 links |
 | Citizen identity | runtime/citizens/ | CANONICAL | load_citizen_identity, build_citizen_prompt |
-| Citizen directories | .mind/citizens/ | EMPTY | Need to copy from manemus |
+| Citizen directories | citizens/ | CANONICAL | 245 citizens copied from manemus, 243 with profile.json |

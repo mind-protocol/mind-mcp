@@ -36,22 +36,45 @@ logger = logging.getLogger("cognition.brain_seeder")
 
 # ── Identity directory scanning ────────────────────────────────────────────
 
-_CITIZENS_DIR = Path(__file__).parent.parent.parent / ".mind" / "citizens"
+_PROJECT_ROOT = Path(__file__).parent.parent.parent
+_CITIZENS_DIRS = [
+    _PROJECT_ROOT / "citizens",           # primary: copied from manemus
+    _PROJECT_ROOT / ".mind" / "citizens",  # fallback: protocol template
+]
 
 
 def _find_citizen_identity(citizen_handle: str) -> Optional[dict]:
-    """Load citizen identity from .mind/citizens/{handle}/.
+    """Load citizen identity from citizens/{handle}/ or .mind/citizens/{handle}/.
 
-    Looks for identity.json or identity.md in the citizen's directory.
+    Searches for identity data in order:
+    1. profile.json (manemus format with id, display_name, bio, etc.)
+    2. identity.json (structured identity)
+    3. identity.md / CLAUDE.md (markdown identity)
+
     Returns a dict with keys like: role, personality, goals, relationships.
     Returns None if no identity found.
     """
-    citizen_dir = _CITIZENS_DIR / citizen_handle
-    if not citizen_dir.is_dir():
-        logger.debug(f"No citizen directory found: {citizen_dir}")
+    citizen_dir = None
+    for base in _CITIZENS_DIRS:
+        candidate = base / citizen_handle
+        if candidate.is_dir():
+            citizen_dir = candidate
+            break
+
+    if citizen_dir is None:
+        logger.debug(f"No citizen directory found for {citizen_handle}")
         return None
 
-    # Try JSON first
+    # Try profile.json (manemus format)
+    profile_path = citizen_dir / "profile.json"
+    if profile_path.exists():
+        try:
+            profile = json.loads(profile_path.read_text(encoding="utf-8"))
+            return _normalize_profile(profile, citizen_dir)
+        except (json.JSONDecodeError, OSError) as e:
+            logger.warning(f"Failed to parse {profile_path}: {e}")
+
+    # Try identity.json
     json_path = citizen_dir / "identity.json"
     if json_path.exists():
         try:
@@ -70,6 +93,36 @@ def _find_citizen_identity(citizen_handle: str) -> Optional[dict]:
         return _parse_identity_md(claude_path)
 
     return None
+
+
+def _normalize_profile(profile: dict, citizen_dir: Path) -> dict:
+    """Convert manemus profile.json format to brain seeder identity format."""
+    identity: dict = {"_source": str(citizen_dir / "profile.json")}
+
+    # Map profile fields to identity fields
+    identity["name"] = profile.get("display_name") or profile.get("id", "")
+    identity["role"] = profile.get("class_", "citizen")
+
+    bio = profile.get("bio", "")
+    tagline = profile.get("tagline", "")
+    identity["personality"] = f"{tagline}. {bio}".strip(". ")
+
+    # Extract goals from aspirations if present
+    aspirations = profile.get("aspirations", [])
+    if aspirations:
+        identity["goals"] = "\n".join(f"- {a}" for a in aspirations)
+
+    # Try to load CLAUDE.md for richer identity context
+    claude_path = citizen_dir / "CLAUDE.md"
+    if claude_path.exists():
+        claude_data = _parse_identity_md(claude_path)
+        if claude_data:
+            # Merge — CLAUDE.md fields override profile where present
+            for key in ("role", "personality", "goals", "relationships", "values"):
+                if key in claude_data and claude_data[key]:
+                    identity[key] = claude_data[key]
+
+    return identity
 
 
 def _parse_identity_md(path: Path) -> Optional[dict]:

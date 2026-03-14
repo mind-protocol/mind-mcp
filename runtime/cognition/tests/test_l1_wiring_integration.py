@@ -200,12 +200,12 @@ class TestConceptExtraction:
 
 class TestWMPromptSerializer:
 
-    def test_empty_state_returns_empty(self):
-        """Empty state should produce empty or minimal prompt."""
+    def test_empty_state_returns_minimal(self):
+        """Empty state should produce minimal prompt (just system line)."""
         state = CitizenCognitiveState(citizen_id="test")
         result = serialize_wm_to_prompt(state)
-        # May return arousal info but no WM nodes or drives
-        assert "Active in mind" not in result
+        # Should have system line but no WM content
+        assert "What's on my mind" not in result
 
     def test_with_active_nodes(self):
         """State with energized WM nodes should include them in prompt."""
@@ -217,20 +217,20 @@ class TestWMPromptSerializer:
         state.wm.node_ids = ["node_0", "node_1", "node_2"]
 
         result = serialize_wm_to_prompt(state, orientation="explore")
-        assert "explore" in result.lower()
-        assert "Active in mind" in result
+        assert "curious" in result.lower()
+        assert "What's on my mind" in result
 
     def test_orientation_description(self):
-        """Should include orientation description."""
+        """Should include orientation as felt experience."""
         state = CitizenCognitiveState(citizen_id="test")
         result = serialize_wm_to_prompt(state, orientation="care")
-        assert "care" in result.lower() or "nurture" in result.lower()
+        assert "care" in result.lower() or "nurture" in result.lower() or "support" in result.lower()
 
-    def test_arousal_regime(self):
-        """Should report arousal level when nodes exist."""
+    def test_nodes_in_graph_count(self):
+        """Should report node count in system line."""
         state = make_citizen_with_nodes()
         result = serialize_wm_to_prompt(state)
-        assert "Arousal" in result
+        assert "nodes in graph" in result
 
 
 # ── Feedback Injector Tests ──────────────────────────────────────────────────

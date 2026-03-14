@@ -66,6 +66,32 @@ if [ ! -L "$DATA_DIR/.claude/settings.json" ]; then
     ln -sf "$CLAUDE_SETTINGS" "$DATA_DIR/.claude/settings.json"
 fi
 
+# ── 2b. Citizen data on persistent disk ────────────────────────────────
+PERSIST_CITIZENS="$DATA_DIR/citizens"
+REPO_CITIZENS="$APP_DIR/citizens"
+
+mkdir -p "$PERSIST_CITIZENS"
+
+# First run: seed from repo if citizens/ was baked in (docker build with data)
+if [ -d "$REPO_CITIZENS" ] && [ ! -f "$PERSIST_CITIZENS/.initialized" ]; then
+    echo "[entrypoint] First run: seeding citizens from app..."
+    cp -rn "$REPO_CITIZENS/." "$PERSIST_CITIZENS/" 2>/dev/null || true
+    touch "$PERSIST_CITIZENS/.initialized"
+fi
+
+# Symlink repo path to persistent citizens
+rm -rf "$REPO_CITIZENS"
+ln -sf "$PERSIST_CITIZENS" "$REPO_CITIZENS"
+echo "[entrypoint] Citizens: $(ls -d "$PERSIST_CITIZENS"/*/ 2>/dev/null | wc -l) dirs on persistent disk"
+
+# ── 2c. Seed brain on persistent disk ─────────────────────────────────
+PERSIST_DATA="$DATA_DIR/seed"
+mkdir -p "$PERSIST_DATA"
+if [ -f "$APP_DIR/data/base_seed_brain.json" ] && [ ! -f "$PERSIST_DATA/base_seed_brain.json" ]; then
+    cp "$APP_DIR/data/base_seed_brain.json" "$PERSIST_DATA/"
+    echo "[entrypoint] Seed brain copied to persistent disk"
+fi
+
 # ── 3. Set environment ──────────────────────────────────────────────────
 export HOME="$DATA_DIR"
 export PORT="${PORT:-8765}"

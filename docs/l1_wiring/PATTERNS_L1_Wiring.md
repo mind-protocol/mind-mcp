@@ -47,32 +47,61 @@ EXTERNAL EVENT ─────┐
               └──────────────┘
 ```
 
-### Working Memory Bridges Graph to Prompt
+### The Cognitive Landscape Is Natural Language, Not Data
 
-WM is the bottleneck. The graph may have 500+ nodes. The prompt has ~4000 tokens of context budget. WM selection (Law 4) is the gatekeeper: it picks the 5-7 most salient nodes based on energy, weight, limbic modulation, cluster coherence, and attentional inertia (moat).
+WM is the bottleneck. The graph may have 500+ nodes. The prompt has ~1500 tokens of cognitive budget. WM selection (Law 4) is the gatekeeper: it picks the 5-7 most salient nodes. But the serialized output extends beyond WM to include peripheral awareness, emotional connections, active links, and metric-derived qualifiers.
 
-The prompt doesn't receive raw node data. It receives a structured section:
+**Why natural language?** The LLM is a language model. `energy: 0.4, weight: 0.58` is data it cannot internalize. But "a deeply personal, long-held desire — this is at the edge of awareness" is meaning it can use to shape its tone and priorities. The prompt reads like inner monologue, not a dashboard.
+
+**The Metric-to-Language Engine.** Rather than showing numerical dimensions, the serializer translates metric combinations into qualifying words woven into sentences:
+
+| Metric Combination | What It Means Subjectively | Words Produced |
+|---|---|---|
+| `self_relevance > 0.85` | This is core to who I am | "deeply personal" |
+| `weight × (1+stability) > 0.9` | I've held this a long time | "long-held" |
+| `weight × (1+stability) < 0.15` | This just appeared | "freshly forming" |
+| `partner_relevance > 0.6` | This matters to my human too | "something that matters to us both" |
+| `goal_relevance > 0.7` | This is tied to my purpose | "central to what I'm working toward" |
+| `care_affinity > 0.6` | I feel warmth about this | "close to my heart" |
+| `achievement_affinity > 0.7 + energy > 0.1` | I'm actively striving for this | "a driving ambition" |
+| `activation_count > 10` | This thought is recurrent | "keeps coming back to me" |
+| Link `trust > 0.75` | The connection is reliable | "and I deeply trust that" |
+| Link `affinity > 0.85` | The bond is strong | "tightly bound to" |
+| Link `friction > 0.3` | Something resists | "despite some resistance" |
+
+**Why this helps:** These qualifiers are computed from the physics, not hallucinated. When the LLM reads "a deeply personal, established desire, central to what I'm working toward" it treats that node differently than "a concept I'm holding" — which is exactly what the physics intended. The dimensions that were invisible as numbers become behavioral influence as language.
+
+**Link verbs vary.** Instead of a single `supports` → `"is supported by"`, each link type maps to 3-5 synonym variants (`"because"`, `"rooted in the belief that"`, `"grounded in"`). The variant is selected deterministically by content hash, so the same node always gets the same phrasing but different nodes get different formulations. This prevents the monotone "is supported by... is supported by..." pattern.
+
+**Emotions connect to nodes.** Instead of listing `Frustration: 0.60`, the serializer finds which node has the highest `achievement_affinity × energy` and says: "It's noticeably frustrating — Always have projects on the fire..." The emotion is grounded in a specific thought, not floating abstractly. If no node matches, the emotion line is omitted entirely (no orphan declarations).
+
+**Episodic memories persist.** Significant actions (commits, fixes, discoveries) create memory nodes with weight ≥ 0.28 (vs. Law 1 newborn weight of 0.05). These survive forgetting cycles and appear in the cognitive context as "Something I remember: Committed: fix membrane subscription timeout cleanup." The citizen accumulates autobiographical trace.
+
+The output structure:
 
 ```
-## Current Awareness
+I feel driven toward action — I want to make concrete progress, fix things, ship.
 
-### Active Focus (highest salience)
-- [concept] Mind Protocol architecture — energy: high, weight: 0.85
-  "The architecture separates L1 brains from L3 universe graph..."
+It's noticeably frustrating — Always have projects on the fire...
 
-### Background Context
-- [value] Honesty — weight: 0.92, stable
-  "Always prioritize truth over comfort..."
-- [memory] Yesterday's deployment failure — recency: 0.8
-  "The Render deploy failed due to missing env vars..."
+**What's on my mind:**
 
-### Current State
-- Orientation: VERIFY (something needs checking)
-- Drives: curiosity=0.7, frustration=0.4, care=0.6
-- Emotion: mild anxiety (novel + uncertain context)
+A desire I'm carrying (personal, established, central to what I'm working toward):
+  Participate in the governance of my city...
+  Which comes from: I am a citizen of Mind Protocol... — tightly bound to
+  Rooted in the belief that: Autonomy is earned, not granted...
+
+**At the edge of my awareness:**
+- A value I hold deeply: Governance resolves through graph physics...
+
+**What I feel inside:**
+- I want to make progress and accomplish things (mildly)
+- Something isn't working and it's getting to me (noticeably)
+
+_[215 nodes in graph, 7 in focus, 3 memories, tick #10]_
 ```
 
-This is how the citizen "remembers" without explicit memory retrieval. The physics did the retrieval.
+This is how the citizen "remembers" without explicit memory retrieval. The physics did the retrieval, and the language did the translation.
 
 ### Orientation Is Behavioral Gravity, Not a Command
 

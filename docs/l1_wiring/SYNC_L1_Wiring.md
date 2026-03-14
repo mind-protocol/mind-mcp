@@ -8,26 +8,25 @@
 
 ## Maturity
 
-**STATUS: DESIGNING**
+**STATUS: DESIGNING → IMPLEMENTING (F5 tasks 5.1-5.8 DONE)**
 
 ### What's canonical:
 - L1 physics spec: 21 laws, formulas, constants (ALGORITHM_L1_Physics.md) -- complete, detailed
 - Schema v2.0: 7 cognitive types, 14 relation_kinds, NodeBase/LinkBase with all fields
-- Orchestrator: dispatcher loop with budget-driven ticks, Claude Code subprocess invocation
+- Orchestrator: dispatcher loop with budget-driven ticks, L1 cognitive context injected into citizen prompts
 - FalkorDB adapter: working, tested, supports per-graph connections
-- OpenAI embedding adapter: working, text-embedding-3-small and 3-large
-- Seed brain generator: 209 nodes, 295 links from 6 manifestos + SYSTEM.md
+- OpenAI embedding adapter: activated, text-embedding-3-small (1536 dims)
+- Seed brain generator: 209 nodes, 399 links (11 link types) from 6 manifestos + SYSTEM.md
 - Orientation taxonomy: 6 orientations defined (take_care/create/verify/explore/rest/escalate)
+- **Cognitive landscape serializer**: Natural language output (~5000 chars) with metric-to-language engine, formulation variation, emotion-to-node grounding, episodic memory creation
+- **Perception-action loop**: Fully closed — stimulus → tick → WM → prompt → LLM → feedback → memory creation → stimulus
+- **245 citizen directories**: Copied from manemus, brain seeder reads profile.json + CLAUDE.md
+- L1 engine: 5,230 lines, 118/118 tests passing
 
-### What's being designed (this doc chain):
-- Stimulus injection pipeline (event to Law 1)
-- Tick integration in orchestrator dispatcher
-- WM-to-prompt serialization format
-- Orientation-to-prompt modifier mapping
-- Post-action self-stimulus feedback loop with anti-loop protection
-- FalkorDB hybrid persistence (in-memory + periodic checkpoint)
-- Per-citizen brain seeding (base + overlay pattern)
-- Emotion calibration (anxiety, satisfaction, frustration formulas)
+### What remains (deployment):
+- Phase 7: Deploy to Render (Dockerfile + render.yaml ready)
+- Parallel validation: manemus + mind-mcp side by side
+- DNS cutover
 - Production cutover plan (parallel run, DNS, bot migration)
 
 ### What's proposed (v2):

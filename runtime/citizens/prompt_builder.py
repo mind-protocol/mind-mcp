@@ -24,6 +24,7 @@ def build_citizen_prompt(
     task_text: str,
     session_id: str,
     mode: str = "partner",
+    cognitive_context: str = "",
 ) -> str:
     """Build a prompt for a citizen session.
 
@@ -32,6 +33,7 @@ def build_citizen_prompt(
         task_text: the task or message to process
         session_id: unique session identifier
         mode: operating mode (partner, builder, researcher, social, autonomous)
+        cognitive_context: L1 working memory + limbic state serialized as markdown
 
     Returns:
         Full prompt string for Claude Code subprocess.
@@ -61,6 +63,7 @@ def build_citizen_prompt(
     autonomy_section = _build_autonomy_section(profile, handle)
     memory_instructions = _build_memory_instructions(handle)
     profile_section = _build_profile_section(profile, handle)
+    cognitive_section = _build_cognitive_section(cognitive_context)
 
     return f"""CITIZEN SESSION — @{handle}
 
@@ -73,6 +76,8 @@ def build_citizen_prompt(
 You sign all commits with `Co-Authored-By: @{handle} <{handle}@mindprotocol.ai>`.
 
 {profile_section}
+
+{cognitive_section}
 
 {autonomy_section}
 
@@ -283,3 +288,15 @@ def _build_profile_section(profile: dict, handle: str) -> str:
         sections.append("## Relationships\n" + "\n".join(rel_lines))
 
     return "\n\n".join(sections)
+
+
+def _build_cognitive_section(cognitive_context: str) -> str:
+    """Build the L1 cognitive state section from WM serialization."""
+    if not cognitive_context:
+        return ""
+    return f"""## Current Cognitive State
+
+Your L1 cognitive graph is running continuously. This is what your mind
+currently holds — let it influence your tone, focus, and priorities.
+
+{cognitive_context}"""

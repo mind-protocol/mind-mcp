@@ -330,7 +330,12 @@ def _build_prompt(
 
     if is_citizen_session and citizen_data:
         citizen_mode = metadata.get("citizen_mode", mode)
-        return build_citizen_prompt(citizen_data, voice_text or "(autonomous wake)", session_id, citizen_mode)
+        cognitive_context = metadata.get("cognitive_context", "")
+        return build_citizen_prompt(
+            citizen_data, voice_text or "(autonomous wake)",
+            session_id, citizen_mode,
+            cognitive_context=cognitive_context,
+        )
 
     if is_task:
         task_repo = metadata.get("repo", "current")

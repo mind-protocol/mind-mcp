@@ -283,117 +283,125 @@ TICK_MODES = {
 
 ---
 
-## 3. Working Memory to Prompt Mapping
+## 3. Cognitive Landscape Serialization
 
-### 3.1 WM Serialization Algorithm
+### 3.1 Design Rationale: Why Natural Language Over Structured Data
 
-```python
-def serialize_wm_to_prompt(
-    wm_nodes: list[Node],
-    limbic_state: LimbicState,
-    orientation: str,
-    total_token_budget: int = 1200,
-) -> str:
-    """
-    Serialize working memory into a prompt section.
+The LLM is a language model. Feeding it numerical metrics (`energy: 0.4, weight: 0.58, self_relevance: 0.92`) wastes tokens on data the model cannot use to modulate its behavior. Instead, we translate metric combinations into felt experience — qualifying words woven naturally into first-person prose.
 
-    Args:
-        wm_nodes: 5-7 nodes selected by Law 4
-        limbic_state: Current limbic state (drives, emotions)
-        orientation: Law 11 output (take_care/create/verify/explore/rest/escalate)
-        total_token_budget: Max tokens for the WM section
+This produces two effects:
+1. **Behavioral influence.** The LLM reads "a deeply personal, long-held desire, central to what I'm working toward" and treats that node with more gravity than "a concept I'm holding." The physics intended this difference (high self_relevance × high weight × high goal_relevance), and natural language transmits that intent.
+2. **Coherent inner voice.** The citizen's prompt reads as inner monologue, not a dashboard. The citizen doesn't "have a frustration metric of 0.75" — it "finds something noticeably frustrating." This shapes the LLM's tone and word choice.
 
-    Returns:
-        Formatted markdown string for injection into system prompt
-    """
-    # Sort by salience (energy * weight * recency)
-    ranked = sorted(wm_nodes, key=lambda n: n.energy * n.weight * n.recency, reverse=True)
+### 3.2 Metric-to-Language Engine
 
-    # Allocate tokens proportional to weight
-    total_weight = sum(n.weight for n in ranked)
-    token_allocations = {}
-    for node in ranked:
-        share = node.weight / total_weight if total_weight > 0 else 1.0 / len(ranked)
-        token_allocations[node.id] = int(total_token_budget * 0.7 * share)
-        # 70% of budget to nodes, 30% to state/orientation/overhead
-
-    # Build sections
-    lines = ["## Current Awareness\n"]
-
-    # Active focus (top 2 by salience)
-    lines.append("### Active Focus")
-    for node in ranked[:2]:
-        lines.append(format_wm_node(node, token_allocations[node.id], detail="full"))
-
-    # Background context (remaining nodes)
-    if len(ranked) > 2:
-        lines.append("\n### Background Context")
-        for node in ranked[2:]:
-            lines.append(format_wm_node(node, token_allocations[node.id], detail="summary"))
-
-    # Current state
-    lines.append("\n### Internal State")
-    lines.append(f"- **Orientation:** {orientation.upper()} -- {ORIENTATION_DESCRIPTIONS[orientation]}")
-    lines.append(f"- **Drives:** {format_drives(limbic_state)}")
-    lines.append(f"- **Mood:** {format_emotions(limbic_state)}")
-
-    # Arousal regime
-    arousal = compute_arousal(limbic_state)
-    if arousal > 0.8:
-        lines.append("- **Alert level:** HIGH -- something urgent needs attention")
-    elif arousal < 0.3:
-        lines.append("- **Alert level:** LOW -- calm, routine mode")
-
-    return "\n".join(lines)
-
-
-def format_wm_node(node: Node, token_budget: int, detail: str) -> str:
-    """Format a single WM node for the prompt."""
-    type_label = node.type or node.node_type  # cognitive type or universal type
-    indicators = []
-    if node.energy > 50:
-        indicators.append("active")
-    if node.weight > 0.8:
-        indicators.append("core")
-    if node.recency > 0.9:
-        indicators.append("fresh")
-
-    indicator_str = f" ({', '.join(indicators)})" if indicators else ""
-
-    if detail == "full":
-        # Truncate synthesis to token budget (~4 chars/token rough estimate)
-        max_chars = token_budget * 4
-        text = node.synthesis[:max_chars]
-        return f"- **[{type_label}]** {node.name}{indicator_str}\n  \"{text}\""
-    else:
-        return f"- [{type_label}] {node.name} -- weight: {node.weight:.2f}{indicator_str}"
-```
-
-### 3.2 Prompt Assembly Integration
-
-The WM section is injected into `build_citizen_prompt()` in `runtime/citizens/__init__.py`:
+Node dimensions combine into qualifying phrases:
 
 ```python
-def build_citizen_prompt(citizen_data: dict, session_context: dict) -> str:
-    """Build the full system prompt for a citizen session."""
+def _qualify_node(node: Node) -> str:
+    """Metric combination → felt qualifiers."""
+    qualifiers = []
 
-    # ... existing prompt sections (identity, personality, tools) ...
+    # Personal depth: self_relevance
+    if node.self_relevance > 0.85: qualifiers.append("deeply personal")
+    elif node.self_relevance > 0.6: qualifiers.append("personal")
 
-    # ── NEW: Cognitive state from L1 physics ──
-    citizen_handle = citizen_data["handle"]
-    engine = get_citizen_engine(citizen_handle)
+    # Permanence: weight × (1 + stability)
+    consolidation = node.weight * (1.0 + node.stability)
+    if consolidation > 0.9: qualifiers.append("long-held")
+    elif consolidation > 0.6: qualifiers.append("established")
+    elif consolidation < 0.15: qualifiers.append("freshly forming")
 
-    if engine:
-        wm_nodes = engine.get_working_memory()
-        limbic = engine.get_limbic_state()
-        orientation = engine.get_orientation()
-        cognitive_section = serialize_wm_to_prompt(wm_nodes, limbic, orientation)
-        prompt += f"\n\n{cognitive_section}"
+    # Partner bond: partner_relevance
+    if node.partner_relevance > 0.6: qualifiers.append("something that matters to us both")
 
-    # ... existing prompt sections (instructions, context) ...
+    # Purpose: goal_relevance
+    if node.goal_relevance > 0.7: qualifiers.append("central to what I'm working toward")
 
-    return prompt
+    # Warmth: care_affinity
+    if node.care_affinity > 0.6: qualifiers.append("close to my heart")
+
+    # Ambition: achievement_affinity × energy
+    if node.achievement_affinity > 0.7 and node.energy > 0.1: qualifiers.append("a driving ambition")
+
+    # Recurrence: activation_count
+    if node.activation_count > 10: qualifiers.append("keeps coming back to me")
+
+    return ", ".join(qualifiers[:3])
 ```
+
+Link dimensions add relationship texture:
+
+```python
+def _qualify_link(link) -> str:
+    """Link metrics → relationship quality."""
+    qualifiers = []
+    if link.trust > 0.75: qualifiers.append("and I deeply trust that")
+    elif link.trust < 0.3: qualifiers.append("though I'm uncertain whether")
+    if link.affinity > 0.85: qualifiers.append("tightly bound to")
+    if link.friction > 0.3: qualifiers.append("despite some resistance")
+    if link.weight > 0.85: qualifiers.append("a strong connection")
+    return " — " + ", ".join(qualifiers[:2]) if qualifiers else ""
+```
+
+### 3.3 Formulation Variation
+
+Each structural element (node intro, link verb, emotion sentence) has 3-5 synonym variants. The variant is selected by `MD5(content_seed) % len(variants)` — deterministic (same node always gets same phrasing) but diverse across nodes.
+
+**Node intros:** "Something I want" / "A desire I'm carrying" / "What I'm longing for"
+**Link verbs for SUPPORTS:** "because" / "rooted in the belief that" / "which comes from" / "grounded in"
+**Emotion sentences for frustration:** "I have to say, there is something that is {level} frustrating me right now: {content}" / "Something is {level} getting under my skin: {content}" / "It's {level} frustrating — {content}"
+
+### 3.4 Serialization Sections (in order)
+
+1. **Orientation** — One sentence of felt tendency from Law 11
+2. **Mood shifts** — What entered/exited WM, what emotions rose/eased (requires previous state)
+3. **Emotional landscape** — Each active emotion (>0.25) connected to the node with highest `affinity_field × energy`. If no node matches, the emotion is omitted (no orphan declarations)
+4. **What's on my mind** — WM nodes (sorted by energy) with full untruncated content, metric-derived qualifiers, and up to 2 outgoing relationships with varied verb forms and link qualifiers
+5. **Peripheral awareness** — Non-WM nodes above energy 0.03, sorted by salience, with varied intros
+6. **Inner drives** — Active drives (>0.25) as felt experience: "Something isn't working and it's getting to me (noticeably)"
+7. **System line** — Node count, WM size, memory count, tick number (italicized, for debugging)
+
+Target: ~5000 chars (~1200-1500 tokens). Hard cap with truncation.
+
+### 3.5 Prompt Assembly
+
+The cognitive context flows from dispatcher to prompt:
+
+```
+dispatcher._tick()
+  → get_citizen_wm_context(handle)
+    → serialize_wm_to_prompt(state, orientation)
+  → item["metadata"]["cognitive_context"] = wm_text
+
+invoke_claude(request)
+  → _build_prompt(...)
+    → cognitive_context = metadata["cognitive_context"]
+    → build_citizen_prompt(..., cognitive_context=cognitive_context)
+
+build_citizen_prompt()
+  → "## Current Cognitive State\n\n{cognitive_context}"
+  → injected between Identity and Autonomy sections
+```
+
+### 3.6 Episodic Memory Creation
+
+The feedback injector creates persistent MEMORY nodes for significant actions:
+
+```python
+# Significance keywords → weight multiplier
+"commit", "pushed", "merged", "deployed"  → significance 0.9
+"created", "fixed", "implemented", "built" → significance 0.8
+"learned", "discovered", "realized"        → significance 0.85
+"error", "failed", "broken"               → significance 0.7
+
+# Memory node properties
+weight = 0.35 × significance   # ≥ 0.28, vs newborn 0.05
+stability = 0.3                # resists Law 7 decay
+# Linked to current WM nodes via REMINDS_OF
+```
+
+These memories persist across ticks, appear in the cognitive landscape, and accumulate into autobiographical trace. Max 3 memories per feedback call to prevent flooding.
 
 ---
 

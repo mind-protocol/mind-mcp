@@ -63,3 +63,9 @@ logs/
 .sessionId
 data/MESSAGES*.md
 data/MESSAGES*.json
+
+# Citizen data (lives on persistent disk in prod, not in repo)
+/citizens/
+
+# Swarm logs
+.mind/swarm/

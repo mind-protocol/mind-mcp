@@ -2,8 +2,38 @@
 
 ```
 LAST_UPDATED: 2026-03-14
-UPDATED_BY: Force batch closer (groundwork — F2/F3/F5 10-item closure)
+UPDATED_BY: groundwork — F5 WM wiring + embeddings + citizen seeding
 ```
+
+---
+
+## RECENT CHANGES (2026-03-14, afternoon session)
+
+### F5: L1 Cognitive Context Wired Into Citizen Prompts
+
+- **WM Prompt Serializer rewritten** (`runtime/cognition/wm_prompt_serializer.py`): now produces ~4000-5000 chars of cognitive landscape (was ~600 chars with 5-7 nodes). Three tiers: "In focus" (WM nodes, full content up to 400 chars each, 55% budget), "Peripheral awareness" (high-salience non-WM nodes, 25% budget), "Active connections" (links between top nodes). Includes limbic drives with numerical intensities, emotions (threshold 0.15 down from 0.3), arousal regime with node count and tick number.
+- **Perception-action loop closed**: `dispatcher.py` now injects L1 cognitive context (`get_citizen_wm_context()`) into request metadata before dispatching. `claude_invoker.py` passes `cognitive_context` to `build_citizen_prompt()`. `prompt_builder.py` renders it as "## Current Cognitive State" section. Citizens' LLM sessions now see their current orientation, focus nodes, peripheral awareness, drives, and emotions.
+- **OpenAI embeddings activated**: `.env` changed from `# EMBEDDING_PROVIDER=openai` to `EMBEDDING_PROVIDER=openai`, model set to `text-embedding-3-small` (1536 dims, matches schema v2.0).
+- **245 citizen directories copied** from manemus to `citizens/`. 243 have profile.json, 46 have pre-existing brain.json.
+- **Brain seeder updated** (`runtime/cognition/citizen_brain_seeder.py`): now searches `citizens/` (primary) and `.mind/citizens/` (fallback). Added `profile.json` support with `_normalize_profile()` that extracts name/role/personality/goals from manemus format and merges with CLAUDE.md identity data.
+- **Base seed brain generated**: 209 nodes, 295 links from 6 canonical manifestos. Saved to `data/base_seed_brain.json`.
+- **118/118 tests passing** (0.92s).
+
+### F5 Task Status Updates
+
+| # | Task | Status | Change |
+|---|------|--------|--------|
+| 5.1 | Wire physics to orchestrator | DONE | — |
+| 5.2 | Real embeddings | DONE | Activated `text-embedding-3-small` in .env |
+| 5.3 | Seed brain for citizens | DONE | Base brain generated (209 nodes), seeder reads profile.json |
+| 5.4 | FalkorDB persistence | DONE | — |
+| 5.5 | Orientation taxonomy | DONE | — |
+| 5.6 | Emotion calibration | DONE | Formulas in constants.py + tick_runner, tested |
+| 5.7 | Graph isolation strategy | DONE | Decided: one graph per citizen `brain_{handle}`, in code |
+| 5.8 | Copy citizen dirs | DONE | 245 citizens copied from manemus |
+| 5.9 | Deploy to Render | TODO | Dockerfile + render.yaml ready |
+| 5.10 | DNS cutover | TODO | Depends on 5.9 + 5.11 |
+| 5.11 | Parallel validation | TODO | Depends on 5.9 |
 
 ---
 
@@ -415,11 +445,11 @@ See **MASTER TODO** section below for full breakdown.
 
 | Issue | Severity | Area | Notes |
 |-------|----------|------|-------|
-| Citizen dirs not copied | Medium | `.mind/citizens/` | Need to copy from manemus |
+| ~~Citizen dirs not copied~~ | ~~Medium~~ | `citizens/` | RESOLVED: 245 citizens copied from manemus |
 | Place tool `m.content` vs `m.text` | Low | `mcp/tools/place_handler.py` | `_listen` queries `m.content` but `add_moment` stores as `text` — messages may appear empty |
 | Graph may not connect | Low | FalkorDB | Graceful degradation if offline |
 | Architecture shift not implemented | High | Graph model | Single universe graph, Space/Moment model, HAS_ACCESS links, encrypted brains — designed but not yet coded |
-| L1 engine in manemus, not mind-mcp | Medium | Integration | Code at `manemus/runtime/cognition/` (7,243 lines) needs porting to mind-mcp |
+| ~~L1 engine in manemus, not mind-mcp~~ | ~~Medium~~ | Integration | RESOLVED: 5,230 lines ported, 118 tests passing, WM wired to prompts |
 
 ---
 

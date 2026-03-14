@@ -228,6 +228,14 @@ class Dispatcher:
             },
         )
 
+        # Inject L1 cognitive context into citizen requests
+        if L1_AVAILABLE and citizen_handle and citizen_handle != "_system":
+            wm_context = self.get_citizen_wm_context(citizen_handle)
+            if wm_context:
+                if "metadata" not in item:
+                    item["metadata"] = {}
+                item["metadata"]["cognitive_context"] = wm_context
+
         # Choose invocation path
         if degradation.is_degraded():
             invoke_fn = invoke_degraded

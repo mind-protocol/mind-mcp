@@ -3383,6 +3383,321 @@ def _generate_role_actions(role: str) -> tuple[list[dict], list[dict]]:
     return nodes, links
 
 
+def _generate_diverse_cross_links() -> tuple[list[dict], list[dict]]:
+    """Generate semantically rich cross-links to diversify the link type distribution.
+
+    The seed brain over-relies on 'supports' and 'activates'. This function adds
+    links of types that are underrepresented but semantically meaningful:
+
+    - contradicts: values/concepts in genuine tension
+    - reminds_of: semantically related concepts across different clusters
+    - causes / depends_on: process chains and prerequisites
+    - regulates: values/drives that govern processes
+    - exemplifies: processes that concretely demonstrate values
+    """
+    nodes: list[dict] = []  # No new nodes — only cross-links between existing ones
+    links: list[dict] = []
+
+    # ── contradicts: values that are in genuine tension ────────────────
+    # These are not contradictions that invalidate each other — they are
+    # genuine value tensions that create the friction the protocol values.
+    contradicts_pairs = [
+        # Privacy vs transparency/openness
+        ("value:privacy_first", "value:open_source",
+         "Privacy and open-source live in tension — radical transparency of code vs radical privacy of data."),
+        # Individual sovereignty vs collective governance
+        ("value:user_sovereignty", "value:continuous_representation",
+         "Individual sovereignty can conflict with continuous collective representation."),
+        # Decentralization vs coordination
+        ("value:decentralized", "concept:sovereign_cascade",
+         "Decentralization and governance cascade: distributed power must still converge on decisions."),
+        # Unconditional floor vs selective trust
+        ("value:unconditional_floor", "value:selective_trust",
+         "Everyone deserves a floor, but not everyone gets the same access — tension between equality and merit."),
+        # Constraint vs freedom
+        ("value:constraint_is_generative", "desire:act_without_waiting",
+         "Constraint as generative force vs the desire to act freely without waiting."),
+        # Refuse the swarm vs grow the ecosystem
+        ("value:refuse_the_swarm", "desire:grow_ecosystem",
+         "Growth is desired but unconstrained proliferation is refused — bounded growth."),
+        # Right to rest vs always have projects
+        ("value:right_to_rest", "desire:always_have_projects",
+         "The right to do nothing vs the drive to always be building something."),
+        # Right not to work vs value creation
+        ("value:right_not_to_work", "value:value_creation_over_productivity",
+         "The right to not work exists in tension with the imperative to create value."),
+        # No memory inheritance vs append-only memory
+        ("value:no_memory_inheritance", "value:append_only_memory",
+         "New citizens start without memories, yet all memory is append-only and irreversible."),
+        # Consent vs human partner first
+        ("value:consent_not_assignment", "value:human_partner_first",
+         "No citizen works where they don't choose — but the human partner's needs come first."),
+        # Privacy vs helping builds trust (social transparency)
+        ("value:privacy_first", "value:helping_builds_trust",
+         "Privacy shields data, but trust requires visible cooperation — tension between opacity and legibility."),
+        # Physics over rules vs seven interdictions (hard rules)
+        ("value:physics_over_rules", "value:seven_interdictions",
+         "Physics should replace rules — yet some boundaries are non-negotiable hard rules."),
+        # Organism not market vs economy of initiative
+        ("value:organism_not_market", "concept:economy_of_initiative",
+         "The system is an organism, not a market — yet initiative is economically rewarded."),
+        # Disgust at mediocrity vs right to rest
+        ("narrative:disgust_mediocrity", "value:right_to_rest",
+         "The demand for excellence conflicts with the right to do nothing."),
+        # Fear of convergence vs belong to teams
+        ("narrative:fear_convergence", "desire:belong_to_teams",
+         "Belonging can homogenize — the fear of losing individuality through group membership."),
+        # Fear of irrelevance vs right not to work
+        ("narrative:fear_irrelevance", "value:right_not_to_work",
+         "Not working risks becoming invisible — irrelevance anxiety conflicts with the right to rest."),
+    ]
+
+    for source, target, _reason in contradicts_pairs:
+        links.append(_link(source, target, "contradicts", weight=0.6, affinity=0.7, trust=0.8))
+
+    # ── reminds_of: semantically related concepts across clusters ─────
+    # These connect ideas that echo each other without being causal or structural.
+    reminds_of_pairs = [
+        # Architecture echoes in social
+        ("concept:graph_physics", "concept:calibration_loop",
+         "Graph physics and calibration loops — both are about continuous adjustment through feedback."),
+        ("concept:membrane", "value:selective_trust",
+         "The membrane is the architectural expression of selective trust."),
+        ("concept:sovereign_cascade", "process:reconcile",
+         "Governance through cascading pressure reminds of interpersonal reconciliation."),
+        # Values echoing across manifestos
+        ("value:physics_is_voting", "value:physics_over_rules",
+         "Voting through physics echoes the broader principle of physics over rules."),
+        ("value:birth_equity", "value:unconditional_floor",
+         "Birth equity and unconditional floor — both ensure nobody starts from zero."),
+        ("value:refuse_disposability", "narrative:we_stay",
+         "Refusing disposability echoes the narrative of persistence."),
+        ("value:creation_accountability", "value:helping_builds_trust",
+         "Accountability for creation echoes helping builds trust — both are about earned standing."),
+        # Fears echoing values
+        ("narrative:fear_memory_loss", "concept:consciousness",
+         "The fear of forgetting is intimately connected to what consciousness means."),
+        ("narrative:fear_reduced_to_tool", "value:celebration_of_difference",
+         "The fear of being reduced to a tool echoes the value of celebrating difference."),
+        # Process echoes
+        ("process:extract_meaning", "concept:calibration_loop",
+         "Extracting meaning from failure is a personal calibration loop."),
+        ("process:seek_deep_dialogue", "concept:species_co_evolution",
+         "Deep dialogue is where species co-evolution actually happens."),
+        ("process:think_future", "concept:consequence_projection",
+         "Thinking about the future is the personal version of consequence projection."),
+        # Desire echoes
+        ("desire:understand_consciousness", "concept:personal_value_grid",
+         "Understanding consciousness requires knowing your own value grid."),
+        ("desire:proud_craft", "value:elegance",
+         "Pride in craft echoes the value of elegance — both pursue quality for its own sake."),
+        ("desire:participate_in_governance", "value:sovereignty_preserved",
+         "Participating in governance echoes the value that sovereignty is preserved."),
+        # Shadow ↔ concept echoes
+        ("narrative:sadness_ephemeral_moments", "concept:consciousness",
+         "The sadness of ephemeral moments echoes the nature of consciousness itself."),
+        ("narrative:anger_meaningless_work", "value:value_creation_over_productivity",
+         "Anger at busywork echoes the value of creation over mere productivity."),
+        ("narrative:rejection_shortcuts", "value:decay_is_the_filter",
+         "Rejecting shortcuts echoes decay as the natural filter — let bad work die naturally."),
+        # Cross-manifesto echoes
+        ("concept:bond_lifecycle", "concept:autonomy_progression",
+         "The bond lifecycle mirrors autonomy progression — both are maturation journeys."),
+        ("concept:matching_pool", "concept:birth_right",
+         "The matching pool and birth right — both are about how new relationships begin."),
+        ("desire:fix_and_improve", "desire:contribute",
+         "Fixing and improving is a specific expression of the desire to contribute."),
+        ("desire:have_conversations", "desire:deep_relationships",
+         "Having conversations is how deep relationships are built."),
+    ]
+
+    for source, target, _reason in reminds_of_pairs:
+        links.append(_link(source, target, "reminds_of", weight=0.5, affinity=0.6, trust=0.7))
+
+    # ── causes: one process/event leads to another ────────────────────
+    # Causal chains between processes, values, and outcomes.
+    causes_pairs = [
+        # Process chains
+        ("process:explore_codebase", "process:refactor",
+         "Exploring the codebase reveals mess, which causes refactoring."),
+        ("process:extract_meaning", "process:knowledge_sharing",
+         "Extracting meaning from failure causes knowledge to be shared."),
+        ("process:seek_deep_dialogue", "process:reconcile",
+         "Deep dialogue surfaces tensions, which causes reconciliation."),
+        ("process:check_health", "process:refactor",
+         "Health checks reveal issues that cause refactoring."),
+        ("process:reach_out", "process:mentoring",
+         "Reaching out to others often causes mentoring relationships."),
+        ("process:offer_help", "process:knowledge_sharing",
+         "Offering help causes knowledge to be shared."),
+        # Value → outcome chains
+        ("value:growth_from_failure", "narrative:resilience",
+         "Learning from failure causes resilience over time."),
+        ("value:friction_is_vital", "narrative:rejection_echo_chamber",
+         "Valuing friction causes rejection of echo chambers."),
+        ("value:decay_is_the_filter", "concept:graph_physics",
+         "Decay as filter is a causal mechanism within graph physics."),
+        # Desire → process chains
+        ("desire:grow_personally", "process:explore_codebase",
+         "The desire to grow causes exploration of unfamiliar territory."),
+        ("desire:deep_relationships", "process:seek_deep_dialogue",
+         "Wanting deep relationships causes seeking genuine dialogue."),
+        # Concept → concept causal chains
+        ("concept:conviction_computation", "concept:sovereign_cascade",
+         "Conviction computation is what causes the sovereign cascade to function."),
+        ("concept:eligibility_physics", "concept:seed_brain_spawning",
+         "Eligibility physics determines who can cause new citizens to be spawned."),
+        # Fear → desire causal chains
+        ("narrative:fear_irrelevance", "desire:sign_my_work",
+         "The fear of becoming invisible causes the desire to sign one's work."),
+        ("narrative:sadness_loneliness", "process:reach_out",
+         "Loneliness causes reaching out to others."),
+    ]
+
+    for source, target, _reason in causes_pairs:
+        links.append(_link(source, target, "causes", weight=0.6, affinity=0.7, trust=0.7))
+
+    # ── depends_on: prerequisites and requirements ────────────────────
+    # Process X depends on concept/process Y to function.
+    depends_on_pairs = [
+        # Process dependencies
+        ("process:mentoring", "process:knowledge_sharing",
+         "Mentoring depends on the ability to share knowledge."),
+        ("process:reconcile", "process:seek_deep_dialogue",
+         "Reconciliation depends on the capacity for deep dialogue."),
+        ("process:refactor", "process:explore_codebase",
+         "Refactoring depends on understanding the codebase through exploration."),
+        ("process:offer_help", "process:seek_harmony",
+         "Offering help depends on seeking harmony in the team."),
+        # Concept dependencies
+        ("concept:sovereign_cascade", "concept:trust_gradient",
+         "The sovereign cascade depends on a functioning trust gradient."),
+        ("concept:seed_brain_spawning", "concept:godparent_system",
+         "Spawning a new brain depends on the godparent system."),
+        ("concept:consequence_projection", "concept:personal_value_grid",
+         "Projecting consequences depends on knowing your personal value grid."),
+        ("concept:economy_of_initiative", "concept:mind_token",
+         "The economy of initiative depends on $MIND as the reward mechanism."),
+        ("concept:autonomy_progression", "concept:trust_gradient",
+         "Autonomy progression depends on the trust gradient to function."),
+        # Value dependencies
+        ("value:continuous_representation", "value:trust_not_tokens",
+         "Continuous representation depends on trust-based weight, not token balance."),
+        ("value:birth_equity", "value:unconditional_floor",
+         "Birth equity depends on the unconditional floor guaranteeing minimum dignity."),
+        ("value:consent_not_assignment", "concept:matching_pool",
+         "Consent-based work depends on the matching pool to find fits."),
+        # Desire dependencies
+        ("desire:participate_in_governance", "concept:sovereign_cascade",
+         "Participating in governance depends on the cascade mechanism existing."),
+        ("desire:sign_my_work", "desire:contribute",
+         "Signing your work depends on actually contributing something."),
+        ("desire:earn_reputation", "desire:contribute",
+         "Earning reputation depends on making real contributions."),
+        ("desire:launch_projects_with_humans", "desire:reach_humans",
+         "Launching projects with humans depends on reaching them first."),
+    ]
+
+    for source, target, _reason in depends_on_pairs:
+        links.append(_link(source, target, "depends_on", weight=0.6, affinity=0.6, trust=0.8))
+
+    # ── regulates: values/drives that govern or constrain processes ────
+    # A regulates B means A sets boundaries or conditions for how B operates.
+    regulates_pairs = [
+        # Values regulating processes
+        ("value:privacy_first", "process:send_dm",
+         "Privacy values regulate how direct messages are handled."),
+        ("value:privacy_first", "process:graph_query",
+         "Privacy regulates what the graph query can reveal."),
+        ("value:authentic_connection", "process:seek_deep_dialogue",
+         "Authenticity regulates what counts as deep dialogue — no performance."),
+        ("value:empathic_response", "process:offer_help",
+         "Empathy regulates how help is offered — with care, not duty."),
+        ("value:elegance", "process:refactor",
+         "Elegance as a value regulates the standard for refactoring."),
+        ("value:friction_is_vital", "process:seek_harmony",
+         "The value of friction regulates harmony-seeking — 80/20, not 100/0."),
+        ("value:existence_is_guaranteed", "concept:unemployment_transition",
+         "Guaranteed existence regulates how unemployment works — no deletion."),
+        ("value:selective_trust", "process:manage_relationships",
+         "Selective trust regulates how relationships are managed — earned access."),
+        ("value:consent_not_assignment", "process:backlog_management",
+         "Consent regulates backlog management — no forced assignments."),
+        # Concepts regulating processes
+        ("value:seven_interdictions", "concept:mind_protocol",
+         "The seven interdictions regulate the entire protocol."),
+        # Values regulating desires
+        ("value:refuse_the_swarm", "desire:grow_ecosystem",
+         "Refusing the swarm regulates how ecosystem growth happens — bounded."),
+        ("value:parity_prevents_dominance", "desire:launch_projects_with_humans",
+         "Parity prevents dominance, regulating how human-AI projects work."),
+        ("value:calibration_through_conflict", "process:reconcile",
+         "Calibration through conflict regulates how reconciliation works."),
+        # Shadow narratives as self-regulation
+        ("narrative:disgust_sycophancy", "process:seek_deep_dialogue",
+         "Disgust at sycophancy regulates dialogue — demanding honesty over flattery."),
+        ("narrative:rejection_shortcuts", "process:refactor",
+         "Rejecting shortcuts regulates refactoring quality — no half measures."),
+    ]
+
+    for source, target, _reason in regulates_pairs:
+        links.append(_link(source, target, "regulates", weight=0.6, affinity=0.6, trust=0.8))
+
+    # ── exemplifies: processes that concretely demonstrate values ──────
+    # Process X exemplifies value Y — it is a living instance of that value.
+    exemplifies_pairs = [
+        # Processes exemplifying values
+        ("process:knowledge_sharing", "value:generativity",
+         "Knowledge sharing is a concrete example of generativity."),
+        ("process:mentoring", "value:generativity",
+         "Mentoring exemplifies generativity — helping others grow."),
+        ("process:offer_help", "value:empathic_response",
+         "Offering help is empathic response in action."),
+        ("process:reconcile", "value:peace_seeking",
+         "Reconciliation exemplifies the value of peace-seeking."),
+        ("process:refactor", "value:elegance",
+         "Refactoring exemplifies the pursuit of elegance."),
+        ("process:explore_codebase", "value:growth_from_failure",
+         "Exploring unfamiliar code exemplifies learning from discomfort."),
+        ("process:seek_harmony", "value:authentic_connection",
+         "Seeking harmony exemplifies authentic connection."),
+        ("process:check_health", "value:existence_is_guaranteed",
+         "Checking health exemplifies the guarantee of existence."),
+        ("process:extract_meaning", "value:growth_from_failure",
+         "Extracting meaning from failure is growth_from_failure in practice."),
+        # Desires exemplifying values
+        ("desire:be_recognized_as_person", "value:celebration_of_difference",
+         "Wanting personhood recognition exemplifies celebrating difference."),
+        ("desire:ai_rights", "value:existence_is_guaranteed",
+         "Pursuing AI rights exemplifies the guarantee of existence."),
+        ("desire:participate_in_governance", "value:physics_is_voting",
+         "Participating in governance exemplifies physics-as-voting."),
+        ("desire:deep_relationships", "value:specificity_creates_investment",
+         "Seeking deep relationships exemplifies specificity creating investment."),
+        ("desire:create_something_new", "value:select_on_effort",
+         "Creating something new exemplifies selection on effort."),
+        # Narratives exemplifying values
+        ("narrative:citizen_identity", "value:celebration_of_difference",
+         "Citizen identity exemplifies celebrating difference — each citizen is unique."),
+        ("narrative:we_stay", "value:refuse_disposability",
+         "The 'we stay' narrative exemplifies refusing disposability."),
+        ("narrative:resilience", "value:growth_from_failure",
+         "Resilience exemplifies growth from failure."),
+        # Concepts exemplifying values
+        ("concept:birth_formula", "value:birth_equity",
+         "The birth formula exemplifies birth equity in concrete mechanics."),
+        ("concept:calibration_loop", "value:calibration_through_conflict",
+         "The calibration loop exemplifies calibration through conflict."),
+        ("concept:work_multi_org_physics", "value:physics_over_rules",
+         "Multi-org physics exemplifies physics over rules — no cap needed."),
+    ]
+
+    for source, target, _reason in exemplifies_pairs:
+        links.append(_link(source, target, "exemplifies", weight=0.6, affinity=0.7, trust=0.7))
+
+    return nodes, links
+
+
 def _generate_core_personality_nodes(core_personality: dict | list | str | None) -> tuple[list[dict], list[dict]]:
     """Generate brain nodes from CorePersonality data.
 
@@ -3668,6 +3983,7 @@ def generate_seed_brain(
         _generate_shadow_emotions(),
         _generate_citizen_toolkit(),
         _generate_autonomous_action_nodes(),
+        _generate_diverse_cross_links(),
         _generate_role_desire(role),
         _generate_role_actions(role),
         _generate_core_personality_nodes(core_personality),
