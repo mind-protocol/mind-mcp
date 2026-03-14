@@ -13,7 +13,7 @@ from runtime.physics.graph import GraphQueries, GraphOps
 from runtime.physics.tick_v1_2_types import TickResultV1_2
 from runtime.physics.tick_v1_2_queries import TickQueries
 from runtime.physics.graph.graph_query_utils import dijkstra_with_resistance, dijkstra_single_source
-from runtime.physics.constants import BLOCKED_PATH_RESISTANCE, MAX_PATH_HOPS, plutchik_intensity
+from runtime.physics.constants import BLOCKED_PATH_RESISTANCE, MAX_PATH_HOPS
 
 # Import phases
 from runtime.physics.phases.generation import phase_generation
@@ -183,13 +183,16 @@ class GraphTickV1_2:
         self._proximity_cache = {player_id: 0.0}  # Player has 0 resistance to self
 
         try:
-            # Fetch ALL edges in the graph (limited to those with valid properties)
+            # Fetch ALL edges with L3 relational physics dimensions
             edges_result = self.read.query("""
             MATCH (a)-[r]-(b)
             WHERE a.id IS NOT NULL AND b.id IS NOT NULL
             RETURN DISTINCT a.id AS node_a, b.id AS node_b,
                    coalesce(r.weight, 1.0) AS weight,
-                   r.emotions AS emotions
+                   coalesce(r.trust, 0.0) AS trust,
+                   coalesce(r.friction, 0.0) AS friction,
+                   coalesce(r.affinity, 0.0) AS affinity,
+                   coalesce(r.aversion, 0.0) AS aversion
             LIMIT 5000
             """)
 
@@ -197,17 +200,22 @@ class GraphTickV1_2:
                 logger.debug("[Proximity] No edges found, using fallback")
                 return
 
-            # Build edge list for Dijkstra (v1.2: no conductivity)
+            # Build edge list for Dijkstra — resistance from L3 topological physics
             edges = []
             for edge in edges_result:
-                emotions = edge.get('emotions', []) or []
-                emotion_factor = avg_emotion_intensity(emotions)
+                trust = edge.get('trust', 0.0) or 0.0
+                friction = edge.get('friction', 0.0) or 0.0
+                affinity = edge.get('affinity', 0.0) or 0.0
+                aversion = edge.get('aversion', 0.0) or 0.0
+                # Resistance: high friction/aversion = hard to traverse
+                # High trust/affinity = easier flow
+                edge_factor = (1.0 + affinity + trust) / (1.0 + friction + aversion)
 
                 edges.append({
                     'node_a': edge.get('node_a'),
                     'node_b': edge.get('node_b'),
                     'weight': edge.get('weight', 1.0) or 1.0,
-                    'emotion_factor': max(0.1, emotion_factor)
+                    'emotion_factor': max(0.1, edge_factor)
                 })
 
             # Single-source Dijkstra from player
