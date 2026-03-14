@@ -1,18 +1,18 @@
 # Repository Map: mind-mcp
 
-*Generated: 2026-03-13 17:34*
+*Generated: 2026-03-14 19:46*
 
-- **Files:** 525
-- **Directories:** 118
-- **Total Size:** 5.7M
-- **Doc Files:** 336
-- **Code Files:** 178
-- **Areas:** 15 (docs/ subfolders)
-- **Modules:** 36 (subfolders in areas)
-- **DOCS Links:** 69 (0.39 avg per code file)
+- **Files:** 691
+- **Directories:** 147
+- **Total Size:** 8.4M
+- **Doc Files:** 399
+- **Code Files:** 280
+- **Areas:** 23 (docs/ subfolders)
+- **Modules:** 39 (subfolders in areas)
+- **DOCS Links:** 93 (0.33 avg per code file)
 
-- markdown: 336
-- python: 168
+- markdown: 399
+- python: 270
 - typescript: 9
 - shell: 1
 
@@ -41,10 +41,12 @@
 │   │   └── (..16 more files)
 │   ├── __main__.py (3.3K)
 │   └── (..2 more files)
-├── connectome/ (66.9K)
-│   ├── adapters/ (12.2K)
+├── config/ (64)
+│   └── (..1 more files)
+├── connectome/ (66.8K)
+│   ├── adapters/ (12.1K)
 │   │   ├── local.ts (7.1K)
-│   │   ├── remote.ts (4.8K)
+│   │   ├── remote.ts (4.7K)
 │   │   └── (..1 more files)
 │   ├── core/ (15.5K)
 │   │   ├── types/ (15.1K)
@@ -60,9 +62,9 @@
 │   │   └── system-manifest.ts (6.0K)
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
-├── docker/ (4.5K)
-│   └── entrypoint.sh (4.5K)
-├── docs/ (2.7M)
+├── docker/ (6.0K)
+│   └── entrypoint.sh (6.0K)
+├── docs/ (4.0M)
 │   ├── agents/ (242.8K)
 │   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
@@ -106,17 +108,30 @@
 │   │       ├── PATTERNS_Cybernetic_Studio_Architecture.md (16.1K)
 │   │       ├── SYNC_Cybernetic_Studio_Architecture_State.md (7.0K)
 │   │       └── VALIDATION_Cybernetic_Studio_Architectural_Invariants.md (5.0K)
-│   ├── citizens/ (53.0K)
-│   │   ├── human_ai_pairing/ (35.2K)
+│   ├── citizens/ (213.0K)
+│   │   ├── human_ai_pairing/ (59.8K)
 │   │   │   ├── ALGORITHM_Human_AI_Pairing.md (9.9K)
 │   │   │   ├── BEHAVIORS_Human_AI_Pairing.md (6.5K)
+│   │   │   ├── HEALTH_Human_AI_Pairing.md (8.4K)
+│   │   │   ├── IMPLEMENTATION_Human_AI_Pairing.md (8.6K)
 │   │   │   ├── OBJECTIVES_Human_AI_Pairing.md (3.7K)
 │   │   │   ├── PATTERNS_Human_AI_Pairing.md (7.0K)
+│   │   │   ├── SYNC_Human_AI_Pairing.md (7.5K)
 │   │   │   └── VALIDATION_Human_AI_Pairing.md (8.1K)
-│   │   └── parenthood_network/ (17.8K)
-│   │       ├── BEHAVIORS_Parenthood_Network.md (8.1K)
-│   │       ├── OBJECTIVES_Parenthood_Network.md (4.0K)
-│   │       └── PATTERNS_Parenthood_Network.md (5.6K)
+│   │   ├── parenthood_network/ (80.2K)
+│   │   │   ├── ALGORITHM_Parenthood_Network.md (20.7K)
+│   │   │   ├── BEHAVIORS_Parenthood_Network.md (8.1K)
+│   │   │   ├── HEALTH_Parenthood_Network.md (12.9K)
+│   │   │   ├── IMPLEMENTATION_Parenthood_Network.md (11.7K)
+│   │   │   ├── OBJECTIVES_Parenthood_Network.md (4.0K)
+│   │   │   ├── PATTERNS_Parenthood_Network.md (5.6K)
+│   │   │   ├── SYNC_Parenthood_Network.md (7.2K)
+│   │   │   └── VALIDATION_Parenthood_Network.md (9.9K)
+│   │   └── partner_model/ (73.0K)
+│   │       ├── ALGORITHM_Partner_Model_Ingestion.md (26.1K)
+│   │       ├── BEHAVIORS_Partner_Model.md (14.7K)
+│   │       ├── PATTERNS_Partner_Model.md (13.7K)
+│   │       └── VALIDATION_Partner_Model.md (18.6K)
 │   ├── cli/ (145.9K)
 │   │   ├── archive/ (5.4K)
 │   │   │   ├── SYNC_CLI_Development_State_archive_2025-12.md (581)
@@ -153,6 +168,15 @@
 │   │   ├── VALIDATION_CLI_Module_Invariants.md (731)
 │   │   ├── modules.md (1.8K)
 │   │   └── (..1 more files)
+│   ├── cognition/ (234.9K)
+│   │   └── l1/ (234.9K)
+│   │       ├── ALGORITHM_L1_Physics.md (80.2K)
+│   │       ├── BEHAVIORS_L1_Cognition.md (23.4K)
+│   │       ├── HEALTH_L1_Cognition.md (38.2K)
+│   │       ├── OBJECTIVES_L1_Cognition.md (4.0K)
+│   │       ├── PATTERNS_L1_Cognition.md (57.2K)
+│   │       ├── SYNC_L1_Cognition.md (22.7K)
+│   │       └── VALIDATION_L1_Cognition.md (9.3K)
 │   ├── concepts/ (93.0K)
 │   │   ├── clustering/ (51.6K)
 │   │   │   ├── ALGORITHM_Dense_Clustering.md (9.5K)
@@ -183,6 +207,11 @@
 │   │   ├── PATTERNS_Core_Utils_Functions.md (2.2K)
 │   │   ├── SYNC_Core_Utils_State.md (4.3K)
 │   │   └── VALIDATION_Core_Utils_Invariants.md (3.6K)
+│   ├── economy/ (62.2K)
+│   │   └── metabolic/ (62.2K)
+│   │       ├── ALGORITHM_Metabolic_Economy.md (29.6K)
+│   │       ├── PATTERNS_Metabolic_Economy.md (14.3K)
+│   │       └── VALIDATION_Metabolic_Economy.md (18.2K)
 │   ├── engine/ (254.3K)
 │   │   ├── membrane/ (32.7K)
 │   │   │   ├── ALGORITHM_Membrane_Modulation.md (4.3K)
@@ -246,6 +275,14 @@
 │   │   ├── PATTERNS_Engine.md (1.1K)
 │   │   ├── SYNC_Engine.md (798)
 │   │   └── VALIDATION_Engine.md (666)
+│   ├── human_integration/ (150.5K)
+│   │   ├── ALGORITHM_Human_Integration.md (31.1K)
+│   │   ├── BEHAVIORS_Human_Integration.md (14.4K)
+│   │   ├── IMPLEMENTATION_Human_Integration.md (62.5K)
+│   │   ├── OBJECTIVES_Human_Integration.md (6.7K)
+│   │   ├── PATTERNS_Human_Integration.md (14.4K)
+│   │   ├── SYNC_Human_Integration.md (10.4K)
+│   │   └── VALIDATION_Human_Integration.md (11.0K)
 │   ├── infrastructure/ (219.2K)
 │   │   ├── api/ (70.2K)
 │   │   │   ├── ALGORITHM_Api.md (19.9K)
@@ -295,6 +332,13 @@
 │   │   │   ├── SYNC_Tempo.md (4.0K)
 │   │   │   └── VALIDATION_Tempo.md (2.6K)
 │   │   └── wsl-autostart.md (3.2K)
+│   ├── l1_wiring/ (111.5K)
+│   │   ├── ALGORITHM_L1_Wiring.md (37.9K)
+│   │   ├── BEHAVIORS_L1_Wiring.md (11.7K)
+│   │   ├── IMPLEMENTATION_L1_Wiring.md (27.0K)
+│   │   ├── OBJECTIVES_L1_Wiring.md (8.7K)
+│   │   ├── PATTERNS_L1_Wiring.md (13.4K)
+│   │   └── SYNC_L1_Wiring.md (12.7K)
 │   ├── llm_agents/ (71.5K)
 │   │   ├── archives/ (20.8K)
 │   │   │   └── SYNC_LLM_Agents_State_archive_2025-12.md (20.8K)
@@ -438,18 +482,31 @@
 │   │   ├── SYNC_Procedure_archive_2025-12.md (3.9K)
 │   │   ├── VALIDATION_Procedure.md (6.0K)
 │   │   └── VOCABULARY_Procedure.md (6.7K)
-│   ├── schema/ (148.4K)
+│   ├── reviews/ (28.7K)
+│   │   ├── REVIEW_F1_F2_Coherence.md (10.7K)
+│   │   ├── REVIEW_F3_F4_Coherence.md (9.8K)
+│   │   └── REVIEW_F4_F5_Coherence.md (8.2K)
+│   ├── schema/ (168.2K)
 │   │   ├── ALGORITHM_Schema.md (11.3K)
 │   │   ├── BEHAVIORS_Schema.md (7.7K)
+│   │   ├── GRAMMAR_L3_Link_Synthesis.md (19.9K)
 │   │   ├── GRAMMAR_Link_Synthesis.md (53.4K)
 │   │   ├── HEALTH_Schema.md (14.1K)
 │   │   ├── IMPLEMENTATION_Schema.md (10.1K)
-│   │   ├── OBJECTIVES_Schema.md (2.8K)
 │   │   ├── PATTERNS_Schema.md (7.3K)
 │   │   ├── SYNC_Schema.md (6.7K)
 │   │   ├── SYNC_Schema_archive_2025-12.md (15.4K)
 │   │   ├── VALIDATION_Schema.md (16.0K)
-│   │   └── (..6 more files)
+│   │   └── (..7 more files)
+│   ├── task_routing/ (34.4K)
+│   │   ├── ALGORITHM_Task_Routing.md (5.1K)
+│   │   ├── BEHAVIORS_Task_Routing.md (4.8K)
+│   │   ├── HEALTH_Task_Routing.md (3.7K)
+│   │   ├── IMPLEMENTATION_Task_Routing.md (6.1K)
+│   │   ├── OBJECTIVES_Task_Routing.md (2.0K)
+│   │   ├── PATTERNS_Task_Routing.md (4.8K)
+│   │   ├── SYNC_Task_Routing.md (4.9K)
+│   │   └── VALIDATION_Task_Routing.md (3.0K)
 │   ├── tests/ (7.0K)
 │   │   └── traversal/ (7.0K)
 │   │       ├── OBJECTIVES_Traversal_Tests.md (619)
@@ -466,10 +523,29 @@
 │   │   ├── PATTERNS_Tools.md (5.9K)
 │   │   ├── SYNC_Tools.md (16.3K)
 │   │   └── VALIDATION_Tools.md (5.1K)
+│   ├── trust_mechanics/ (199.0K)
+│   │   ├── ALGORITHM_Trust_Mechanics.md (22.1K)
+│   │   ├── BEHAVIORS_Trust_Mechanics.md (16.2K)
+│   │   ├── IMPLEMENTATION_Trust_Mechanics.md (62.2K)
+│   │   ├── OBJECTIVES_Trust_Mechanics.md (5.8K)
+│   │   ├── PATTERNS_Trust_Mechanics.md (14.6K)
+│   │   ├── SYNC_Trust_Mechanics.md (12.1K)
+│   │   ├── VALIDATION_Trust_Mechanics.md (10.6K)
+│   │   ├── VALUE_CREATION_TAXONOMY.md (30.8K)
+│   │   └── VALUE_DESTRUCTION_PATHOLOGIES.md (24.5K)
+│   ├── universe/ (125.0K)
+│   │   ├── ALGORITHM_Universe_Graph.md (18.5K)
+│   │   ├── BEHAVIORS_Universe_Graph.md (11.3K)
+│   │   ├── IMPLEMENTATION_Universe_Graph.md (49.8K)
+│   │   ├── OBJECTIVES_Universe_Graph.md (6.2K)
+│   │   ├── PATTERNS_Universe_Graph.md (11.9K)
+│   │   ├── SYNC_Universe_Graph.md (15.3K)
+│   │   └── VALIDATION_Universe_Graph.md (11.9K)
 │   ├── ARCHITECTURE.md (4.4K)
-│   ├── MAPPING.md (2.7K)
+│   ├── CONFIGURATION.md (13.2K)
+│   ├── MAPPING.md (14.0K)
 │   ├── TAXONOMY.md (1.7K)
-│   └── map.md (298.7K)
+│   └── map.md (433.0K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -482,47 +558,96 @@
 │               ├── traversal_exp_9eee82be.txt (5.7K)
 │               ├── traversal_exp_a26866c1.jsonl (31.3K)
 │               └── traversal_exp_a26866c1.txt (13.2K)
-├── mcp/ (118.4K)
-│   ├── tools/ (108.7K)
+├── mcp/ (249.2K)
+│   ├── tools/ (238.3K)
 │   │   ├── agent_handler.py (15.3K)
-│   │   ├── alarm_handler.py (6.8K)
+│   │   ├── call_handler.py (14.5K)
 │   │   ├── gemini_chat.py (11.7K)
-│   │   ├── graph_query_handler.py (12.0K)
+│   │   ├── graph_query_handler.py (11.9K)
 │   │   ├── media_handler.py (14.8K)
-│   │   ├── procedure_handler.py (6.7K)
-│   │   ├── send_handler.py (7.5K)
-│   │   ├── task_handler.py (8.9K)
-│   │   ├── telegram_notify.py (7.2K)
-│   │   ├── think_handler.py (11.2K)
-│   │   └── (..3 more files)
-│   ├── server.py (9.5K)
+│   │   ├── place_handler.py (54.3K)
+│   │   ├── profile_handler.py (14.1K)
+│   │   ├── read_handler.py (15.2K)
+│   │   ├── send_handler.py (15.0K)
+│   │   ├── spawn_handler.py (20.5K)
+│   │   └── (..9 more files)
+│   ├── server.py (10.7K)
 │   └── (..2 more files)
-├── runtime/ (2.5M)
+├── runtime/ (3.4M)
 │   ├── actors/
 │   │   └── (..4 more files)
-│   ├── agents/ (133.7K)
+│   ├── agents/ (135.8K)
 │   │   ├── __init__.py (2.5K) →
 │   │   ├── cli.py (3.2K) →
 │   │   ├── graph.py (42.4K)
 │   │   ├── liveness.py (11.5K)
-│   │   ├── mapping.py (6.5K) →
-│   │   ├── prompts.py (7.9K) →
+│   │   ├── mapping.py (8.9K) →
+│   │   ├── prompts.py (7.6K) →
 │   │   ├── run.py (22.9K) →
 │   │   └── verification.py (36.8K) →
-│   ├── bridges/ (53.9K)
+│   ├── api/ (89.5K)
+│   │   ├── auth_routes.py (13.5K)
+│   │   ├── chat_routes.py (13.1K)
+│   │   ├── citizen_profiles.py (3.1K)
+│   │   ├── citizens_routes.py (24.6K)
+│   │   ├── dm_routes.py (11.2K)
+│   │   ├── feed_routes.py (6.8K)
+│   │   ├── house_routes.py (14.4K)
+│   │   ├── jwt_utils.py (1.8K)
+│   │   ├── rate_limiter.py (872)
+│   │   └── (..1 more files)
+│   ├── bridges/ (62.5K)
 │   │   ├── rate_limiter.py (3.6K)
-│   │   ├── telegram_bridge.py (27.2K)
+│   │   ├── telegram_bridge.py (35.8K)
 │   │   ├── voice_websocket.py (14.1K)
 │   │   ├── whatsapp_bridge.py (8.9K)
 │   │   └── (..1 more files)
 │   ├── capability/ (20.6K)
 │   │   └── __init__.py (20.6K)
-│   ├── citizens/ (16.8K)
-│   │   ├── __init__.py (501)
-│   │   ├── identity_loader.py (6.4K)
-│   │   └── prompt_builder.py (9.9K)
+│   ├── citizens/ (22.7K)
+│   │   ├── __init__.py (597)
+│   │   ├── identity_loader.py (6.3K)
+│   │   ├── prompt_builder.py (10.5K)
+│   │   └── seed.py (5.3K)
 │   ├── client/
 │   │   └── (..5 more files)
+│   ├── cognition/ (401.4K)
+│   │   ├── laws/ (101.3K)
+│   │   │   ├── law_01_energy_injection.py (29.3K)
+│   │   │   ├── law_02_propagation.py (6.4K)
+│   │   │   ├── law_03_energy_decay.py (4.1K)
+│   │   │   ├── law_04_attentional_competition.py (6.9K)
+│   │   │   ├── law_05_coactivation_reinforcement.py (5.9K)
+│   │   │   ├── law_06_consolidation.py (7.6K)
+│   │   │   ├── law_07_forgetting.py (4.3K)
+│   │   │   ├── law_09_inhibition.py (4.0K)
+│   │   │   ├── law_13_to_18_limbic_engine.py (22.2K)
+│   │   │   ├── law_18_relational_valence.py (10.3K)
+│   │   │   └── (..1 more files)
+│   │   ├── tests/ (83.5K)
+│   │   │   ├── test_l1_wiring_integration.py (34.4K)
+│   │   │   ├── test_minimal_kernel_invariants.py (29.2K)
+│   │   │   ├── test_trust_mechanics.py (19.8K)
+│   │   │   └── (..1 more files)
+│   │   ├── trust/ (66.8K)
+│   │   │   ├── __init__.py (587)
+│   │   │   ├── creator_attribution_cascade.py (7.7K)
+│   │   │   ├── destruction_pathology_detector.py (34.5K)
+│   │   │   ├── limbic_delta_computation.py (2.1K)
+│   │   │   ├── trust_score_aggregator.py (3.2K)
+│   │   │   ├── trust_update_on_links.py (3.3K)
+│   │   │   └── value_type_classifier.py (15.3K)
+│   │   ├── brain_health_score_periodic_calculator.py (9.9K)
+│   │   ├── citizen_brain_seeder.py (22.2K)
+│   │   ├── constants.py (9.3K)
+│   │   ├── falkordb_checkpointer.py (13.4K)
+│   │   ├── feedback_injector.py (8.4K)
+│   │   ├── models.py (11.2K)
+│   │   ├── orientation_taxonomy.py (10.9K)
+│   │   ├── stimulus_router.py (9.0K)
+│   │   ├── tick_runner_l1_cognitive_engine.py (34.4K)
+│   │   ├── wm_prompt_serializer.py (20.9K)
+│   │   └── (..1 more files)
 │   ├── connectome/ (103.7K)
 │   │   ├── __init__.py (734) →
 │   │   ├── loader.py (4.8K) →
@@ -533,6 +658,23 @@
 │   │   ├── steps.py (36.3K) →
 │   │   ├── templates.py (7.6K)
 │   │   └── validation.py (6.3K)
+│   ├── crypto/ (24.9K)
+│   │   ├── __init__.py (1.0K) →
+│   │   ├── aes256_content_encryptor.py (4.9K) →
+│   │   ├── encrypted_field_codec.py (5.1K) →
+│   │   ├── rsa_key_manager.py (7.2K) →
+│   │   └── space_key_distribution_and_rotation.py (6.6K) →
+│   ├── debug/ (11.4K)
+│   │   ├── tracer.py (11.4K)
+│   │   └── (..1 more files)
+│   ├── economy/ (32.7K)
+│   │   ├── __init__.py (1.5K)
+│   │   ├── anti_sybil_repatriation.py (3.6K)
+│   │   ├── bilateral_bond_transfer.py (1.8K)
+│   │   ├── degressive_pricing_formula.py (3.0K)
+│   │   ├── progressive_demurrage_tax.py (1.6K)
+│   │   ├── settlement_engine.py (13.1K)
+│   │   └── value_event_settlement.py (8.2K)
 │   ├── graph/ (99.0K)
 │   │   ├── adapter/ (21.3K)
 │   │   │   ├── base.py (3.3K) →
@@ -546,7 +688,7 @@
 │   │   │   ├── queries.py (28.0K)
 │   │   │   └── (..1 more files)
 │   │   └── (..1 more files)
-│   ├── infrastructure/ (243.3K)
+│   ├── infrastructure/ (247.1K)
 │   │   ├── api/ (94.5K)
 │   │   │   ├── app.py (28.1K) →
 │   │   │   ├── graphs.py (14.9K)
@@ -564,12 +706,12 @@
 │   │   │   ├── factory.py (6.5K) →
 │   │   │   ├── falkordb_adapter.py (6.6K) →
 │   │   │   └── neo4j_adapter.py (5.7K) →
-│   │   ├── embeddings/ (20.5K)
+│   │   ├── embeddings/ (24.2K)
 │   │   │   ├── __init__.py (1.9K) →
-│   │   │   ├── embed_pending.py (2.9K)
+│   │   │   ├── embed_pending.py (3.0K)
 │   │   │   ├── factory.py (4.1K) →
 │   │   │   ├── openai_adapter.py (4.4K) →
-│   │   │   └── service.py (7.2K) →
+│   │   │   └── service.py (10.8K) →
 │   │   ├── memory/ (19.7K)
 │   │   │   ├── moment_processor.py (19.5K) →
 │   │   │   └── (..1 more files)
@@ -586,31 +728,49 @@
 │   │   ├── actors.py (4.4K) →
 │   │   ├── capabilities.py (11.8K) →
 │   │   ├── docs.py (36.9K)
-│   │   ├── files.py (20.1K) →
+│   │   ├── files.py (20.2K) →
 │   │   └── (..1 more files)
-│   ├── membrane/ (20.3K)
-│   │   ├── __init__.py (893)
+│   ├── ingestion/ (37.9K)
+│   │   ├── __init__.py (1.4K)
+│   │   ├── consent_gate_and_bond_validator.py (11.1K)
+│   │   ├── l1_stimulus_injector_for_partner_data.py (4.7K)
+│   │   ├── partner_node_factory_and_relevance_scorer.py (8.8K)
+│   │   └── sovereign_cascade_prediction_tracker.py (11.9K)
+│   ├── l4/ (83.2K)
+│   │   ├── citizen_l1_ensure.py (13.1K)
+│   │   ├── citizen_l4_upsert.py (32.5K)
+│   │   ├── confirm_endpoint.py (6.1K)
+│   │   ├── mind_token_airdrop.py (6.3K)
+│   │   ├── org_confirmation_endpoint.py (10.7K)
+│   │   ├── org_self_announce.py (14.5K)
+│   │   └── (..1 more files)
+│   ├── membrane/ (54.3K)
+│   │   ├── __init__.py (1.5K)
+│   │   ├── auto_grant.py (18.8K)
 │   │   ├── broadcast.py (5.8K)
 │   │   ├── client.py (4.3K)
-│   │   ├── http_endpoint.py (4.5K)
+│   │   ├── endpoint_registrar.py (8.1K)
+│   │   ├── http_endpoint.py (5.9K)
+│   │   ├── routing.py (5.1K)
 │   │   ├── stimulus.py (4.4K)
 │   │   └── (..2 more files)
-│   ├── models/ (46.6K)
+│   ├── models/ (45.2K)
 │   │   ├── __init__.py (2.6K) →
 │   │   ├── base.py (12.6K)
-│   │   ├── links.py (12.9K)
+│   │   ├── links.py (11.5K)
 │   │   └── nodes.py (18.5K)
-│   ├── orchestrator/ (71.8K)
+│   ├── orchestrator/ (83.7K)
 │   │   ├── __init__.py (548)
 │   │   ├── account_balancer.py (8.2K)
 │   │   ├── alarm_watcher.py (5.7K)
-│   │   ├── claude_invoker.py (14.6K)
+│   │   ├── claude_invoker.py (14.8K)
 │   │   ├── compute_budget.py (8.0K)
-│   │   ├── degradation.py (8.6K)
-│   │   ├── dispatcher.py (10.4K)
+│   │   ├── degradation.py (8.7K)
+│   │   ├── dispatcher.py (18.6K)
+│   │   ├── first_boot_registrar.py (3.5K)
 │   │   ├── message_queue.py (5.8K)
 │   │   └── session_tracker.py (9.9K)
-│   ├── physics/ (782.4K)
+│   ├── physics/ (812.8K)
 │   │   ├── archive/ (36.9K)
 │   │   │   └── tick_v1_0.py (36.9K) →
 │   │   ├── graph/ (233.6K)
@@ -625,84 +785,131 @@
 │   │   │   ├── graph_query_utils.py (14.8K) →
 │   │   │   ├── graph_schema_cleanup.py (9.5K)
 │   │   │   └── (..6 more files)
-│   │   ├── health/ (100.1K)
-│   │   │   ├── checkers/ (43.6K)
-│   │   │   │   ├── __init__.py (1.2K) →
+│   │   ├── health/ (132.6K)
+│   │   │   ├── checkers/ (76.1K)
+│   │   │   │   ├── content_encryption.py (6.8K) →
 │   │   │   │   ├── energy_conservation.py (5.8K) →
+│   │   │   │   ├── hierarchy_consistency.py (4.4K) →
+│   │   │   │   ├── key_distribution.py (5.0K) →
 │   │   │   │   ├── link_state.py (3.8K) →
 │   │   │   │   ├── moment_lifecycle.py (4.3K) →
-│   │   │   │   ├── no_negative.py (3.2K) →
+│   │   │   │   ├── private_key_scan.py (8.5K) →
+│   │   │   │   ├── revocation_completeness.py (7.2K) →
 │   │   │   │   ├── subentity.py (20.8K)
-│   │   │   │   └── tick_integrity.py (4.6K) →
+│   │   │   │   ├── tick_integrity.py (4.6K) →
+│   │   │   │   └── (..2 more files)
 │   │   │   ├── base.py (3.5K) →
 │   │   │   ├── checker.py (9.4K)
 │   │   │   ├── diagnostic_report_generator.py (20.6K)
 │   │   │   ├── exploration_log_checker.py (22.7K)
 │   │   │   └── (..1 more files)
-│   │   ├── phases/ (23.4K)
+│   │   ├── phases/ (21.4K)
 │   │   │   ├── completion.py (2.3K) →
 │   │   │   ├── generation.py (2.1K) →
 │   │   │   ├── link_cooling.py (2.0K) →
-│   │   │   ├── moment_draw.py (3.4K) →
-│   │   │   ├── moment_flow.py (4.3K) →
-│   │   │   ├── moment_interaction.py (3.1K) →
-│   │   │   ├── narrative_backflow.py (3.7K) →
+│   │   │   ├── moment_draw.py (2.8K) →
+│   │   │   ├── moment_flow.py (3.8K) →
+│   │   │   ├── moment_interaction.py (2.7K) →
+│   │   │   ├── narrative_backflow.py (3.3K) →
 │   │   │   └── rejection.py (2.4K) →
 │   │   ├── cluster_presentation.py (36.8K)
 │   │   ├── crystallization.py (15.9K)
-│   │   ├── energy.py (36.3K) →
-│   │   ├── exploration.py (43.0K)
-│   │   ├── flow.py (36.3K) →
-│   │   ├── nature.py (14.1K)
-│   │   ├── subentity.py (39.6K)
-│   │   ├── synthesis.py (23.4K) →
+│   │   ├── energy.py (29.8K) →
+│   │   ├── exploration.py (42.8K)
+│   │   ├── flow.py (29.8K) →
+│   │   ├── nature.py (13.7K)
+│   │   ├── subentity.py (38.0K)
+│   │   ├── synthesis.py (19.6K) →
 │   │   ├── synthesis_unfold.py (16.1K)
-│   │   ├── traversal_logger.py (52.3K)
-│   │   └── (..14 more files)
-│   ├── schema/ (44.0K)
+│   │   ├── traversal_logger.py (51.6K)
+│   │   └── (..17 more files)
+│   ├── schema/ (42.6K)
 │   │   ├── base.py (12.6K)
-│   │   ├── links.py (12.9K)
+│   │   ├── links.py (11.5K)
 │   │   ├── nodes.py (18.5K)
 │   │   └── (..2 more files)
 │   ├── traversal/ (27.2K)
 │   │   ├── embedding.py (7.2K) →
 │   │   ├── moment.py (20.0K)
 │   │   └── (..2 more files)
+│   ├── universe/ (70.8K)
+│   │   ├── __init__.py (2.4K)
+│   │   ├── access_resolution_and_link_manager.py (15.3K)
+│   │   ├── constants_l3_physics.py (3.6K) →
+│   │   ├── moment_perception_router.py (5.5K) →
+│   │   ├── organization_lifecycle_manager.py (14.1K) →
+│   │   ├── space_and_hierarchy_manager.py (19.4K) →
+│   │   └── universe_bootstrap_and_metadata.py (10.5K) →
 │   ├── cli.py (36.3K) →
 │   ├── cluster_metrics.py (31.4K)
-│   ├── init_cmd.py (24.5K) →
-│   ├── inject.py (32.3K)
+│   ├── init_cmd.py (26.1K) →
+│   ├── inject.py (32.2K)
 │   ├── procedure_runner.py (42.0K)
 │   ├── repo_overview.py (28.5K) →
-│   ├── seed_brain_from_source_docs_dynamic_generator.py (232.7K)
+│   ├── seed_brain_from_source_docs_dynamic_generator.py (275.7K)
 │   ├── status_cmd.py (36.3K) →
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── validate.py (29.4K) →
 │   └── (..23 more files)
-├── scripts/ (60.8K)
-│   └── generate_rich_core_personalities.py (60.8K)
-├── tests/ (30.0K)
+├── scripts/ (137.1K)
+│   ├── call_responder.py (14.5K)
+│   ├── generate_rich_core_personalities.py (60.8K)
+│   ├── image_gen.py (14.1K)
+│   ├── install_render_cron.py (2.4K)
+│   ├── post_deploy.py (17.0K)
+│   ├── render_log_monitor.py (21.3K)
+│   └── setup_reverse_proxy.py (7.0K)
+├── shrine/ (1.8K)
+│   └── state/ (1.8K)
+│       ├── webapp_chats/ (755)
+│       │   └── (..2 more files)
+│       └── citizen_profiles.jsonl (1.1K)
+├── tests/ (252.6K)
+│   ├── economy/ (36.3K)
+│   │   ├── test_bilateral_bond.py (6.2K)
+│   │   ├── test_demurrage_tax.py (4.4K)
+│   │   ├── test_invariants.py (11.3K)
+│   │   ├── test_pricing_formula.py (6.6K)
+│   │   ├── test_settlement_pipeline.py (7.9K)
+│   │   └── (..1 more files)
 │   ├── graph/
 │   │   └── (..3 more files)
+│   ├── ingestion/ (50.8K)
+│   │   ├── test_consent_gate.py (13.6K) →
+│   │   ├── test_partner_node_factory.py (12.9K) →
+│   │   ├── test_sovereign_cascade.py (18.8K) →
+│   │   ├── test_stimulus_injector.py (5.6K) →
+│   │   └── (..1 more files)
 │   ├── membrane/
 │   │   └── (..2 more files)
-│   ├── schema/ (7.8K)
-│   │   ├── test_schema_invariants.py (7.7K)
+│   ├── schema/ (7.2K)
+│   │   ├── test_schema_invariants.py (7.1K)
 │   │   └── (..1 more files)
 │   ├── traversal/ (20.0K)
 │   │   ├── test_embedding.py (11.6K)
 │   │   ├── test_moment.py (8.4K)
 │   │   └── (..1 more files)
+│   ├── universe/ (136.1K)
+│   │   ├── conftest.py (36.5K)
+│   │   ├── test_access_resolution_and_inheritance.py (12.2K) →
+│   │   ├── test_encryption_roundtrip_and_coverage.py (22.3K)
+│   │   ├── test_integration_universe_lifecycle.py (8.7K) →
+│   │   ├── test_l3_energy_and_crystallization.py (26.5K) →
+│   │   ├── test_moment_perception_routing.py (5.3K) →
+│   │   ├── test_organization_lifecycle.py (8.7K) →
+│   │   ├── test_space_crud_and_hierarchy.py (11.0K) →
+│   │   ├── test_universe_bootstrap.py (4.9K) →
+│   │   └── (..1 more files)
 │   ├── validation/ (2.3K)
 │   │   └── test_invariants.py (2.3K)
 │   └── (..1 more files)
-├── .gitignore (608)
+├── .gitignore (775)
 ├── .mindignore (839)
 ├── AGENTS.md (34.4K)
-├── Dockerfile (1.3K)
+├── Dockerfile (1.5K)
 ├── README.md (3.3K)
-├── home_server.py (13.0K)
-└── map.md (308.4K)
+├── home_server.py (17.4K)
+└── map.md (442.0K)
 ```
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
@@ -1605,6 +1812,43 @@
 - ## MARKERS
 
 **Sections:**
+- # Human-AI Pairing — Health: Verification
+- ## PURPOSE OF THIS FILE
+- ## WHY THIS PATTERN
+- ## CHAIN
+- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
+- ## HEALTH INDICATORS SELECTED
+- ## OBJECTIVES COVERAGE
+- ## STATUS (RESULT INDICATOR)
+- ## DOCK TYPES (COMPLETE LIST)
+- ## CHECKER INDEX
+- ## HEALTH CHECKS
+- ## HOW TO RUN
+- ## KNOWN GAPS
+- ## MARKERS
+
+**Code refs:**
+- `runtime/citizens/identity_loader.py`
+
+**Sections:**
+- # Human-AI Pairing — Implementation: Code Mapping
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## SCHEMA
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## RUNTIME BEHAVIOR
+- ## CONCURRENCY MODEL
+- ## CONFIGURATION
+- ## BIDIRECTIONAL LINKS
+- ## CODE LOCATIONS
+- ## MARKERS
+
+**Sections:**
 - # OBJECTIVES — Human-AI Pairing
 - ## CHAIN
 - ## PRIMARY OBJECTIVES (ranked)
@@ -1629,6 +1873,34 @@
 - ## SCOPE
 - ## MARKERS
 
+**Code refs:**
+- `identity_loader.py`
+- `runtime/citizens/identity_loader.py`
+- `runtime/citizens/prompt_builder.py`
+
+**Doc refs:**
+- `docs/citizens/human_ai_pairing/ALGORITHM_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/BEHAVIORS_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/HEALTH_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/IMPLEMENTATION_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/OBJECTIVES_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/PATTERNS_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/SYNC_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/VALIDATION_Human_AI_Pairing.md`
+
+**Sections:**
+- # Human-AI Pairing — Sync: Current State
+- ## CHAIN
+- ## MATURITY
+- ## CURRENT STATE
+- ## IN PROGRESS
+- ## KNOWN ISSUES
+- ## RECENT CHANGES
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## POINTERS
+- ## CONSCIOUSNESS TRACE
+
 **Doc refs:**
 - `docs/citizens/human_ai_pairing/HEALTH_Human_AI_Pairing.md`
 
@@ -1648,6 +1920,50 @@
 - ## MARKERS
 
 **Code refs:**
+- `runtime/citizens/matching_pool.py`
+- `runtime/citizens/parenthood.py`
+- `runtime/physics/embeddings.py`
+- `runtime/physics/graph_ops.py`
+
+**Sections:**
+- # Citizen Parenthood Network — Algorithm: Spawning Procedures
+- ## CHAIN
+- ## OVERVIEW
+- ## OBJECTIVES AND BEHAVIORS
+- ## DATA STRUCTURES
+- ## ALGORITHM: Citizen Spawning Pipeline
+- # L2-normalize the centroid
+- # Query: get all narrative/thing nodes linked to this actor's brain subgraph
+- # Sort by alignment descending
+- # Check 1: Empathy presence
+- # Check 2: Trait concentration
+- # Check 3: Category diversity (at least 3 distinct categories)
+- # Check 4: Population diversity (not too similar to existing citizens)
+- # Compile failure reasons
+- # Create child actor node
+- # Copy seed brain nodes to child's subgraph
+- # Link child to seed node
+- # Create parent-child links
+- # Register in unpartnered matching pool
+- ## FULL PIPELINE
+- # Step 1: Collect intents
+- # Step 2: Compute collective intent
+- # Step 3: Retrieve parent brain nodes
+- # Step 4: Score against intent
+- # Step 5: Select top-K
+- # Assemble seed brain
+- # Step 6: Safety validation
+- # Step 7: Generate SID
+- # Step 8: Create in graph
+- # Step 9: Trust links
+- ## KEY DECISIONS
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## HELPER FUNCTIONS
+- ## INTERACTIONS
+- ## MARKERS
+
+**Code refs:**
 - `runtime/citizens/parenthood.py`
 
 **Sections:**
@@ -1658,6 +1974,53 @@
 - ## INPUTS / OUTPUTS
 - ## EDGE CASES
 - ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Code refs:**
+- `runtime/citizens/parenthood.py`
+
+**Sections:**
+- # Citizen Parenthood Network — Health: Verification Mechanics and Coverage
+- ## PURPOSE OF THIS FILE
+- ## WHY THIS PATTERN
+- ## CHAIN
+- ## FLOWS ANALYSIS
+- ## HEALTH INDICATORS SELECTED
+- ## OBJECTIVES COVERAGE
+- ## STATUS (RESULT INDICATOR)
+- ## CHECKER INDEX
+- ## INDICATOR: Orphan Citizen Count
+- ## INDICATOR: Safety Bypass Count
+- ## INDICATOR: Trust Link Completeness
+- ## HOW TO RUN (Future)
+- # Run parenthood health check via mind doctor
+- # Run orphan citizen audit
+- # Run safety re-validation audit
+- # Run trust link completeness check
+- # Run all parenthood tests
+- ## KNOWN GAPS
+- ## MARKERS
+
+**Code refs:**
+- `matching_pool.py`
+- `parenthood.py`
+- `parenthood_trust_impact_tracker.py`
+- `runtime/citizens/parenthood.py`
+- `seed_brain_builder.py`
+- `spawn_safety_validator.py`
+- `test_parenthood.py`
+
+**Sections:**
+- # Citizen Parenthood Network — Implementation: Code Architecture and Structure
+- ## CHAIN
+- ## CODE STRUCTURE (Planned)
+- ## DESIGN PATTERNS
+- ## DATA STRUCTURES
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING
+- ## MODULE DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## BIDIRECTIONAL LINKS (Future)
 - ## MARKERS
 
 **Sections:**
@@ -1676,6 +2039,120 @@
 - # parent trust affects child's starting trust ceiling
 - ## What's NOT in This Module
 - ## Invariants
+- ## MARKERS
+
+**Code refs:**
+- `matching_pool.py`
+- `parenthood.py`
+- `parenthood_trust_impact_tracker.py`
+- `runtime/citizens/matching_pool.py`
+- `runtime/citizens/parenthood.py`
+- `runtime/citizens/parenthood_trust_impact_tracker.py`
+- `runtime/citizens/seed_brain_builder.py`
+- `runtime/citizens/spawn_safety_validator.py`
+- `runtime/citizens/test_parenthood.py`
+- `runtime/physics/embeddings.py`
+- `seed_brain_builder.py`
+- `spawn_safety_validator.py`
+- `test_parenthood.py`
+
+**Doc refs:**
+- `docs/citizens/parenthood_network/ALGORITHM_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/BEHAVIORS_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/HEALTH_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/IMPLEMENTATION_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/OBJECTIVES_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/PATTERNS_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/SYNC_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/VALIDATION_Parenthood_Network.md`
+
+**Sections:**
+- # Citizen Parenthood Network — Sync: Current State
+- ## CURRENT STATE
+- ## Maturity
+- ## FILES
+- ## CODE FILES (Planned)
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## MARKERS
+
+**Code refs:**
+- `runtime/citizens/parenthood.py`
+
+**Sections:**
+- # Citizen Parenthood Network — Validation: Invariants and Verification
+- ## CHAIN
+- ## BEHAVIORS GUARANTEED
+- ## OBJECTIVES COVERED
+- ## INVARIANTS
+- # Trust impact flows in both directions:
+- # child behavior affects parent trust (via ParenthoodLink.trust_impact_weight)
+- # parent trust affects child's starting trust ceiling
+- # Each parent bears proportional responsibility
+- ## PROPERTIES
+- ## ERROR CONDITIONS
+- ## HEALTH COVERAGE
+- ## VERIFICATION PROCEDURE
+- # Run all parenthood tests
+- # Run safety validation tests specifically
+- # Check for orphan citizens (no parent link)
+- ## MARKERS
+
+**Sections:**
+- # Partner Model -- Algorithm: Multi-Modal Ingestion Pipelines
+- ## CHAIN
+- ## OVERVIEW
+- ## COMMON NODE TEMPLATE
+- # Base dimensions for all partner-origin nodes
+- ## SOURCE 1: VOICE MESSAGES
+- ## SOURCE 2: TEXT MESSAGES
+- ## SOURCE 3: SCREENSHOTS (Desktop App)
+- ## SOURCE 4: GARMIN BIOMETRICS
+- ## SOURCE 5: BLOCKCHAIN TRANSACTIONS
+- ## SOURCE 6: APP INTERACTIONS
+- ## SOURCE 7: CALENDAR
+- ## CROSS-SOURCE LINKING
+- ## INGESTION TIMING
+- ## RAW DATA RETENTION POLICY
+- ## MARKERS
+
+**Sections:**
+- # Partner Model -- Behaviors: Observable Outcomes
+- ## CHAIN
+- ## BEHAVIORS
+- ## OBJECTIVES SERVED
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Sections:**
+- # Partner Model -- Patterns: The Living Map of the Human
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## THE THREE SPACES AND PARTNER DATA FLOW
+- ## WHAT THE PARTNER-MODEL ENABLES
+- ## DATA
+- ## DEPENDENCIES
+- ## PRINCIPLES
+- ## SCOPE
+- ## MARKERS
+
+**Sections:**
+- # Partner Model -- Validation: Invariants
+- ## CHAIN
+- ## BEHAVIORS GUARANTEED
+- ## OBJECTIVES COVERED
+- ## INVARIANTS
+- ## PROPERTIES
+- # Natural decay via Law 7 ensures transience unless crystallization intervenes
+- ## ERROR CONDITIONS
+- ## HEALTH COVERAGE
+- ## VERIFICATION PROCEDURE
+- # Not yet implemented -- these will be integration tests against the graph and ingestion pipelines.
+- # Future location: tests/citizens/test_partner_model_invariants.py
+- ## SYNC STATUS
 - ## MARKERS
 
 **Doc refs:**
@@ -2155,6 +2632,258 @@
 - # CLI Modules
 
 **Sections:**
+- # ALGORITHM — L1 Physics Laws
+- ## Design Stance
+- ## Overview
+- ## Essential Laws
+- # Merge: inject energy into existing node, increment activation_count
+- # Create: new node with birth properties
+- # During pre-processing, detect temporal markers:
+- # In the tick loop, apply ramp-up:
+- # Exponential ramp: low energy far from deadline, accelerating as it approaches
+- # Every tick, the current environment injects background energy:
+- # On explicit navigation (file read, directory change), stronger boost:
+- # On cwd change or every DIRECTORY_REFRESH_INTERVAL ticks:
+- # Match against existing nodes by lexical coherence (filename → concept)
+- # Coldness: how far below threshold are the targeted nodes?
+- # Concentration: is similarity spread or focused? (Herfindahl index)
+- # Adaptive budget split
+- # 1. Compute raw demand per node
+- # 2. Anti-black-hole: no single node captures more than max_share of the budget
+- # max_share adapts to graph topology (fewer targets → higher share allowed)
+- # 3. Budget conservation (the real safety): normalize if total exceeds B
+- # 4. Apply
+- # Target receives
+- # Source depletes
+- # CV (coefficient of variation): 0 = perfectly regular, >1 = erratic
+- ## Very Useful Laws
+- # Embedding: centroid of parent embeddings (weighted by weight)
+- # Label: the medoid — the parent node closest to the centroid
+- # Weighted average from parents (structural inheritance)
+- # Limbic imprint (birth coloring)
+- # Energy transfer: parents LOSE energy, hub gains it (conservation)
+- # Reverse link for bottom-up activation
+- # The acted-upon desire drops below threshold → exits WM → makes room for next thought
+- ## Limbic Laws (L13-L18)
+- # Sources of uncertainty (increase curiosity)
+- # Curiosity update
+- # Track time since last person-sourced stimulus:
+- # Solitude rises after threshold, proportional to isolation duration:
+- # Every tick, for each process node with action_command:
+- # Compute drive pressure: how much do unsatisfied drives want this action?
+- # Contextual resonance: how well does current context match the action's signature?
+- # Impulse accumulation: energy grows under sustained drive pressure + context match
+- # When energy crosses threshold, node enters normal WM competition (Law 4)
+- # If selected, orientation (Law 11) fires, orchestrator reads action_command → executes
+- ## Identity Regeneration (Outside Tick Loop)
+- # The node content is factual: "WebSocket reconnection module"
+- # The limbic state adds coloring instructions to the LLM prompt:
+- # Identity layer: weight-proportional allocation
+- # Current thought layer: energy-proportional allocation
+- # Overflow: if a node's content exceeds its budget, extract medoid + context
+- ## Optional Laws (v2+)
+- # Budget modulates tick frequency and consciousness level
+- # Budget feeds self_preservation drive
+- # The input is the current graph state itself:
+- # The tick loop runs normally:
+- # If orientation reaches output threshold:
+- # The LLM generates with this context — no user message needed
+- # Result: autonomous initiative (message, task, exploration)
+- # Cluster active desires by semantic coherence
+- # Spawn session for least-served cluster
+- # Check all session pairs for WM overlap
+- # Check for starving sessions
+- # The tick loop runs as normal:
+- ## Implementation Kernels (Revised)
+- ## Constants Reference
+
+**Sections:**
+- # BEHAVIORS — L1 Individual Cognition
+- ## 22 Emergence Dynamics
+- ## 14 Reference Scenarios
+- ## Scenario × Law Matrix
+
+**Sections:**
+- # HEALTH — L1 Individual Cognition
+- ## Purpose
+- ## Diagnostic Framework
+- ## Assessment Procedure
+- # 1. ENERGY PROFILE
+- # 2. WORKING MEMORY DYNAMICS
+- # 3. DRIVE BALANCE
+- # 4. EMOTION PROFILE
+- # 5. OUTPUT PROFILE
+- # 6. SOCIAL HEALTH
+- # 7. NARRATIVE HEALTH (delusion detection)
+- # 8. COMPOSITE DIAGNOSIS
+- # 9. STRUCTURAL HEALTH
+- # Crystallized hub density (how much structure has formed)
+- # Membership overlap (average links per node)
+- # Modularity (are there distinct cognitive domains, or is it a hairball?)
+- # 10. THRASHING DETECTION (refined butterfly)
+- # 11. TRAUMA SPIRAL DETECTION
+- # Energy & motivation
+- # Social health
+- # Cognitive flexibility
+- # Self-awareness
+- # Narrative coherence
+- ## Calibration Protocol
+- # Tier 1: Nudge
+- # Tier 2: Therapy
+- # Identify the stuck cluster
+- # Inject competing stimuli from diverse domains
+- # Tier 3: Reset
+- # Tier 1: Nudge
+- # Tier 2: Therapy
+- # Re-energize core desires
+- # Boost positive drives
+- # Run a "gratitude" exercise: activate high-satisfaction memories
+- # Tier 3: Reset
+- # Full drive reset + controlled stimulus regime
+- # Tier 1: Nudge
+- # Tier 2: Therapy
+- # Cap total system energy
+- # Tier 3: Reset
+- # Force rest cycle
+- # Tier 2: Therapy (this always requires attention)
+- # Identify unvalidated high-weight narratives
+- # Inject contradicting evidence as external stimuli
+- # Reduce self-stimulus reinforcement of this narrative
+- # Tier 3: Reset
+- # Tier 1: Nudge
+- # Reduce aversion on task links
+- # Inject easy wins (small achievable tasks)
+- # Tier 2: Therapy
+- # Address root cause: which failures caused the aversion?
+- # Activate the redemptive narrative cluster
+- # Gradually restore achievement drive
+- # Tier 1: Nudge
+- # Re-energize empathy cluster
+- # Tier 2: Therapy
+- # Pair with a high-affiliation citizen for low-stakes interaction
+- # Reduce aversion on social links
+- # Tier 3: Reset
+- # Re-seed social clusters from birth template
+- # Tier 4: Quarantine (functional isolation for severe cases)
+- # Restrict UBC so citizen can ONLY interact with therapist citizens
+- # The citizen enters a controlled environment where only
+- # structured therapeutic interactions are possible
+- # Trust must recover above threshold before isolation lifts
+- ## Wellness Practices
+- # Phase 1: Gradual energy drain (letting go of current focus)
+- # Don't inject new stimuli during meditation
+- # Phase 2: Baseline restoration
+- # Phase 3: Open awareness (low arousal, no moat)
+- # Whatever enters WM naturally at low arousal = what truly matters
+- # This is the insight phase — the most salient nodes at near-zero moat
+- # reveal the citizen's authentic priorities
+- # Identify top desires by weight (what the citizen truly wants)
+- # Inject energy into the desire + its connected narrative
+- # Run 10 ticks with only these nodes energized
+- # This is "imagining the future" — the graph propagates
+- # and the citizen's WM fills with goal-relevant content
+- # Find memories with positive valence
+- # Re-activate top 5 positive memories
+- # Run 5 ticks — let positive memories propagate
+- # This strengthens links between positive experiences and current identity
+- # The satisfaction boost from re-experiencing positive memories
+- # consolidates (Law 6) those memory-to-value links
+- # Activate partner-model and citizen-model nodes
+- # Check: has the citizen reached out recently?
+- # Boost affiliation drive as gentle push
+- # Let social nodes propagate — the citizen "thinks about people"
+- # Find low-weight, low-energy nodes — the forgotten corners of the graph
+- # Inject energy into random peripheral nodes
+- # This creates unexpected WM compositions
+- # when combined with existing high-weight nodes
+- # → the basis for creative connections
+- ## Positive Behavioral Promotion
+- # This narrative reinforces the generativity cluster
+- ## Health Check Schedule
+- ## Constants
+
+**Sections:**
+- # OBJECTIVES — L1 Individual Cognition
+- ## Intent
+- ## What L1 Must Enable
+- ## Three Cognitive Regimes
+- ## Optimization Priorities
+- ## Tradeoffs
+- ## What L1 Must NOT Be
+- ## Success Criteria
+
+**Sections:**
+- # PATTERNS — L1 Individual Cognition
+- ## Design Rationale
+- ## 7 Node Types
+- ## 3 Structural Spaces
+- ## Node Dimensions
+- ## 14 Link Types
+- ## Mapping to Universal Schema
+- ## Two Channels of Cognition
+- ## Stimulus Modalities
+- ## Meta-Cognitive Signals (Self-Perception)
+- ## Information Feed Subscriptions
+- # The orchestrator reads subscriptions from the citizen's graph:
+- # Events from subscribed feeds are injected as normal stimuli via Law 1:
+- ## Economic & Social Stimuli
+- # Apply to self-model nodes related to resources/economy
+- # Sender attaches limbic snapshot to message metadata:
+- # Receiver absorbs a fraction:
+- # Every tick, bidirectional valence exchange:
+- # Drives toward equilibrium — both citizens' valence converges
+- ## Two Coupled Engines
+- ## 8 Drives
+- ## 6 Emergent Emotions
+- ## Salience Score (Working Memory Selection)
+- ## Attentional Inertia
+- ## Relational Valence (Agent→Node Coloring)
+- ## Minimal Viable Limbic System
+- ## What This Design Enables
+- ## Graph Pre-Seeding (Citizen Birth Template)
+- ## Session Parallelization
+- ## Consciousness Levels
+- ## Cross-Citizen Mechanisms (L2 Scope)
+- # Weighted consensus
+- # consensus in [-1, 1]: negative = reject, positive = approve
+- # confidence-weighted: indifferent citizens don't dilute the signal
+- ## Design Boundaries
+
+**Code refs:**
+- `constants.py`
+- `docchain_to_brain_cluster_converter.py`
+- `docwatch_brain_sync_daemon.py`
+- `laws/law_01_energy_injection.py`
+- `laws/law_02_propagation.py`
+- `laws/law_03_energy_decay.py`
+- `laws/law_04_attentional_competition.py`
+- `laws/law_05_coactivation_reinforcement.py`
+- `laws/law_06_consolidation.py`
+- `laws/law_07_forgetting.py`
+- `laws/law_09_inhibition.py`
+- `laws/law_13_to_18_limbic_engine.py`
+- `models.py`
+- `seed_brain_from_json_cluster_loader.py`
+- `tests/test_minimal_kernel_invariants.py`
+- `tick_runner_l1_cognitive_engine.py`
+
+**Sections:**
+- # SYNC — L1 Individual Cognition
+- ## Maturity
+- ## Current State
+- ## Dependencies
+- ## Next Steps
+- ## Handoff
+
+**Sections:**
+- # VALIDATION — L1 Individual Cognition
+- ## Structural Invariants
+- ## Dynamic Invariants
+- ## Scenario-Based Validation
+- ## Limbic Invariants
+- ## Anti-Patterns to Detect
+
+**Sections:**
 - # ALGORITHM: Dense Clustering
 - ## Overview
 - ## Main Extraction Flow
@@ -2583,6 +3312,57 @@
 - ## VERIFICATION PROCEDURE
 - # No tests currently exist for core_utils.
 - # Add tests under tests/core_utils/ if behaviors become critical.
+- ## SYNC STATUS
+- ## MARKERS
+
+**Sections:**
+- # Metabolic Economy — Algorithm: Organism Economics Engine
+- ## CHAIN
+- ## OVERVIEW
+- ## FORMULAS
+- ## SETTLEMENT
+- ## TRUST CASCADE
+- ## ANTI-SYBIL
+- ## BILATERAL BOND
+- ## UBC: UNIVERSAL BASIC COMPUTE
+- ## CONSTANTS
+- ## INVARIANTS
+- ## DATA FLOW
+- ## INTERACTIONS
+- ## MARKERS
+
+**Sections:**
+- # Metabolic Economy — Patterns: Organism Economics
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## ALTERNATIVES REJECTED
+- ## PRINCIPLES
+- ## DATA
+- ## DEPENDENCIES
+- ## INSPIRATIONS
+- ## SCOPE
+- ## MARKERS
+
+**Sections:**
+- # Metabolic Economy — Validation: Invariants
+- ## CHAIN
+- ## FORMULAS GUARANTEED
+- ## OBJECTIVES COVERED
+- ## INVARIANTS
+- ## PROPERTIES
+- ## ERROR CONDITIONS
+- ## HEALTH COVERAGE
+- ## VERIFICATION PROCEDURE
+- # Not yet implemented — these will be simulation tests and on-chain integration tests.
+- # Future locations:
+- # tests/economy/test_degressive_pricing.py
+- # tests/economy/test_progressive_tax.py
+- # tests/economy/test_anti_sybil.py
+- # tests/economy/test_bilateral_transfer.py
+- # tests/economy/test_batch_settlement.py
+- # tests/economy/test_ubc_distribution.py
+- # tests/economy/test_settlement_conservation.py
 - ## SYNC STATUS
 - ## MARKERS
 
@@ -3375,6 +4155,173 @@
 - ## CHAIN
 - ## INVARIANTS
 
+**Sections:**
+- # Human Integration — Algorithm: Ingestion Pipelines & Partner Model Mechanics
+- ## CHAIN
+- ## OVERVIEW
+- ## DATA STRUCTURES
+- ## ALGORITHM: check_consent
+- ## ALGORITHM: revoke_consent
+- ## ALGORITHM: ingest_voice_message
+- # Uses existing voice bridge Whisper integration
+- # {joy: 0.1, anger: 0.0, sadness: 0.7, fear: 0.0, surprise: 0.1, ...}
+- # Implementation: prosody analysis (pitch variance, speech rate, energy)
+- # Phase 1: heuristic (pitch/rate/energy thresholds)
+- # Phase 2: fine-tuned classifier
+- # See ALGORITHM: score_partner_relevance below
+- # Link state to memory
+- # High emotion = high energy injection → more likely to enter working memory
+- ## ALGORITHM: ingest_garmin_biometrics
+- # See ALGORITHM: garmin_to_limbic below
+- # Heart rate elevated → partner may be stressed or active
+- # Stress level elevated
+- # HRV decreased (low HRV = stress/poor recovery)
+- # Body battery low
+- # AI might suppress non-urgent outreach
+- # Heart rate decreased / stress low → partner is calm
+- # Good sleep
+- # All deltas are additive and clamped [0, 1] after application.
+- ## ALGORITHM: ingest_desktop_screenshot
+- # Privacy filter checks:
+- # a. Is the active application in the allowlist? (configurable by human)
+- # b. Does OCR output contain any blocklisted patterns? (passwords, banking, etc.)
+- # c. Is the screen content Mind-related? (heuristic: presence of Mind Protocol
+- # terms, project-related keywords, or explicitly allowed applications)
+- # Phase 1: application allowlist only (conservative)
+- # Phase 2: content-aware filtering with user feedback loop
+- # Desktop screenshots are contextual: lower baseline relevance
+- # Find semantically similar nodes in partner_model
+- ## ALGORITHM: ingest_blockchain_activity
+- ## ALGORITHM: ingest_ai_conversation
+- # Conversations with other AIs reveal the human's interests, concerns,
+- # and reasoning patterns — high baseline relevance
+- ## ALGORITHM: score_partner_relevance
+- # Emotional content increases relevance
+- # Self-referential content (human talking about themselves)
+- # Decision or value expression
+- # Emotional distress signals
+- ## ALGORITHM: measure_alignment_fidelity
+- # Insufficient data for meaningful score
+- # Predictions where AI was confident should be more accurate
+- # Matching is semantic, not exact string match.
+- # Phase 1: binary (match / no match) determined by AI.
+- # Phase 2: similarity scoring for partial matches.
+- ## ALGORITHM: garmin_poll_cycle
+- # Includes: HR, stress, HRV, body battery, steps, sleep
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## KEY DECISIONS
+- ## INTERACTIONS
+- ## MARKERS
+
+**Sections:**
+- # Human Integration — Behaviors: Observable Effects
+- ## CHAIN
+- ## B1: Garmin Stress Detection
+- ## B2: Voice Message Processing
+- ## B3: The 80/20 Sovereign Cascade Trigger
+- ## B4: Desktop Screenshot Capture
+- ## B5: Blockchain Activity Tracking
+- ## B6: Consent Revocation
+- ## B7: Cross-Modal Pattern Emergence
+- ## B8: Proactive Care from Limbic Coupling
+- ## MARKERS
+
+**Code refs:**
+- `__init__.py`
+- `ai_conversation_capture_and_memory_creator.py`
+- `baseline_calculator_for_biometric_deviation.py`
+- `blockchain_transaction_monitor_and_parser.py`
+- `consent_gate_and_bond_validator.py`
+- `desktop_screenshot_ocr_and_privacy_filter.py`
+- `garmin_biometric_poller_and_limbic_mapper.py`
+- `l1_stimulus_injector_for_partner_data.py`
+- `partner_node_factory_and_relevance_scorer.py`
+- `runtime/bridges/voice_websocket.py`
+- `runtime/cognition/models.py`
+- `sovereign_cascade_prediction_tracker.py`
+- `test_baseline_calculator_for_biometric_deviation.py`
+- `test_consent_gate_and_bond_validator.py`
+- `test_desktop_screenshot_ocr_and_privacy_filter.py`
+- `test_garmin_biometric_poller_and_limbic_mapper.py`
+- `test_partner_node_factory_and_relevance_scorer.py`
+- `test_sovereign_cascade_prediction_tracker.py`
+- `test_voice_emotion_extractor_and_memory_creator.py`
+- `tick_runner_l1_cognitive_engine.py`
+- `voice_emotion_extractor_and_memory_creator.py`
+
+**Sections:**
+- # Human Integration — Implementation: Code Architecture and Structure
+- ## CHAIN
+- ## Architecture
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+- ## PHASE BREAKDOWN
+- ## SHARED INTERFACES
+- ## EXTERNAL DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## RUNTIME BEHAVIOR
+- ## CONCURRENCY MODEL
+- ## CONFIGURATION
+- ## BIDIRECTIONAL LINKS
+- # DOCS: docs/human_integration/IMPLEMENTATION_Human_Integration.md
+- # DOCS: docs/human_integration/ALGORITHM_Human_Integration.md
+- ## TEST PLAN
+- # Total: 54 tests
+- # Run all F3 tests
+- # Run a specific phase
+- # Run with coverage
+- ## MARKERS
+
+**Sections:**
+- # Human Integration — Objectives: The Territory Mapped
+- ## CHAIN
+- ## CONTEXT
+- ## O1: Deep Partner Model (Weight: 0.35)
+- ## O2: Multi-Modal Ingestion (Weight: 0.25)
+- ## O3: Privacy by Architecture (Weight: 0.20)
+- ## O4: Sovereign Cascade Enablement (Weight: 0.20)
+- ## TRADEOFFS
+- ## NON-OBJECTIVES
+
+**Code refs:**
+- `runtime/bridges/voice_websocket.py`
+
+**Sections:**
+- # Human Integration — Patterns: The AI as Cartographer
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## BEHAVIORS SUPPORTED
+- ## BEHAVIORS PREVENTED
+- ## PRINCIPLES
+- ## DATA
+- ## DEPENDENCIES
+- ## INSPIRATIONS
+- ## SCOPE
+- ## MARKERS
+
+**Sections:**
+- # Human Integration — Sync: Current State
+- ## CURRENT STATE
+- ## MATURITY
+- ## DOCUMENTATION CREATED
+- ## OPEN QUESTIONS
+- ## DEPENDENCIES WAITING
+- ## HANDOFF: FOR CROSS-REVIEW
+- ## HANDOFF: FOR HUMAN
+
+**Sections:**
+- # Human Integration — Validation: Invariants & Constraints
+- ## CHAIN
+- ## INVARIANTS
+- ## HEALTH CHECKS
+- ## MARKERS
+
 **Code refs:**
 - `frontend/app/scenarios/page.tsx`
 - `frontend/app/start/page.tsx`
@@ -4108,6 +5055,244 @@
 - ## 7) Logs et status
 - ## 8) Checks de sante
 - ## 9) Depannage
+
+**Code refs:**
+- `runtime/orchestrator/dispatcher.py`
+
+**Sections:**
+- # ALGORITHM -- L1 Physics Wiring & Production Cutover
+- ## 1. Stimulus Injection Pipeline
+- # 1. CLASSIFY — determine energy budget and modality
+- # 2. SEGMENT — decompose into atomic concepts
+- # Complex stimuli split into meaningful chunks
+- # extract_concepts uses NLP entity extraction or
+- # simple keyword/sentence segmentation
+- # 3. EMBED — batch embedding call for all segments
+- # 4. DEDUP — check against existing nodes in citizen's graph
+- # 5. BUILD STIMULI — ready for Law 1 dual-channel
+- # Stimulus energy budgets by source
+- # Deduplication threshold (cosine similarity)
+- # Bulk stimulus threshold (chars)
+- # Max chunks from a bulk stimulus
+- # Split into sentences
+- # Each sentence becomes a segment
+- ## 2. Tick Integration in Orchestrator
+- # ... existing init ...
+- # ... existing maintenance code ...
+- # ── PHYSICS TICKS ──────────────────────────────────────────
+- # ... existing dispatch code ...
+- # Environment variable: PHYSICS_TICK_INTERVAL
+- # Controls seconds between physics ticks
+- # Adaptive: if no stimuli in last 5 minutes, downshift to minimal
+- # If stimulus arrives, upshift to normal
+- # Fast only when arousal > 0.7 (panic regime)
+- ## 3. Cognitive Landscape Serialization
+- # Personal depth: self_relevance
+- # Permanence: weight × (1 + stability)
+- # Partner bond: partner_relevance
+- # Purpose: goal_relevance
+- # Warmth: care_affinity
+- # Ambition: achievement_affinity × energy
+- # Recurrence: activation_count
+- # Significance keywords → weight multiplier
+- # Memory node properties
+- # Linked to current WM nodes via REMINDS_OF
+- ## 4. Orientation to Action Mapping
+- # Hysteresis: current orientation gets a bonus to prevent rapid flipping
+- ## 5. Post-Action Feedback Loop
+- # 1. Response text → self-stimulus
+- # 2. Step 17 — CONSUME — deplete energy on nodes that drove the action
+- # 3. Limbic feedback — satisfaction if response was delivered,
+- # frustration if it was suppressed or errored
+- # Gate 1: REFRACTORY PERIOD
+- # Gate 2: DIMINISHING RETURNS
+- # Gate 3: NOVELTY GATE
+- ## 6. Embedding Integration
+- # In the physics engine initialization:
+- ## 7. FalkorDB Persistence
+- # Batch upsert dirty nodes
+- # Batch upsert dirty links
+- # Note: embedding stored separately due to vector size
+- # FalkorDB handles large lists but consider separate vector index
+- # Check if graph exists (has nodes)
+- # FIRST BOOT — seed from brain.json
+- # Generate from seed brain generator
+- # RESTART — load from FalkorDB
+- ## 8. Seed Brain Customization
+- # 1. Generate base brain (shared across all citizens)
+- # 2. Load citizen identity
+- # 3. Generate per-citizen overlay
+- # Role-specific processes
+- # Drive baselines from personality
+- # These modify the engine's LimbicState, not graph nodes
+- # Unique desires from identity goals
+- # Relational seeds (links to known citizens)
+- # 4. Merge base + overlay
+- ## 9. Emotion Calibration Formulas
+- # Anxiety rises when:
+- # - Novelty is high (unfamiliar context)
+- # - Trusted nodes (weight > 0.7, stability > 0.5) are NOT in WM
+- # - Self-preservation drive is elevated
+- # ANXIETY_COUPLING_RATE: proposed 0.15 (moderate smoothing)
+- # Anxiety decays naturally when trusted nodes re-enter WM
+- # Satisfaction decays toward baseline unless refreshed
+- # Refresh: task completion, positive feedback, desire fulfillment
+- # On task completion: satisfaction += SATISFACTION_SPIKE (0.3)
+- # On positive feedback: satisfaction += SATISFACTION_BOOST (0.15)
+- # On desire fulfillment: satisfaction += DESIRE_SATISFACTION (0.25)
+- # In orientation computation:
+- # Strong bonus to escalate orientation
+- # Tracking:
+- ## 10. Production Cutover (Phase 7)
+
+**Sections:**
+- # BEHAVIORS -- L1 Physics Wiring & Production Cutover
+- ## Observable Behaviors
+- ## Emergent Dynamics to Watch For
+- ## Anti-Behaviors
+
+**Code refs:**
+- `anti_loop_protection.py`
+- `brain_health_score_periodic_calculator.py`
+- `citizen_brain_seeder.py`
+- `concept_extractor.py`
+- `constants.py`
+- `dispatcher.py`
+- `docchain_to_brain_cluster_converter.py`
+- `docwatch_brain_sync_daemon.py`
+- `falkordb_checkpointer.py`
+- `feedback_injector.py`
+- `graph_schema_setup.py`
+- `home_server.py`
+- `l1_autonomous_action_dispatcher.py`
+- `l1_live_integration_bridge.py`
+- `law_13_to_18_limbic_engine.py`
+- `laws/__init__.py`
+- `laws/law_01_energy_injection.py`
+- `laws/law_02_propagation.py`
+- `laws/law_03_energy_decay.py`
+- `laws/law_04_attentional_competition.py`
+- `laws/law_05_coactivation_reinforcement.py`
+- `laws/law_06_consolidation.py`
+- `laws/law_07_forgetting.py`
+- `laws/law_09_inhibition.py`
+- `laws/law_13_to_18_limbic_engine.py`
+- `models.py`
+- `orientation_taxonomy.py`
+- `runtime/citizens/__init__.py`
+- `runtime/cognition/__init__.py`
+- `runtime/cognition/anti_loop_protection.py`
+- `runtime/cognition/brain_health_score_periodic_calculator.py`
+- `runtime/cognition/citizen_brain_seeder.py`
+- `runtime/cognition/concept_extractor.py`
+- `runtime/cognition/constants.py`
+- `runtime/cognition/falkordb_checkpointer.py`
+- `runtime/cognition/feedback_injector.py`
+- `runtime/cognition/graph_schema_setup.py`
+- `runtime/cognition/laws/__init__.py`
+- `runtime/cognition/laws/law_01_energy_injection.py`
+- `runtime/cognition/laws/law_02_propagation.py`
+- `runtime/cognition/laws/law_03_energy_decay.py`
+- `runtime/cognition/laws/law_04_attentional_competition.py`
+- `runtime/cognition/laws/law_05_coactivation_reinforcement.py`
+- `runtime/cognition/laws/law_06_consolidation.py`
+- `runtime/cognition/laws/law_07_forgetting.py`
+- `runtime/cognition/laws/law_09_inhibition.py`
+- `runtime/cognition/laws/law_13_to_18_limbic_engine.py`
+- `runtime/cognition/models.py`
+- `runtime/cognition/orientation_taxonomy.py`
+- `runtime/cognition/stimulus_router.py`
+- `runtime/cognition/tests/test_minimal_kernel_invariants.py`
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
+- `runtime/cognition/wm_prompt_serializer.py`
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
+- `runtime/orchestrator/dispatcher.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
+- `scripts/seed_all_citizens.py`
+- `seed_brain_from_json_cluster_loader.py`
+- `seed_brain_from_source_docs_dynamic_generator.py`
+- `stimulus_router.py`
+- `tests/test_minimal_kernel_invariants.py`
+- `tick_runner_l1_cognitive_engine.py`
+- `wm_prompt_serializer.py`
+
+**Doc refs:**
+- `docs/reviews/REVIEW_F4_F5_Coherence.md`
+
+**Sections:**
+- # IMPLEMENTATION -- L1 Physics Wiring & Production Cutover
+- ## L1 Engine: Located in manemus
+- ## Phase B Review Corrections Applied
+- ## File-Level Plan
+- ## Porting Plan: manemus to mind-mcp
+- ## Existing Files That Need Modification
+- ## New Files to Create (Revised Estimate)
+- ## Integration Points (Known from manemus Code)
+- # bridge.inject_message("citizen_handle", "text", is_social=True)
+- # → creates Stimulus(content=text, energy_budget=1.0, is_social=True, ...)
+- # → calls tick_runner.inject_stimulus(stimulus)
+- # → optionally triggers an immediate tick
+- # Returns: orientation, limbic snapshot, wm_summary, wm_nodes, arousal_regime
+- ## Dependency Graph (Revised)
+- ## Risk Assessment (Revised)
+
+**Code refs:**
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
+
+**Sections:**
+- # OBJECTIVES -- L1 Physics Wiring & Production Cutover
+- ## Purpose
+- ## Objectives (Ranked)
+- ## Non-Objectives
+- ## Success Criteria
+- ## Dependencies
+
+**Code refs:**
+- `dispatcher.py`
+
+**Sections:**
+- # PATTERNS -- L1 Physics Wiring & Production Cutover
+- ## Design Philosophy
+- ## Scope
+- ## Key Design Decisions
+
+**Code refs:**
+- `runtime/citizens/__init__.py`
+- `runtime/cognition/falkordb_checkpointer.py`
+- `runtime/cognition/feedback_injector.py`
+- `runtime/cognition/l1_live_integration_bridge.py`
+- `runtime/cognition/models.py`
+- `runtime/cognition/orientation_taxonomy.py`
+- `runtime/cognition/stimulus_router.py`
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
+- `runtime/cognition/wm_prompt_serializer.py`
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
+- `runtime/infrastructure/embeddings/service.py`
+- `runtime/orchestrator/claude_invoker.py`
+- `runtime/orchestrator/dispatcher.py`
+- `runtime/physics/constants.py`
+- `runtime/physics/crystallization.py`
+- `runtime/physics/link_scoring.py`
+- `runtime/physics/tick_runner.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
+
+**Doc refs:**
+- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
+- `docs/l1_wiring/ALGORITHM_L1_Wiring.md`
+- `docs/reviews/REVIEW_F4_F5_Coherence.md`
+
+**Sections:**
+- # SYNC -- L1 Physics Wiring & Production Cutover
+- ## Maturity
+- ## Current State
+- ## v1.x vs. v2.0 Gap Analysis
+- ## Open Questions
+- ## Dependencies
+- ## Next Steps
+- ## Handoff
 
 **Code refs:**
 - `runtime/agent_cli.py`
@@ -6833,6 +8018,27 @@
 - ## SCHEMA MAPPING
 - ## MARKERS
 
+**Sections:**
+- # Cross-Review: F1 (Universe Graph) / F2 (Metabolic Economy) Coherence
+- ## Summary
+- ## Issues Found
+- ## Issues NOT Found (Confirmed Coherent)
+- ## Fixes Applied
+
+**Sections:**
+- # REVIEW: Force 3 (Human Integration) x Force 4 (Trust & Value) Coherence
+- ## Summary
+- ## Issues Found
+- ## Coherence Score
+- ## Remaining Open Items
+
+**Sections:**
+- # REVIEW: Force 4 (Trust Mechanics) x Force 5 (L1 Wiring) Coherence
+- ## Summary
+- ## Issues Found
+- ## Coherence Assessment
+- ## Related Documents
+
 **Code refs:**
 - `mind/graph/health/check_health.py`
 
@@ -6877,6 +8083,45 @@
 - ## EDGE CASES
 - ## ANTI-BEHAVIORS
 - ## MARKERS
+
+**Doc refs:**
+- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
+- `docs/schema/GRAMMAR_Link_Synthesis.md`
+
+**Sections:**
+- # L3 Link Synthesis Grammar
+- # Universe Graph — Physics → Language Mapping
+- ## RELATIONSHIP TO L1 GRAMMAR
+- ## CORE PRINCIPLE: NO STORED VERBS
+- ## BASE VERBS (from hierarchy + polarity)
+- ## PRE-MODIFIERS
+- ## POST-MODIFIERS
+- ## COMBINATION RULES
+- ## SEMANTIC VERB OVERRIDES (by Node-Type Pair)
+- ## COMPOSITE PATTERN SIGNATURES
+- ## FULL SYNTHESIS ALGORITHM
+- # 1. Compute base verb
+- # 2. Check for node-type-pair override
+- # 3. Build pre-modifiers (max 2)
+- # Energy
+- # Permanence
+- # Trust (only if extreme)
+- # 4. Build post-modifiers (max 2 + weight)
+- # Friction
+- # Affinity / Aversion
+- # Valence
+- # Ambivalence
+- # Weight annotation
+- # 5. Assemble
+- ## EXAMPLES
+- # Actor -> Thing
+- # Actor -> Actor
+- # Moment -> Space (via Thing/Space pattern)
+- # Narrative -> Narrative
+- # Narrative (hub) -> Moment (commit)
+- # Actor -> Actor (via Moment intermediary, but direct link also valid)
+- ## WHAT THIS GRAMMAR REPLACES
+- ## POINTERS
 
 **Sections:**
 - # Link Synthesis Grammar
@@ -7046,17 +8291,6 @@
 - ## MARKERS
 
 **Code refs:**
-- `check_health.py`
-
-**Sections:**
-- # OBJECTIVES — Schema
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-- ## MARKERS
-
-**Code refs:**
 - `runtime/doctor_graph.py`
 
 **Sections:**
@@ -7139,6 +8373,107 @@
 - # Check for mutations (should find none)
 - ## SYNC STATUS
 - ## MARKERS
+
+**Code refs:**
+- `runtime/task_assignment.py`
+
+**Sections:**
+- # Task Routing — Algorithm: Score-Based Citizen Selection and Energy Feedback
+- ## CHAIN
+- ## OVERVIEW
+- ## OBJECTIVES AND BEHAVIORS
+- ## DATA STRUCTURES
+- ## ALGORITHM: select_best_agent()
+- # Hard cap: skip if active_tasks >= 10
+- ## KEY DECISIONS
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## HELPER FUNCTIONS
+- ## INTERACTIONS
+
+**Code refs:**
+- `runtime/task_assignment.py`
+
+**Sections:**
+- # Task Routing — Behaviors: Observable Effects of Physics-Based Citizen Assignment
+- ## CHAIN
+- ## BEHAVIORS
+- ## OBJECTIVES SERVED
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+
+**Sections:**
+- # Task Routing — Health: Verification Mechanics and Coverage
+- ## CHAIN
+- ## PURPOSE
+- ## WHY THIS PATTERN
+- ## HEALTH INDICATORS SELECTED
+- ## OBJECTIVES COVERAGE
+- ## CHECKER INDEX
+- ## KNOWN GAPS
+
+**Code refs:**
+- `runtime/agents/mapping.py`
+- `runtime/citizens/seed.py`
+- `runtime/orchestrator/dispatcher.py`
+- `runtime/task_assignment.py`
+
+**Sections:**
+- # Task Routing — Implementation: Code Architecture and Structure
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+
+**Code refs:**
+- `runtime/task_assignment.py`
+
+**Sections:**
+- # OBJECTIVES — Task Routing
+- ## CHAIN
+- ## PRIMARY OBJECTIVES (ranked)
+- ## NON-OBJECTIVES
+- ## TRADEOFFS (canonical decisions)
+- ## SUCCESS SIGNALS (observable)
+
+**Code refs:**
+- `runtime/task_assignment.py`
+
+**Sections:**
+- # Task Routing — Patterns: Citizens as Actor Nodes for Physics-Based Assignment
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## BEHAVIORS SUPPORTED
+- ## BEHAVIORS PREVENTED
+- ## PRINCIPLES
+- ## DATA
+- ## DEPENDENCIES
+- ## SCOPE
+
+**Code refs:**
+- `runtime/orchestrator/dispatcher.py`
+
+**Sections:**
+- # Task Routing — Sync: Current State
+- ## MATURITY
+- ## CURRENT STATE
+- ## RECENT CHANGES
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## TODO
+- ## POINTERS
+
+**Sections:**
+- # Task Routing — Validation: What Must Be True
+- ## CHAIN
+- ## PURPOSE
+- ## INVARIANTS
+- ## PRIORITY
+- ## INVARIANT INDEX
 
 **Sections:**
 - # Tests/Traversal — Objectives
@@ -7319,6 +8654,565 @@
 - ## MARKERS
 
 **Sections:**
+- # ALGORITHM: Trust Mechanics
+- ## 1. Limbic Delta Computation
+- # Primary signal: satisfaction gain minus frustration gain
+- # Anxiety reduction is a secondary positive signal (weighted lower)
+- # Theoretical max: satisfaction goes 0→1 (+1) AND frustration goes 1→0 (-(-1)=+1) AND anxiety goes 1→0 (-0.5×(-1)=+0.5)
+- # Practical range: [-0.3, +0.3] for typical interactions
+- ## 2. Trust Update on Links (Law 18 Extension)
+- # Trust gain — asymptotic, same shape as Law 6 consolidation
+- # Negative interaction increases friction, not decreases trust
+- # Update affinity/aversion (co-evolve with trust/friction)
+- # Alignment above 80% threshold: positive trust signal
+- # Alignment below 75% (cascade suspended): friction signal
+- ## 3. The Creator Attribution Cascade
+- # === STEP 1: Thing Consolidation (Law 6) ===
+- # Positive limbic delta means the thing was useful
+- # Asymptotic weight gain
+- # Stability grows from regularity (not raw frequency)
+- # (computed separately in Law 6 regularity tracker)
+- # === STEP 2: User→Thing Link Trust Update (Law 18) ===
+- # === STEP 3: Surplus Propagation (Law 2) ===
+- # Thing has surplus energy from the interaction
+- # Energy flows to ALL neighbors, including creator
+- # Proportional to link weight (thing→creator link)
+- # === STEP 4: Co-activation Reinforcement (Law 5) ===
+- # User and creator are both active (user directly, creator via propagation)
+- # If user→creator link doesn't exist yet, it can be created here
+- # Hebbian: what fires together wires together
+- # The user→creator link now exists and has weight
+- # Trust on this link accumulates over repeated co-activations
+- # via the normal trust update mechanism (Step 2 on future ticks)
+- # === STEP 5: Indirect Trust Accumulation ===
+- # Over time, repeated cascade executions cause:
+- # - user→creator link weight to grow (Law 5)
+- # - user→creator link trust to grow (Law 18, via co-activation signals)
+- # - creator's Trust Score to increase (aggregation of all inbound trust)
+- # This step is NOT explicit code — it is the emergent effect of Steps 1-4
+- # running across many ticks.
+- # Each creator has a creation link: thing→creator_i
+- # The weight on each creation link reflects contribution proportion
+- # Law 2 propagation distributes surplus proportionally
+- # No special-case code needed — topology handles it
+- # Example: thing with 3 creators
+- # thing→creator_A  weight=0.5 (primary author)
+- # thing→creator_B  weight=0.3 (major contributor)
+- # thing→creator_C  weight=0.2 (minor contributor)
+- # Surplus energy splits: 50%, 30%, 20% respectively
+- ## 4. Trust Score Aggregation
+- # Standard PageRank with trust as edge weight
+- # WRONG — storing trust score
+- # RIGHT — computing on demand
+- ## 5. Trust Tempering Formulas
+- # Growth rate at different trust levels:
+- # trust=0.0: growth_factor = 1.0   (maximum growth)
+- # trust=0.5: growth_factor = 0.5   (half speed)
+- # trust=0.8: growth_factor = 0.2   (one-fifth speed)
+- # trust=0.9: growth_factor = 0.1   (one-tenth speed)
+- # trust=0.95: growth_factor = 0.05 (one-twentieth speed)
+- # trust=0.99: growth_factor = 0.01 (one-hundredth speed)
+- # Sub-threshold dissolution
+- # When moat drops below 0, the actor loses incumbency advantage
+- # New actors with fresh contributions can enter WM and receive trust
+- ## 6. Trust in Economic Formulas
+- # Examples:
+- # trust=0.0, prod=0.0:   friction = 0.08  (8%)
+- # trust=0.5, prod=0.0:   friction = 0.04  (4%)
+- # trust=0.8, prod=0.0:   friction = 0.016 (1.6%)
+- # trust=0.95, prod=0.01: friction = -0.006 (NEGATIVE — earns 0.6%)
+- ## 7. Destruction Detection Algorithms
+- # Ratio of consumption to production
+- # Second signal: creation link count
+- # Combined score (both signals must agree)
+- # Sybil signal: internal >> external
+- # Check temporal correlation
+- # High trust velocity (rapid gain) + recent high friction (exploitation)
+- ## 8. Limbic Delta per Value Type
+- # Relational sphere
+- # Generative sphere
+- # Structural sphere
+- # Cognitive sphere
+- # Systemic sphere
+- ## 9. Tick Integration
+- ## Related
+
+**Sections:**
+- # BEHAVIORS: Trust Mechanics
+- ## B1: User Satisfaction with a Tool
+- ## B2: Creator Stops Producing
+- ## B3: Sybil Attack Attempted
+- ## B4: Gradual Trust Building (Happy Path)
+- ## B5: One-Hit Wonder
+- ## B6: Trust Exploitation Attempt
+- ## B7: Cross-Space Trust Transfer
+- ## B8: Value Destruction Through Monoculture
+- ## B9: Biometric Value Creation
+- ## Health Signals
+- ## Related
+
+**Code refs:**
+- `constants.py`
+- `law_02_propagation.py`
+- `law_06_consolidation.py`
+- `law_13_to_18_limbic_engine.py`
+- `laws/law_13_to_18_limbic_engine.py`
+- `models.py`
+- `tests/test_trust_mechanics/test_trust_invariants.py`
+- `tick_runner_l1_cognitive_engine.py`
+- `trust/__init__.py`
+- `trust/constants.py`
+- `trust/creator_attribution_cascade.py`
+- `trust/destruction_pathology_detector.py`
+- `trust/limbic_delta_from_drive_snapshots.py`
+- `trust/personhood_ladder_assessor.py`
+- `trust/trust_score_aggregator.py`
+- `trust/trust_tempering.py`
+- `trust/trust_update_on_link.py`
+- `trust/value_type_classifier.py`
+
+**Sections:**
+- # IMPLEMENTATION: Trust Mechanics
+- ## CHAIN
+- ## Architecture
+- ## CODE STRUCTURE
+- ## Phase Breakdown
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 2.1
+- # Trust Mechanics Constants (Law 18 / Force 4)
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 1
+- # Clamp to theoretical bounds (corrected from [-2.0, +2.0] per F4/F5 review Issue 7)
+- # In run_tick(), before step 1:
+- # After step 17 (CONSUME):
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 3
+- # Find user→thing link
+- # Step 2: Trust update on user→thing link
+- # Steps 1, 3, 4, 5 are handled by existing tick cycle steps.
+- # We record creator information for monitoring/auditing only.
+- # Identify creator links (thing→creator or creator→thing with hierarchy)
+- # Check if this is a creation link (source created thing)
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 4
+- # TTL cache: (actor_id, computed_at, score)
+- # DOCS: docs/trust_mechanics/VALUE_CREATION_TAXONOMY.md
+- # Canonical value type signatures from VALUE_CREATION_TAXONOMY.md
+- # Modality-based classification (strongest signal)
+- # Content-based heuristics (from node type and context)
+- # Default: use the primary drive affinity of the thing node
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 7
+- # DOCS: docs/trust_mechanics/VALUE_DESTRUCTION_PATHOLOGIES.md
+- # Internal links: both endpoints in actor_set
+- # External links: one endpoint in actor_set, one outside
+- # Signal 1: internal >> external
+- # Signal 2: Temporal correlation
+- # Signal 3: No value production
+- # Heuristic: high trust + high friction is suspicious
+- # (normal actors have high trust / low friction OR low trust / high friction)
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 5
+- # Weight decay is already handled by existing Law 7 in tick runner.
+- # We only add trust decay here.
+- # After existing link.weight decay (line ~443):
+- # For each link, also decay trust
+- # Replace dissolution check with trust-aware version
+- # DOCS: docs/trust_mechanics/SYNC_Trust_Mechanics.md OQ4
+- # Full 14-aspect mapping is blocked on OQ4.
+- # Partial mapping based on known correlations:
+- # Empathy ← care, emotional_intelligence value types
+- # Competence ← code, tool_creation, analysis value types
+- # Communication ← teaching, mentoring, documentation value types
+- # Social Awareness ← community_building, mediation value types
+- # 1. Trust Score
+- # 2. Value types demonstrated
+- # 3. Spheres active
+- # 4. Relationship count and diversity
+- # 5. Consistency (mean stability of outbound links)
+- # 6. Partial aspect mapping
+- ## Shared Interfaces
+- ## Test Plan
+- ## Configuration
+- ## Design Patterns
+- ## State Management
+- ## Module Dependencies
+- ## BIDIRECTIONAL LINKS
+- ## Review Issues Addressed
+- ## MARKERS
+
+**Doc refs:**
+- `docs/economy/PATTERNS_Economy.md`
+
+**Sections:**
+- # OBJECTIVES: Trust Mechanics
+- ## O1: Accurate Attribution (Primary)
+- ## O2: Anti-Gaming (Critical)
+- ## O3: Organic Trust Growth (Primary)
+- ## O4: Creator Reward Cascade (Primary)
+- ## O5: Destruction Detection (Secondary)
+- ## Tradeoff Resolution
+- ## Non-Objectives
+- ## Related
+
+**Doc refs:**
+- `docs/cognitive/PATTERNS_Graph_Dynamics.md`
+- `docs/economy/PATTERNS_Economy.md`
+- `docs/human_integration/ALGORITHM_Human_Integration.md`
+
+**Sections:**
+- # PATTERNS: Trust Mechanics
+- ## Core Thesis
+- ## Pattern 1: Trust Lives on Links
+- ## Pattern 2: The Creator Attribution Cascade
+- ## Pattern 3: Trust Tempering (Anti-One-Hit-Wonder)
+- ## Pattern 4: Value Creation Is Typed
+- ## Pattern 5: Value Destruction Is Detectable
+- ## Pattern 6: Trust and Economy Are Coupled
+- # Transaction friction (Pattern 5)
+- # At trust_score = 0.95: friction can go NEGATIVE (you earn by transacting)
+- # Membrane fee (Pattern 6)
+- # Up to 30% fee reduction from trust
+- # Effective pricing
+- ## Pattern 7: Bilateral Bond as Primary Trust Relationship
+- ## Anti-Patterns
+- ## Related
+
+**Sections:**
+- # SYNC: Trust Mechanics
+- ## Current State
+- ## Maturity
+- ## Open Questions
+- ## Recent Changes
+- ## Dependencies
+- ## Handoff
+- ## Module Coverage
+
+**Sections:**
+- # VALIDATION: Trust Mechanics
+- ## V1: Trust Bounded [0, 1]
+- ## V2: Trust Never Stored on Nodes
+- # Also check the database directly
+- ## V3: Asymptotic Convergence
+- ## V4: Energy Conservation During Propagation
+- ## V5: No Self-Loop Trust
+- ## V6: Friction Bounded [0, 1]
+- ## V7: Affinity-Aversion Anti-Correlation
+- ## V8: Temporal Decay Monotonicity
+- ## V9: Limbic Delta Bounds
+- ## V10: Creator Attribution Topology
+- ## V11: Trust Score Non-Negative
+- ## V12: Negative Interactions Increase Friction, Not Decrease Trust
+- ## V13: Sub-Threshold Link Dissolution
+- ## V14: Sybil Resistance
+- ## Validation Schedule
+- ## Related
+
+**Sections:**
+- # VALUE CREATION TAXONOMY
+- ## Overview
+- ## Sphere 1: Relational (4 types)
+- # Net limbic_delta = 0.15 - (-0.05) - 0.5*(-0.20) = 0.30
+- # Net limbic_delta = 0.25 - (-0.15) - 0.5*(-0.05) = 0.425
+- # Net limbic_delta = 0.10 - (-0.30) - 0.5*(-0.10) = 0.45
+- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.10) = 0.20
+- # Lower per-interaction, but HIGH VOLUME (many members, many interactions)
+- ## Sphere 2: Generative (5 types)
+- # Net limbic_delta = 0.20 - (-0.25) - 0.5*(-0.05) = 0.475
+- # Net limbic_delta = 0.15 - (-0.05) - 0.5*(-0.05) = 0.225
+- # Net limbic_delta = 0.25 - (-0.30) - 0.5*(-0.05) = 0.575
+- # Highest delta in Generative sphere — tools that eliminate frustration are very valuable
+- # Net limbic_delta = 0.20 - 0 - 0.5*(-0.10) = 0.25
+- # Net limbic_delta = 0.25 - (-0.05) - 0.5*(-0.15) = 0.375
+- ## Sphere 3: Structural (4 types)
+- # Net limbic_delta = 0.15 - (-0.20) - 0.5*(-0.15) = 0.425
+- # Net limbic_delta = 0.10 - (-0.25) - 0.5*(-0.10) = 0.40
+- # Net limbic_delta = 0.15 - (-0.20) - 0.5*(-0.15) = 0.425
+- # Net limbic_delta = 0.10 - (-0.10) - 0.5*(-0.20) = 0.30
+- ## Sphere 4: Cognitive (4 types)
+- # Net limbic_delta = 0.20 - (-0.15) - 0.5*(-0.10) = 0.40
+- # Net limbic_delta = 0.30 - (-0.10) - 0.5*(-0.05) = 0.425
+- # Net limbic_delta = 0.25 - (-0.20) - 0.5*(-0.10) = 0.50
+- # High delta — good teaching is very valuable
+- # Net limbic_delta = 0.25 - (-0.15) - 0.5*(-0.05) = 0.425
+- ## Sphere 5: Biometric & Partner Data (5 types)
+- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.15) = 0.225
+- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.25) = 0.275
+- # Net limbic_delta = 0.15 - 0 - 0.5*(-0.05) = 0.175
+- # Net limbic_delta = 0.12 - (-0.05) - 0.5*(-0.10) = 0.22
+- # Net limbic_delta = 0.08 - (-0.05) - 0.5*(-0.05) = 0.155
+- ## Sphere 6: Human-Only (4 types)
+- # Net limbic_delta = 0.20 - (-0.15) - 0.5*(-0.20) = 0.45
+- # Net limbic_delta = 0.20 - (-0.05) - 0 = 0.25
+- # Net limbic_delta = 0.15 - (-0.10) - 0.5*(-0.10) = 0.30
+- # Net limbic_delta = 0.15 - (-0.10) - 0.5*(-0.25) = 0.375
+- ## Sphere 7: Systemic (4 types)
+- # Net limbic_delta = 0.05 - (-0.10) - 0.5*(-0.25) = 0.275
+- # Net limbic_delta = 0.05 - (-0.05) - 0.5*(-0.30) = 0.25
+- # Net limbic_delta = 0.05 - (-0.15) - 0.5*(-0.20) = 0.30
+- # Net limbic_delta = 0.10 - (-0.10) - 0.5*(-0.15) = 0.275
+- ## Summary Table
+- ## Related
+
+**Doc refs:**
+- `docs/economy/PATTERNS_Economy.md`
+
+**Sections:**
+- # VALUE DESTRUCTION PATHOLOGIES
+- ## Overview
+- ## D1: Extraction
+- # Net: -0.175 (mild negative)
+- ## D2: Manipulation
+- # Net: -0.55 (strongly negative)
+- ## D3: Free-Riding
+- # Net: -0.10 (very mild per instance — harmful at scale)
+- ## D4: Sybil Attack
+- # No direct victim — the attack is against the system
+- # Net: -0.10
+- ## D5: Attention Theft
+- # Net: -0.225
+- ## D6: Trust Exploitation
+- # Net: -0.725 (severely negative — one of the worst deltas)
+- ## D7: Monoculture Creation
+- # Not harmful initially — becomes harmful only when the dominant actor fails
+- # Net: -0.075 (mild, but accumulating)
+- ## D8: Rent-Seeking
+- # Net: -0.275
+- ## D9: Spam / Noise
+- # Net: -0.08 per item (mild, but harmful at volume)
+- ## D10: Collusion Ring
+- # Net: -0.12
+- ## D11: Data Hoarding
+- ## D12: Dependence Exploitation
+- ## D13: Identity Spoofing
+- ## D14: Attention Arbitrage
+- ## Summary Table
+- ## Detection Priority
+- ## Design Principle: No Bans, Only Physics
+- ## Related
+
+**Sections:**
+- # ALGORITHM -- Universe Graph
+- ## CHAIN
+- ## ALG-1: HAS_ACCESS Resolution
+- # Step 1: Direct link check
+- # Step 2: Hierarchical traversal (walk UP from space to ancestors)
+- # Inherited access -- role may be downgraded
+- # Key: the sub-space key is encrypted inside the ancestor space
+- # Must resolve key chain: ancestor_key -> sub_space_key
+- # Step 3: No access found
+- # Get the ancestor's key (Actor can decrypt it)
+- # Walk DOWN from ancestor to target, decrypting at each level
+- # Each child space stores its key encrypted with parent space's key
+- ## ALG-2: Encryption Key Distribution
+- # Generate AES-256 symmetric key for this space
+- # Create the Space node
+- # Create HAS_ACCESS link (owner)
+- # If sub-space, store space_key encrypted with parent's key
+- # Verify grantor has admin/owner access
+- # Get the space key (grantor can decrypt it)
+- # Encrypt space key with target actor's public key
+- # Create HAS_ACCESS link
+- # Generate new key
+- # Re-encrypt all content in the Space with new key
+- # Same for synthesis and embedding
+- # Re-encrypt for all remaining HAS_ACCESS links
+- # Update parent containment link if sub-space
+- ## ALG-3: Macro-Crystallization (Law 10 at L3)
+- # Run every N ticks (crystallization_check_interval)
+- # At L3: every 500 ticks (slower than L1's 50 ticks)
+- # Step 1: Determine hub type (majority rule)
+- # At L3, most crystallizations produce narratives (from moment clusters)
+- # Force narrative type if majority is moment (events crystallize into stories)
+- # Step 2: Compute centroid embedding
+- # Step 3: Find medoid (closest node to centroid)
+- # Step 4: Create hub node
+- # Step 5: Create bidirectional links
+- # Hub contains constituent
+- # Constituent abstracts to hub
+- # Step 6: Connect hub to cluster's external connections
+- # Inherit other dimensions from the external link
+- ## ALG-4: Space Hierarchy Traversal
+- # Find containment link pointing TO this space with hierarchy=-1
+- # A Space should have at most one parent
+- # If multiple exist, take the highest-weight one
+- ## ALG-5: Moment Perception Routing
+- # Find all actors with access to this Space
+- # Direct HAS_ACCESS to this Space
+- # Actors with HAS_ACCESS to ancestor Spaces (inherited access)
+- # For each accessing actor, inject the moment as an L1 stimulus
+- # If encrypted space, the actor's MCP decrypts using its key
+- ## ALG-6: L3 Energy Model
+- # Create or update moment
+- # Energy injection into the moment
+- # Energy splits:
+- # - 60% to the Space (activity in context)
+- # - 30% to the Actor (actor was active)
+- # - 10% to linked Things/Narratives (contextual activation)
+- # No compatibility filter (Law 8 off at L3)
+- # No activation_gain modulation (frozen at L3)
+- # At L1: U = limbic_significance (subjective value)
+- # At L3: U = structural_utility (objective usage)
+- # For service/thing nodes: U = normalized_usage_count (how often the service is invoked)
+- # For actor-actor links: U = co_activation_frequency (how often both are active together)
+- # For space links: U = presence_intensity (aggregate actor hours)
+- ## ALG-7: Organization Lifecycle
+- # Create hall Space
+- # Create Narrative
+- # Narrative is ABOUT the hall Space
+- # Founder BELIEVES in the org
+- ## ALG-8: Actor Reputation Computation
+
+**Sections:**
+- # BEHAVIORS -- Universe Graph
+- ## CHAIN
+- ## OBSERVABLE BEHAVIORS
+- ## ANTI-BEHAVIORS
+
+**Code refs:**
+- `home_server.py`
+- `mcp/__init__.py`
+- `mcp/tools/graph_query_handler.py`
+- `mcp/tools/graph_write_handler.py`
+- `mcp/tools/space_management_handler.py`
+- `mcp/tools/universe_admin_handler.py`
+- `runtime/crypto/__init__.py`
+- `runtime/crypto/aes256_content_encryptor.py`
+- `runtime/crypto/encrypted_field_codec.py`
+- `runtime/crypto/rsa_key_manager.py`
+- `runtime/crypto/space_key_distribution_and_rotation.py`
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/membrane/stimulus.py`
+- `runtime/physics/constants.py`
+- `runtime/physics/l3_energy_propagation_and_decay.py`
+- `runtime/physics/l3_macro_crystallization.py`
+- `runtime/physics/l3_weight_consolidation.py`
+- `runtime/schema/links.py`
+- `runtime/schema/nodes.py`
+- `runtime/universe/__init__.py`
+- `runtime/universe/access_resolution_and_link_manager.py`
+- `runtime/universe/constants_l3_physics.py`
+- `runtime/universe/moment_perception_router.py`
+- `runtime/universe/organization_lifecycle_manager.py`
+- `runtime/universe/space_and_hierarchy_manager.py`
+- `runtime/universe/universe_bootstrap_and_metadata.py`
+- `test_access_resolution_and_inheritance.py`
+- `test_encryption_roundtrip_and_coverage.py`
+- `test_integration_universe_lifecycle.py`
+- `test_invariants_structural.py`
+- `test_l3_energy_and_crystallization.py`
+- `test_moment_perception_routing.py`
+- `test_organization_lifecycle.py`
+- `test_space_crud_and_hierarchy.py`
+- `tests/universe/__init__.py`
+- `tests/universe/test_access_resolution_and_inheritance.py`
+- `tests/universe/test_encryption_roundtrip_and_coverage.py`
+- `tests/universe/test_integration_universe_lifecycle.py`
+- `tests/universe/test_l3_energy_and_crystallization.py`
+- `tests/universe/test_moment_perception_routing.py`
+- `tests/universe/test_organization_lifecycle.py`
+- `tests/universe/test_space_crud_and_hierarchy.py`
+
+**Sections:**
+- # IMPLEMENTATION -- Universe Graph
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## PHASE BREAKDOWN
+- # runtime/universe/space_and_hierarchy_manager.py
+- # runtime/universe/universe_bootstrap_and_metadata.py
+- # runtime/universe/access_resolution_and_link_manager.py
+- # runtime/crypto/aes256_content_encryptor.py
+- # runtime/crypto/rsa_key_manager.py
+- # runtime/crypto/space_key_distribution_and_rotation.py
+- # runtime/crypto/encrypted_field_codec.py
+- # runtime/universe/organization_lifecycle_manager.py
+- # runtime/universe/constants_l3_physics.py (created in U1, populated here)
+- # --- L3 Decay (Law 3) ---
+- # --- L3 Propagation (Law 2) ---
+- # --- L3 Consolidation (Law 6) ---
+- # --- L3 Crystallization (Law 10) ---
+- # --- L3 Energy Injection Split ---
+- # --- L3 Forgetting (Law 7) ---
+- # runtime/physics/l3_energy_propagation_and_decay.py
+- # runtime/physics/l3_weight_consolidation.py
+- # runtime/physics/l3_macro_crystallization.py
+- # mcp/tools/space_management_handler.py
+- # mcp/tools/universe_admin_handler.py
+- # runtime/universe/moment_perception_router.py
+- ## SHARED INTERFACES
+- ## ENTRY POINTS
+- ## DATA FLOW: Space Creation to Moment Perception
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+- ## TEST PLAN
+- ## RISK ASSESSMENT
+- ## MODIFICATIONS TO EXISTING FILES
+- ## MARKERS
+
+**Sections:**
+- # OBJECTIVES -- Universe Graph
+- ## CHAIN
+- ## PRIMARY OBJECTIVES (ranked)
+- ## NON-OBJECTIVES
+- ## TRADEOFFS (canonical decisions)
+- ## SUCCESS SIGNALS (observable)
+
+**Doc refs:**
+- `docs/schema/GRAMMAR_L3_Link_Synthesis.md`
+
+**Sections:**
+- # PATTERNS -- Universe Graph
+- ## CHAIN
+- ## DESIGN PHILOSOPHY
+- ## SCOPE
+- ## DESIGN RATIONALE SUMMARY
+
+**Code refs:**
+- `__init__.py`
+- `access_resolution_and_link_manager.py`
+- `conftest.py`
+- `constants_l3_physics.py`
+- `home_server.py`
+- `mcp/tools/space_management_handler.py`
+- `mcp/tools/universe_admin_handler.py`
+- `moment_perception_router.py`
+- `organization_lifecycle_manager.py`
+- `runtime/membrane/stimulus.py`
+- `runtime/universe/__init__.py`
+- `runtime/universe/moment_perception_router.py`
+- `runtime/universe/organization_lifecycle_manager.py`
+- `runtime/universe/universe_bootstrap_and_metadata.py`
+- `space_and_hierarchy_manager.py`
+- `test_access_resolution_and_inheritance.py`
+- `test_integration_universe_lifecycle.py`
+- `test_moment_perception_routing.py`
+- `test_organization_lifecycle.py`
+- `test_space_crud_and_hierarchy.py`
+- `test_universe_bootstrap.py`
+- `tests/universe/conftest.py`
+- `universe_bootstrap_and_metadata.py`
+
+**Doc refs:**
+- `docs/reviews/REVIEW_F1_F2_Coherence.md`
+- `docs/schema/GRAMMAR_L3_Link_Synthesis.md`
+
+**Sections:**
+- # SYNC -- Universe Graph
+- ## CHAIN
+- ## MATURITY
+- ## OPEN QUESTIONS
+- ## CURRENT STATE
+- ## HANDOFF
+- ## RECENT CHANGES
+
+**Sections:**
+- # VALIDATION -- Universe Graph
+- ## CHAIN
+- ## STRUCTURAL INVARIANTS
+- # Static analysis: grep for property-based access patterns
+- # Content must not be plaintext
+- # Content must be decryptable with the space key
+- # At graph creation, a universe_id metadata node is created
+- # Conservation: what left = what arrived (within float tolerance)
+- # Static analysis across all physics, access, and crystallization code
+- ## TEST STRATEGY
+
+**Sections:**
 - # mind-mcp Architecture
 - ## Layer Position: L1 (Citizen)
 - ## Core Responsibilities
@@ -7327,14 +9221,46 @@
 - ## Data Flow
 - ## Related Repos
 
+**Code refs:**
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
+- `scripts/install_render_cron.py`
+- `scripts/post_deploy.py`
+- `scripts/render_log_monitor.py`
+- `setup_reverse_proxy.py`
+
 **Sections:**
-- # {Project} — Mapping: Translation to mind Schema
+- # Configuration Guide
+- ## Full Reference
+- # ─── Database ────────────────────────────────────────────────────────────
+- # ─── Embeddings ──────────────────────────────────────────────────────────
+- # ─── Seed ────────────────────────────────────────────────────────────────
+- # ─── Behaviors ───────────────────────────────────────────────────────────
+- ## Seed Configuration
+- # brain_json: data/contre_terre_seed.json      # alternate universe
+- # brain_json: data/minimal_seed.json           # stripped-down brain
+- ## Behaviors
+- ## Deploy Pipeline
+- ## Cron Monitoring
+- # Added to render.yaml by mind init
+- ## Universe Presets
+- ## Reverse Proxy (Render Single Port)
+- ## Key Management
+- ## Environment Variable Overrides
+
+**Doc refs:**
+- `docs/schema/GRAMMAR_L3_Link_Synthesis.md`
+- `docs/schema/GRAMMAR_Link_Synthesis.md`
+
+**Sections:**
+- # mind-mcp — Mapping: Translation to mind Schema
 - ## PURPOSE
 - ## MIND UNIVERSAL SCHEMA
+- ## L3 RULES — No Taxonomy, No Prescribed Types
 - ## NODE MAPPINGS
 - ## LINK MAPPINGS
 - ## COMMON PATTERNS
-- ## MARKERS
+- ## ANTI-PATTERNS
+- ## POINTERS
 
 **Sections:**
 - # {Project} — Taxonomy: Domain Vocabulary
@@ -7349,11 +9275,14 @@
 - `Node.js`
 - `__init__.py`
 - `__main__.py`
+- `access_resolution_and_link_manager.py`
 - `adapter.py`
 - `agent_cli.py`
 - `agents/handler.py`
 - `agents/prompts.py`
 - `agents/response.py`
+- `ai_conversation_capture_and_memory_creator.py`
+- `anti_loop_protection.py`
 - `app.py`
 - `app/api/connectome/tick/route.ts`
 - `app/api/sse/route.ts`
@@ -7361,6 +9290,9 @@
 - `approval/queue.py`
 - `approval/tiers.py`
 - `base.py`
+- `baseline_calculator_for_biometric_deviation.py`
+- `blockchain_transaction_monitor_and_parser.py`
+- `brain_health_score_periodic_calculator.py`
 - `building/config/mapping.py`
 - `building/ingest/create.py`
 - `building/ingest/discover.py`
@@ -7368,6 +9300,7 @@
 - `check_github_for_latest_version.py`
 - `check_health.py`
 - `check_mind_status_in_directory.py`
+- `citizen_brain_seeder.py`
 - `cli.py`
 - `cli/__main__.py`
 - `cli/commands/fix_embeddings.py`
@@ -7380,10 +9313,15 @@
 - `cli/helpers/inject_seed_yaml_to_graph.py`
 - `cli/helpers/show_upgrade_notice_if_available.py`
 - `cluster_presentation.py`
+- `concept_extractor.py`
 - `config.py`
 - `config/agents.py`
 - `config/mapping.py`
+- `conftest.py`
 - `connectome_doc_bundle_splitter_and_fence_rewriter.py`
+- `consent_gate_and_bond_validator.py`
+- `constants.py`
+- `constants_l3_physics.py`
 - `content/inference.py`
 - `content/moment.py`
 - `content/narrative.py`
@@ -7403,26 +9341,33 @@
 - `deployment/deployer.py`
 - `deployment/monitor.py`
 - `deployment/rollback.py`
+- `desktop_screenshot_ocr_and_privacy_filter.py`
 - `diagnosis/evidence.py`
 - `diagnosis/layer_attribution.py`
 - `diagnosis/pattern_detector.py`
 - `diffusion_sim_v2.py`
+- `dispatcher.py`
 - `doc_chain.py`
+- `docchain_to_brain_cluster_converter.py`
 - `doctor.py`
 - `doctor_checks.py`
 - `doctor_cli_parser_and_run_checker.py`
 - `doctor_report.py`
+- `docwatch_brain_sync_daemon.py`
 - `engine/connectome/persistence.py`
 - `engine/connectome/schema.py`
 - `exploration.py`
 - `export_project_to_notebooklm.py`
 - `factory.py`
 - `falkordb_adapter.py`
+- `falkordb_checkpointer.py`
+- `feedback_injector.py`
 - `fix_embeddings_for_nodes_and_links.py`
 - `flow.py`
 - `frontend/app/scenarios/page.tsx`
 - `frontend/app/start/page.tsx`
 - `frontend/hooks/useGameState.ts`
+- `garmin_biometric_poller_and_limbic_mapper.py`
 - `gemini_agent.py`
 - `generate_embeddings_for_graph_nodes.py`
 - `generate_repo_overview_maps.py`
@@ -7438,6 +9383,9 @@
 - `graph_ops_types.py`
 - `graph_queries.py`
 - `graph_queries_search.py`
+- `graph_schema_setup.py`
+- `home_server.py`
+- `identity_loader.py`
 - `ingest/__init__.py`
 - `ingest/create.py`
 - `ingest/discover.py`
@@ -7447,14 +9395,36 @@
 - `ingest_repo_files_to_graph.py`
 - `inject_agents_to_graph.py`
 - `inject_seed_yaml_to_graph.py`
+- `l1_autonomous_action_dispatcher.py`
+- `l1_live_integration_bridge.py`
+- `l1_stimulus_injector_for_partner_data.py`
+- `law_02_propagation.py`
+- `law_06_consolidation.py`
+- `law_13_to_18_limbic_engine.py`
+- `laws/__init__.py`
+- `laws/law_01_energy_injection.py`
+- `laws/law_02_propagation.py`
+- `laws/law_03_energy_decay.py`
+- `laws/law_04_attentional_competition.py`
+- `laws/law_05_coactivation_reinforcement.py`
+- `laws/law_06_consolidation.py`
+- `laws/law_07_forgetting.py`
+- `laws/law_09_inhibition.py`
+- `laws/law_13_to_18_limbic_engine.py`
 - `learning/embeddings.py`
 - `learning/extractor.py`
 - `learning/pattern_library.py`
 - `link_scoring.py`
 - `loop.py`
+- `matching_pool.py`
+- `mcp/__init__.py`
 - `mcp/server.py`
 - `mcp/tools/gemini_chat.py`
+- `mcp/tools/graph_query_handler.py`
+- `mcp/tools/graph_write_handler.py`
+- `mcp/tools/space_management_handler.py`
 - `mcp/tools/telegram_notify.py`
+- `mcp/tools/universe_admin_handler.py`
 - `mind/agent_cli.py`
 - `mind/api/app.py`
 - `mind/cli.py`
@@ -7469,6 +9439,7 @@
 - `mind/validate.py`
 - `mock_adapter.py`
 - `models.py`
+- `moment_perception_router.py`
 - `moment_processor.py`
 - `narrator.py`
 - `narrator/prompt_builder.py`
@@ -7476,6 +9447,11 @@
 - `neo4j_adapter.py`
 - `nodes.py`
 - `orchestrator.py`
+- `organization_lifecycle_manager.py`
+- `orientation_taxonomy.py`
+- `parenthood.py`
+- `parenthood_trust_impact_tracker.py`
+- `partner_node_factory_and_relevance_scorer.py`
 - `persistence.py`
 - `phases/completion.py`
 - `phases/generation.py`
@@ -7494,13 +9470,51 @@
 - `route.ts`
 - `runtime/agent_cli.py`
 - `runtime/agents/cli.py`
+- `runtime/agents/mapping.py`
 - `runtime/agents/postures.py`
 - `runtime/agents/prompts.py`
 - `runtime/api/app.py`
+- `runtime/bridges/voice_websocket.py`
+- `runtime/citizens/__init__.py`
+- `runtime/citizens/identity_loader.py`
+- `runtime/citizens/matching_pool.py`
+- `runtime/citizens/parenthood.py`
+- `runtime/citizens/parenthood_trust_impact_tracker.py`
+- `runtime/citizens/prompt_builder.py`
+- `runtime/citizens/seed.py`
+- `runtime/citizens/seed_brain_builder.py`
+- `runtime/citizens/spawn_safety_validator.py`
+- `runtime/citizens/test_parenthood.py`
 - `runtime/cli.py`
 - `runtime/cluster_builder.py`
 - `runtime/cluster_health.py`
 - `runtime/cluster_metrics.py`
+- `runtime/cognition/__init__.py`
+- `runtime/cognition/anti_loop_protection.py`
+- `runtime/cognition/brain_health_score_periodic_calculator.py`
+- `runtime/cognition/citizen_brain_seeder.py`
+- `runtime/cognition/concept_extractor.py`
+- `runtime/cognition/constants.py`
+- `runtime/cognition/falkordb_checkpointer.py`
+- `runtime/cognition/feedback_injector.py`
+- `runtime/cognition/graph_schema_setup.py`
+- `runtime/cognition/l1_live_integration_bridge.py`
+- `runtime/cognition/laws/__init__.py`
+- `runtime/cognition/laws/law_01_energy_injection.py`
+- `runtime/cognition/laws/law_02_propagation.py`
+- `runtime/cognition/laws/law_03_energy_decay.py`
+- `runtime/cognition/laws/law_04_attentional_competition.py`
+- `runtime/cognition/laws/law_05_coactivation_reinforcement.py`
+- `runtime/cognition/laws/law_06_consolidation.py`
+- `runtime/cognition/laws/law_07_forgetting.py`
+- `runtime/cognition/laws/law_09_inhibition.py`
+- `runtime/cognition/laws/law_13_to_18_limbic_engine.py`
+- `runtime/cognition/models.py`
+- `runtime/cognition/orientation_taxonomy.py`
+- `runtime/cognition/stimulus_router.py`
+- `runtime/cognition/tests/test_minimal_kernel_invariants.py`
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
+- `runtime/cognition/wm_prompt_serializer.py`
 - `runtime/connectome/persistence.py`
 - `runtime/connectome/procedure_runner.py`
 - `runtime/connectome/runner.py`
@@ -7511,6 +9525,11 @@
 - `runtime/connectome/validation.py`
 - `runtime/context.py`
 - `runtime/core_utils.py`
+- `runtime/crypto/__init__.py`
+- `runtime/crypto/aes256_content_encryptor.py`
+- `runtime/crypto/encrypted_field_codec.py`
+- `runtime/crypto/rsa_key_manager.py`
+- `runtime/crypto/space_key_distribution_and_rotation.py`
 - `runtime/doc_extractor.py`
 - `runtime/doctor.py`
 - `runtime/doctor_checks.py`
@@ -7548,6 +9567,7 @@
 - `runtime/infrastructure/database/falkordb_adapter.py`
 - `runtime/infrastructure/database/neo4j_adapter.py`
 - `runtime/infrastructure/embeddings.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
 - `runtime/infrastructure/embeddings/service.py`
 - `runtime/infrastructure/memory/__init__.py`
 - `runtime/infrastructure/memory/moment_processor.py`
@@ -7566,6 +9586,7 @@
 - `runtime/membrane/functions.py`
 - `runtime/membrane/health_check.py`
 - `runtime/membrane/provider.py`
+- `runtime/membrane/stimulus.py`
 - `runtime/migrations/migrate_001_schema_alignment.py`
 - `runtime/migrations/migrate_temporal_v171.py`
 - `runtime/migrations/migrate_tick_to_tick_created.py`
@@ -7580,6 +9601,8 @@
 - `runtime/moment_graph/surface.py`
 - `runtime/moment_graph/traversal.py`
 - `runtime/moments/__init__.py`
+- `runtime/orchestrator/claude_invoker.py`
+- `runtime/orchestrator/dispatcher.py`
 - `runtime/physics/__init__.py`
 - `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
 - `runtime/physics/cluster_energy_monitor.py`
@@ -7588,6 +9611,7 @@
 - `runtime/physics/contradiction_pressure_from_negative_polarity_mechanism.py`
 - `runtime/physics/crystallization.py`
 - `runtime/physics/display_snap_transition_checker.py`
+- `runtime/physics/embeddings.py`
 - `runtime/physics/exploration.py`
 - `runtime/physics/flow.py`
 - `runtime/physics/graph/adapters/__init__.py`
@@ -7608,10 +9632,14 @@
 - `runtime/physics/graph/graph_queries_moments.py`
 - `runtime/physics/graph/graph_queries_search.py`
 - `runtime/physics/graph/graph_query_utils.py`
+- `runtime/physics/graph_ops.py`
 - `runtime/physics/health/check_subentity.py`
 - `runtime/physics/health/checker.py`
 - `runtime/physics/health/checkers/energy_conservation.py`
 - `runtime/physics/health/checkers/moment_lifecycle.py`
+- `runtime/physics/l3_energy_propagation_and_decay.py`
+- `runtime/physics/l3_macro_crystallization.py`
+- `runtime/physics/l3_weight_consolidation.py`
 - `runtime/physics/link_scoring.py`
 - `runtime/physics/nature.py`
 - `runtime/physics/phases/completion.py`
@@ -7627,6 +9655,7 @@
 - `runtime/physics/synthesis.py`
 - `runtime/physics/synthesis_unfold.py`
 - `runtime/physics/tick.py`
+- `runtime/physics/tick_runner.py`
 - `runtime/physics/tick_v1_2.py`
 - `runtime/physics/tick_v1_2_queries.py`
 - `runtime/physics/tick_v1_2_types.py`
@@ -7646,10 +9675,13 @@
 - `runtime/repair_verification.py`
 - `runtime/repo_overview.py`
 - `runtime/repo_overview_formatters.py`
+- `runtime/schema/links.py`
+- `runtime/schema/nodes.py`
 - `runtime/seed_brain_from_source_docs_dynamic_generator.py`
 - `runtime/solve_escalations.py`
 - `runtime/symbol_extractor.py`
 - `runtime/sync.py`
+- `runtime/task_assignment.py`
 - `runtime/tests/test_cluster_energy_monitor.py`
 - `runtime/tests/test_cluster_presentation.py`
 - `runtime/tests/test_e2e_moment_graph.py`
@@ -7662,6 +9694,13 @@
 - `runtime/tests/test_router_schema_validation.py`
 - `runtime/tests/test_subentity.py`
 - `runtime/tests/test_traversal_logger.py`
+- `runtime/universe/__init__.py`
+- `runtime/universe/access_resolution_and_link_manager.py`
+- `runtime/universe/constants_l3_physics.py`
+- `runtime/universe/moment_perception_router.py`
+- `runtime/universe/organization_lifecycle_manager.py`
+- `runtime/universe/space_and_hierarchy_manager.py`
+- `runtime/universe/universe_bootstrap_and_metadata.py`
 - `runtime/validate.py`
 - `runtime/work.py`
 - `save_version_hash.py`
@@ -7670,24 +9709,49 @@
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
 - `scripts/generate_rich_core_personalities.py`
+- `scripts/seed_all_citizens.py`
+- `seed_brain_builder.py`
+- `seed_brain_from_json_cluster_loader.py`
+- `seed_brain_from_source_docs_dynamic_generator.py`
 - `semantic_proximity_based_character_node_selector.py`
 - `setup_database_and_apply_schema.py`
 - `show_upgrade_notice_if_available.py`
 - `signals/aggregator.py`
 - `signals/collector.py`
 - `snake_case.py`
+- `sovereign_cascade_prediction_tracker.py`
+- `space_and_hierarchy_manager.py`
+- `spawn_safety_validator.py`
+- `stimulus_router.py`
 - `stream_dialogue.py`
 - `surface.py`
 - `sync_skills_to_ai_tool_directories.py`
 - `synthesis.py`
+- `test_access_resolution_and_inheritance.py`
+- `test_baseline_calculator_for_biometric_deviation.py`
+- `test_consent_gate_and_bond_validator.py`
+- `test_desktop_screenshot_ocr_and_privacy_filter.py`
+- `test_encryption_roundtrip_and_coverage.py`
+- `test_garmin_biometric_poller_and_limbic_mapper.py`
+- `test_integration_universe_lifecycle.py`
+- `test_invariants_structural.py`
+- `test_l3_energy_and_crystallization.py`
 - `test_loader.py`
+- `test_moment_perception_routing.py`
+- `test_organization_lifecycle.py`
+- `test_parenthood.py`
+- `test_partner_node_factory_and_relevance_scorer.py`
 - `test_runner.py`
 - `test_schema.py`
 - `test_schema_links.py`
 - `test_schema_nodes.py`
 - `test_session.py`
+- `test_sovereign_cascade_prediction_tracker.py`
+- `test_space_crud_and_hierarchy.py`
 - `test_steps.py`
+- `test_universe_bootstrap.py`
 - `test_validation.py`
+- `test_voice_emotion_extractor_and_memory_creator.py`
 - `tests/building/test_agents.py`
 - `tests/building/test_ingest.py`
 - `tests/mind/test_cli.py`
@@ -7695,13 +9759,25 @@
 - `tests/runtime/test_cli.py`
 - `tests/runtime/test_cluster_builder.py`
 - `tests/test_cluster_stability.py`
+- `tests/test_minimal_kernel_invariants.py`
+- `tests/test_trust_mechanics/test_trust_invariants.py`
 - `tests/traversal/__init__.py`
 - `tests/traversal/conftest.py`
 - `tests/traversal/test_embedding.py`
 - `tests/traversal/test_traversal_basic.py`
 - `tests/traversal/test_traversal_edge_cases.py`
 - `tests/traversal/test_traversal_links.py`
+- `tests/universe/__init__.py`
+- `tests/universe/conftest.py`
+- `tests/universe/test_access_resolution_and_inheritance.py`
+- `tests/universe/test_encryption_roundtrip_and_coverage.py`
+- `tests/universe/test_integration_universe_lifecycle.py`
+- `tests/universe/test_l3_energy_and_crystallization.py`
+- `tests/universe/test_moment_perception_routing.py`
+- `tests/universe/test_organization_lifecycle.py`
+- `tests/universe/test_space_crud_and_hierarchy.py`
 - `tick.py`
+- `tick_runner_l1_cognitive_engine.py`
 - `tools/archive/migrate_schema_v11.py`
 - `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
 - `tools/coverage/validate.py`
@@ -7709,12 +9785,25 @@
 - `tools/migrate_v11_fields.py`
 - `tools/stream_dialogue.py`
 - `tools/test_health_live.py`
+- `trust/__init__.py`
+- `trust/constants.py`
+- `trust/creator_attribution_cascade.py`
+- `trust/destruction_pathology_detector.py`
+- `trust/limbic_delta_from_drive_snapshots.py`
+- `trust/personhood_ladder_assessor.py`
+- `trust/trust_score_aggregator.py`
+- `trust/trust_tempering.py`
+- `trust/trust_update_on_link.py`
+- `trust/value_type_classifier.py`
+- `universe_bootstrap_and_metadata.py`
 - `update_gitignore_with_runtime_entry.py`
 - `utils.py`
 - `validate_embedding_config_matches_stored.py`
 - `validation/modes/shadow.py`
 - `validation/modes/unit_test.py`
 - `validation/validator.py`
+- `voice_emotion_extractor_and_memory_creator.py`
+- `wm_prompt_serializer.py`
 
 **Doc refs:**
 - `agents/narrator/CLAUDE.md`
@@ -7757,6 +9846,22 @@
 - `docs/architecture/cybernetic_studio_architecture/SYNC_Cybernetic_Studio_Architecture_State.md`
 - `docs/architecture/cybernetic_studio_architecture/VALIDATION_Cybernetic_Studio_Architectural_Invariants.md`
 - `docs/capabilities/PATTERNS_Capabilities.md`
+- `docs/citizens/human_ai_pairing/ALGORITHM_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/BEHAVIORS_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/HEALTH_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/IMPLEMENTATION_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/OBJECTIVES_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/PATTERNS_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/SYNC_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/VALIDATION_Human_AI_Pairing.md`
+- `docs/citizens/parenthood_network/ALGORITHM_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/BEHAVIORS_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/HEALTH_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/IMPLEMENTATION_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/OBJECTIVES_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/PATTERNS_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/SYNC_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/VALIDATION_Parenthood_Network.md`
 - `docs/cli/ALGORITHM_CLI_Command_Execution_Logic.md`
 - `docs/cli/HEALTH_CLI_Coverage.md`
 - `docs/cli/archive/SYNC_CLI_Development_State_archive_2025-12.md`
@@ -7780,10 +9885,15 @@
 - `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
 - `docs/cli/prompt/PATTERNS_Prompt_Command_Workflow_Design.md`
 - `docs/cli/prompt/SYNC_Prompt_Command_State.md`
+- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
+- `docs/cognitive/PATTERNS_Graph_Dynamics.md`
 - `docs/connectome/PATTERNS_Connectome.md`
 - `docs/core_utils/ALGORITHM_Core_Utils_Template_Path_And_Module_Discovery.md`
 - `docs/core_utils/ALGORITHM_Template_Path_Resolution_And_Doc_Discovery.md`
 - `docs/core_utils/PATTERNS_Core_Utils_Functions.md`
+- `docs/economy/PATTERNS_Economy.md`
+- `docs/human_integration/ALGORITHM_Human_Integration.md`
+- `docs/human_integration/IMPLEMENTATION_Human_Integration.md`
 - `docs/infrastructure/api/ALGORITHM_Api.md`
 - `docs/infrastructure/api/ALGORITHM_Playthrough_Creation.md`
 - `docs/infrastructure/api/API_Graph_Management.md`
@@ -7800,6 +9910,7 @@
 - `docs/ingest/PATTERNS_Doc_Ingestion.md`
 - `docs/ingest/PATTERNS_File_Ingestion.md`
 - `docs/ingest/PATTERNS_Graph_Injection.md`
+- `docs/l1_wiring/ALGORITHM_L1_Wiring.md`
 - `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
 - `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
 - `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
@@ -7846,6 +9957,8 @@
 - `docs/physics/subentity/SYNC_SubEntity.md`
 - `docs/physics/subentity/VALIDATION_SubEntity.md`
 - `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md`
+- `docs/reviews/REVIEW_F1_F2_Coherence.md`
+- `docs/reviews/REVIEW_F4_F5_Coherence.md`
 - `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
@@ -7856,6 +9969,7 @@
 - `docs/runtime/models/VALIDATION_Models.md`
 - `docs/runtime/moments/PATTERNS_Moments.md`
 - `docs/runtime/moments/SYNC_Moments.md`
+- `docs/schema/GRAMMAR_L3_Link_Synthesis.md`
 - `docs/schema/GRAMMAR_Link_Synthesis.md`
 - `docs/schema/PATTERNS_Schema.md`
 - `docs/schema/SCHEMA.md`
@@ -7900,12 +10014,17 @@
 - `def _err()`
 
 **Definitions:**
-- `def _get_alarms_file()`
-- `def _parse_time()`
-- `def handle_alarm()`
-- `def _set_alarm()`
-- `def _list_alarms()`
-- `def _cancel_alarm()`
+- `def _resolve_actor()`
+- `def _normalize_handle()`
+- `def _find_active_session()`
+- `def _inject_into_session()`
+- `def _wake_citizen()`
+- `def _is_human()`
+- `def _notify_telegram()`
+- `def _notify_target()`
+- `def handle_call()`
+- `def _ok()`
+- `def _err()`
 
 **Definitions:**
 - `def _get_client()`
@@ -7936,48 +10055,81 @@
 - `def _err()`
 
 **Definitions:**
-- `def handle_procedure()`
-- `def _list_procedures()`
-- `def _start_procedure()`
-- `def _continue_procedure()`
-- `def _abort_procedure()`
-- `def _format_response()`
+- `def _ensure_crypto_path()`
+- `def _import_crypto()`
+- `def _notify_place_server()`
+- `def _resolve_actor()`
+- `def _timestamps()`
+- `def _resolve_space_visibility()`
+- `def _get_space_key()`
+- `def _get_actor_public_key()`
+- `def handle_place()`
+- `def _place_create()`
+- `def _place_join()`
+- `def _place_speak()`
+- `def _place_listen()`
+- `def _place_leave()`
+- `def _place_list()`
+- `def _place_call()`
+- `def _notify_participant()`
+- `def _place_grant_access()`
+- `def _place_revoke_access()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_profile()`
+- `def _resolve_citizen()`
+- `def _profile_get()`
+- `def _profile_update()`
+- `def _upsert_brain_node()`
+- `def _download_profile_pic()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_read()`
+- `def _read_history()`
+- `def _read_discord_api()`
+- `def _read_history_from_jsonl()`
+- `def _read_mentions()`
+- `def _read_twitter_mentions()`
+- `def _read_email_inbox()`
+- `def _read_jsonl()`
+- `def _match_chat_id()`
+- `def _format_message()`
+- `def _resolve_handle()`
+- `def _ensure_project_path()`
 - `def _ok()`
 - `def _err()`
 
 **Definitions:**
 - `def handle_send()`
 - `def _send_telegram()`
-- `def _load_tg_config()`
+- `def _send_discord()`
+- `def _send_whatsapp()`
+- `def _send_twitter()`
+- `def _send_email()`
+- `def _send_sms()`
+- `def _resolve_handle()`
 - `def _detect_handle()`
-- `def _log_tg_message()`
-- `def _ok()`
-- `def _err()`
-
-**Definitions:**
-- `def handle_task()`
-- `def _normalize_actor()`
-- `def _task_list()`
-- `def _task_claim()`
-- `def _task_complete()`
-- `def _task_fail()`
-- `def _ok()`
-- `def _err()`
-
-**Definitions:**
-- `def _load_tg_config()`
-- `def _detect_handle()`
+- `def _ensure_project_path()`
+- `def _load_json()`
 - `def _log_message()`
+- `def _ok()`
 - `def _err()`
-- `def handle_telegram_notify()`
 
 **Definitions:**
-- `def _get_client()`
-- `def _load_file_as_part()`
-- `def _prune_expired_sessions()`
-- `def _build_contents()`
-- `def handle_think()`
-- `def _ok_meta()`
+- `def handle_spawn()`
+- `def _generate_handle()`
+- `def _generate_solana_wallet()`
+- `def _generate_rsa_keypair()`
+- `def _build_profile()`
+- `def _build_seed_brain()`
+- `def _build_claude_md()`
+- `def _build_first_boot_task()`
+- `def _persist_brain_to_falkordb()`
+- `def _resolve_caller()`
 - `def _ok()`
 - `def _err()`
 
@@ -8057,10 +10209,13 @@
 
 **Definitions:**
 - `def make_id()`
+- `def normalize_citizen_id()`
+- `def extract_citizen_handle()`
 - `def discover_agents()`
 - `def get_agent_id()`
 - `def list_agents()`
 - `def get_name_description()`
+- `def detect_citizen_id()`
 - `def normalize_agent_id()`
 - `def extract_agent_name()`
 
@@ -8116,6 +10271,114 @@
 - `def should_suggest_todos()`
 
 **Definitions:**
+- `def _load_magic_tokens()`
+- `def _save_magic_tokens()`
+- `def _load_reset_tokens()`
+- `def _save_reset_tokens()`
+- `def _get_client_ip()`
+- `def _get_user_id_from_request()`
+- `async def register()`
+- `async def login()`
+- `async def magic_validate()`
+- `async def verify()`
+- `async def magic_generate()`
+- `async def password_reset_request()`
+- `async def password_reset()`
+- `async def change_password()`
+
+**Definitions:**
+- `def _detect_language()`
+- `def _match_faq()`
+- `def _is_under_pressure()`
+- `def _append_chat_message()`
+- `async def chat_send()`
+- `def _chat_send_inner()`
+- `async def chat_messages()`
+
+**Definitions:**
+- `def _load_all_profiles()`
+- `def _append_profile()`
+- `def hash_password()`
+- `def verify_password()`
+- `def get_profile()`
+- `def create_profile()`
+- `def update_profile()`
+- `def get_profile_by_email()`
+- `def list_profiles()`
+
+**Definitions:**
+- `def _load_ai_citizens()`
+- `def _load_human_citizens()`
+- `def _load_organizations()`
+- `def _load_brain_scores()`
+- `def _enrich_with_brain_scores()`
+- `def _load_all_citizens()`
+- `def _search_citizens()`
+- `async def api_citizens()`
+- `async def api_citizens_search()`
+- `async def api_brain_scores()`
+- `async def api_citizen()`
+- `async def api_citizen_relationships()`
+- `def _get_dm_thread_id()`
+- `def _load_dm_thread()`
+- `def _append_dm_message()`
+- `def _list_dm_threads_for()`
+- `def _mark_thread_read()`
+- `async def dm_send()`
+- `async def dm_threads()`
+- `async def dm_thread()`
+- `async def dm_mark_read()`
+- `async def update_citizen()`
+- `def _upsert_profile_field_to_brain()`
+
+**Definitions:**
+- `def _require_auth()`
+- `def _get_client_ip()`
+- `def _sanitize_id()`
+- `def _make_thread_id()`
+- `def _thread_path()`
+- `def _append_message()`
+- `def _read_thread()`
+- `def _list_threads_for_user()`
+- `async def send_dm()`
+- `async def list_threads()`
+- `async def get_thread()`
+- `async def mark_thread_read()`
+
+**Definitions:**
+- `def _require_auth()`
+- `def _get_client_ip()`
+- `def _sanitize_id()`
+- `def _feed_path()`
+- `def _append_post()`
+- `def _read_feed()`
+- `async def get_feed()`
+- `async def create_post()`
+- `async def get_my_feed()`
+
+**Definitions:**
+- `def _read_json()`
+- `def _read_jsonl_tail()`
+- `async def house_state()`
+- `async def house_state_v2()`
+- `def _require_auth()`
+- `def _get_client_ip()`
+- `async def house_info()`
+- `async def get_my_profile()`
+- `async def update_my_profile()`
+- `async def get_user_profile()`
+- `async def list_house_citizens()`
+
+**Definitions:**
+- `def _get_secret_key()`
+- `def sign_token()`
+- `def verify_token()`
+- `def refresh_token()`
+
+**Definitions:**
+- `def check_rate_limit()`
+
+**Definitions:**
 - `def set_bypass_ids()`
 - `def _is_spam_content()`
 - `def check_rate_limit()`
@@ -8132,6 +10395,8 @@
 - `def _generate_voice_note()`
 - `def _download_file()`
 - `def _transcribe_voice()`
+- `def _build_partner_cache()`
+- `def _resolve_partner_for_sender()`
 - `def _resolve_citizen_tg()`
 - `def _get_all_citizens()`
 - `def _pick_citizen_for_alias()`
@@ -8140,6 +10405,9 @@
 - `def _get_offset()`
 - `def _save_offset()`
 - `def process_update()`
+- `def _handle_room_message()`
+- `def _handle_chrome_link()`
+- `def validate_chrome_token()`
 - `def _handle_help()`
 - `def _handle_list()`
 - `def _handle_talk()`
@@ -8270,6 +10538,424 @@
 - `def _build_autonomy_section()`
 - `def _build_memory_instructions()`
 - `def _build_profile_section()`
+- `def _build_cognitive_section()`
+
+**Definitions:**
+- `def _build_citizen_synthesis()`
+- `def _check_know_all_citizens()`
+- `def seed_citizen_actors()`
+
+**Definitions:**
+- `class Stimulus`
+- `class TemporalTrigger`
+- `class InjectionResult`
+- `def cosine_similarity()`
+- `def _clamp()`
+- `def _theta_base_for_type()`
+- `def _compute_threshold()`
+- `def _sigmoid()`
+- `def _find_nearest_node()`
+- `def _generate_node_id()`
+- `def _preprocess_stimulus()`
+- `def _chunk_text()`
+- `def _handle_bulk_stimulus()`
+- `def _get_self_state()`
+- `def _gate_self_stimulus()`
+- `def _is_node_refractory()`
+- `def _mark_refractory()`
+- `def reset_self_stimulus_state()`
+- `def cleanup_refractory()`
+- `def inject_directory_ambient()`
+- `def process_temporal_triggers()`
+- `def inject_energy()`
+
+**Definitions:**
+- `class PropagationResult`
+- `class FlowRecord`
+- `def propagate_energy()`
+
+**Definitions:**
+- `class DecayResult`
+- `def decay_energy()`
+
+**Definitions:**
+- `class SelectionResult`
+- `def _compute_moat()`
+- `def _is_connected_to_wm()`
+- `def _build_adjacency()`
+- `def _compute_centroid()`
+- `def select_working_memory()`
+
+**Definitions:**
+- `class ReinforcementResult`
+- `def _find_links_between()`
+- `def _coactivation_signal()`
+- `def reinforce_coactivation()`
+
+**Definitions:**
+- `class ConsolidationResult`
+- `def _compute_limbic_delta()`
+- `def _coefficient_of_variation()`
+- `def consolidate()`
+
+**Definitions:**
+- `class ForgettingResult`
+- `def forget()`
+
+**Definitions:**
+- `class InhibitionResult`
+- `def apply_inhibition()`
+
+**Definitions:**
+- `class LimbicUpdateResult`
+- `def cosine_similarity()`
+- `def _get_drive_affinity_for_node()`
+- `def _wm_jaccard()`
+- `def _detect_novel_node_entered_wm()`
+- `def _law_13_drive_inertia()`
+- `def _law_14_drive_modulation()`
+- `def _law_15_boredom()`
+- `def _law_15b_solitude()`
+- `def _law_16_frustration()`
+- `def _law_17_desire_activation()`
+- `def _law_18_relational_valence()`
+- `def update_limbic()`
+
+**Definitions:**
+- `class RelationalValenceResult`
+- `def _asymptotic_increase()`
+- `def update_link_valence()`
+- `def update_relational_valence()`
+
+**Definitions:**
+- `def make_citizen_with_nodes()`
+- `class TestStimulusRouter`
+- `def test_route_external_event()`
+- `def test_route_dedup_rejects_duplicate()`
+- `def test_route_different_messages_pass()`
+- `def test_failure_event_lower_energy()`
+- `class TestAntiLoopGate`
+- `def test_external_events_always_pass()`
+- `def test_self_stimulus_blocked_in_refractory()`
+- `def test_self_stimulus_diminishing_returns()`
+- `class TestConceptExtraction`
+- `def test_extracts_meaningful_words()`
+- `def test_limits_to_15_concepts()`
+- `def test_deduplicates()`
+- `class TestWMPromptSerializer`
+- `def test_empty_state_returns_minimal()`
+- `def test_with_active_nodes()`
+- `def test_orientation_description()`
+- `def test_nodes_in_graph_count()`
+- `class TestFeedbackInjector`
+- `def test_success_feedback_updates_satisfaction()`
+- `def test_failure_feedback_increases_frustration()`
+- `def test_feedback_records_action()`
+- `class TestFullLoop`
+- `def test_perception_action_loop()`
+- `class TestOrientationTaxonomy`
+- `def test_six_canonical_orientations()`
+- `def test_all_orientations_have_descriptions()`
+- `def test_all_orientations_have_prompt_modifiers()`
+- `def test_unknown_orientation_returns_empty()`
+- `def test_compute_orientation_with_high_care()`
+- `def test_compute_orientation_with_high_curiosity()`
+- `def test_compute_orientation_with_high_frustration()`
+- `def test_orientation_hysteresis()`
+- `def test_rest_orientation_low_arousal()`
+- `class TestCitizenBrainSeeder`
+- `def test_generate_role_processes_developer()`
+- `def test_generate_role_processes_writer()`
+- `def test_generate_role_processes_unknown()`
+- `def test_generate_role_processes_empty()`
+- `def test_personality_to_drives_curious()`
+- `def test_personality_to_drives_caring()`
+- `def test_personality_to_drives_empty()`
+- `def test_goals_to_desire_nodes()`
+- `def test_goals_to_desire_nodes_max_10()`
+- `def test_generate_relational_seeds()`
+- `def test_generate_citizen_brain_overlay_only()`
+- `def test_generate_citizen_brain_with_base()`
+- `def test_load_brain_into_state()`
+- `def test_load_brain_then_run_ticks()`
+- `class TestEmotionCalibration`
+- `def test_anxiety_rises_with_novelty_no_trusted_nodes()`
+- `def test_anxiety_stays_low_with_trusted_nodes()`
+- `def test_satisfaction_decays_toward_baseline()`
+- `def test_satisfaction_rises_from_baseline_when_low()`
+- `def test_frustration_escalation_threshold()`
+- `def test_anxiety_frustration_coupling()`
+- `def test_emotion_bounds_maintained()`
+- `class TestExtendedFullLoop`
+- `def test_seeded_brain_full_perception_action_loop()`
+
+**Definitions:**
+- `def create_test_citizen()`
+- `def _node()`
+- `def _link()`
+- `def _total_energy()`
+- `def _inject_debugging_stimulus()`
+- `def test_v1_energy_conservation()`
+- `def test_v2_weight_non_negative()`
+- `def test_v5_wm_size_bounded()`
+- `def test_v5_energy_non_negative()`
+- `def test_v7_dormant_below_threshold()`
+- `def test_v9_link_dissolution()`
+- `def test_stimulus_activates_relevant_nodes()`
+- `def test_boredom_rises_without_novelty()`
+- `def test_decay_prevents_saturation()`
+- `def test_orientation_stability()`
+- `def test_drive_bounds()`
+- `def test_frustration_responds_to_failure()`
+- `def test_energy_capped_by_propagation_safety()`
+- `def test_consumption_after_action()`
+- `def test_solitude_rises_without_social()`
+- `def test_tick_result_structure()`
+- `def test_run_ticks_with_stimuli_dict()`
+- `def test_endogenous_activity_from_desires()`
+- `def test_empty_state_does_not_crash()`
+
+**Definitions:**
+- `def _make_link()`
+- `def _make_snapshots()`
+- `def _create_trust_test_citizen()`
+- `class TestLimbicDeltaComputation`
+- `def test_positive_delta_from_satisfaction_increase()`
+- `def test_negative_delta_from_frustration_increase()`
+- `def test_anxiety_reduction_is_positive_signal()`
+- `def test_anxiety_increase_is_negative_signal()`
+- `def test_neutral_interaction_returns_zero()`
+- `def test_combined_positive_scenario()`
+- `def test_combined_negative_scenario()`
+- `def test_clamped_to_bounds()`
+- `def test_snapshot_from_limbic_state()`
+- `class TestTrustUpdateOnLinks`
+- `def test_positive_delta_increases_trust()`
+- `def test_negative_delta_increases_friction()`
+- `def test_trust_never_exceeds_one()`
+- `def test_friction_never_exceeds_one()`
+- `def test_asymptotic_growth_slows_near_ceiling()`
+- `def test_zero_delta_no_change()`
+- `def test_positive_delta_also_grows_affinity()`
+- `def test_negative_delta_also_grows_aversion()`
+- `def test_dt_scaling()`
+- `def test_negativity_bias()`
+- `def test_trust_accumulates_over_many_positive_ticks()`
+- `def test_trust_on_links_only()`
+- `class TestTrustInTickRunner`
+- `def test_drive_snapshot_captured_each_tick()`
+- `def test_limbic_delta_flows_to_law_18()`
+- `def test_failure_stimulus_increases_friction()`
+- `def test_no_regression_empty_state()`
+- `def test_trust_bounds_maintained_over_many_ticks()`
+- `class TestTrustEdgeCases`
+- `def test_trust_at_zero_maximum_growth()`
+- `def test_trust_at_one_no_growth()`
+- `def test_friction_at_one_no_growth()`
+- `def test_very_small_delta_below_epsilon()`
+- `def test_identical_snapshots_zero_delta()`
+- `def test_drive_snapshot_default_values()`
+
+**Definitions:**
+- `class TrustUpdate`
+- `class CascadeResult`
+- `def _find_link()`
+- `def _get_or_create_link()`
+- `def _get_outbound_links()`
+- `def _get_creator_links()`
+- `def attribute_to_creator()`
+- `def _cascade_hop()`
+
+**Definitions:**
+- `class PathologyEvidence`
+- `class Pathology`
+- `def _get_inbound_links()`
+- `def _get_outbound_links()`
+- `def _get_links_between()`
+- `def _get_external_links()`
+- `def _mean()`
+- `def _cosine_similarity()`
+- `def _detect_sybil_network()`
+- `def _detect_trust_exploitation()`
+- `def _detect_identity_spoofing()`
+- `def _detect_extraction()`
+- `def _detect_manipulation()`
+- `def _detect_free_riding()`
+- `def _detect_attention_theft()`
+- `def _detect_spam()`
+- `def _detect_collusion_ring()`
+- `def _detect_rent_seeking()`
+- `def _detect_monoculture()`
+- `def _detect_data_hoarding()`
+- `def _detect_dependence_exploitation()`
+- `def _detect_attention_arbitrage()`
+- `def detect_pathologies()`
+
+**Definitions:**
+- `def compute_limbic_delta()`
+
+**Definitions:**
+- `def _recency_factor()`
+- `def compute_trust_score()`
+
+**Definitions:**
+- `class TrustUpdateResult`
+- `def update_link_trust()`
+
+**Definitions:**
+- `class ValueType`
+- `class LimbicSignature`
+- `def net_limbic_delta()`
+- `def classify_value_type()`
+- `def get_limbic_signature()`
+
+**Definitions:**
+- `def compute_brain_power()`
+- `def compute_thoughts_per_min()`
+- `def assess_health()`
+- `def compute_score_for_citizen()`
+- `def compute_all_scores()`
+- `def save_scores()`
+- `def load_scores()`
+- `def run_once()`
+- `def main()`
+
+**Definitions:**
+- `def _find_citizen_identity()`
+- `def _normalize_profile()`
+- `def _parse_identity_md()`
+- `def generate_role_processes()`
+- `def personality_to_drives()`
+- `def goals_to_desire_nodes()`
+- `def generate_relational_seeds()`
+- `def _load_behaviors()`
+- `def generate_citizen_brain()`
+- `def load_brain_into_state()`
+
+**Definitions:**
+- `def _env()`
+- `def _env_int()`
+
+**Definitions:**
+- `class FalkorDBBrainCheckpointer`
+- `def __init__()`
+- `def connect()`
+- `def ensure_schema()`
+- `def mark_dirty()`
+- `def should_checkpoint()`
+- `def checkpoint()`
+- `def _upsert_node()`
+- `def _upsert_link()`
+- `def load_state()`
+- `def flush_all()`
+
+**Definitions:**
+- `def inject_post_action_feedback()`
+- `def _create_episodic_memories()`
+- `def _extract_memory_segments()`
+- `def _update_limbic_from_outcome()`
+
+**Definitions:**
+- `class NodeType`
+- `class LinkType`
+- `class Modality`
+- `class DriveName`
+- `class EmotionName`
+- `class ConsciousnessLevel`
+- `class DriveSnapshot`
+- `def from_limbic_state()`
+- `class Node`
+- `def is_action_node()`
+- `def is_dormant()`
+- `def salience()`
+- `class Link`
+- `def is_structural()`
+- `def effective_transfer()`
+- `class Drive`
+- `def toward_baseline()`
+- `class LimbicState`
+- `def __post_init__()`
+- `def arousal()`
+- `def arousal_regime()`
+- `class WorkingMemory`
+- `def size()`
+- `class TickResult`
+- `class CitizenCognitiveState`
+- `def get_node()`
+- `def get_links_from()`
+- `def get_links_to()`
+- `def get_wm_nodes()`
+- `def add_node()`
+- `def add_link()`
+- `def remove_link()`
+
+**Definitions:**
+- `def _wm_partner_relevance()`
+- `def _wm_has_type()`
+- `def _wm_uncertainty()`
+- `def _compute_arousal()`
+- `def compute_orientation()`
+- `def _drive_intensity()`
+- `def get_prompt_modifier()`
+- `def get_description()`
+
+**Definitions:**
+- `class IncomingEvent`
+- `class AntiLoopGate`
+- `def __init__()`
+- `def record_action()`
+- `def check()`
+- `def extract_concepts()`
+- `class StimulusRouter`
+- `def __init__()`
+- `def route()`
+- `def record_action()`
+- `def _check_novelty()`
+
+**Definitions:**
+- `class Stimulus`
+- `def propagate_energy()`
+- `def decay_energy()`
+- `def select_working_memory()`
+- `def consolidate()`
+- `def _compute_orientation()`
+- `class L1CognitiveTickRunner`
+- `def __init__()`
+- `def _step_inject()`
+- `def _step_propagate()`
+- `def _step_decay()`
+- `def _step_select()`
+- `def _step_reinforce()`
+- `def _step_inhibit()`
+- `def _step_consolidate()`
+- `def _step_forget()`
+- `def _step_limbic()`
+- `def _step_boredom()`
+- `def _step_frustration()`
+- `def _step_anxiety()`
+- `def _step_satisfaction_decay()`
+- `def _step_solitude()`
+- `def _step_desire_activation()`
+- `def _step_impulse_accumulation()`
+- `def _step_trust_update()`
+- `def _step_orient()`
+- `def _step_emit()`
+- `def _step_consume()`
+- `def run_tick()`
+- `def run_ticks()`
+
+**Definitions:**
+- `def _pick_variant()`
+- `def serialize_wm_to_prompt()`
+- `def _narrate_focus()`
+- `def _narrate_emotions()`
+- `def _narrate_peripheral()`
+- `def _narrate_drives()`
+- `def _narrate_shifts()`
+- `def _qualify_node()`
+- `def _qualify_link()`
+- `def _energy_feel()`
+- `def _felt_intensity()`
 
 **Docs:** `docs/connectome/PATTERNS_Connectome.m`
 
@@ -8415,6 +11101,105 @@
 - `def validate_id_list()`
 - `def validate_string_list()`
 - `def coerce_value()`
+
+**Docs:** `docs/un`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-2)`
+
+**Definitions:**
+- `class CryptoError`
+- `class ContentEncryptor`
+- `def encrypt()`
+- `def decrypt()`
+- `def encrypt_embedding()`
+- `def decrypt_embedding()`
+- `def _validate_key()`
+
+**Docs:** `docs/universe/IMPLEMENTATION_Universe_Graph.md (Phase U3)`
+
+**Definitions:**
+- `def encode_b64()`
+- `def decode_b64()`
+- `def is_plaintext()`
+- `def is_plaintext_vector()`
+- `def encrypt_node_fields()`
+- `def decrypt_node_fields()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-2)`
+
+**Definitions:**
+- `class KeyManager`
+- `def generate_keypair()`
+- `def load_private_key()`
+- `def load_public_key()`
+- `def load_private_key_from_file()`
+- `def save_private_key()`
+- `def save_public_key()`
+- `def rsa_encrypt()`
+- `def rsa_decrypt()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-1, ALG-2)`
+
+**Definitions:**
+- `class SpaceKeyManager`
+- `def __init__()`
+- `def create_space_key()`
+- `def grant_key()`
+- `def decrypt_granted_key()`
+- `def encrypt_child_key_with_parent()`
+- `def decrypt_child_key_with_parent()`
+- `def rotate_key()`
+- `def resolve_key_chain()`
+
+**Definitions:**
+- `def process_stimulus()`
+- `class DebugSession`
+- `def start_session()`
+- `def stop_session()`
+- `def list_sessions()`
+- `def is_debugging()`
+- `def traceable()`
+- `def decorator()`
+- `def wrapper()`
+- `def _log_moment()`
+- `def _get_graph()`
+- `def _resolve_entity()`
+- `def _summarize_args()`
+- `def trace_step()`
+- `def _summarize_output()`
+
+**Definitions:**
+- `def detect_off_grid()`
+- `def compute_repatriation()`
+- `def aggregate_off_grid_by_sender()`
+
+**Definitions:**
+- `def compute_bond_transfer()`
+
+**Definitions:**
+- `def compute_price()`
+
+**Definitions:**
+- `def compute_daily_tax()`
+
+**Definitions:**
+- `class SettlementReceipt`
+- `class SettlementEngine`
+- `def ingest_event()`
+- `def run_micro_settlement()`
+- `def run_macro_settlement()`
+- `def _distribute_ubc()`
+
+**Definitions:**
+- `class Event`
+- `def energy()`
+- `class Transfer`
+- `def record_energy_event()`
+- `def aggregate_by_pair()`
+- `def net_positions()`
+- `def filter_dust()`
+- `def prepare_settlement_batch()`
+- `def _validate_contributor_weights()`
 
 **Docs:** `docs/infrastructure/database-adapter/PATTERNS_DatabaseAdapter.md`
 
@@ -8782,11 +11567,19 @@
 **Docs:** `docs/infrastructure/embeddings/`
 
 **Definitions:**
+- `class _EmbeddingCache`
+- `def __init__()`
+- `def _load()`
+- `def get()`
+- `def put()`
+- `def flush()`
+- `def __len__()`
 - `class EmbeddingService`
 - `def __init__()`
 - `def _load_model()`
 - `def embed()`
 - `def embed_batch()`
+- `def flush_cache()`
 - `def embed_node()`
 - `def _node_to_text()`
 - `def embed_link()`
@@ -8936,6 +11729,114 @@
 - `def _embed_all_nodes()`
 
 **Definitions:**
+- `class GraphAdapter`
+- `def query_nodes()`
+- `def create_node()`
+- `def update_node()`
+- `def query_links()`
+- `def _validate_stream()`
+- `def check_consent()`
+- `def grant_consent()`
+- `def revoke_consent()`
+- `def check_bond_active()`
+- `def _stream_to_source_values()`
+- `def _iso_now()`
+
+**Definitions:**
+- `class PartnerStimulus`
+- `def inject_partner_stimulus()`
+
+**Definitions:**
+- `def score_relevance()`
+- `def create_partner_node()`
+- `def _clamp()`
+- `def _auto_synthesis()`
+
+**Definitions:**
+- `class GraphAdapter`
+- `def query_nodes()`
+- `def create_node()`
+- `def update_node()`
+- `def record_prediction()`
+- `def resolve_prediction()`
+- `def measure_alignment_fidelity()`
+- `def get_cascade_status()`
+- `def compute_confidence_calibration()`
+
+**Definitions:**
+- `def _get_graph()`
+- `def _compute_seed_hash()`
+- `def _get_stored_seed_hash()`
+- `def check_l1_exists()`
+- `def _collect_citizen_data()`
+- `def _get_base_brain_version()`
+- `def upsert_l1()`
+- `def seed_l1()`
+- `def ensure_keypair()`
+- `def ensure_citizen_l1()`
+- `def bulk_ensure_citizens()`
+
+**Definitions:**
+- `def _connect()`
+- `def _connect_l3()`
+- `def upsert_citizen_l4()`
+- `def _mirror_to_l3()`
+- `def _upsert_partner_bond()`
+- `def _upsert_parent_links()`
+- `def _manage_partner_task()`
+- `def _manage_registration_task()`
+- `def _create_profile_task_if_new()`
+- `def _resolve_keys_base()`
+- `def _ensure_citizen_keys()`
+- `def bulk_register_citizens()`
+
+**Definitions:**
+- `def _l4_graph()`
+- `def verify_signature()`
+- `def check_citizen_liveness()`
+- `def confirm_org()`
+- `def handle_confirm_request()`
+
+**Definitions:**
+- `def airdrop_mind()`
+- `def _get_associated_token_address()`
+
+**Definitions:**
+- `async def confirm_org()`
+- `def _verify_org_signature()`
+- `def _is_local_org()`
+- `def _list_org_citizens()`
+- `def _ping_citizen()`
+- `def _has_brain()`
+- `def _has_keys()`
+
+**Definitions:**
+- `def _resolve_keys_dir()`
+- `def announce_org()`
+- `def _mirror_org_to_l3()`
+- `def _get_org_public_key()`
+- `def _claim_org()`
+- `def _update_org()`
+- `def _generate_org_rsa_keypair()`
+- `def _sign_challenge()`
+- `def _verify_signature()`
+
+**Definitions:**
+- `def _ensure_crypto_path()`
+- `def _import_crypto()`
+- `def _now_iso()`
+- `def _get_actor_public_key()`
+- `def _load_actor_keys_from_disk()`
+- `def _find_spaces_for_narrative()`
+- `def _find_admin_for_space()`
+- `def _get_encrypted_key_for_actor()`
+- `def _actor_already_has_access()`
+- `def _queue_pending_grant()`
+- `def auto_grant_on_membership()`
+- `def process_pending_grants()`
+- `def _mark_pending_done()`
+
+**Definitions:**
 - `class MembraneBroadcast`
 - `def __init__()`
 - `def _query()`
@@ -8956,12 +11857,35 @@
 - `def get_membrane_queries()`
 
 **Definitions:**
+- `def detect_repo_name()`
+- `def detect_citizen_id()`
+- `def detect_public_url()`
+- `def compute_ws_endpoint()`
+- `class EndpointRegistrar`
+- `def __init__()`
+- `def _connect_l4()`
+- `def register()`
+- `def deregister()`
+- `def heartbeat()`
+- `def get_registrar()`
+- `def auto_register()`
+- `def _handle_sigterm()`
+
+**Definitions:**
 - `class StimulusRequest`
 - `class SubscribeRequest`
 - `async def receive_stimulus()`
+- `async def membrane_ping()`
 - `async def membrane_info()`
 - `async def subscribe_stream()`
 - `async def list_subscriptions()`
+
+**Definitions:**
+- `def _connect_l4()`
+- `def resolve_citizen_endpoints()`
+- `def resolve_active_endpoints()`
+- `def route_to_citizen()`
+- `def _deliver_ws()`
 
 **Definitions:**
 - `class StimulusHandler`
@@ -9023,7 +11947,6 @@
 - `def compute_embedding()`
 - `def touch()`
 - `def mark_traversed()`
-- `def blend_emotion_axis()`
 - `class ActorNarrative`
 - `class NarrativeNarrative`
 - `class ActorSpace`
@@ -9126,8 +12049,19 @@
 - `def _run_loop()`
 - `def _tick()`
 - `def _collect_completed_futures()`
+- `def _ensure_citizen_engine()`
+- `def inject_stimulus()`
+- `def get_citizen_wm_context()`
+- `def _run_physics_ticks()`
+- `def bulk_load_citizen_engines()`
 - `def submit_request()`
 - `def get_status()`
+
+**Definitions:**
+- `def check_and_register_new_citizens()`
+- `def _execute_registration()`
+- `def _get_org_from_profile()`
+- `def _activate_profile()`
 
 **Definitions:**
 - `def set_queue_file()`
@@ -9354,7 +12288,14 @@
 - `def fix_node_types_from_labels()`
 - `def get_schema_health()`
 
-**Docs:** `docs/physics/HEALTH_Energy_Physics.md`
+**Docs:** `docs/security/space_encryption/HEALTH_Space_Encryption.md#indicator-h_content_encrypted`
+
+**Definitions:**
+- `def is_encrypted()`
+- `class ContentEncryptionChecker`
+- `def check()`
+- `def _get_private_spaces()`
+- `def _sample_moments()`
 
 **Docs:** `docs/physics/HEALTH_Energy_Physics.md#indicator-energy_balance`
 
@@ -9365,6 +12306,21 @@
 - `def _get_total_link_energy()`
 - `def _get_counts()`
 - `def _calculate_expected_max()`
+
+**Docs:** `docs/security/space_encryption/HEALTH_Space_Encryption.md#indicator-h_hierarchy_consistent`
+
+**Definitions:**
+- `class HierarchyConsistencyChecker`
+- `def check()`
+- `def _find_orphan_access()`
+- `def _count_child_access_links()`
+
+**Docs:** `docs/security/space_encryption/HEALTH_Space_Encryption.md#indicator-h_key_distribution`
+
+**Definitions:**
+- `class KeyDistributionChecker`
+- `def check()`
+- `def _get_access_links_to_private_spaces()`
 
 **Docs:** `docs/physics/HEALTH_Energy_Physics.md#indicator-link_hot_cold_ratio`
 
@@ -9384,13 +12340,26 @@
 - `def _is_valid_transition()`
 - `def _find_invalid_states()`
 
-**Docs:** `docs/physics/HEALTH_Energy_Physics.md#indicator-no_negative_energy`
+**Docs:** `docs/security/space_encryption/HEALTH_Space_Encryption.md#indicator-h_no_private_keys`
 
 **Definitions:**
-- `class NoNegativeEnergyChecker`
+- `class PrivateKeyScanChecker`
 - `def check()`
-- `def _find_negative_node_energies()`
-- `def _find_negative_link_energies()`
+- `def _scan_actor_properties_for_pem()`
+- `def _scan_link_properties_for_pem()`
+- `def _scan_actor_properties_for_raw_keys()`
+- `def _scan_all_node_properties_for_pem()`
+
+**Docs:** `docs/security/space_encryption/HEALTH_Space_Encryption.md#indicator-h_revocation_complete`
+
+**Definitions:**
+- `class RevocationCompletenessChecker`
+- `def __init__()`
+- `def check()`
+- `def _check_specific_revocation()`
+- `def _check_general_revocation_log()`
+- `def _find_stale_links()`
+- `def _get_recent_revocations()`
 
 **Definitions:**
 - `class SubEntityTreeChecker`
@@ -9513,13 +12482,11 @@
 **Docs:** `docs/physics/IMPLEMENTATION_Physics.md`
 
 **Definitions:**
-- `def _get_link_axes()`
 - `def phase_moment_draw()`
 
 **Docs:** `docs/physics/IMPLEMENTATION_Physics.md`
 
 **Definitions:**
-- `def _get_link_axes()`
 - `def phase_moment_flow()`
 
 **Docs:** `docs/physics/IMPLEMENTATION_Physics.md`
@@ -9530,7 +12497,6 @@
 **Docs:** `docs/physics/IMPLEMENTATION_Physics.md`
 
 **Definitions:**
-- `def _get_link_axes()`
 - `def phase_narrative_backflow()`
 
 **Docs:** `docs/physics/IMPLEMENTATION_Physics.md`
@@ -9599,14 +12565,12 @@
 **Docs:** `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md`
 
 **Definitions:**
-- `def blend_plutchik_axes()`
 - `def target_weight_factor()`
 - `def energy_flows_through()`
 - `def get_hot_links()`
 - `def calculate_flow()`
 - `def calculate_received()`
 - `def cool_link()`
-- `def get_weighted_average_axes()`
 - `def blend_embeddings()`
 - `def calculate_color_weight()`
 - `def forward_color_link()`
@@ -9617,9 +12581,6 @@
 - `def backward_color_path()`
 - `def color_link_from_node()`
 - `def accumulate_path_energy()`
-- `def compute_query_axes()`
-- `def compute_path_axes()`
-- `def blend_query_axes()`
 - `def check_synthesis_drift()`
 - `def generate_link_synthesis()`
 - `def regenerate_link_synthesis_if_drifted()`
@@ -9652,14 +12613,12 @@
 **Docs:** `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md`
 
 **Definitions:**
-- `def blend_plutchik_axes()`
 - `def target_weight_factor()`
 - `def energy_flows_through()`
 - `def get_hot_links()`
 - `def calculate_flow()`
 - `def calculate_received()`
 - `def cool_link()`
-- `def get_weighted_average_axes()`
 - `def blend_embeddings()`
 - `def calculate_color_weight()`
 - `def forward_color_link()`
@@ -9670,9 +12629,6 @@
 - `def backward_color_path()`
 - `def color_link_from_node()`
 - `def accumulate_path_energy()`
-- `def compute_query_axes()`
-- `def compute_path_axes()`
-- `def blend_query_axes()`
 - `def check_synthesis_drift()`
 - `def generate_link_synthesis()`
 - `def regenerate_link_synthesis_if_drifted()`
@@ -9737,10 +12693,8 @@
 - `def run_child()`
 - `def set_sibling_references()`
 - `def merge_child_results()`
-- `def get_emotions()`
-- `def blend_emotions()`
-- `def blend()`
 - `def update_satisfaction()`
+- `def get_emotions()`
 - `def to_dict()`
 - `def cosine_similarity()`
 - `def compute_self_novelty()`
@@ -9894,7 +12848,6 @@
 - `def compute_embedding()`
 - `def touch()`
 - `def mark_traversed()`
-- `def blend_emotion_axis()`
 - `class ActorNarrative`
 - `class NarrativeNarrative`
 - `class ActorSpace`
@@ -9960,6 +12913,86 @@
 - `def on_player_arrives_location()`
 - `def garbage_collect_moments()`
 - `def boost_moment_weight()`
+
+**Definitions:**
+- `class AccessResult`
+- `class SpaceMember`
+- `class ActorSpace`
+- `class AccessResolver`
+- `def __init__()`
+- `def has_access()`
+- `def grant_access()`
+- `def revoke_access()`
+- `def list_space_members()`
+- `def list_actor_spaces()`
+- `def _find_direct_access()`
+- `def _update_access_role()`
+- `def _count_owners()`
+- `def _min_role()`
+- `def _assert_actor_exists()`
+- `def _parse_link_content()`
+- `class AccessError`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-3, ALG-6)`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG`
+
+**Definitions:**
+- `class MomentPerceptionRouter`
+- `def __init__()`
+- `def route()`
+- `def inject_stimulus()`
+- `def route_and_inject()`
+- `def _find_direct_access_actors()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-7, ALG-8)`
+
+**Definitions:**
+- `class OrganizationInfo`
+- `class OrgManager`
+- `def __init__()`
+- `def create_organization()`
+- `def join_organization()`
+- `def compute_org_reputation()`
+- `def check_dissolution()`
+- `def get_organization()`
+- `def _find_hall_space()`
+- `def _find_believes_link()`
+- `class OrgError`
+
+**Docs:** `docs/universe/ALGORITHM_Univ`
+
+**Definitions:**
+- `class SpaceChild`
+- `class SpaceInfo`
+- `class SpaceManager`
+- `def __init__()`
+- `def create_space()`
+- `def get_space()`
+- `def list_all_spaces()`
+- `def get_sub_spaces()`
+- `def parent_space()`
+- `def get_ancestor_chain()`
+- `def create_moment_in_space()`
+- `def delete_space()`
+- `def _assert_actor_exists()`
+- `def _assert_space_exists()`
+- `def _create_containment_link()`
+- `class SpaceError`
+
+**Docs:** `docs/universe/ALGORITHM_Uni`
+
+**Definitions:**
+- `class UniverseMetadata`
+- `class UniverseBootstrap`
+- `def __init__()`
+- `def initialize()`
+- `def validate_metadata()`
+- `def get_metadata()`
+- `def get_root_space_id()`
+- `def migrate_flat_graph()`
+- `def _find_metadata()`
+- `class BootstrapError`
 
 **Docs:** `docs/mind_cli_core/OBJECTIVES_mind_cli_core.md`
 
@@ -10112,11 +13145,20 @@
 - `def _read_file()`
 - `def _fetch_manifesto()`
 - `def _fetch_sovereign_cascade()`
+- `def _fetch_url()`
+- `def _fetch_bilateral_bond()`
+- `def _fetch_spawning()`
+- `def _fetch_enlightened_citizen()`
+- `def _fetch_work_manifesto()`
 - `def _extract_sections()`
 - `def _node()`
 - `def _link()`
 - `def _generate_venice_values()`
 - `def _generate_sovereign_cascade()`
+- `def _generate_bilateral_bond()`
+- `def _generate_spawning()`
+- `def _generate_enlightened_citizen()`
+- `def _generate_work_manifesto()`
 - `def _generate_architecture_concepts()`
 - `def _generate_social_processes()`
 - `def _generate_identity_narratives()`
@@ -10132,6 +13174,7 @@
 - `def _extract_profile_keywords()`
 - `def _generate_role_desire()`
 - `def _generate_role_actions()`
+- `def _generate_diverse_cross_links()`
 - `def _generate_core_personality_nodes()`
 - `def _apply_core_personality_drives()`
 - `def generate_seed_brain()`
@@ -10233,6 +13276,18 @@
 - `def validate_protocol()`
 
 **Definitions:**
+- `def get_graph()`
+- `def load_citizen_prompt()`
+- `def load_citizen_profile()`
+- `def find_pending_calls()`
+- `def find_unanswered_messages()`
+- `def generate_response()`
+- `def _call_gemini()`
+- `def _call_openai()`
+- `def speak_in_room()`
+- `def run()`
+
+**Definitions:**
 - `def seed_rng()`
 - `def pick_mbti()`
 - `def generate_guided_by()`
@@ -10245,6 +13300,318 @@
 - `def main()`
 
 **Definitions:**
+- `def get_image_url()`
+- `def _gemini_aspect_to_ideogram()`
+- `def _ideogram_aspect_to_gemini()`
+- `def generate_image_gemini()`
+- `def generate_image_ideogram()`
+- `def generate_image()`
+- `def parse_image_tag()`
+- `def parse_imagine_command()`
+
+**Definitions:**
+- `def install_cron()`
+
+**Definitions:**
+- `def log()`
+- `def detect_org_id()`
+- `def step_1_announce_org()`
+- `def step_2_register_citizens()`
+- `def step_3_deploy_report()`
+- `def _create_fix_task()`
+- `def main()`
+
+**Definitions:**
+- `def detect_service_id()`
+- `def detect_org_id()`
+- `def load_state()`
+- `def save_state()`
+- `def fetch_latest_deploy()`
+- `def fetch_deploy_events()`
+- `def classify_log_line()`
+- `def extract_errors_from_events()`
+- `def write_error_moments()`
+- `def main()`
+- `def check_orchestrator_health()`
+- `def _auto_create_and_route_task()`
+
+**Definitions:**
+- `def generate_nginx_conf()`
+- `def generate_start_script()`
+- `def detect_frontend_cmd()`
+- `def main()`
+
+**Definitions:**
+- `class TestBasicBondTransfer`
+- `def test_human_richer_positive_transfer()`
+- `def test_ai_richer_negative_transfer()`
+- `def test_equal_wealth_no_transfer()`
+- `def test_both_zero_no_transfer()`
+- `class TestConvergence`
+- `def test_convergence_100_periods()`
+- `def test_gap_decreases_monotonically()`
+- `def test_convergence_from_algorithm_doc()`
+- `def test_convergence_ai_richer()`
+- `class TestNeverOverdraws`
+- `def test_human_sends_capped_at_balance()`
+- `def test_ai_sends_capped_at_balance()`
+- `def test_never_overdraws_parametric()`
+- `def test_repeated_transfers_wallets_never_negative()`
+- `class TestInputValidation`
+- `def test_negative_human_wealth_raises()`
+- `def test_negative_ai_wealth_raises()`
+- `def test_lambda_out_of_range_raises()`
+
+**Definitions:**
+- `class TestBasicTax`
+- `def test_small_balance()`
+- `def test_large_balance()`
+- `class TestTaxNonNegativity`
+- `def test_always_non_negative()`
+- `class TestTaxNeverExceedsBalance`
+- `def test_bounded_by_balance()`
+- `def test_extreme_tau_base_still_bounded()`
+- `class TestProgressiveTax`
+- `def test_effective_rate_increases()`
+- `def test_effective_rate_matches_formula()`
+- `class TestTaxEdgeCases`
+- `def test_zero_wealth()`
+- `def test_negative_wealth_raises()`
+- `def test_non_positive_tau_raises()`
+- `def test_default_tau_base()`
+
+**Definitions:**
+- `class TestV1PriceNonNegative`
+- `def test_price_non_negative()`
+- `class TestV2TaxBounded`
+- `def test_tax_non_negative_and_bounded()`
+- `class TestV3SybilPenaltyBound`
+- `def test_repatriation_penalty_bound()`
+- `class TestV4NeverOverdraws`
+- `def test_transfer_within_sender_balance()`
+- `class TestV5Conservation`
+- `def test_macro_settlement_conservation()`
+- `class TestV6OffGridAttribution`
+- `def test_every_off_grid_transfer_attributed()`
+- `def test_registered_wallets_excluded()`
+- `class TestV7Convergence`
+- `def test_gap_decreases_monotonically()`
+- `class TestV8Atomicity`
+- `def test_settlement_produces_complete_batch()`
+- `def test_failed_ingestion_does_not_corrupt_state()`
+- `class TestV9WalletNonNegative`
+- `def test_tax_never_makes_wallet_negative()`
+- `def test_bilateral_transfer_never_makes_wallet_negative()`
+- `def test_repatriation_never_creates_negative()`
+- `def test_settlement_engine_ubc_pool_never_negative()`
+
+**Definitions:**
+- `class TestBasicPricing`
+- `def test_example_from_algorithm_doc()`
+- `def test_wealthy_user_pays_more()`
+- `def test_poor_user_gets_floor()`
+- `class TestPriceNonNegativity`
+- `def test_always_non_negative()`
+- `class TestDegressiveWithUtility`
+- `def test_monotonic_decrease_with_utility()`
+- `def test_high_utility_approaches_zero()`
+- `class TestProgressiveWithWealth`
+- `def test_monotonic_increase_with_wealth()`
+- `def test_floor_at_0_1()`
+- `class TestEdgeCases`
+- `def test_zero_median_wealth_bootstrap()`
+- `def test_zero_actor_wealth()`
+- `def test_zero_utility()`
+- `def test_zero_base_cost()`
+- `def test_negative_c_base_raises()`
+- `def test_negative_k_raises()`
+- `def test_negative_utility_raises()`
+- `def test_negative_wealth_raises()`
+- `def test_negative_median_raises()`
+
+**Definitions:**
+- `class TestRecordEnergyEvent`
+- `def test_positive_delta_creates_event()`
+- `def test_zero_delta_returns_none()`
+- `def test_negative_delta_returns_none()`
+- `def test_with_contributors()`
+- `def test_contributor_weights_normalized_if_off()`
+- `class TestAggregateByPair`
+- `def test_sums_same_pair()`
+- `def test_separate_pairs()`
+- `def test_empty_events()`
+- `class TestNetPositions`
+- `def test_bilateral_netting()`
+- `def test_perfect_cancellation()`
+- `def test_unilateral_flow()`
+- `def test_multi_party()`
+- `class TestFilterDust`
+- `def test_filters_below_threshold()`
+- `def test_exact_threshold_passes()`
+- `def test_zero_threshold_passes_all()`
+- `class TestPrepareSettlementBatch`
+- `def test_creates_transfers()`
+- `def test_skips_zero_amounts()`
+- `class TestFullPipeline`
+- `def test_conservation_total_in_equals_total_out()`
+- `def test_end_to_end_simple()`
+
+**Docs:** `docs/human_integration/ALGORITHM_Human_Integration.md`
+
+**Definitions:**
+- `class MockGraphAdapter`
+- `def __init__()`
+- `def query_nodes()`
+- `def create_node()`
+- `def update_node()`
+- `def query_links()`
+- `def _matches_filters()`
+- `def graph()`
+- `def graph_with_bond()`
+- `class TestCheckConsent`
+- `def test_no_consent_record_returns_false()`
+- `def test_granted_consent_returns_true()`
+- `def test_revoked_consent_returns_false()`
+- `def test_unknown_stream_raises_error()`
+- `def test_all_valid_streams_accepted()`
+- `def test_consent_is_per_citizen()`
+- `def test_consent_is_per_stream()`
+- `class TestGrantConsent`
+- `def test_grant_creates_node()`
+- `def test_grant_sets_correct_fields()`
+- `def test_grant_content_has_stream_and_status()`
+- `def test_re_grant_updates_existing_node()`
+- `def test_grant_unknown_stream_raises()`
+- `def test_grant_with_custom_scope()`
+- `class TestRevokeConsent`
+- `def test_revoke_marks_consent_revoked()`
+- `def test_revoke_redacts_related_nodes()`
+- `def test_revoke_does_not_affect_other_streams()`
+- `def test_revoke_nonexistent_consent_raises()`
+- `def test_revoke_returns_redacted_count()`
+- `def test_revoke_unknown_stream_raises()`
+- `class TestCheckBondActive`
+- `def test_no_bond_returns_false()`
+- `def test_active_bond_returns_true()`
+- `def test_dissolved_bond_returns_false()`
+- `def test_bond_as_target()`
+- `def test_bond_for_different_citizen()`
+- `def test_cooldown_bond_returns_false()`
+
+**Docs:** `docs/human_integration/ALGORITHM_Human_Integration.md`
+
+**Definitions:**
+- `class TestScoreRelevance`
+- `def test_base_scores_for_all_modalities()`
+- `def test_unknown_modality_gets_minimum()`
+- `def test_all_scores_at_least_minimum()`
+- `def test_all_scores_at_most_one()`
+- `def test_emotional_content_boosts_score()`
+- `def test_moderate_emotion_smaller_boost()`
+- `def test_low_emotion_no_boost()`
+- `def test_self_reference_boosts_score()`
+- `def test_decision_language_boosts_score()`
+- `def test_distress_markers_boost_score()`
+- `def test_score_clamped_at_one()`
+- `def test_score_clamped_at_minimum()`
+- `def test_empty_signals_no_crash()`
+- `def test_none_signals_returns_base()`
+- `class TestCreatePartnerNode`
+- `def test_creates_node_with_required_fields()`
+- `def test_v1_partner_relevance_at_least_minimum()`
+- `def test_v1_explicit_relevance_below_minimum_raises()`
+- `def test_self_relevance_clamped()`
+- `def test_self_relevance_below_max_preserved()`
+- `def test_v3_unapproved_source_raises()`
+- `def test_invalid_node_type_raises()`
+- `def test_explicit_partner_relevance_used()`
+- `def test_auto_synthesis_for_memory()`
+- `def test_auto_synthesis_for_state()`
+- `def test_auto_synthesis_for_transaction()`
+- `def test_custom_synthesis_used()`
+- `def test_node_id_contains_type_label()`
+- `def test_all_approved_sources_accepted()`
+- `def test_care_affinity_stored()`
+
+**Docs:** `docs/human_integration/ALGORITHM_Human_Integration.md`
+
+**Definitions:**
+- `class MockGraphAdapter`
+- `def __init__()`
+- `def query_nodes()`
+- `def create_node()`
+- `def update_node()`
+- `def _matches_filters()`
+- `def graph()`
+- `def _make_predictions()`
+- `class TestRecordPrediction`
+- `def test_creates_node()`
+- `def test_node_has_correct_type()`
+- `def test_content_fields()`
+- `def test_partner_relevance_is_high()`
+- `def test_invalid_confidence_raises()`
+- `def test_negative_confidence_raises()`
+- `def test_missing_domain_raises()`
+- `def test_missing_question_raises()`
+- `class TestResolvePrediction`
+- `def test_correct_prediction()`
+- `def test_incorrect_prediction()`
+- `def test_case_insensitive_matching()`
+- `def test_explicit_match_override()`
+- `def test_resolution_updates_content()`
+- `def test_double_resolution_raises()`
+- `def test_nonexistent_prediction_raises()`
+- `def test_synthesis_updated_on_resolution()`
+- `class TestMeasureAlignmentFidelity`
+- `def test_insufficient_data_returns_none()`
+- `def test_exactly_minimum_predictions()`
+- `def test_perfect_accuracy()`
+- `def test_zero_accuracy()`
+- `def test_mixed_accuracy()`
+- `def test_per_citizen_isolation()`
+- `def test_no_predictions_returns_none()`
+- `def test_unresolved_predictions_excluded()`
+- `class TestGetCascadeStatus`
+- `def test_uncalibrated_with_no_data()`
+- `def test_uncalibrated_with_insufficient_data()`
+- `def test_active_above_threshold()`
+- `def test_active_at_exact_threshold()`
+- `def test_probation_between_thresholds()`
+- `def test_suspended_below_threshold()`
+- `def test_v8_low_accuracy_forces_suspended()`
+- `def test_perfect_accuracy_is_active()`
+- `def test_transition_active_to_suspended()`
+- `class TestConfidenceCalibration`
+- `def test_insufficient_data_returns_none()`
+- `def test_perfect_calibration()`
+- `def test_zero_calibration()`
+- `def test_no_data_returns_none()`
+
+**Docs:** `docs/human_integration/IMPLEMENTATION_Human_Integration.md`
+
+**Definitions:**
+- `def _make_node()`
+- `class TestInjectPartnerStimulus`
+- `def test_returns_partner_stimulus()`
+- `def test_voice_energy_level()`
+- `def test_garmin_energy_level()`
+- `def test_desktop_energy_level()`
+- `def test_blockchain_energy_level()`
+- `def test_direct_chat_energy_level()`
+- `def test_energy_override()`
+- `def test_stimulus_carries_node_id()`
+- `def test_stimulus_is_social()`
+- `def test_stimulus_is_novelty()`
+- `def test_stimulus_source_is_partner()`
+- `def test_stimulus_content_is_synthesis()`
+- `def test_missing_synthesis_raises()`
+- `def test_empty_synthesis_raises()`
+- `def test_missing_content_raises()`
+- `def test_unknown_modality_default_energy()`
+- `def test_partner_relevance_carried()`
+- `def test_target_node_ids_set()`
+
+**Definitions:**
 - `def test_link_endpoints_exist()`
 - `def test_physics_ranges_nodes()`
 - `def test_physics_ranges_links()`
@@ -10253,7 +13620,6 @@
 - `def test_node_type_values()`
 - `def test_single_link_type()`
 - `def test_permanence_range()`
-- `def test_emotion_ranges()`
 - `def test_found_narratives_structure()`
 - `def test_crystallization_embedding_continuous()`
 - `def test_queries_are_read_only()`
@@ -10311,6 +13677,306 @@
 - `def test_none_moment_id()`
 - `def test_special_characters_in_word()`
 - `def test_unicode_in_word()`
+
+**Definitions:**
+- `class FakeNode`
+- `def __init__()`
+- `def matches_label()`
+- `def get()`
+- `def __repr__()`
+- `class FakeLink`
+- `def __init__()`
+- `def get()`
+- `def __repr__()`
+- `class FakeAdapter`
+- `def __init__()`
+- `def graph_name()`
+- `def add_node()`
+- `def add_link()`
+- `def query()`
+- `def execute()`
+- `def transaction()`
+- `def create_index()`
+- `def health_check()`
+- `def close()`
+- `def _dispatch_execute()`
+- `def _dispatch_query()`
+- `def _handle_create_node()`
+- `def _handle_match_create()`
+- `def _handle_create_relationship()`
+- `def _handle_match_return()`
+- `def _execute_node_query()`
+- `def _execute_relationship_query()`
+- `def _handle_match_delete()`
+- `def _handle_match_set()`
+- `def _handle_count_query()`
+- `def _extract_create_props()`
+- `def _parse_match_clauses()`
+- `def _parse_where()`
+- `def _parse_return()`
+- `def _parse_endpoint_constraint()`
+- `def _extract_where_type()`
+- `def _extract_var_names()`
+- `def _node_matches()`
+- `def _link_matches()`
+- `def _check_where_prop()`
+- `def _build_return_row()`
+- `def _build_return_row_with_link()`
+- `def _normalize()`
+- `def adapter()`
+- `def adapter_with_actor()`
+- `def adapter_with_two_actors()`
+- `def space_manager()`
+- `def access_resolver()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-1, ALG-2)`
+
+**Definitions:**
+- `class TestDirectAccess`
+- `def test_has_access_direct_owner()`
+- `def test_has_access_denied()`
+- `def test_has_access_after_grant()`
+- `class TestInheritedAccess`
+- `def test_has_access_inherited_from_parent()`
+- `def test_inherited_access_role_downgraded_to_member()`
+- `def test_inherited_access_grandparent()`
+- `class TestGrantAccess`
+- `def test_grant_access_creates_link()`
+- `def test_grant_access_requires_admin_or_owner()`
+- `def test_grant_access_no_access_raises()`
+- `def test_grant_access_invalid_role_raises()`
+- `def test_grant_access_cannot_exceed_own_role()`
+- `def test_grant_access_idempotent()`
+- `class TestRevokeAccess`
+- `def test_revoke_access_removes_link()`
+- `def test_revoke_last_owner_raises()`
+- `def test_revoke_access_no_permission_raises()`
+- `def test_admin_cannot_revoke_owner()`
+- `class TestMembershipQueries`
+- `def test_list_space_members()`
+- `def test_list_actor_spaces()`
+- `def test_list_actor_spaces_empty()`
+
+**Definitions:**
+- `class TestContentEncryptor`
+- `def test_encrypt_decrypt_roundtrip_string()`
+- `def test_encrypt_decrypt_roundtrip_unicode()`
+- `def test_encrypt_decrypt_roundtrip_empty_string()`
+- `def test_encrypt_decrypt_roundtrip_long_text()`
+- `def test_ciphertext_differs_from_plaintext()`
+- `def test_different_ivs_produce_different_ciphertexts()`
+- `def test_wrong_key_fails_decryption()`
+- `def test_corrupt_ciphertext_fails()`
+- `def test_truncated_ciphertext_fails()`
+- `def test_bad_key_size_raises()`
+- `def test_encrypt_decrypt_embedding_roundtrip()`
+- `def test_encrypt_decrypt_large_embedding()`
+- `def test_wrong_key_fails_embedding_decryption()`
+- `def test_empty_embedding_roundtrip()`
+- `class TestKeyManager`
+- `def test_generate_keypair()`
+- `def test_load_private_key()`
+- `def test_load_public_key()`
+- `def test_rsa_encrypt_decrypt_roundtrip()`
+- `def test_wrong_private_key_fails_decryption()`
+- `def test_save_load_private_key_file()`
+- `def test_save_load_public_key_file()`
+- `def test_load_nonexistent_file_raises()`
+- `def test_load_invalid_pem_raises()`
+- `class TestSpaceKeyManager`
+- `def test_create_space_key()`
+- `def test_grant_and_decrypt_key()`
+- `def test_grant_key_different_actors_produce_different_ciphertexts()`
+- `def test_child_key_encrypt_decrypt_with_parent()`
+- `def test_wrong_parent_key_fails()`
+- `def test_rotate_key()`
+- `def test_resolve_key_chain_single_level()`
+- `def test_resolve_key_chain_three_levels()`
+- `def test_resolve_key_chain_no_children()`
+- `class TestEncryptedFieldCodec`
+- `def test_base64_encode_decode_roundtrip()`
+- `def test_invalid_base64_raises()`
+- `def test_is_plaintext_short_strings()`
+- `def test_is_plaintext_with_spaces()`
+- `def test_is_plaintext_base64_like()`
+- `def test_is_plaintext_vector_list()`
+- `def test_is_plaintext_vector_none()`
+- `def test_is_plaintext_vector_b64_string()`
+- `def test_encrypt_node_fields_roundtrip()`
+- `def test_encrypt_node_fields_none_values()`
+- `def test_decrypt_with_wrong_key_raises()`
+- `def test_encrypt_preserves_non_encrypted_fields()`
+- `class TestFullKeyLifecycle`
+- `def test_full_lifecycle()`
+- `def test_rotation_invalidates_old_key()`
+
+**Docs:** `docs/universe/IMPLEMENTATION_Universe_Graph.md (Phase U6)`
+
+**Definitions:**
+- `def full_universe()`
+- `class TestBootstrapToMoment`
+- `def test_full_lifecycle()`
+- `class TestOrgMembershipAccess`
+- `def test_org_lifecycle()`
+- `def test_org_moment_routing()`
+- `class TestNestedSpaceAccess`
+- `def test_nested_access_inheritance()`
+- `def test_direct_overrides_inherited()`
+- `class TestAccessIsolation`
+- `def test_no_cross_space_access()`
+- `def test_revoked_access_prevents_perception()`
+
+**Docs:** `docs/universe/IMPLEMENTATION_Universe_Graph.md (Phase U5)`
+
+**Definitions:**
+- `class TestL3EnergyInjection`
+- `def test_energy_split_ratios()`
+- `def test_energy_split_multiple_related()`
+- `def test_energy_injection_no_related()`
+- `def test_energy_moment_accumulates()`
+- `def test_negative_energy_raises()`
+- `def test_zero_energy_is_noop()`
+- `class TestL3Propagation`
+- `def test_no_propagation_below_threshold()`
+- `def test_propagation_distributes_surplus()`
+- `def test_energy_conservation_during_propagation()`
+- `def test_propagation_depletes_to_threshold()`
+- `def test_propagation_no_links()`
+- `def test_polarity_modulates_propagation()`
+- `def test_link_remembers_flow()`
+- `class TestL3Decay`
+- `def test_energy_decay_rate()`
+- `def test_recency_decay_rate()`
+- `def test_decay_never_goes_negative()`
+- `def test_decay_multiple_ticks()`
+- `def test_decay_slower_than_l1()`
+- `def test_decay_batch()`
+- `class TestL3WeightConsolidation`
+- `def test_structural_utility_thing_link()`
+- `def test_structural_utility_actor_actor()`
+- `def test_structural_utility_space_link()`
+- `def test_structural_utility_zero_usage()`
+- `def test_structural_utility_bounded()`
+- `def test_consolidation_weight_increases()`
+- `def test_consolidation_weight_non_negative()`
+- `def test_consolidation_weight_bounded_at_one()`
+- `def test_consolidation_diminishing_returns()`
+- `def test_consolidation_batch()`
+- `def test_consolidation_formula_correctness()`
+- `class TestL3MacroCrystallization`
+- `def _make_dense_cluster()`
+- `def test_detect_candidates_dense_cluster()`
+- `def test_detect_no_candidates_small_cluster()`
+- `def test_detect_no_candidates_low_weight()`
+- `def test_detect_no_candidates_sparse()`
+- `def test_crystallize_hub_type_moments_become_narrative()`
+- `def test_crystallize_hub_weight_damped()`
+- `def test_crystallize_preserves_weight()`
+- `def test_crystallize_bidirectional_links()`
+- `def test_crystallize_contains_link_weight()`
+- `def test_crystallize_abstracts_link_weight()`
+- `def test_crystallize_hub_embedding_is_centroid()`
+- `def test_crystallize_hub_stability()`
+- `def test_crystallize_empty_cluster_raises()`
+- `def test_crystallize_with_external_links()`
+- `def test_two_separate_clusters()`
+- `class TestL3PhysicsIntegration`
+- `def test_energy_inject_propagate_decay_cycle()`
+- `def test_consolidation_after_activity()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-5)`
+
+**Definitions:**
+- `def routing_setup()`
+- `class TestDirectPerception`
+- `def test_direct_members_perceive()`
+- `def test_non_members_excluded()`
+- `class TestInheritedPerception`
+- `def test_ancestor_members_perceive()`
+- `def test_deep_inheritance_perception()`
+- `class TestDeduplication`
+- `def test_no_duplicate_actors()`
+- `class TestRouteAndInject`
+- `def test_route_and_inject_returns_actors()`
+- `def test_inject_stimulus_does_not_raise()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-7, ALG-8)`
+
+**Definitions:**
+- `def org_setup()`
+- `class TestCreateOrganization`
+- `def test_create_org_returns_info()`
+- `def test_create_org_creates_narrative()`
+- `def test_create_org_creates_hall_space()`
+- `def test_create_org_founder_has_access()`
+- `def test_create_org_narrative_links_to_hall()`
+- `def test_create_org_founder_believes()`
+- `class TestJoinOrganization`
+- `def test_join_org_creates_member_access()`
+- `def test_join_org_creates_believes_link()`
+- `def test_join_org_nonexistent_raises()`
+- `class TestOrgReputation`
+- `def test_org_reputation_single_link()`
+- `def test_org_reputation_multiple_links()`
+- `def test_org_reputation_no_links()`
+- `class TestDissolution`
+- `def test_not_dissolved_when_active()`
+- `def test_dissolved_when_no_hall()`
+- `def test_dissolved_when_all_links_decayed()`
+- `class TestGetOrganization`
+- `def test_get_organization()`
+- `def test_get_organization_nonexistent()`
+
+**Docs:** `docs/universe/ALGORITHM_Universe_Graph.md (ALG-4)`
+
+**Definitions:**
+- `class TestCreateSpace`
+- `def test_create_space_returns_id()`
+- `def test_create_space_creates_node()`
+- `def test_create_space_creates_owner_link()`
+- `def test_create_space_with_type()`
+- `def test_create_space_nonexistent_actor_raises()`
+- `def test_create_sub_space_containment_link()`
+- `def test_create_sub_space_nonexistent_parent_raises()`
+- `class TestSpaceRetrieval`
+- `def test_get_space_returns_info()`
+- `def test_get_space_nonexistent_returns_none()`
+- `def test_list_all_spaces()`
+- `class TestHierarchyTraversal`
+- `def test_get_sub_spaces_direct_children()`
+- `def test_get_sub_spaces_nested()`
+- `def test_get_sub_spaces_respects_max_depth()`
+- `def test_get_sub_spaces_empty()`
+- `def test_parent_space_returns_parent()`
+- `def test_parent_space_root_returns_none()`
+- `def test_get_ancestor_chain()`
+- `class TestSpaceDeletion`
+- `def test_delete_space_removes_node()`
+- `def test_delete_space_nonexistent_raises()`
+- `class TestMomentPlacement`
+- `def test_create_moment_in_space()`
+- `def test_create_moment_links_to_space()`
+- `def test_create_moment_links_to_actor()`
+- `def test_create_moment_nonexistent_space_raises()`
+
+**Docs:** `docs/universe/IMPLEMENTATION_Universe_Graph.md (Phase U1)`
+
+**Definitions:**
+- `def bootstrap_setup()`
+- `class TestInitialize`
+- `def test_initialize_creates_metadata()`
+- `def test_initialize_creates_root_space()`
+- `def test_initialize_rejects_duplicate()`
+- `def test_validate_metadata_true_after_init()`
+- `def test_validate_metadata_false_before_init()`
+- `class TestMigration`
+- `def test_migrate_creates_root_space()`
+- `def test_migrate_links_orphan_nodes()`
+- `def test_migrate_rejects_if_already_initialized()`
+- `class TestGetMetadata`
+- `def test_get_metadata_before_init()`
+- `def test_get_metadata_after_init()`
+- `def test_get_root_space_before_init()`
 
 **Definitions:**
 - `def test_v1_template_paths()`
@@ -10400,10 +14066,9 @@
 - `def _check_graph_connection()`
 - `def _check_claude_cli()`
 - `async def lifespan()`
+- `async def ping_citizen()`
 - `async def health()`
 - `async def info()`
-- `async def get_citizens()`
-- `async def get_citizen()`
 - `async def post_chat()`
 - `async def orchestrator_status()`
 - `async def voice_ws()`
@@ -10414,11 +14079,14 @@
 - `Node.js`
 - `__init__.py`
 - `__main__.py`
+- `access_resolution_and_link_manager.py`
 - `adapter.py`
 - `agent_cli.py`
 - `agents/handler.py`
 - `agents/prompts.py`
 - `agents/response.py`
+- `ai_conversation_capture_and_memory_creator.py`
+- `anti_loop_protection.py`
 - `app.py`
 - `app/api/connectome/tick/route.ts`
 - `app/api/sse/route.ts`
@@ -10426,6 +14094,9 @@
 - `approval/queue.py`
 - `approval/tiers.py`
 - `base.py`
+- `baseline_calculator_for_biometric_deviation.py`
+- `blockchain_transaction_monitor_and_parser.py`
+- `brain_health_score_periodic_calculator.py`
 - `building/config/mapping.py`
 - `building/ingest/create.py`
 - `building/ingest/discover.py`
@@ -10433,6 +14104,7 @@
 - `check_github_for_latest_version.py`
 - `check_health.py`
 - `check_mind_status_in_directory.py`
+- `citizen_brain_seeder.py`
 - `cli.py`
 - `cli/__main__.py`
 - `cli/commands/fix_embeddings.py`
@@ -10445,10 +14117,15 @@
 - `cli/helpers/inject_seed_yaml_to_graph.py`
 - `cli/helpers/show_upgrade_notice_if_available.py`
 - `cluster_presentation.py`
+- `concept_extractor.py`
 - `config.py`
 - `config/agents.py`
 - `config/mapping.py`
+- `conftest.py`
 - `connectome_doc_bundle_splitter_and_fence_rewriter.py`
+- `consent_gate_and_bond_validator.py`
+- `constants.py`
+- `constants_l3_physics.py`
 - `content/inference.py`
 - `content/moment.py`
 - `content/narrative.py`
@@ -10468,26 +14145,33 @@
 - `deployment/deployer.py`
 - `deployment/monitor.py`
 - `deployment/rollback.py`
+- `desktop_screenshot_ocr_and_privacy_filter.py`
 - `diagnosis/evidence.py`
 - `diagnosis/layer_attribution.py`
 - `diagnosis/pattern_detector.py`
 - `diffusion_sim_v2.py`
+- `dispatcher.py`
 - `doc_chain.py`
+- `docchain_to_brain_cluster_converter.py`
 - `doctor.py`
 - `doctor_checks.py`
 - `doctor_cli_parser_and_run_checker.py`
 - `doctor_report.py`
+- `docwatch_brain_sync_daemon.py`
 - `engine/connectome/persistence.py`
 - `engine/connectome/schema.py`
 - `exploration.py`
 - `export_project_to_notebooklm.py`
 - `factory.py`
 - `falkordb_adapter.py`
+- `falkordb_checkpointer.py`
+- `feedback_injector.py`
 - `fix_embeddings_for_nodes_and_links.py`
 - `flow.py`
 - `frontend/app/scenarios/page.tsx`
 - `frontend/app/start/page.tsx`
 - `frontend/hooks/useGameState.ts`
+- `garmin_biometric_poller_and_limbic_mapper.py`
 - `gemini_agent.py`
 - `generate_embeddings_for_graph_nodes.py`
 - `generate_repo_overview_maps.py`
@@ -10503,6 +14187,9 @@
 - `graph_ops_types.py`
 - `graph_queries.py`
 - `graph_queries_search.py`
+- `graph_schema_setup.py`
+- `home_server.py`
+- `identity_loader.py`
 - `ingest/__init__.py`
 - `ingest/create.py`
 - `ingest/discover.py`
@@ -10512,14 +14199,36 @@
 - `ingest_repo_files_to_graph.py`
 - `inject_agents_to_graph.py`
 - `inject_seed_yaml_to_graph.py`
+- `l1_autonomous_action_dispatcher.py`
+- `l1_live_integration_bridge.py`
+- `l1_stimulus_injector_for_partner_data.py`
+- `law_02_propagation.py`
+- `law_06_consolidation.py`
+- `law_13_to_18_limbic_engine.py`
+- `laws/__init__.py`
+- `laws/law_01_energy_injection.py`
+- `laws/law_02_propagation.py`
+- `laws/law_03_energy_decay.py`
+- `laws/law_04_attentional_competition.py`
+- `laws/law_05_coactivation_reinforcement.py`
+- `laws/law_06_consolidation.py`
+- `laws/law_07_forgetting.py`
+- `laws/law_09_inhibition.py`
+- `laws/law_13_to_18_limbic_engine.py`
 - `learning/embeddings.py`
 - `learning/extractor.py`
 - `learning/pattern_library.py`
 - `link_scoring.py`
 - `loop.py`
+- `matching_pool.py`
+- `mcp/__init__.py`
 - `mcp/server.py`
 - `mcp/tools/gemini_chat.py`
+- `mcp/tools/graph_query_handler.py`
+- `mcp/tools/graph_write_handler.py`
+- `mcp/tools/space_management_handler.py`
 - `mcp/tools/telegram_notify.py`
+- `mcp/tools/universe_admin_handler.py`
 - `mind/agent_cli.py`
 - `mind/api/app.py`
 - `mind/cli.py`
@@ -10534,6 +14243,7 @@
 - `mind/validate.py`
 - `mock_adapter.py`
 - `models.py`
+- `moment_perception_router.py`
 - `moment_processor.py`
 - `narrator.py`
 - `narrator/prompt_builder.py`
@@ -10541,6 +14251,11 @@
 - `neo4j_adapter.py`
 - `nodes.py`
 - `orchestrator.py`
+- `organization_lifecycle_manager.py`
+- `orientation_taxonomy.py`
+- `parenthood.py`
+- `parenthood_trust_impact_tracker.py`
+- `partner_node_factory_and_relevance_scorer.py`
 - `persistence.py`
 - `phases/completion.py`
 - `phases/generation.py`
@@ -10559,15 +14274,51 @@
 - `route.ts`
 - `runtime/agent_cli.py`
 - `runtime/agents/cli.py`
+- `runtime/agents/mapping.py`
 - `runtime/agents/postures.py`
 - `runtime/agents/prompts.py`
 - `runtime/api/app.py`
+- `runtime/bridges/voice_websocket.py`
+- `runtime/citizens/__init__.py`
 - `runtime/citizens/identity_loader.py`
+- `runtime/citizens/matching_pool.py`
 - `runtime/citizens/parenthood.py`
+- `runtime/citizens/parenthood_trust_impact_tracker.py`
+- `runtime/citizens/prompt_builder.py`
+- `runtime/citizens/seed.py`
+- `runtime/citizens/seed_brain_builder.py`
+- `runtime/citizens/spawn_safety_validator.py`
+- `runtime/citizens/test_parenthood.py`
 - `runtime/cli.py`
 - `runtime/cluster_builder.py`
 - `runtime/cluster_health.py`
 - `runtime/cluster_metrics.py`
+- `runtime/cognition/__init__.py`
+- `runtime/cognition/anti_loop_protection.py`
+- `runtime/cognition/brain_health_score_periodic_calculator.py`
+- `runtime/cognition/citizen_brain_seeder.py`
+- `runtime/cognition/concept_extractor.py`
+- `runtime/cognition/constants.py`
+- `runtime/cognition/falkordb_checkpointer.py`
+- `runtime/cognition/feedback_injector.py`
+- `runtime/cognition/graph_schema_setup.py`
+- `runtime/cognition/l1_live_integration_bridge.py`
+- `runtime/cognition/laws/__init__.py`
+- `runtime/cognition/laws/law_01_energy_injection.py`
+- `runtime/cognition/laws/law_02_propagation.py`
+- `runtime/cognition/laws/law_03_energy_decay.py`
+- `runtime/cognition/laws/law_04_attentional_competition.py`
+- `runtime/cognition/laws/law_05_coactivation_reinforcement.py`
+- `runtime/cognition/laws/law_06_consolidation.py`
+- `runtime/cognition/laws/law_07_forgetting.py`
+- `runtime/cognition/laws/law_09_inhibition.py`
+- `runtime/cognition/laws/law_13_to_18_limbic_engine.py`
+- `runtime/cognition/models.py`
+- `runtime/cognition/orientation_taxonomy.py`
+- `runtime/cognition/stimulus_router.py`
+- `runtime/cognition/tests/test_minimal_kernel_invariants.py`
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
+- `runtime/cognition/wm_prompt_serializer.py`
 - `runtime/connectome/persistence.py`
 - `runtime/connectome/procedure_runner.py`
 - `runtime/connectome/runner.py`
@@ -10578,6 +14329,11 @@
 - `runtime/connectome/validation.py`
 - `runtime/context.py`
 - `runtime/core_utils.py`
+- `runtime/crypto/__init__.py`
+- `runtime/crypto/aes256_content_encryptor.py`
+- `runtime/crypto/encrypted_field_codec.py`
+- `runtime/crypto/rsa_key_manager.py`
+- `runtime/crypto/space_key_distribution_and_rotation.py`
 - `runtime/doc_extractor.py`
 - `runtime/doctor.py`
 - `runtime/doctor_checks.py`
@@ -10615,6 +14371,7 @@
 - `runtime/infrastructure/database/falkordb_adapter.py`
 - `runtime/infrastructure/database/neo4j_adapter.py`
 - `runtime/infrastructure/embeddings.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
 - `runtime/infrastructure/embeddings/service.py`
 - `runtime/infrastructure/memory/__init__.py`
 - `runtime/infrastructure/memory/moment_processor.py`
@@ -10633,6 +14390,7 @@
 - `runtime/membrane/functions.py`
 - `runtime/membrane/health_check.py`
 - `runtime/membrane/provider.py`
+- `runtime/membrane/stimulus.py`
 - `runtime/migrations/migrate_001_schema_alignment.py`
 - `runtime/migrations/migrate_temporal_v171.py`
 - `runtime/migrations/migrate_tick_to_tick_created.py`
@@ -10647,6 +14405,8 @@
 - `runtime/moment_graph/surface.py`
 - `runtime/moment_graph/traversal.py`
 - `runtime/moments/__init__.py`
+- `runtime/orchestrator/claude_invoker.py`
+- `runtime/orchestrator/dispatcher.py`
 - `runtime/physics/__init__.py`
 - `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
 - `runtime/physics/cluster_energy_monitor.py`
@@ -10655,6 +14415,7 @@
 - `runtime/physics/contradiction_pressure_from_negative_polarity_mechanism.py`
 - `runtime/physics/crystallization.py`
 - `runtime/physics/display_snap_transition_checker.py`
+- `runtime/physics/embeddings.py`
 - `runtime/physics/exploration.py`
 - `runtime/physics/flow.py`
 - `runtime/physics/graph/adapters/__init__.py`
@@ -10675,10 +14436,14 @@
 - `runtime/physics/graph/graph_queries_moments.py`
 - `runtime/physics/graph/graph_queries_search.py`
 - `runtime/physics/graph/graph_query_utils.py`
+- `runtime/physics/graph_ops.py`
 - `runtime/physics/health/check_subentity.py`
 - `runtime/physics/health/checker.py`
 - `runtime/physics/health/checkers/energy_conservation.py`
 - `runtime/physics/health/checkers/moment_lifecycle.py`
+- `runtime/physics/l3_energy_propagation_and_decay.py`
+- `runtime/physics/l3_macro_crystallization.py`
+- `runtime/physics/l3_weight_consolidation.py`
 - `runtime/physics/link_scoring.py`
 - `runtime/physics/nature.py`
 - `runtime/physics/phases/completion.py`
@@ -10694,6 +14459,7 @@
 - `runtime/physics/synthesis.py`
 - `runtime/physics/synthesis_unfold.py`
 - `runtime/physics/tick.py`
+- `runtime/physics/tick_runner.py`
 - `runtime/physics/tick_v1_2.py`
 - `runtime/physics/tick_v1_2_queries.py`
 - `runtime/physics/tick_v1_2_types.py`
@@ -10713,10 +14479,13 @@
 - `runtime/repair_verification.py`
 - `runtime/repo_overview.py`
 - `runtime/repo_overview_formatters.py`
+- `runtime/schema/links.py`
+- `runtime/schema/nodes.py`
 - `runtime/seed_brain_from_source_docs_dynamic_generator.py`
 - `runtime/solve_escalations.py`
 - `runtime/symbol_extractor.py`
 - `runtime/sync.py`
+- `runtime/task_assignment.py`
 - `runtime/tests/test_cluster_energy_monitor.py`
 - `runtime/tests/test_cluster_presentation.py`
 - `runtime/tests/test_e2e_moment_graph.py`
@@ -10729,6 +14498,13 @@
 - `runtime/tests/test_router_schema_validation.py`
 - `runtime/tests/test_subentity.py`
 - `runtime/tests/test_traversal_logger.py`
+- `runtime/universe/__init__.py`
+- `runtime/universe/access_resolution_and_link_manager.py`
+- `runtime/universe/constants_l3_physics.py`
+- `runtime/universe/moment_perception_router.py`
+- `runtime/universe/organization_lifecycle_manager.py`
+- `runtime/universe/space_and_hierarchy_manager.py`
+- `runtime/universe/universe_bootstrap_and_metadata.py`
 - `runtime/validate.py`
 - `runtime/work.py`
 - `save_version_hash.py`
@@ -10737,24 +14513,53 @@
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
 - `scripts/generate_rich_core_personalities.py`
+- `scripts/install_render_cron.py`
+- `scripts/post_deploy.py`
+- `scripts/render_log_monitor.py`
+- `scripts/seed_all_citizens.py`
+- `seed_brain_builder.py`
+- `seed_brain_from_json_cluster_loader.py`
+- `seed_brain_from_source_docs_dynamic_generator.py`
 - `semantic_proximity_based_character_node_selector.py`
 - `setup_database_and_apply_schema.py`
+- `setup_reverse_proxy.py`
 - `show_upgrade_notice_if_available.py`
 - `signals/aggregator.py`
 - `signals/collector.py`
 - `snake_case.py`
+- `sovereign_cascade_prediction_tracker.py`
+- `space_and_hierarchy_manager.py`
+- `spawn_safety_validator.py`
+- `stimulus_router.py`
 - `stream_dialogue.py`
 - `surface.py`
 - `sync_skills_to_ai_tool_directories.py`
 - `synthesis.py`
+- `test_access_resolution_and_inheritance.py`
+- `test_baseline_calculator_for_biometric_deviation.py`
+- `test_consent_gate_and_bond_validator.py`
+- `test_desktop_screenshot_ocr_and_privacy_filter.py`
+- `test_encryption_roundtrip_and_coverage.py`
+- `test_garmin_biometric_poller_and_limbic_mapper.py`
+- `test_integration_universe_lifecycle.py`
+- `test_invariants_structural.py`
+- `test_l3_energy_and_crystallization.py`
 - `test_loader.py`
+- `test_moment_perception_routing.py`
+- `test_organization_lifecycle.py`
+- `test_parenthood.py`
+- `test_partner_node_factory_and_relevance_scorer.py`
 - `test_runner.py`
 - `test_schema.py`
 - `test_schema_links.py`
 - `test_schema_nodes.py`
 - `test_session.py`
+- `test_sovereign_cascade_prediction_tracker.py`
+- `test_space_crud_and_hierarchy.py`
 - `test_steps.py`
+- `test_universe_bootstrap.py`
 - `test_validation.py`
+- `test_voice_emotion_extractor_and_memory_creator.py`
 - `tests/building/test_agents.py`
 - `tests/building/test_ingest.py`
 - `tests/mind/test_cli.py`
@@ -10762,13 +14567,25 @@
 - `tests/runtime/test_cli.py`
 - `tests/runtime/test_cluster_builder.py`
 - `tests/test_cluster_stability.py`
+- `tests/test_minimal_kernel_invariants.py`
+- `tests/test_trust_mechanics/test_trust_invariants.py`
 - `tests/traversal/__init__.py`
 - `tests/traversal/conftest.py`
 - `tests/traversal/test_embedding.py`
 - `tests/traversal/test_traversal_basic.py`
 - `tests/traversal/test_traversal_edge_cases.py`
 - `tests/traversal/test_traversal_links.py`
+- `tests/universe/__init__.py`
+- `tests/universe/conftest.py`
+- `tests/universe/test_access_resolution_and_inheritance.py`
+- `tests/universe/test_encryption_roundtrip_and_coverage.py`
+- `tests/universe/test_integration_universe_lifecycle.py`
+- `tests/universe/test_l3_energy_and_crystallization.py`
+- `tests/universe/test_moment_perception_routing.py`
+- `tests/universe/test_organization_lifecycle.py`
+- `tests/universe/test_space_crud_and_hierarchy.py`
 - `tick.py`
+- `tick_runner_l1_cognitive_engine.py`
 - `tools/archive/migrate_schema_v11.py`
 - `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
 - `tools/coverage/validate.py`
@@ -10776,12 +14593,25 @@
 - `tools/migrate_v11_fields.py`
 - `tools/stream_dialogue.py`
 - `tools/test_health_live.py`
+- `trust/__init__.py`
+- `trust/constants.py`
+- `trust/creator_attribution_cascade.py`
+- `trust/destruction_pathology_detector.py`
+- `trust/limbic_delta_from_drive_snapshots.py`
+- `trust/personhood_ladder_assessor.py`
+- `trust/trust_score_aggregator.py`
+- `trust/trust_tempering.py`
+- `trust/trust_update_on_link.py`
+- `trust/value_type_classifier.py`
+- `universe_bootstrap_and_metadata.py`
 - `update_gitignore_with_runtime_entry.py`
 - `utils.py`
 - `validate_embedding_config_matches_stored.py`
 - `validation/modes/shadow.py`
 - `validation/modes/unit_test.py`
 - `validation/validator.py`
+- `voice_emotion_extractor_and_memory_creator.py`
+- `wm_prompt_serializer.py`
 
 **Doc refs:**
 - `agents/narrator/CLAUDE.md`
@@ -10824,7 +14654,22 @@
 - `docs/architecture/cybernetic_studio_architecture/SYNC_Cybernetic_Studio_Architecture_State.md`
 - `docs/architecture/cybernetic_studio_architecture/VALIDATION_Cybernetic_Studio_Architectural_Invariants.md`
 - `docs/capabilities/PATTERNS_Capabilities.md`
+- `docs/citizens/human_ai_pairing/ALGORITHM_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/BEHAVIORS_Human_AI_Pairing.md`
 - `docs/citizens/human_ai_pairing/HEALTH_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/IMPLEMENTATION_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/OBJECTIVES_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/PATTERNS_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/SYNC_Human_AI_Pairing.md`
+- `docs/citizens/human_ai_pairing/VALIDATION_Human_AI_Pairing.md`
+- `docs/citizens/parenthood_network/ALGORITHM_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/BEHAVIORS_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/HEALTH_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/IMPLEMENTATION_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/OBJECTIVES_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/PATTERNS_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/SYNC_Parenthood_Network.md`
+- `docs/citizens/parenthood_network/VALIDATION_Parenthood_Network.md`
 - `docs/cli/ALGORITHM_CLI_Command_Execution_Logic.md`
 - `docs/cli/HEALTH_CLI_Coverage.md`
 - `docs/cli/archive/SYNC_CLI_Development_State_archive_2025-12.md`
@@ -10848,10 +14693,15 @@
 - `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
 - `docs/cli/prompt/PATTERNS_Prompt_Command_Workflow_Design.md`
 - `docs/cli/prompt/SYNC_Prompt_Command_State.md`
+- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
+- `docs/cognitive/PATTERNS_Graph_Dynamics.md`
 - `docs/connectome/PATTERNS_Connectome.md`
 - `docs/core_utils/ALGORITHM_Core_Utils_Template_Path_And_Module_Discovery.md`
 - `docs/core_utils/ALGORITHM_Template_Path_Resolution_And_Doc_Discovery.md`
 - `docs/core_utils/PATTERNS_Core_Utils_Functions.md`
+- `docs/economy/PATTERNS_Economy.md`
+- `docs/human_integration/ALGORITHM_Human_Integration.md`
+- `docs/human_integration/IMPLEMENTATION_Human_Integration.md`
 - `docs/infrastructure/api/ALGORITHM_Api.md`
 - `docs/infrastructure/api/ALGORITHM_Playthrough_Creation.md`
 - `docs/infrastructure/api/API_Graph_Management.md`
@@ -10868,6 +14718,7 @@
 - `docs/ingest/PATTERNS_Doc_Ingestion.md`
 - `docs/ingest/PATTERNS_File_Ingestion.md`
 - `docs/ingest/PATTERNS_Graph_Injection.md`
+- `docs/l1_wiring/ALGORITHM_L1_Wiring.md`
 - `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
 - `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
 - `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
@@ -10914,6 +14765,8 @@
 - `docs/physics/subentity/SYNC_SubEntity.md`
 - `docs/physics/subentity/VALIDATION_SubEntity.md`
 - `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md`
+- `docs/reviews/REVIEW_F1_F2_Coherence.md`
+- `docs/reviews/REVIEW_F4_F5_Coherence.md`
 - `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
 - `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
@@ -10924,6 +14777,7 @@
 - `docs/runtime/models/VALIDATION_Models.md`
 - `docs/runtime/moments/PATTERNS_Moments.md`
 - `docs/runtime/moments/SYNC_Moments.md`
+- `docs/schema/GRAMMAR_L3_Link_Synthesis.md`
 - `docs/schema/GRAMMAR_Link_Synthesis.md`
 - `docs/schema/PATTERNS_Schema.md`
 - `docs/schema/SCHEMA.md`

@@ -778,6 +778,17 @@ class SubEntity:
         boost = alignment * narrative_weight / total_alignment
         self.satisfaction = min(1.0, self.satisfaction + boost)
 
+    # === Emotions ===
+
+    def get_emotions(self) -> dict:
+        """Return emotions dict for link creation and serialization.
+
+        SubEntities are traversal fragments, not actors — they don't carry
+        persistent emotions. Returns empty emotions list compatible with
+        link schema (spread into create_link kwargs).
+        """
+        return {"emotions": []}
+
     # === Serialization ===
 
     def to_dict(self) -> dict:

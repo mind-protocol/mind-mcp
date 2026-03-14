@@ -827,7 +827,7 @@ def _handle_chrome_link(chat_id: str, user_id: str, sender_name: str):
         "created_at": now,
     }
 
-    link = f"https://app.mind-protocol.com/chrome-auth?token={token}"
+    link = f"https://mindprotocol.ai/chrome-auth?token={token}"
 
     send_message(
         f"*MIND Chrome Extension*\n\n"

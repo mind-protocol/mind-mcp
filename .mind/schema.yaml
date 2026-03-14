@@ -1,12 +1,11 @@
-# MIND Graph Schema v2.1
-# Living Cognitive Graph — 21 Physics Laws + 7 Cognitive Types + Working Memory + L3/L1 Separation
+# MIND Graph Schema v2.0
+# Living Cognitive Graph — 21 Physics Laws + 7 Cognitive Types + Working Memory
 #
-# REPLACES: v2.0 (Plutchik on all links)
-# NEW: Plutchik REMOVED from L3 links. L3 uses topological physics (trust, friction, affinity, aversion).
-#      Plutchik confined to L1 brain graphs only. compute_priority on L4 org nodes.
+# REPLACES: v1.9.1 (SubEntity traversal model, static physics)
+# NEW: Full cognitive substrate from L1 Cognition (manemus/docs/cognition/l1)
 
-version: "2.1"
-updated: "2026-03-14"
+version: "2.0"
+updated: "2026-03-13"
 status: "CANONICAL"
 
 # =============================================================================
@@ -18,7 +17,7 @@ status: "CANONICAL"
 # 3. 7 cognitive node types map to 5 universal types — L1 is a VIEW, not a fork
 # 4. Energy + Weight duality: energy = ephemeral activation, weight = consolidated importance
 # 5. 21 physics laws execute per tick — no LLM in the tick loop, pure graph mechanics
-# 6. Working memory (~5000 chars) bridges graph → prompt — saliency selects what enters consciousness
+# 6. Working memory (5-7 nodes) bridges graph → prompt — saliency selects what enters consciousness
 # 7. Limbic system (drives, emotions) modulates ALL cognitive operations — not optional
 # 8. Crystallization creates new structure from recurring patterns — zero LLM, pure math
 # 9. Identity emerges from weight + stability — changes only through accumulated experience
@@ -377,41 +376,37 @@ LinkBase:
       default: 0.5
       description: "0 = speculative, 1 = definitive"
 
-    # === Relational Physics (Universal — L3 + L1) ===
-    # These 4 dimensions replace Plutchik emotions at the universal level.
-    # They are topological physics, not psychology.
-    trust:
-      type: float
-      range: [0, 1]
-      default: 0.0
-      description: "Confidence in the relationship. Asymptotic growth (1-W), decays without reinforcement. Reduces anxiety when active (Law 18)."
-    friction:
-      type: float
-      range: [0, 1]
-      default: 0.0
-      description: "Resistance / difficulty in the relationship. Increases path cost, frustration accumulation (Law 18)."
-    affinity:
-      type: float
-      range: [0, 1]
-      default: 0.0
-      description: "Attraction between nodes. Amplifies energy flow toward each other (Law 18)."
-    aversion:
-      type: float
-      range: [0, 1]
-      default: 0.0
-      description: "Repulsion between nodes. Dampens energy flow, increases avoidance (Law 18)."
-
-    # === Affective Dimensions (Universal — L3 + L1) ===
+    # === Affective Dimensions (L1) ===
     valence:
       type: float
       range: [-1, +1]
       default: 0.0
-      description: "L1 only. Positive/negative emotional color."
+      description: "Positive/negative emotional color"
     ambivalence:
       type: float
       range: [0, 1]
       default: 0.0
-      description: "L1 only. Internal conflict about this link."
+      description: "Internal conflict about this link"
+    affinity:
+      type: float
+      range: [0, 1]
+      default: 0.0
+      description: "Amplifies energy flow toward liked nodes (Law 18)"
+    aversion:
+      type: float
+      range: [0, 1]
+      default: 0.0
+      description: "Dampens energy flow, increases avoidance (Law 18)"
+    trust:
+      type: float
+      range: [0, 1]
+      default: 0.0
+      description: "Reduces anxiety when trusted nodes active (Law 18)"
+    friction:
+      type: float
+      range: [0, 1]
+      default: 0.0
+      description: "Increases frustration accumulation (Law 18)"
 
     # === Text Data ===
     synthesis:
@@ -487,10 +482,10 @@ drives:
 # =============================================================================
 #
 # The bridge between graph (cheap, unlimited) and prompt (expensive, limited).
-# 5000 chars selected by Law 4 (Attentional Competition).
+# 5-7 nodes selected by Law 4 (Attentional Competition).
 
 working_memory:
-  capacity: 5000 chars
+  capacity: 5-7
   selection: "Law 4 — salience-based competition with inertia moat (Law 13)"
   context_vector: "Mean embedding of current WM members — the situation model"
 
@@ -760,7 +755,6 @@ invariants:
 # RETAINED:
 #   - 5 universal node types
 #   - Single link type
-#   - Plutchik 4 emotion axes on links
 #   - Polarity, hierarchy, permanence on links
 #   - Link synthesis grammar (v2.1)
 #   - Temporal fields (created_at_s, updated_at_s, last_traversed_at_s)
@@ -801,11 +795,7 @@ invariants:
 #    No algorithm, formula, or physics law reads space_type for branching.
 #    No taxonomy. No prescribed values. Free text or null.
 #
-# 5. NO EMOTIONS AT L3.
-#    Emotions are handled by the limbic system (valence, arousal, drives) at L1 only.
-#    The universe itself has no feelings.
-#
-# 6. TRUST LIVES ON LINKS, NEVER ON NODES.
+# 5. TRUST LIVES ON LINKS, NEVER ON NODES.
 #    There is no "trusted actor" in the schema. Trust is a property of a
 #    specific relationship between two entities. An actor's "reputation" is
 #    the aggregation of inbound trust values across all links pointing to it:
@@ -852,7 +842,6 @@ l3_universe:
 
   link_at_l3:
     relation_kind: null  # ALWAYS null at L3
-    # Plutchik axes removed in v2.1 — emotions handled by limbic system at L1
     active_dimensions:
       # These carry structural meaning at L3:
       - weight        # Consolidated importance of the relationship
@@ -1002,26 +991,6 @@ l3_universe:
       mechanism: "Trust grows through co-activation reinforcement (L5) and consolidation (L6)"
       example: "Repeated successful collaborations → L5 strengthens link → L6 consolidates → trust field rises"
 
-  # --- Link Initialization (L1 → L3 Bridge) ---
-  #
-  # When a new L3 link is created, the relational physics dimensions
-  # (trust, friction, affinity, aversion) are NOT zero — they inherit
-  # from the creating agent's current L1 state.
-  #
-  # This is how the subjective colors the structural:
-  # the AI's internal state at creation time becomes the initial
-  # condition of the universe link.
-
-  link_initialization:
-    rule: "New L3 links inherit trust, friction, affinity, aversion from the creating AI's current L1 state"
-    ai_citizen:
-      mechanism: "When citizen A creates a link, the link's initial relational dimensions are projected from A's L1 brain state toward the target node"
-      example: "If citizen A has high trust and low friction toward concept X in L1, the new L3 link A→X starts with those values"
-    human_via_partner:
-      mechanism: "When a human creates a link (via action), their AI partner determines initial values from its model of the human (partner_model in L1)"
-      example: "Human commits code → AI partner knows human is confident about this repo → new link starts with high trust, low friction"
-    rationale: "L3 links are born colored by their creator's perspective. Physics (L5, L6, L7) then evolves them from that starting point. This prevents cold-start (all zeros) and encodes the act of creation as meaningful."
-
 # =============================================================================
 # L3 INVARIANTS
 # =============================================================================
@@ -1029,7 +998,6 @@ l3_universe:
 l3_invariants:
   - "5 universal node types only — no L3-specific types"
   - "relation_kind is always null at L3"
-  - "Plutchik emotion axes are always 0.0 at L3"
   - "space_type is free text, optional, never used in algorithmic branching"
   - "Trust lives on links only — no node-level trust field"
   - "Actor reputation is always computed, never stored"
@@ -1038,7 +1006,6 @@ l3_invariants:
   - "L3 does NOT use limbic laws: L13, L14, L15, L16, L17, L18"
   - "Macro-crystallization is automatic, zero LLM"
   - "Energy enters L3 from L1 actions — the universe doesn't self-activate"
-  - "New L3 links inherit trust/friction/affinity/aversion from the creating AI's L1 state (or partner AI for humans)"
 
 # =============================================================================
 # POINTERS
