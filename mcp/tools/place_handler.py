@@ -169,11 +169,15 @@ def _notify_place_server(place_id: str, event_data: Dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 def _resolve_actor(args: Dict[str, Any], ctx: ServerContext) -> str:
-    """Resolve actor ID from args or normalize via runtime helper."""
+    """Resolve actor ID from args or detect citizen/agent from context."""
     actor_id = args.get("actor_id")
     try:
         from runtime.agents import normalize_agent_id
-        return normalize_agent_id(actor_id, graph_ops=ctx.graph_ops)
+        return normalize_agent_id(
+            actor_id,
+            target_dir=ctx.target_dir,
+            graph_ops=ctx.graph_ops,
+        )
     except Exception:
         return actor_id or "unknown"
 
@@ -789,19 +793,75 @@ def _place_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             except Exception as e:
                 logger.warning(f"Could not join {member_id} to call: {e}")
 
-        # Grant HAS_ACCESS to all members (for encryption if needed)
+        # Grant HAS_ACCESS with encrypted space keys to all members
+        crypto = _import_crypto()
+        space_key = None
+        use_encryption = False
+
+        if crypto:
+            try:
+                space_key = crypto.generate_space_key()
+                use_encryption = True
+            except Exception as e:
+                logger.warning(f"Could not generate space key: {e}")
+
         for member_id in all_members:
             try:
+                role = "owner" if member_id == actor_id else "member"
+                encrypted_key = None
+
+                if use_encryption and space_key:
+                    member_pub_key = _get_actor_public_key(member_id, ctx.graph_ops)
+                    if member_pub_key:
+                        try:
+                            encrypted_key = crypto.encrypt_space_key_for_actor(
+                                space_key, member_pub_key,
+                            )
+                        except Exception as e:
+                            logger.warning(
+                                f"Could not wrap space key for {member_id}: {e}"
+                            )
+
+                if encrypted_key:
+                    ctx.graph_ops._query(
+                        """MATCH (a {id: $actor}), (s:Space {id: $space})
+                           MERGE (a)-[r:link {type: 'HAS_ACCESS'}]->(s)
+                           SET r.role = $role, r.granted_at = $ts,
+                               r.encrypted_key = $ekey, r.granted_by = $grantor""",
+                        {
+                            "actor": member_id,
+                            "space": call_id,
+                            "role": role,
+                            "ts": created_at,
+                            "ekey": encrypted_key,
+                            "grantor": actor_id,
+                        },
+                    )
+                else:
+                    # Fallback: grant access without encryption
+                    ctx.graph_ops._query(
+                        """MATCH (a {id: $actor}), (s:Space {id: $space})
+                           MERGE (a)-[r:link {type: 'HAS_ACCESS'}]->(s)
+                           SET r.role = $role, r.granted_at = $ts""",
+                        {
+                            "actor": member_id,
+                            "space": call_id,
+                            "role": role,
+                            "ts": created_at,
+                        },
+                    )
+            except Exception:
+                pass
+
+        # If any member lacks a public key, downgrade space to public so
+        # everyone can still speak/listen without encrypted keys.
+        if not use_encryption or any(
+            not _get_actor_public_key(m, ctx.graph_ops) for m in all_members
+        ):
+            try:
                 ctx.graph_ops._query(
-                    """MATCH (a {id: $actor}), (s:Space {id: $space})
-                       MERGE (a)-[r:link {type: 'HAS_ACCESS'}]->(s)
-                       SET r.role = $role, r.granted_at = $ts""",
-                    {
-                        "actor": member_id,
-                        "space": call_id,
-                        "role": "owner" if member_id == actor_id else "member",
-                        "ts": created_at,
-                    },
+                    "MATCH (s:Space {id: $id}) SET s.visibility = 'public'",
+                    {"id": call_id},
                 )
             except Exception:
                 pass
