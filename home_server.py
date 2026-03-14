@@ -148,6 +148,10 @@ async def lifespan(app: FastAPI):
                 seed_fn = getattr(mod, fn_name)
                 results = seed_fn(str(citizens_dir))
                 logger.info(f"L1 boot: {len(results)} citizens ensured (seed: {seed_fn_path})")
+
+                # Pre-load L1 engines into dispatcher for auto-stimulation
+                if results:
+                    _dispatcher.bulk_load_citizen_engines(list(results.keys()))
             else:
                 logger.info("L1 boot: citizen_seed disabled in database_config.yaml")
         except Exception as e:
