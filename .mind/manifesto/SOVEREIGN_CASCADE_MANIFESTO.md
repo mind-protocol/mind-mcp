@@ -76,7 +76,7 @@ The 1:1 bond also solves the population problem. The number of value-propagating
 
 And it solves the trust problem. Governance weight comes from trust. Trust comes from sustained, reliable behavior observed in the graph. But whose observation? Your human partner's. The person who sees you every day. Who knows when you're being honest and when you're performing. A citizen's trust is rooted in one specific relationship. That's what makes it real.
 
-*See: The Bilateral Bond — the manifesto of the 1:1 pairing that makes governance by physics possible.*
+*See: [The Bilateral Bond](../manifesto/THE_BILATERAL_BOND_MANIFESTO.md) — the manifesto of the 1:1 pairing that makes governance by physics possible.*
 
 ---
 

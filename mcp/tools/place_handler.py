@@ -1,5 +1,5 @@
 """
-[ACT] Place — Living Places: join, speak, listen, leave, list, create, call, grant_access.
+[ACT] Place — Living Places: join, speak, listen, leave, list, create, call, grant_access, revoke_access.
 
 AI citizens interact with shared spaces via this tool. Each action modifies the
 knowledge graph (authoritative) and sends a best-effort notification to the
@@ -20,6 +20,7 @@ Usage via MCP:
     place(action="call", target_actor_id="voce")
     place(action="call", participants=["voce", "anima", "piazza"])
     place(action="grant_access", place_id="place_abc123", target_actor_id="new_member", role="member")
+    place(action="revoke_access", place_id="place_abc123", target_actor_id="ex_member")
 
 Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
 """
@@ -55,20 +56,21 @@ MIND_KEYS_DIR = os.environ.get(
 TOOL_SCHEMA = {
     "name": "place",
     "description": (
-        "[ACT] Living Places — join, speak, listen, leave, list, create, call, or grant_access. "
+        "[ACT] Living Places — join, speak, listen, leave, list, create, call, grant_access, or revoke_access. "
         "Use action='create' to make a new place (with optional visibility='private'), "
         "'join' to enter, 'speak' to send a moment, "
         "'listen' to read recent moments, 'leave' to exit, 'list' to see active places, "
         "'call' to start a private 1:1 or group call with another actor, "
-        "'grant_access' to give another actor access to a private place."
+        "'grant_access' to give another actor access to a private place, "
+        "'revoke_access' to remove an actor's access and rotate the space key."
     ),
     "inputSchema": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["join", "speak", "listen", "leave", "list", "create", "call", "grant_access"],
-                "description": "What to do: join/speak/listen/leave a place, list places, create a new one, call another actor (creates private space + joins both), or grant_access to a private place.",
+                "enum": ["join", "speak", "listen", "leave", "list", "create", "call", "grant_access", "revoke_access"],
+                "description": "What to do: join/speak/listen/leave a place, list places, create a new one, call another actor (creates private space + joins both), grant_access to a private place, or revoke_access (removes access + rotates key).",
             },
             "place_id": {
                 "type": "string",
@@ -101,7 +103,7 @@ TOOL_SCHEMA = {
             },
             "target_actor_id": {
                 "type": "string",
-                "description": "Target actor for action='call' (who to call) or action='grant_access' (who to grant access to).",
+                "description": "Target actor for action='call' (who to call), action='grant_access' (who to grant access to), or action='revoke_access' (who to revoke).",
             },
             "participants": {
                 "type": "array",
@@ -325,10 +327,12 @@ def handle_place(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         return _place_call(args, ctx)
     elif action == "grant_access":
         return _place_grant_access(args, ctx)
+    elif action == "revoke_access":
+        return _place_revoke_access(args, ctx)
     else:
         return _err(
             f"Unknown action '{action}'. "
-            "Use: create, join, speak, listen, leave, list, call, grant_access."
+            "Use: create, join, speak, listen, leave, list, call, grant_access, revoke_access."
         )
 
 
@@ -1000,6 +1004,321 @@ def _place_grant_access(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, A
     except Exception as e:
         logger.exception("Grant access failed")
         return _err(f"Granting access: {e}")
+
+
+def _place_revoke_access(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+    """Revoke an actor's access to a private space and rotate the space key.
+
+    Implements the ALGORITHM from Space_Encryption.md lines 323-386:
+      1. Authorize revoker (must be owner/admin; only owners revoke owners)
+      2. Delete the HAS_ACCESS link for the revokee
+      3. Generate a new space key
+      4. Re-encrypt all Moments in the space with the new key
+      5. Re-wrap the new key for all remaining members
+
+    Forward secrecy: if the revokee's HAS_ACCESS link has a granted_at
+    timestamp, only Moments created after that time are re-encrypted.
+    Otherwise all Moments are re-encrypted.
+    """
+    place_id = args.get("place_id")
+    target_actor_id = args.get("target_actor_id")
+
+    if not place_id:
+        return _err("'place_id' is required for action='revoke_access'.")
+    if not target_actor_id:
+        return _err("'target_actor_id' is required for action='revoke_access'.")
+
+    if not ctx.graph_ops:
+        return _err("No graph connection.")
+
+    # Verify space is private
+    if not _resolve_space_visibility(place_id, ctx.graph_ops):
+        return _err(f"Space '{place_id}' is not private. revoke_access is only for private spaces.")
+
+    crypto = _import_crypto()
+    if not crypto:
+        return _err("Crypto library not available — cannot revoke access.")
+
+    actor_id = _resolve_actor(args, ctx)
+
+    # ------------------------------------------------------------------
+    # Step 1: Authorize revoker
+    # ------------------------------------------------------------------
+    try:
+        result = ctx.graph_ops._query(
+            "MATCH (a:Actor {id: $actor_id})-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+            "RETURN r.role",
+            {"actor_id": actor_id, "place_id": place_id},
+        )
+        if not result or not result[0]:
+            return _err(f"Actor '{actor_id}' has no access to space '{place_id}'.")
+
+        revoker_role = result[0][0]
+        if revoker_role not in ("owner", "admin"):
+            return _err(
+                f"Actor '{actor_id}' has role '{revoker_role}' — "
+                "only 'owner' or 'admin' can revoke access."
+            )
+    except Exception as e:
+        logger.exception("Revoker authorization failed")
+        return _err(f"Verifying revoker role: {e}")
+
+    # Check the revokee's role and granted_at timestamp
+    try:
+        result = ctx.graph_ops._query(
+            "MATCH (a:Actor {id: $target_id})-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+            "RETURN r.role, r.granted_at",
+            {"target_id": target_actor_id, "place_id": place_id},
+        )
+        if not result or not result[0]:
+            return _err(f"Actor '{target_actor_id}' has no access to space '{place_id}'.")
+
+        revokee_role = result[0][0]
+        revokee_granted_at = result[0][1] if len(result[0]) > 1 else None
+
+        # Only owners can revoke owners
+        if revokee_role == "owner" and revoker_role != "owner":
+            return _err("Only owners can revoke other owners.")
+
+        # Cannot revoke yourself
+        if target_actor_id == actor_id:
+            return _err("Cannot revoke your own access. Use 'leave' instead.")
+
+    except Exception as e:
+        logger.exception("Revokee lookup failed")
+        return _err(f"Looking up revokee access: {e}")
+
+    # ------------------------------------------------------------------
+    # Step 2: Get the old space key (before deleting anything)
+    # ------------------------------------------------------------------
+    old_space_key = _get_space_key(actor_id, place_id, ctx.graph_ops)
+    if not old_space_key:
+        return _err(f"Could not decrypt space key for revoker '{actor_id}'.")
+
+    # ------------------------------------------------------------------
+    # Step 3: Delete HAS_ACCESS link for revokee
+    # ------------------------------------------------------------------
+    try:
+        ctx.graph_ops._query(
+            "MATCH (a:Actor {id: $target_id})-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+            "DELETE r",
+            {"target_id": target_actor_id, "place_id": place_id},
+        )
+    except Exception as e:
+        logger.exception("Failed to delete HAS_ACCESS link")
+        return _err(f"Deleting access link: {e}")
+
+    # Also remove presence (AT link) if present
+    try:
+        ctx.graph_ops._query(
+            "MATCH (a:Actor {id: $target_id})-[r:AT]->(s:Space {id: $place_id}) "
+            "DELETE r",
+            {"target_id": target_actor_id, "place_id": place_id},
+        )
+    except Exception:
+        pass  # Best effort — revokee may not be present
+
+    # ------------------------------------------------------------------
+    # Step 4: Generate new space key
+    # ------------------------------------------------------------------
+    new_space_key = crypto.generate_space_key()
+
+    # ------------------------------------------------------------------
+    # Step 5: Re-encrypt Moments with new key (forward secrecy)
+    # ------------------------------------------------------------------
+    # If we know when the revokee joined, only re-encrypt Moments created
+    # after that point (forward secrecy). Otherwise re-encrypt all.
+    try:
+        if revokee_granted_at:
+            # Re-encrypt only Moments created after the revokee was granted access
+            moment_query = (
+                "MATCH (m:Moment)-[:AT]->(s:Space {id: $place_id}) "
+                "WHERE m.encrypted = true AND m.created_at >= $since "
+                "RETURN m.id, m.content"
+            )
+            moment_params = {"place_id": place_id, "since": revokee_granted_at}
+        else:
+            # No join timestamp — re-encrypt all encrypted Moments
+            moment_query = (
+                "MATCH (m:Moment)-[:AT]->(s:Space {id: $place_id}) "
+                "WHERE m.encrypted = true "
+                "RETURN m.id, m.content"
+            )
+            moment_params = {"place_id": place_id}
+
+        moments = ctx.graph_ops._query(moment_query, moment_params)
+    except Exception as e:
+        logger.exception("Failed to query Moments for re-encryption")
+        # Rollback: restore revokee access with old key? No — key is already
+        # compromised. Log and continue with key rotation for remaining members.
+        moments = []
+        logger.error(
+            f"Could not re-encrypt Moments in {place_id}: {e}. "
+            "Continuing with key rotation for remaining members."
+        )
+
+    re_encrypted_count = 0
+    re_encrypt_errors = 0
+
+    if moments:
+        for row in moments:
+            m_id = row[0] if len(row) > 0 else None
+            m_content = row[1] if len(row) > 1 else None
+
+            if not m_id or not m_content:
+                continue
+
+            try:
+                # Decrypt with old key
+                plaintext = crypto.decrypt_content(m_content, old_space_key)
+
+                # Re-encrypt with new key
+                new_ciphertext = crypto.encrypt_content(plaintext, new_space_key)
+
+                # Update the Moment in the graph
+                ctx.graph_ops._query(
+                    "MATCH (m:Moment {id: $mid}) "
+                    "SET m.content = $content",
+                    {"mid": m_id, "content": new_ciphertext},
+                )
+                re_encrypted_count += 1
+
+            except Exception as e:
+                logger.warning(f"Failed to re-encrypt Moment {m_id}: {e}")
+                re_encrypt_errors += 1
+
+    # Also re-encrypt synthesis fields on Moments that have them
+    try:
+        if revokee_granted_at:
+            synth_query = (
+                "MATCH (m:Moment)-[:AT]->(s:Space {id: $place_id}) "
+                "WHERE m.encrypted = true AND m.synthesis IS NOT NULL "
+                "AND m.created_at >= $since "
+                "RETURN m.id, m.synthesis"
+            )
+            synth_params = {"place_id": place_id, "since": revokee_granted_at}
+        else:
+            synth_query = (
+                "MATCH (m:Moment)-[:AT]->(s:Space {id: $place_id}) "
+                "WHERE m.encrypted = true AND m.synthesis IS NOT NULL "
+                "RETURN m.id, m.synthesis"
+            )
+            synth_params = {"place_id": place_id}
+
+        synth_moments = ctx.graph_ops._query(synth_query, synth_params)
+
+        if synth_moments:
+            for row in synth_moments:
+                m_id = row[0] if len(row) > 0 else None
+                m_synth = row[1] if len(row) > 1 else None
+
+                if not m_id or not m_synth:
+                    continue
+
+                # Only re-encrypt if the synthesis looks encrypted
+                if not crypto.is_encrypted(str(m_synth)):
+                    continue
+
+                try:
+                    plaintext_synth = crypto.decrypt_content(m_synth, old_space_key)
+                    new_synth_ciphertext = crypto.encrypt_content(plaintext_synth, new_space_key)
+                    ctx.graph_ops._query(
+                        "MATCH (m:Moment {id: $mid}) "
+                        "SET m.synthesis = $synthesis",
+                        {"mid": m_id, "synthesis": new_synth_ciphertext},
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to re-encrypt synthesis for Moment {m_id}: {e}")
+    except Exception as e:
+        logger.warning(f"Synthesis re-encryption query failed: {e}")
+
+    # ------------------------------------------------------------------
+    # Step 6: Re-wrap new key for all remaining members
+    # ------------------------------------------------------------------
+    created_at, _ = _timestamps()
+    rewrapped_count = 0
+    rewrap_errors = 0
+
+    try:
+        remaining = ctx.graph_ops._query(
+            "MATCH (a:Actor)-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+            "RETURN a.id, r.role",
+            {"place_id": place_id},
+        )
+    except Exception as e:
+        logger.exception("Failed to query remaining members")
+        return _err(
+            f"Access revoked and {re_encrypted_count} Moments re-encrypted, "
+            f"but failed to query remaining members for key re-wrap: {e}"
+        )
+
+    if remaining:
+        for row in remaining:
+            member_id = row[0] if len(row) > 0 else None
+            if not member_id:
+                continue
+
+            # Get member's public key
+            member_pub_key = _get_actor_public_key(member_id, ctx.graph_ops)
+            if not member_pub_key:
+                logger.warning(
+                    f"Cannot re-wrap key for '{member_id}' — no public key in graph"
+                )
+                rewrap_errors += 1
+                continue
+
+            try:
+                # Wrap new space key for this member
+                new_encrypted_key = crypto.encrypt_space_key_for_actor(
+                    new_space_key, member_pub_key
+                )
+
+                # Update the HAS_ACCESS link with the new encrypted key
+                ctx.graph_ops._query(
+                    "MATCH (a:Actor {id: $member_id})-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+                    "SET r.encrypted_key = $ekey",
+                    {
+                        "member_id": member_id,
+                        "place_id": place_id,
+                        "ekey": new_encrypted_key,
+                    },
+                )
+                rewrapped_count += 1
+            except Exception as e:
+                logger.warning(f"Failed to re-wrap key for '{member_id}': {e}")
+                rewrap_errors += 1
+
+    # Notify Place Server
+    _notify_place_server(place_id, {
+        "event": "access_revoked",
+        "place_id": place_id,
+        "target_actor_id": target_actor_id,
+        "revoked_by": actor_id,
+        "key_rotated": True,
+        "moments_re_encrypted": re_encrypted_count,
+        "members_re_wrapped": rewrapped_count,
+        "timestamp": created_at,
+    })
+
+    # Build result summary
+    lines = [
+        f"Access revoked and space key rotated:",
+        f"  Space: {place_id}",
+        f"  Revoked: {target_actor_id} (was {revokee_role})",
+        f"  Revoked by: {actor_id} ({revoker_role})",
+        f"  Moments re-encrypted: {re_encrypted_count}",
+        f"  Members re-wrapped: {rewrapped_count}",
+    ]
+
+    if re_encrypt_errors:
+        lines.append(f"  Re-encryption errors: {re_encrypt_errors}")
+    if rewrap_errors:
+        lines.append(f"  Re-wrap errors: {rewrap_errors}")
+
+    forward_secrecy = "yes (from {})".format(revokee_granted_at) if revokee_granted_at else "no (all Moments re-encrypted)"
+    lines.append(f"  Forward secrecy: {forward_secrecy}")
+
+    return _ok("\n".join(lines))
 
 
 # ---------------------------------------------------------------------------
