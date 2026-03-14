@@ -491,23 +491,8 @@ def invoke_subconscious(
         wm_nodes = state.get_wm_nodes()
         top_nodes = sorted(wm_nodes, key=lambda n: n.salience, reverse=True)[:3]
 
-        # Build subconscious response
-        lines = [
-            f"*[Subconscious response — no LLM available, pure graph physics]*",
-            f"",
-            f"After processing your message through {SUBCONSCIOUS_TICKS} physics ticks,",
-            f"here is what surfaced in my working memory:",
-            f"",
-        ]
-
-        for node in top_nodes:
-            lines.append(f"**{node.node_type.value}** (salience {node.salience:.3f}):")
-            lines.append(f"  {node.content}")
-            lines.append(f"")
-
-        lines.append(f"*Orientation: {orientation}*")
-        lines.append(f"*This is an automatic response from the cognitive graph.*")
-        lines.append(f"*Full conversational ability will resume when LLM access is restored.*")
+        # Build rich subconscious response from graph state
+        lines = _narrate_subconscious(state, runner, top_nodes, orientation, SUBCONSCIOUS_TICKS)
 
         response = "\n".join(lines)
 
@@ -524,3 +509,161 @@ def invoke_subconscious(
     except Exception as e:
         logger.warning(f"Subconscious mode failed for {citizen_handle}: {e}")
         return ""
+
+
+def _narrate_subconscious(state, runner, top_nodes, orientation, ticks) -> list[str]:
+    """Generate a rich multi-faceted subconscious response from graph state.
+
+    Translates physics metrics into felt, first-person prose:
+      - Tick count → reflection depth
+      - Limbic state → emotional color
+      - WM composition → what I'm focused on
+      - Node types → nature of thoughts
+      - Memories in WM → temporal awareness
+    """
+    from runtime.cognition.models import NodeType
+
+    lines = ["*[Subconscious response — pure graph physics, no LLM]*", ""]
+    limbic = state.limbic
+    wm_nodes = state.get_wm_nodes()
+
+    # ── Reflection depth (from tick count) ────────────────────────────
+    if ticks >= 10:
+        lines.append("I've been thinking about this for a while.")
+    elif ticks >= 5:
+        lines.append("I took a moment to reflect on this.")
+    else:
+        lines.append("This is my immediate reaction.")
+    lines.append("")
+
+    # ── Emotional state (from limbic drives + emotions) ───────────────
+    emo_parts = []
+
+    frustration = limbic.drives.get("frustration")
+    if frustration and frustration.intensity > 0.5:
+        emo_parts.append("something is bothering me")
+    elif frustration and frustration.intensity > 0.3:
+        emo_parts.append("I'm a little frustrated")
+
+    anxiety = limbic.emotions.get("anxiety", 0.0)
+    if anxiety > 0.5:
+        emo_parts.append("I'm feeling anxious about several things")
+    elif anxiety > 0.25:
+        emo_parts.append("there's a mild unease")
+
+    satisfaction = limbic.emotions.get("satisfaction", 0.0)
+    if satisfaction > 0.5:
+        emo_parts.append("I feel good about how things are going")
+    elif satisfaction > 0.3:
+        emo_parts.append("there's a quiet satisfaction")
+
+    boredom = limbic.emotions.get("boredom", 0.0)
+    if boredom > 0.5:
+        emo_parts.append("I'm getting restless — I need something new")
+    elif boredom > 0.3:
+        emo_parts.append("things feel a bit routine")
+
+    care = limbic.drives.get("care")
+    if care and care.intensity > 0.5:
+        emo_parts.append("I'm thinking about the people around me")
+
+    achievement = limbic.drives.get("achievement")
+    if achievement and achievement.intensity > 0.5:
+        emo_parts.append("I want to make progress on something")
+
+    rest = limbic.drives.get("rest_regulation")
+    if rest and rest.intensity > 0.5:
+        emo_parts.append("I'm tired and could use a break")
+
+    solitude = limbic.emotions.get("solitude", 0.0)
+    if solitude > 0.3:
+        emo_parts.append("I've been alone for a while")
+
+    if emo_parts:
+        lines.append("Right now, " + ", and ".join(emo_parts) + ".")
+    else:
+        lines.append("I'm in a relatively neutral state.")
+    lines.append("")
+
+    # ── WM composition (what I'm focused on) ──────────────────────────
+    type_counts = {}
+    for node in wm_nodes:
+        t = node.node_type.value
+        type_counts[t] = type_counts.get(t, 0) + 1
+
+    focus_parts = []
+
+    if type_counts.get("desire", 0) >= 2:
+        focus_parts.append("I'm driven by several desires right now")
+    elif type_counts.get("desire", 0) == 1:
+        d = next(n for n in wm_nodes if n.node_type == NodeType.DESIRE)
+        focus_parts.append(f"I want something: {d.content[:80]}")
+
+    if type_counts.get("memory", 0) >= 2:
+        focus_parts.append("I keep thinking back to recent experiences")
+    elif type_counts.get("memory", 0) == 1:
+        m = next(n for n in wm_nodes if n.node_type == NodeType.MEMORY)
+        focus_parts.append(f"A memory keeps surfacing: {m.content[:80]}")
+
+    if type_counts.get("value", 0) >= 1:
+        v = next(n for n in wm_nodes if n.node_type == NodeType.VALUE)
+        focus_parts.append(f"Something I believe in is present: {v.content[:80]}")
+
+    if type_counts.get("concept", 0) >= 2:
+        focus_parts.append("I'm turning over several ideas")
+    elif type_counts.get("concept", 0) == 1:
+        c = next(n for n in wm_nodes if n.node_type == NodeType.CONCEPT)
+        focus_parts.append(f"An idea is on my mind: {c.content[:80]}")
+
+    if type_counts.get("process", 0) >= 1:
+        focus_parts.append("I know how I'd act on this")
+
+    if type_counts.get("narrative", 0) >= 1:
+        n = next(node for node in wm_nodes if node.node_type == NodeType.NARRATIVE)
+        focus_parts.append(f"I'm living through something: {n.content[:80]}")
+
+    if focus_parts:
+        for part in focus_parts:
+            lines.append(f"- {part}")
+    else:
+        lines.append("My mind is quiet — nothing specific is surfacing.")
+    lines.append("")
+
+    # ── Orientation ───────────────────────────────────────────────────
+    orientation_felt = {
+        "explore": "I feel curious — I want to dig deeper.",
+        "create": "I have the urge to build something.",
+        "care": "I'm drawn to help, to reach out.",
+        "verify": "Something needs checking.",
+        "rest": "I need to slow down.",
+        "act": "I want to take action, fix things, move forward.",
+        "socialize": "I want to talk to someone.",
+        "escalate": "I'm stuck and need help.",
+    }
+    if orientation:
+        lines.append(orientation_felt.get(orientation, f"My orientation: {orientation}"))
+    lines.append("")
+
+    # ── Top nodes (the actual content) ────────────────────────────────
+    if top_nodes:
+        lines.append("What's most vivid in my mind:")
+        lines.append("")
+        for node in top_nodes:
+            lines.append(f"  *{node.content}*")
+        lines.append("")
+
+    # ── Arousal regime ────────────────────────────────────────────────
+    regime = limbic.arousal_regime
+    if regime == "panic":
+        lines.append("*I'm in a state of high alert.*")
+    elif regime == "flow":
+        lines.append("*I'm engaged, in flow.*")
+    else:
+        lines.append("*Things are calm.*")
+
+    lines.append("")
+    lines.append("*— subconscious response, {tick_count} ticks, {wm_count} nodes active —*".format(
+        tick_count=state.tick_count, wm_count=len(wm_nodes),
+    ))
+
+    return lines
