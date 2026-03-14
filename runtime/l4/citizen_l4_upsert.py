@@ -576,7 +576,8 @@ def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
 
     # Wallet
     wallet_path = keys_dir / "solana_private_key.json"
-    if wallet_path.exists():
+    wallet_path_existed = wallet_path.exists()
+    if wallet_path_existed:
         # Read existing public key from private key
         try:
             import json as _json
@@ -672,6 +673,20 @@ def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
             rsa_public_pem = pub_pem
         except Exception:
             pass
+
+    # Airdrop initial $MIND allocation if wallet was just created
+    if wallet_address and not wallet_path_existed:
+        try:
+            from runtime.l4.mind_token_airdrop import airdrop_mind
+            result = airdrop_mind(recipient_address=wallet_address)
+            if result.get("status") == "sent":
+                logger.info(f"Airdrop {result.get('amount')} $MIND → {handle}")
+            elif result.get("status") == "skipped":
+                logger.debug(f"Airdrop skipped for {handle}: {result.get('detail')}")
+            else:
+                logger.warning(f"Airdrop failed for {handle}: {result.get('detail')}")
+        except Exception as e:
+            logger.debug(f"Airdrop not available for {handle}: {e}")
 
     return wallet_address, rsa_public_pem
 
