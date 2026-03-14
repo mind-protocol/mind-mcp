@@ -588,6 +588,9 @@ def _embed_all_nodes(adapter) -> int:
                 )
                 count += 1
 
+        # Flush disk cache
+        embed_service.flush_cache()
+
         return count
 
     except Exception as e:

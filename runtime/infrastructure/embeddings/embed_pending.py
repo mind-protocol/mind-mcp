@@ -66,6 +66,9 @@ def embed_all_pending(graph_name: str = 'mind') -> Dict[str, int]:
             """, {'id': link_id, 'emb': embedding})
             stats['links'] += 1
 
+    # Flush disk cache so next run benefits from cached embeddings
+    svc.flush_cache()
+
     return stats
 
 
