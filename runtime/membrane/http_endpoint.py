@@ -70,6 +70,51 @@ async def receive_stimulus(req: StimulusRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/ping/{handle}")
+async def membrane_ping(handle: str):
+    """Ping a citizen through this membrane. Lightweight liveness check.
+
+    Checks: citizen dir exists, brain graph has nodes, keys exist.
+    Does NOT require the stimulus handler or graph ops.
+    """
+    from pathlib import Path
+    import os
+
+    project_root = Path(__file__).resolve().parent.parent.parent
+    citizens_dir = project_root / "citizens"
+    keys_dir = project_root / ".keys"
+
+    citizen_dir = citizens_dir / handle
+    has_profile = (citizen_dir / "profile.json").exists()
+
+    # Check brain in FalkorDB
+    brain_nodes = 0
+    try:
+        from falkordb import FalkorDB
+        host = os.environ.get("FALKORDB_HOST", "localhost")
+        port = int(os.environ.get("FALKORDB_PORT", "6379"))
+        db = FalkorDB(host=host, port=port)
+        graph = db.select_graph(f"brain_{handle}")
+        result = graph.query("MATCH (n) RETURN count(n)")
+        if result.result_set:
+            brain_nodes = result.result_set[0][0]
+    except Exception:
+        pass
+
+    has_keys = (keys_dir / handle / "solana_private_key.json").exists() or \
+               (keys_dir / handle / "rsa_private_key.pem").exists()
+
+    alive = has_profile or brain_nodes > 0
+
+    return {
+        "handle": handle,
+        "alive": alive,
+        "profile": has_profile,
+        "brain_nodes": brain_nodes,
+        "has_keys": has_keys,
+    }
+
+
 @router.get("/info")
 async def membrane_info():
     """Return membrane metadata for L4 registry discovery."""
