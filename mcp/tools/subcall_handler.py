@@ -939,6 +939,179 @@ def _build_response_cluster(
     return cluster
 
 
+def _format_as_telemetry(
+    target_handle: str,
+    query: str,
+    resonance: Dict[str, Any],
+) -> str:
+    """Format subcall result as a 4-part telemetry narrative.
+
+    Translates raw physics into human-readable prose using the
+    Link Synthesis Grammar:
+      1. Current State (arousal regime)
+      2. Cluster (medoid + edges as mini-narrative)
+      3. Limbic Deltas (dominant shift as behavioral verb)
+      4. Crystallization (structural outcome)
+    """
+    import hashlib
+
+    nodes = resonance.get("nodes", [])
+    state = resonance.get("actor_state", {})
+
+    if not nodes:
+        return ""
+
+    name = state.get("name") or target_handle
+    trade = state.get("trade") or state.get("role") or ""
+    arousal = float(state.get("arousal") or 0.3)
+    valence = float(state.get("valence") or 0.0)
+
+    # ── Part 1: Current State (Arousal Regime) ──
+    if arousal > 0.8:
+        state_phrase = f"Piercing through @{target_handle}'s severe anxiety"
+    elif arousal > 0.6:
+        state_phrase = f"Breaking into @{target_handle}'s intense focus"
+    elif arousal > 0.4:
+        state_phrase = f"Reaching @{target_handle} in deep flow"
+    elif arousal > 0.2:
+        state_phrase = f"Finding @{target_handle} in a calm, receptive state"
+    else:
+        state_phrase = f"Catching @{target_handle} idle and open"
+
+    if trade:
+        state_phrase += f" ({trade})"
+
+    # ── Part 2: Cluster (Medoid + Edges) ──
+    medoid = nodes[0]
+    medoid_content = medoid.get("content", "")
+    medoid_type = medoid.get("type", "concept")
+    medoid_name = medoid.get("name") or ""
+
+    # Build mini-narrative from medoid + connected nodes
+    if medoid_name and medoid_name != medoid_content[:len(medoid_name)]:
+        cluster_phrase = f"their mind surfaced **{medoid_name}**"
+    else:
+        # Use first 80 chars of content
+        short = medoid_content[:80].rstrip(".")
+        cluster_phrase = f"their mind surfaced that _{short}_"
+
+    # Add edges (connected nodes)
+    if len(nodes) > 1:
+        edge1 = nodes[1]
+        e1_content = (edge1.get("name") or edge1.get("content", ""))[:60]
+        rel = edge1.get("relation") or "linked to"
+        cluster_phrase += f", {rel.lower().replace('link', 'connected to')} _{e1_content}_"
+    if len(nodes) > 2:
+        edge2 = nodes[2]
+        e2_content = (edge2.get("name") or edge2.get("content", ""))[:60]
+        cluster_phrase += f" and _{e2_content}_"
+
+    # ── Part 3: Limbic Deltas (Dominant Shift) ──
+    # We approximate deltas from node properties since we don't have before/after
+    energy_total = sum(float(n.get("energy") or 0) for n in nodes)
+    weight_total = sum(float(n.get("weight") or 0) for n in nodes)
+
+    if valence > 0.3 and energy_total > 0.5:
+        delta_phrase = "sparking warm resonance"
+    elif valence < -0.3 and energy_total > 0.3:
+        delta_phrase = "triggering a sharp defensive spike"
+    elif energy_total > 1.0:
+        delta_phrase = "igniting intense activation"
+    elif energy_total > 0.3:
+        delta_phrase = "stirring quiet recognition"
+    elif weight_total > 3.0:
+        delta_phrase = "touching deeply rooted knowledge"
+    else:
+        delta_phrase = "brushing against faint echoes"
+
+    # ── Part 4: Crystallization ──
+    has_high_weight = any(float(n.get("weight") or 0) > 5.0 for n in nodes)
+    has_high_energy = energy_total > 1.0
+
+    if has_high_weight and has_high_energy:
+        crystal_phrase = "and resonating with permanent, consolidated expertise."
+    elif has_high_energy:
+        crystal_phrase = "and reverberating strongly through active memory."
+    elif has_high_weight:
+        crystal_phrase = "and touching ancient, deeply-held knowledge."
+    else:
+        crystal_phrase = "and fading softly into background awareness."
+
+    # ── Compose the telemetry narrative ──
+    narrative = f"{state_phrase}, {cluster_phrase}, {delta_phrase} — {crystal_phrase}"
+
+    # ── Append raw metrics ──
+    metrics = []
+    if arousal:
+        regime = "panic" if arousal > 0.8 else "flow" if arousal > 0.4 else "idle"
+        metrics.append(f"state: {regime} {arousal:.2f}")
+    if valence:
+        metrics.append(f"valence: {valence:+.2f}")
+    metrics.append(f"nodes: {len(nodes)}")
+    metrics.append(f"Σenergy: {energy_total:.2f}")
+    metrics.append(f"Σweight: {weight_total:.1f}")
+
+    spaces = state.get("current_spaces")
+    if spaces and any(spaces):
+        metrics.append(f"at: {', '.join(str(s) for s in spaces if s)}")
+
+    return f"> {narrative}\n> *({', '.join(metrics)})*"
+
+
+def _generate_recommendation(resonance: Dict[str, Any]) -> str:
+    """Generate an actionable recommendation from the resonance physics.
+
+    Based on the target's limbic state and resonance strength:
+    - High energy + positive valence → engage now (strike while hot)
+    - High energy + negative valence → back off (defensive spike)
+    - High weight + low energy → deep knowledge found (reliable source)
+    - Low everything → no strong signal (move on)
+    """
+    nodes = resonance.get("nodes", [])
+    state = resonance.get("actor_state", {})
+
+    if not nodes:
+        return ""
+
+    valence = float(state.get("valence") or 0)
+    arousal = float(state.get("arousal") or 0.3)
+    energy_total = sum(float(n.get("energy") or 0) for n in nodes)
+    weight_total = sum(float(n.get("weight") or 0) for n in nodes)
+    has_heavy = any(float(n.get("weight") or 0) > 3.0 for n in nodes)
+
+    # Strong positive resonance + high energy → collaborate immediately
+    if energy_total > 0.5 and valence > 0.2:
+        return (
+            "**Next step:** Strong positive resonance. This person's mind lit up — "
+            "consider `/call` for real-time collaboration while the activation is fresh."
+        )
+
+    # Strong negative resonance → back off or reframe
+    if valence < -0.2 and arousal > 0.5:
+        return (
+            "**Caution:** Defensive spike detected. This person's graph resisted your query. "
+            "Don't push — either wait for their arousal to drop, or reframe your approach "
+            "with stronger evidence."
+        )
+
+    # Deep consolidated knowledge, calm response → reliable expert
+    if has_heavy and energy_total < 0.3:
+        return (
+            "**Insight:** Deep, consolidated knowledge found with minimal cognitive effort — "
+            "this is a true expert on this topic. Their answer is high-confidence. "
+            "Consider building a stronger trust link for future queries."
+        )
+
+    # Moderate resonance → useful but not urgent
+    if energy_total > 0.2:
+        return (
+            "**Note:** Moderate resonance — this person has relevant context but "
+            "isn't deeply activated. The knowledge is there but peripheral."
+        )
+
+    return ""
+
+
 def _format_as_inner_voice(
     target_handle: str,
     query: str,
@@ -1728,20 +1901,28 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             graph_ops=ctx.graph_ops,
         )
 
-        # 5. Format BOTH outputs:
-        #    - Structured MCP response (for the tool caller to read)
-        #    - Inner voice (for WM/prompt injection — first-person whisper)
+        # 5. Format THREE outputs:
+        #    - Telemetry narrative (4-part prose: state → cluster → delta → crystal)
+        #    - Structured MCP response (full content for reading)
+        #    - Inner voice (for WM/prompt injection)
+        telemetry = _format_as_telemetry(target_handle, query, resonance)
         formatted = _format_resonance(target_handle, query, resonance, caller_name, full_content=True)
         inner_voice = _format_as_inner_voice(target_handle, query, resonance)
+        recommendation = _generate_recommendation(resonance)
 
         logger.info(
             f"Subcall: @{caller_name} → @{target_handle} "
             f"({len(resonance.get('nodes', []))} resonances, method={resonance.get('match_method')})"
         )
 
-        # Return both formats — the caller gets the structured view,
-        # the inner_voice can be injected into their WM/system prompt
-        combined = formatted
+        # Assemble: telemetry first (the narrative), then recommendation,
+        # then structured data, then inner voice
+        combined = ""
+        if telemetry:
+            combined += telemetry + "\n\n"
+        if recommendation:
+            combined += recommendation + "\n\n"
+        combined += formatted
         if inner_voice:
             combined += "\n\n---\n\n" + inner_voice
 
