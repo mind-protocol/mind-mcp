@@ -14,6 +14,7 @@ from .broadcast import MembraneBroadcast, get_broadcast, on_node_public, on_node
 from .stimulus import StimulusHandler, get_stimulus_handler
 from .endpoint_registrar import EndpointRegistrar, get_registrar, auto_register
 from .routing import resolve_citizen_endpoints, resolve_active_endpoints, route_to_citizen
+from .auto_grant import auto_grant_on_membership, process_pending_grants
 
 __all__ = [
     # Config
@@ -39,4 +40,7 @@ __all__ = [
     "resolve_citizen_endpoints",
     "resolve_active_endpoints",
     "route_to_citizen",
+    # Auto-grant (join org → Space access)
+    "auto_grant_on_membership",
+    "process_pending_grants",
 ]
