@@ -3,10 +3,8 @@
 Watches the message queue, dispatches requests to Claude Code subprocesses
 via the thread pool, routes responses back to bridge callbacks.
 
-Key change from manemus: tick interval is controlled by ComputeBudget,
-not a fixed sleep. Higher trust citizens get proportionally more ticks.
-
-Ported and restructured from manemus/scripts/orchestrator.py orchestrate().
+Tick interval is controlled by ComputeBudget, not a fixed sleep.
+Higher trust citizens get proportionally more ticks.
 """
 
 import os
@@ -356,7 +354,20 @@ class Dispatcher:
         stimulus = router.route(event)
         if stimulus:
             runner = self._citizen_engines[citizen_handle]
-            runner.run_tick(stimulus=stimulus)
+
+            # Debug trace: stimulus injection
+            from runtime.debug.tracer import trace_step, is_debugging
+            if is_debugging(citizen_handle):
+                trace_step(citizen_handle, "stimulus_router.route",
+                           f"event: {event.content[:200]}", f"stimulus energy={stimulus.energy_budget:.2f}")
+
+            result = runner.run_tick(stimulus=stimulus)
+
+            if is_debugging(citizen_handle):
+                trace_step(citizen_handle, "tick_runner.run_tick",
+                           f"stimulus energy={stimulus.energy_budget:.2f}",
+                           f"wm={result.wm_state}, orientation={result.orientation}")
+
             logger.debug(f"Stimulus injected + tick for {citizen_handle}")
 
     def get_citizen_wm_context(self, citizen_handle: str) -> str:
@@ -373,7 +384,15 @@ class Dispatcher:
 
         state = self._citizen_states[citizen_handle]
         orientation = runner._current_orientation  # type: ignore[union-attr]
-        return serialize_wm_to_prompt(state, orientation)
+        wm_text = serialize_wm_to_prompt(state, orientation)
+
+        from runtime.debug.tracer import trace_step, is_debugging
+        if is_debugging(citizen_handle):
+            trace_step(citizen_handle, "wm_prompt_serializer",
+                       f"orientation={orientation}, nodes={len(state.nodes)}",
+                       f"{len(wm_text)} chars")
+
+        return wm_text
 
     def _run_physics_ticks(self):
         """Run background physics ticks for all active citizen engines.
@@ -384,10 +403,20 @@ class Dispatcher:
         if not L1_AVAILABLE or not self._citizen_engines:
             return
 
+        from runtime.debug.tracer import trace_step, is_debugging
+
         for handle, runner in self._citizen_engines.items():
             try:
-                runner.run_tick()  # No stimulus — background tick
+                result = runner.run_tick()  # No stimulus — background tick
+                if is_debugging(handle):
+                    trace_step(handle, "tick_runner.background_tick",
+                               "no stimulus",
+                               f"wm={result.wm_state}, orientation={result.orientation}")
             except Exception as e:
+                if is_debugging(handle):
+                    import traceback
+                    trace_step(handle, "tick_runner.background_tick",
+                               "no stimulus", error=traceback.format_exc())
                 logger.exception(f"Physics tick error for {handle}: {e}")
 
     # ── Public API ──────────────────────────────────────────────────────────

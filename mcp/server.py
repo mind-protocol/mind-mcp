@@ -61,6 +61,7 @@ from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
 from mcp.tools.call_handler import TOOL_SCHEMA as CALL_SCHEMA, handle_call
 from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_profile
 from mcp.tools.spawn_handler import TOOL_SCHEMA as SPAWN_SCHEMA, handle_spawn
+from mcp.tools.debug_handler import TOOL_SCHEMA as DEBUG_SCHEMA, handle_debug
 
 logging.basicConfig(
     level=logging.INFO,
@@ -91,6 +92,8 @@ TOOL_SCHEMAS = [
     # ACT (identity)
     PROFILE_SCHEMA,
     SPAWN_SCHEMA,
+    # ACT (observability)
+    DEBUG_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -110,6 +113,7 @@ TOOL_DISPATCH = {
     "call":        (handle_call,        True),
     "profile":     (handle_profile,     True),
     "spawn":       (handle_spawn,       True),
+    "debug":       (handle_debug,       True),
 }
 
 
