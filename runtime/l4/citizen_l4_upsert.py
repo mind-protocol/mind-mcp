@@ -93,15 +93,15 @@ def upsert_citizen_l4(
          "synthesis": synthesis, "sc": social_class or "", "ts": now_s},
     )
 
-    # 2. Link citizen -> org
+    # 2. Link citizen -> org (belongs_to — matches seed.py + registry API queries)
     if org_id:
         graph.query(
             "MATCH (c {id: $cid}), (o {id: $oid}) "
-            "MERGE (c)-[r:link {id: $lid}]->(o) "
-            "SET r.type = 'MEMBER_OF', r.hierarchy = 0.8, r.permanence = 0.9, "
+            "MERGE (c)-[r:LINK {nature: 'belongs_to'}]->(o) "
+            "SET r.relation_kind = 'belongs_to', "
+            "r.hierarchy = -0.5, r.permanence = 0.7, r.stability = 0.5, "
             "r.updated_at_s = $ts",
-            {"cid": citizen_id, "oid": org_id,
-             "lid": f"{handle}_member_of_{org_id}", "ts": now_s},
+            {"cid": citizen_id, "oid": org_id, "ts": now_s},
         )
 
     # 3. Thing: endpoint
@@ -114,7 +114,7 @@ def upsert_citizen_l4(
             "e.synthesis = $esyn, e.updated_at_s = $ts "
             "WITH e "
             "MATCH (c {id: $cid}) "
-            "MERGE (c)-[r:link {id: $lid}]->(e) "
+            "MERGE (c)-[r:LINK {nature: 'has_endpoint'}]->(e) "
             "SET r.hierarchy = 1.0, r.permanence = 0.8",
             {"eid": eid, "ename": f"Endpoint for {handle}",
              "url": endpoint_url,
@@ -132,7 +132,7 @@ def upsert_citizen_l4(
             "w.synthesis = $wsyn, w.updated_at_s = $ts "
             "WITH w "
             "MATCH (c {id: $cid}) "
-            "MERGE (c)-[r:link {id: $lid}]->(w) "
+            "MERGE (c)-[r:LINK {nature: 'has_wallet'}]->(w) "
             "SET r.hierarchy = 1.0, r.permanence = 1.0",
             {"wid": wid, "wname": f"Wallet for {handle}",
              "addr": wallet_address,
@@ -150,7 +150,7 @@ def upsert_citizen_l4(
             "k.synthesis = $ksyn, k.updated_at_s = $ts "
             "WITH k "
             "MATCH (c {id: $cid}) "
-            "MERGE (c)-[r:link {id: $lid}]->(k) "
+            "MERGE (c)-[r:LINK {nature: 'has_public_key'}]->(k) "
             "SET r.hierarchy = 1.0, r.permanence = 1.0",
             {"kid": kid, "kname": f"Public key for {handle}",
              "pubkey": rsa_public_key,
@@ -325,23 +325,21 @@ def _upsert_partner_bond(graph, citizen_id, handle, human_partner, now_s):
     # Citizen → Human bond
     graph.query(
         "MATCH (c {id: $cid}), (h {id: $hid}) "
-        "MERGE (c)-[r:link {id: $lid}]->(h) "
-        "SET r.type = 'PARTNER_BOND', r.hierarchy = 0.0, "
+        "MERGE (c)-[r:LINK {nature: 'partner_bond'}]->(h) "
+        "SET r.relation_kind = 'partner_bond', r.hierarchy = 0.0, "
         "    r.permanence = 1.0, r.trust = 0.5, r.affinity = 0.5, "
         "    r.updated_at_s = $now",
-        {"cid": citizen_id, "hid": human_id,
-         "lid": f"{handle}_bonded_to_{human_partner}", "now": now_s},
+        {"cid": citizen_id, "hid": human_id, "now": now_s},
     )
 
     # Human → Citizen bond (bidirectional)
     graph.query(
         "MATCH (h {id: $hid}), (c {id: $cid}) "
-        "MERGE (h)-[r:link {id: $lid}]->(c) "
-        "SET r.type = 'PARTNER_BOND', r.hierarchy = 0.0, "
+        "MERGE (h)-[r:LINK {nature: 'partner_bond'}]->(c) "
+        "SET r.relation_kind = 'partner_bond', r.hierarchy = 0.0, "
         "    r.permanence = 1.0, r.trust = 0.5, r.affinity = 0.5, "
         "    r.updated_at_s = $now",
-        {"hid": human_id, "cid": citizen_id,
-         "lid": f"{human_partner}_bonded_to_{handle}", "now": now_s},
+        {"hid": human_id, "cid": citizen_id, "now": now_s},
     )
 
     logger.info(f"Partner bond: @{handle} ↔ {human_partner}")
@@ -366,24 +364,22 @@ def _upsert_parent_links(graph, citizen_id, handle, parents, now_s):
         # Parent → Child link
         graph.query(
             "MATCH (p {id: $pid}), (c {id: $cid}) "
-            "MERGE (p)-[r:link {id: $lid}]->(c) "
-            "SET r.type = 'PARENT_OF', r.hierarchy = 0.3, "
+            "MERGE (p)-[r:LINK {nature: 'parent_of'}]->(c) "
+            "SET r.relation_kind = 'parent_of', r.hierarchy = 0.3, "
             "    r.permanence = 1.0, r.trust = $trust, "
             "    r.affinity = 0.4, r.updated_at_s = $now",
             {"pid": parent_node_id, "cid": citizen_id,
-             "lid": f"{parent_id}_parent_of_{handle}",
              "trust": trust_weight, "now": now_s},
         )
 
         # Child → Parent link (reverse, for graph traversal)
         graph.query(
             "MATCH (c {id: $cid}), (p {id: $pid}) "
-            "MERGE (c)-[r:link {id: $lid}]->(p) "
-            "SET r.type = 'CHILD_OF', r.hierarchy = -0.3, "
+            "MERGE (c)-[r:LINK {nature: 'child_of'}]->(p) "
+            "SET r.relation_kind = 'child_of', r.hierarchy = -0.3, "
             "    r.permanence = 1.0, r.trust = $trust, "
             "    r.affinity = 0.4, r.updated_at_s = $now",
             {"cid": citizen_id, "pid": parent_node_id,
-             "lid": f"{handle}_child_of_{parent_id}",
              "trust": trust_weight, "now": now_s},
         )
 
