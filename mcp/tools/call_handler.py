@@ -375,22 +375,90 @@ def handle_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             graph_ops=ctx.graph_ops,
         )
 
-        return _ok(
-            f"Call started with @{target_handle}\n"
-            f"\n"
-            f"  Room: {room_id}\n"
-            f"  Name: {room_name}\n"
-            f"  Message sent: {message[:120]}{'...' if len(message) > 120 else ''}\n"
-            f"  Target notified: {wake_status}\n"
-            f"\n"
-            f"To continue the conversation:\n"
-            f"  place(action='listen', place_id='{room_id}')  — hear their response\n"
-            f"  place(action='speak', place_id='{room_id}', text='...')  — reply\n"
-            f"  place(action='leave', place_id='{room_id}')  — hang up"
-        )
+        # 7. Get immediate response from target via subconscious
+        #    Don't wait for LLM — get a graph physics response now.
+        #    If the target has an active LLM session, the full response
+        #    will appear in the room later (via place listen).
+        target_response = _get_subconscious_response(target_handle, message)
+
+        # 8. If we got a response, write it as a Moment in the room
+        if target_response:
+            response_moment_id = f"moment_{uuid.uuid4().hex[:12]}"
+            try:
+                ctx.graph_ops.add_moment(
+                    id=response_moment_id,
+                    text=target_response,
+                    type="dialogue",
+                    status="completed",
+                    speaker=target_actor_id,
+                    place_id=room_id,
+                )
+                ctx.graph_ops._query(
+                    "MATCH (m:Moment {id: $id}) SET m.created_at_s = $ts_s, m.subconscious = true",
+                    {"id": response_moment_id, "ts_s": int(datetime.now(timezone.utc).timestamp())},
+                )
+            except Exception as e:
+                logger.debug(f"Could not write target response moment: {e}")
+
+        # Build response
+        lines = [
+            f"Call started with @{target_handle}",
+            f"",
+            f"  Room: {room_id}",
+            f"  You said: {message[:120]}{'...' if len(message) > 120 else ''}",
+            f"  Status: {wake_status}",
+        ]
+
+        if target_response:
+            lines += [
+                f"",
+                f"@{target_handle} responds:",
+                f"",
+                target_response,
+            ]
+        else:
+            lines += [
+                f"",
+                f"@{target_handle} has no brain loaded — waiting for LLM session.",
+            ]
+
+        lines += [
+            f"",
+            f"To continue:",
+            f"  place(action='listen', place_id='{room_id}')  — hear more",
+            f"  place(action='speak', place_id='{room_id}', text='...')  — reply",
+            f"  place(action='leave', place_id='{room_id}')  — hang up",
+        ]
+
+        return _ok("\n".join(lines))
     except Exception as e:
         logger.exception("Call failed")
         return _err(f"Starting call: {e}")
+
+
+def _get_subconscious_response(target_handle: str, stimulus_text: str) -> str:
+    """Get an immediate subconscious response from the target citizen.
+
+    Injects the caller's message as a stimulus into the target's L1 graph,
+    runs a few ticks, and returns what surfaces in working memory.
+
+    Returns empty string if the target has no brain or if it fails.
+    """
+    try:
+        from runtime.orchestrator.claude_invoker import invoke_subconscious
+
+        result = invoke_subconscious(
+            request={
+                "voice_text": stimulus_text,
+                "metadata": {"citizen_handle": target_handle},
+            },
+            session_id=f"call_{target_handle}",
+            citizen_handle=target_handle,
+        )
+        return result
+    except Exception as e:
+        logger.debug(f"Subconscious response failed for {target_handle}: {e}")
+        return ""
 
 
 def _ok(text: str) -> Dict[str, Any]:
