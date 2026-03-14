@@ -38,6 +38,8 @@ L4_GRAPH_NAME = os.environ.get("L4_GRAPH_NAME", "mind_protocol")
 def announce_org(
     org_id: str,
     endpoint_url: str,
+    org_name: str = "",
+    website: str = "",
     falkordb_host: str = "localhost",
     falkordb_port: int = 6379,
 ) -> dict:
@@ -59,11 +61,9 @@ def announce_org(
     existing_key = _get_org_public_key(graph, org_id)
 
     if existing_key is None:
-        # CLAIM — first use, register everything
-        return _claim_org(graph, org_id, endpoint_url)
+        return _claim_org(graph, org_id, endpoint_url, org_name, website)
     else:
-        # VERIFY — sign announcement, check against stored key
-        return _update_org(graph, org_id, endpoint_url, existing_key)
+        return _update_org(graph, org_id, endpoint_url, existing_key, org_name, website)
 
 
 def _get_org_public_key(graph, org_id: str) -> Optional[str]:
@@ -78,27 +78,29 @@ def _get_org_public_key(graph, org_id: str) -> Optional[str]:
     return None
 
 
-def _claim_org(graph, org_id: str, endpoint_url: str) -> dict:
-    """First boot: generate keypair, register public key + endpoint in L4."""
+def _claim_org(graph, org_id: str, endpoint_url: str, org_name: str = "", website: str = "") -> dict:
+    """First boot: generate keypair, register public key + endpoint + name + website in L4."""
     logger.info(f"TOFU CLAIM: org '{org_id}' — first registration")
 
-    # Generate RSA keypair
     private_pem, public_pem = _generate_org_rsa_keypair(org_id)
 
+    display_name = org_name or org_id
     now_s = int(time.time())
 
-    # Execute full registration in L4
-    # 1. Ensure org actor exists
+    # 1. Ensure org actor exists with name + website
     graph.query(
         "MERGE (o {id: $org_id}) "
         "SET o.node_type = 'actor', o.type = 'ORGANIZATION', "
-        "    o.name = $org_id, "
+        "    o.name = $name, "
         "    o.synthesis = $synthesis, "
+        "    o.website = $website, "
         "    o.weight = 1.0, o.energy = 0.0, "
         "    o.updated_at_s = $now",
         {
             "org_id": org_id,
-            "synthesis": f"Organization {org_id}",
+            "name": display_name,
+            "synthesis": f"Organization {display_name}",
+            "website": website,
             "now": now_s,
         },
     )
@@ -189,7 +191,7 @@ def _claim_org(graph, org_id: str, endpoint_url: str) -> dict:
     }
 
 
-def _update_org(graph, org_id: str, endpoint_url: str, stored_public_key: str) -> dict:
+def _update_org(graph, org_id: str, endpoint_url: str, stored_public_key: str, org_name: str = "", website: str = "") -> dict:
     """Subsequent boot: verify signature before updating endpoint."""
     logger.info(f"TOFU VERIFY: org '{org_id}' — updating endpoint")
 
@@ -217,8 +219,18 @@ def _update_org(graph, org_id: str, endpoint_url: str, stored_public_key: str) -
                       "Private key does not match the public key registered in L4.",
         }
 
-    # Signature OK — update endpoint
+    # Signature OK — update endpoint + name + website
+    display_name = org_name or org_id
     now_s = int(time.time())
+
+    # Update org actor name/website
+    graph.query(
+        "MATCH (o {id: $org_id}) "
+        "SET o.name = $name, o.website = $website, o.updated_at_s = $now",
+        {"org_id": org_id, "name": display_name, "website": website, "now": now_s},
+    )
+
+    # Update endpoint
     graph.query(
         "MERGE (e {id: $endpoint_id}) "
         "SET e.content = $url, e.uri = $url, e.updated_at_s = $now "
