@@ -1063,17 +1063,62 @@ def _format_as_telemetry(
     if spaces and any(spaces):
         metrics.append(f"at: {', '.join(str(s) for s in spaces if s)}")
 
-    # ── Assemble ──
+    # ── Context block (protocol + reach) ──
+    # Determine which formula was applied based on arousal
+    if arousal > 0.7:
+        protocol = "Sniper Filter (Law 18 Trust Conductivity)"
+    elif arousal > 0.4:
+        protocol = "Roundtable Filter (Law 4 Attentional Competition)"
+    elif arousal > 0.2:
+        protocol = "Frontier Probe (Law 8 Narrative Traversal)"
+    else:
+        protocol = "Dragnet Filter (Law 8 Semantic Resonance)"
+
+    # Determine driving intention from dominant drive
+    drive = state.get("dominant_drive") or ""
+    if not drive:
+        if arousal > 0.7:
+            drive = "Self-Preservation"
+        elif valence > 0.3:
+            drive = "Achievement"
+        elif energy_total < 0.2:
+            drive = "Curiosity"
+        else:
+            drive = "Curiosity"
+
+    spaces = state.get("current_spaces")
+    space_str = ", ".join(str(s) for s in spaces if s) if spaces and any(spaces) else ""
+
+    # ── Assemble the Intelligence Briefing ──
     lines = [
         header,
         "",
-        because,
-        "",
-        recommendation,
-        "",
-        f"> `{edge_chain}`",
-        f"> *({', '.join(metrics)})*",
     ]
+
+    # Context block
+    if space_str:
+        lines.append(f"**Context:** {space_str}")
+    lines.append(f"**Protocol:** `{protocol}` driven by **{drive}**")
+    lines.append("")
+
+    # Because explanation
+    lines.append(because)
+    lines.append("")
+
+    # Recommendation
+    lines.append(recommendation)
+    lines.append("")
+
+    # Medoid + edges graph extraction
+    lines.append(f"> `{edge_chain}`")
+    lines.append("")
+
+    # Telemetry stats footer
+    stats = [f"nodes: {len(nodes)}", f"energy: {energy_total:.2f}", f"weight: {weight_total:.1f}"]
+    if valence:
+        stats.append(f"valence: {valence:+.2f}")
+    stats.append(f"Cryst: {cryst_str}")
+    lines.append(f"**Telemetry:** `{'` | `'.join(stats)}`")
 
     return "\n".join(lines)
 
