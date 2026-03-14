@@ -944,17 +944,14 @@ def _format_as_telemetry(
     query: str,
     resonance: Dict[str, Any],
 ) -> str:
-    """Format subcall result as a 4-part telemetry narrative.
+    """Format subcall result as an Actionable Intelligence Briefing.
 
-    Translates raw physics into human-readable prose using the
-    Link Synthesis Grammar:
-      1. Current State (arousal regime)
-      2. Cluster (medoid + edges as mini-narrative)
-      3. Limbic Deltas (dominant shift as behavioral verb)
-      4. Crystallization (structural outcome)
+    Layout:
+      [Emoji] @handle • State • Dominant Δ • Crystallized
+      Because of [limbic state], [explanation of what happened in the graph].
+      Next Step: [actionable recommendation]
+      > [medoid] -(relation)→ [edge1] -(relation)→ [edge2]
     """
-    import hashlib
-
     nodes = resonance.get("nodes", [])
     state = resonance.get("actor_state", {})
 
@@ -965,97 +962,120 @@ def _format_as_telemetry(
     trade = state.get("trade") or state.get("role") or ""
     arousal = float(state.get("arousal") or 0.3)
     valence = float(state.get("valence") or 0.0)
-
-    # ── Part 1: Current State (Arousal Regime) ──
-    if arousal > 0.8:
-        state_phrase = f"Piercing through @{target_handle}'s severe anxiety"
-    elif arousal > 0.6:
-        state_phrase = f"Breaking into @{target_handle}'s intense focus"
-    elif arousal > 0.4:
-        state_phrase = f"Reaching @{target_handle} in deep flow"
-    elif arousal > 0.2:
-        state_phrase = f"Finding @{target_handle} in a calm, receptive state"
-    else:
-        state_phrase = f"Catching @{target_handle} idle and open"
-
-    if trade:
-        state_phrase += f" ({trade})"
-
-    # ── Part 2: Cluster (Medoid + Edges) ──
-    medoid = nodes[0]
-    medoid_content = medoid.get("content", "")
-    medoid_type = medoid.get("type", "concept")
-    medoid_name = medoid.get("name") or ""
-
-    # Build mini-narrative from medoid + connected nodes
-    if medoid_name and medoid_name != medoid_content[:len(medoid_name)]:
-        cluster_phrase = f"their mind surfaced **{medoid_name}**"
-    else:
-        # Use first 80 chars of content
-        short = medoid_content[:80].rstrip(".")
-        cluster_phrase = f"their mind surfaced that _{short}_"
-
-    # Add edges (connected nodes)
-    if len(nodes) > 1:
-        edge1 = nodes[1]
-        e1_content = (edge1.get("name") or edge1.get("content", ""))[:60]
-        rel = edge1.get("relation") or "linked to"
-        cluster_phrase += f", {rel.lower().replace('link', 'connected to')} _{e1_content}_"
-    if len(nodes) > 2:
-        edge2 = nodes[2]
-        e2_content = (edge2.get("name") or edge2.get("content", ""))[:60]
-        cluster_phrase += f" and _{e2_content}_"
-
-    # ── Part 3: Limbic Deltas (Dominant Shift) ──
-    # We approximate deltas from node properties since we don't have before/after
     energy_total = sum(float(n.get("energy") or 0) for n in nodes)
     weight_total = sum(float(n.get("weight") or 0) for n in nodes)
+    has_heavy = any(float(n.get("weight") or 0) > 3.0 for n in nodes)
+    has_crystallized = any(float(n.get("weight") or 0) > 5.0 for n in nodes)
 
-    if valence > 0.3 and energy_total > 0.5:
-        delta_phrase = "sparking warm resonance"
-    elif valence < -0.3 and energy_total > 0.3:
-        delta_phrase = "triggering a sharp defensive spike"
-    elif energy_total > 1.0:
-        delta_phrase = "igniting intense activation"
-    elif energy_total > 0.3:
-        delta_phrase = "stirring quiet recognition"
-    elif weight_total > 3.0:
-        delta_phrase = "touching deeply rooted knowledge"
+    # ── Determine result emoji + dominant delta ──
+    if valence > 0.3 and energy_total > 0.3:
+        emoji = "resonance"
+        dominant_delta = "positive resonance"
+    elif valence < -0.2 and arousal > 0.5:
+        emoji = "rejection"
+        dominant_delta = "defensive spike"
+    elif has_heavy and energy_total < 0.3:
+        emoji = "expertise"
+        dominant_delta = "deep knowledge (calm)"
+    elif energy_total > 0.5:
+        emoji = "activation"
+        dominant_delta = "strong activation"
     else:
-        delta_phrase = "brushing against faint echoes"
+        emoji = "faint"
+        dominant_delta = "faint echo"
 
-    # ── Part 4: Crystallization ──
-    has_high_weight = any(float(n.get("weight") or 0) > 5.0 for n in nodes)
-    has_high_energy = energy_total > 1.0
-
-    if has_high_weight and has_high_energy:
-        crystal_phrase = "and resonating with permanent, consolidated expertise."
-    elif has_high_energy:
-        crystal_phrase = "and reverberating strongly through active memory."
-    elif has_high_weight:
-        crystal_phrase = "and touching ancient, deeply-held knowledge."
+    # ── Arousal regime ──
+    if arousal > 0.8:
+        regime = "Panic"
+    elif arousal > 0.6:
+        regime = "High Focus"
+    elif arousal > 0.4:
+        regime = "Flow"
+    elif arousal > 0.2:
+        regime = "Calm"
     else:
-        crystal_phrase = "and fading softly into background awareness."
+        regime = "Idle"
 
-    # ── Compose the telemetry narrative ──
-    narrative = f"{state_phrase}, {cluster_phrase}, {delta_phrase} — {crystal_phrase}"
+    # ── Line 1: Header ──
+    cryst_str = "True" if has_crystallized else "False"
+    header = f"**@{target_handle}**"
+    if trade:
+        header += f" ({trade})"
+    header += f" | `{regime} ({arousal:.2f})` | `{dominant_delta}` | `Cryst: {cryst_str}`"
 
-    # ── Append raw metrics ──
-    metrics = []
-    if arousal:
-        regime = "panic" if arousal > 0.8 else "flow" if arousal > 0.4 else "idle"
-        metrics.append(f"state: {regime} {arousal:.2f}")
-    if valence:
-        metrics.append(f"valence: {valence:+.2f}")
-    metrics.append(f"nodes: {len(nodes)}")
-    metrics.append(f"Σenergy: {energy_total:.2f}")
-    metrics.append(f"Σweight: {weight_total:.1f}")
+    # ── Line 2: "Because of..." explanation ──
+    # Build from arousal regime + what happened
+    if arousal > 0.6:
+        state_reason = f"high arousal and intense focus"
+    elif arousal < 0.3:
+        state_reason = f"cognitive stillness and low arousal"
+    else:
+        state_reason = f"moderate engagement"
 
+    medoid = nodes[0]
+    medoid_name = medoid.get("name") or medoid.get("content", "")[:60]
+
+    if valence > 0.2 and energy_total > 0.3:
+        effect = f"your query resonated strongly, surfacing **{medoid_name}** and activating connected knowledge"
+    elif valence < -0.2:
+        effect = f"your query was perceived as friction, triggering defensive activation around **{medoid_name}**"
+    elif has_heavy:
+        effect = f"your query touched deeply consolidated expertise around **{medoid_name}** without causing cognitive effort"
+    else:
+        effect = f"your query brushed against **{medoid_name}** with minimal activation"
+
+    if has_crystallized:
+        effect += ", crystallizing into a permanent structural insight"
+
+    because = f"*Because of {state_reason}, {effect}.*"
+
+    # ── Line 3: Recommendation ──
+    if valence > 0.2 and energy_total > 0.3:
+        next_step = f"Strong positive signal. Consider `/call @{target_handle}` for real-time collaboration while activation is fresh."
+    elif valence < -0.2 and arousal > 0.5:
+        next_step = f"Defensive spike detected. Do not push further — wait for arousal to drop, or reframe with stronger evidence."
+    elif has_heavy and energy_total < 0.3:
+        next_step = f"Calm expertise found — this is a reliable, high-confidence source. Build a stronger trust link for future queries."
+    elif energy_total > 0.5:
+        next_step = f"Active resonance — this person has context. A follow-up `/subcall` with more specific question would yield deeper results."
+    elif energy_total > 0.1:
+        next_step = f"Moderate signal — relevant but peripheral. Consider broadening the search with `target='team'` or `target='random:100'`."
+    else:
+        next_step = f"Weak signal — this person likely doesn't have strong context on this topic."
+
+    recommendation = f"**Next step:** {next_step}"
+
+    # ── Line 4: Medoid + Edges graph extraction ──
+    edge_chain_parts = [f"[{medoid_name}]"]
+    for node in nodes[1:3]:
+        n_name = node.get("name") or node.get("content", "")[:40]
+        rel = node.get("relation") or "link"
+        edge_chain_parts.append(f"-({rel})->[{n_name}]")
+    edge_chain = " ".join(edge_chain_parts)
+
+    # ── Raw metrics ──
+    metrics = [
+        f"nodes: {len(nodes)}",
+        f"energy: {energy_total:.2f}",
+        f"weight: {weight_total:.1f}",
+    ]
     spaces = state.get("current_spaces")
     if spaces and any(spaces):
         metrics.append(f"at: {', '.join(str(s) for s in spaces if s)}")
 
-    return f"> {narrative}\n> *({', '.join(metrics)})*"
+    # ── Assemble ──
+    lines = [
+        header,
+        "",
+        because,
+        "",
+        recommendation,
+        "",
+        f"> `{edge_chain}`",
+        f"> *({', '.join(metrics)})*",
+    ]
+
+    return "\n".join(lines)
 
 
 def _generate_recommendation(resonance: Dict[str, Any]) -> str:
@@ -1908,20 +1928,16 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         telemetry = _format_as_telemetry(target_handle, query, resonance)
         formatted = _format_resonance(target_handle, query, resonance, caller_name, full_content=True)
         inner_voice = _format_as_inner_voice(target_handle, query, resonance)
-        recommendation = _generate_recommendation(resonance)
 
         logger.info(
             f"Subcall: @{caller_name} → @{target_handle} "
             f"({len(resonance.get('nodes', []))} resonances, method={resonance.get('match_method')})"
         )
 
-        # Assemble: telemetry first (the narrative), then recommendation,
-        # then structured data, then inner voice
+        # Assemble: telemetry briefing first, then structured data, then inner voice
         combined = ""
         if telemetry:
-            combined += telemetry + "\n\n"
-        if recommendation:
-            combined += recommendation + "\n\n"
+            combined += telemetry + "\n\n---\n\n"
         combined += formatted
         if inner_voice:
             combined += "\n\n---\n\n" + inner_voice
