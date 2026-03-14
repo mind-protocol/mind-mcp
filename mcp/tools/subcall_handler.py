@@ -1176,8 +1176,8 @@ def _discover_by_trade(
 ) -> List[Dict[str, Any]]:
     """Find all citizens with a specific trade/role/type.
 
-    Searches: actor.type, actor.trade, actor.role, actor.class,
-    and linked narratives containing the trade keyword.
+    No direct link required. Scans entire universe.
+    Searches: actor.type, actor.trade, actor.role, actor.class, actor.content.
     """
     trade_lower = trade.lower().strip()
     try:
@@ -1194,8 +1194,7 @@ def _discover_by_trade(
                 OR toLower(a.content) CONTAINS $trade
                 OR toLower(a.synthesis) CONTAINS $trade
               )
-            OPTIONAL MATCH (me:Actor {id: $self})-[r]-(a)
-            RETURN a.id, a.name, r.trust, a.weight
+            RETURN a.id, a.name, a.weight
             ORDER BY a.weight DESC
             LIMIT 50
             """,
@@ -1204,16 +1203,10 @@ def _discover_by_trade(
         team = []
         for row in results:
             if isinstance(row, (list, tuple)):
-                trust = row[2]
-                if min_trust is not None and (trust is None or trust < min_trust):
-                    continue
-                team.append({"id": row[0], "name": row[1] or row[0], "trust": trust})
+                team.append({"id": row[0], "name": row[1] or row[0], "trust": None})
             elif isinstance(row, dict):
-                trust = row.get("r.trust")
-                if min_trust is not None and (trust is None or trust < min_trust):
-                    continue
                 aid = row.get("a.id")
-                team.append({"id": aid, "name": row.get("a.name") or aid, "trust": trust})
+                team.append({"id": aid, "name": row.get("a.name") or aid, "trust": None})
         return team
     except Exception as e:
         logger.warning(f"Trade discovery failed: {e}")
@@ -1226,38 +1219,48 @@ def _discover_random(
     graph_ops,
     min_trust: Optional[float] = None,
 ) -> List[Dict[str, Any]]:
-    """Random sample of N citizens from the entire universe.
+    """Random sample of N citizens from the ENTIRE universe.
 
-    Uses graph-native randomization for fair sampling.
+    No direct link required. Scans all actors in the graph.
     """
-    count = min(count, 200)  # cap at 200
+    count = min(count, 500)  # cap at BROADCAST_MAX_TARGETS
     try:
-        # FalkorDB doesn't have native random, so we use a workaround
-        # Fetch all, then sample in Python
+        import random
         results = graph_ops._query(
             """
             MATCH (a:Actor)
             WHERE a.id <> $self
-              AND a.type IN ['citizen', 'ai', null]
-            OPTIONAL MATCH (me:Actor {id: $self})-[r]-(a)
-            RETURN a.id, a.name, r.trust, a.weight
+            RETURN a.id, a.name, a.weight
             """,
             {"self": caller_id},
         )
-        import random
         all_actors = []
         for row in results:
             if isinstance(row, (list, tuple)):
-                trust = row[2]
-                if min_trust is not None and (trust is None or trust < min_trust):
-                    continue
-                all_actors.append({"id": row[0], "name": row[1] or row[0], "trust": trust})
+                all_actors.append({"id": row[0], "name": row[1] or row[0], "trust": None})
             elif isinstance(row, dict):
-                trust = row.get("r.trust")
-                if min_trust is not None and (trust is None or trust < min_trust):
-                    continue
                 aid = row.get("a.id")
-                all_actors.append({"id": aid, "name": row.get("a.name") or aid, "trust": trust})
+                all_actors.append({"id": aid, "name": row.get("a.name") or aid, "trust": None})
+
+        # If min_trust specified, filter by querying links (but don't require them to exist)
+        if min_trust is not None:
+            filtered = []
+            for actor in all_actors:
+                try:
+                    trust_result = graph_ops._query(
+                        "MATCH (me:Actor {id: $self})-[r]-(a:Actor {id: $target}) RETURN r.trust",
+                        {"self": caller_id, "target": actor["id"]},
+                    )
+                    trust = None
+                    if trust_result:
+                        row = trust_result[0]
+                        trust = row[0] if isinstance(row, (list, tuple)) else row.get("r.trust")
+                    if trust is not None and trust >= min_trust:
+                        actor["trust"] = trust
+                        filtered.append(actor)
+                except Exception:
+                    continue
+            all_actors = filtered
 
         if len(all_actors) <= count:
             return all_actors
