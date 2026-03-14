@@ -34,6 +34,17 @@ from runtime.orchestrator.session_tracker import (
 )
 from runtime.orchestrator import degradation
 
+# L1 Cognitive Engine integration
+try:
+    from runtime.cognition.models import CitizenCognitiveState
+    from runtime.cognition.tick_runner_l1_cognitive_engine import L1CognitiveTickRunner, Stimulus
+    from runtime.cognition.stimulus_router import StimulusRouter, IncomingEvent
+    from runtime.cognition.wm_prompt_serializer import serialize_wm_to_prompt
+    from runtime.cognition.feedback_injector import inject_post_action_feedback
+    L1_AVAILABLE = True
+except ImportError:
+    L1_AVAILABLE = False
+
 logger = logging.getLogger("orchestrator.dispatcher")
 
 # ── Constants ───────────────────────────────────────────────────────────────
@@ -41,6 +52,7 @@ logger = logging.getLogger("orchestrator.dispatcher")
 NEURON_CLEANUP_INTERVAL = 60  # seconds between neuron cleanups
 NEURON_RELAUNCH_INTERVAL = 30  # seconds between relaunch checks
 HEALTH_CHECK_INTERVAL = 10  # seconds between degradation checks
+PHYSICS_TICK_INTERVAL = float(os.environ.get("PHYSICS_TICK_INTERVAL", "60"))  # seconds between L1 ticks
 
 # Suppress infrastructure errors from reaching users
 SUPPRESS_PATTERNS = [
@@ -88,6 +100,12 @@ class Dispatcher:
         self._last_cleanup = 0.0
         self._last_relaunch = 0.0
         self._last_health_check = 0.0
+        self._last_physics_tick = 0.0
+
+        # L1 Cognitive Engine per-citizen instances
+        self._citizen_engines: dict[str, L1CognitiveTickRunner] = {} if L1_AVAILABLE else {}
+        self._citizen_states: dict[str, CitizenCognitiveState] = {} if L1_AVAILABLE else {}
+        self._citizen_routers: dict[str, StimulusRouter] = {} if L1_AVAILABLE else {}
 
     def start(self):
         """Start the dispatch loop in a background thread."""
@@ -160,6 +178,11 @@ class Dispatcher:
         if now - self._last_health_check > HEALTH_CHECK_INTERVAL:
             degradation.check_deadlock(notify_fn=self.notify_callback)
             self._last_health_check = now
+
+        # L1 physics ticks (background processing for all citizens)
+        if now - self._last_physics_tick > PHYSICS_TICK_INTERVAL:
+            self._run_physics_ticks()
+            self._last_physics_tick = now
 
         # Collect completed futures
         self._collect_completed_futures()
@@ -244,12 +267,107 @@ class Dispatcher:
                     except Exception as e:
                         logger.exception(f"Response callback error for {session_id}: {e}")
 
+                # L1 feedback injection: citizen "hears" its own response
+                citizen_handle = (request.get("metadata") or {}).get("citizen_handle", "")
+                if L1_AVAILABLE and citizen_handle and response:
+                    router = self._citizen_routers.get(citizen_handle)
+                    state = self._citizen_states.get(citizen_handle)
+                    if router and state:
+                        try:
+                            inject_post_action_feedback(
+                                state, router, response,
+                                success=True,
+                            )
+                        except Exception as e:
+                            logger.debug(f"Feedback injection error for {citizen_handle}: {e}")
+
                 update_neuron_status(session_id, "idle",
                                      sender_id=str(request.get("sender_id", "")))
 
             except Exception as e:
                 logger.exception(f"Future {session_id} raised: {e}")
                 update_neuron_status(session_id, "error")
+
+    # ── L1 Cognitive Engine Integration ────────────────────────────────────
+
+    def _ensure_citizen_engine(self, citizen_handle: str) -> Optional[L1CognitiveTickRunner]:
+        """Get or create an L1 engine instance for a citizen."""
+        if not L1_AVAILABLE:
+            return None
+
+        if citizen_handle not in self._citizen_engines:
+            state = CitizenCognitiveState(citizen_id=citizen_handle)
+            runner = L1CognitiveTickRunner(state)
+            router = StimulusRouter(citizen_handle)
+
+            self._citizen_states[citizen_handle] = state
+            self._citizen_engines[citizen_handle] = runner
+            self._citizen_routers[citizen_handle] = router
+
+            logger.info(f"L1 engine initialized for {citizen_handle}")
+
+        return self._citizen_engines[citizen_handle]
+
+    def inject_stimulus(self, citizen_handle: str, content: str,
+                        source: str = "external", is_social: bool = False,
+                        is_failure: bool = False, is_progress: bool = False):
+        """Inject a stimulus into a citizen's L1 engine.
+
+        Called by bridges when messages arrive for a citizen.
+        """
+        if not L1_AVAILABLE:
+            return
+
+        self._ensure_citizen_engine(citizen_handle)
+        router = self._citizen_routers.get(citizen_handle)
+        if not router:
+            return
+
+        event = IncomingEvent(
+            content=content,
+            source=source,
+            citizen_handle=citizen_handle,
+            is_social=is_social,
+            is_failure=is_failure,
+            is_progress=is_progress,
+        )
+
+        stimulus = router.route(event)
+        if stimulus:
+            runner = self._citizen_engines[citizen_handle]
+            runner.run_tick(stimulus=stimulus)
+            logger.debug(f"Stimulus injected + tick for {citizen_handle}")
+
+    def get_citizen_wm_context(self, citizen_handle: str) -> str:
+        """Get WM prompt context for a citizen's next LLM session.
+
+        Returns markdown string to inject into the system prompt.
+        """
+        if not L1_AVAILABLE:
+            return ""
+
+        runner = self._ensure_citizen_engine(citizen_handle)
+        if not runner:
+            return ""
+
+        state = self._citizen_states[citizen_handle]
+        orientation = runner._current_orientation  # type: ignore[union-attr]
+        return serialize_wm_to_prompt(state, orientation)
+
+    def _run_physics_ticks(self):
+        """Run background physics ticks for all active citizen engines.
+
+        Called periodically from the main loop. Runs one tick per citizen
+        with no stimulus (background processing: decay, boredom, etc.)
+        """
+        if not L1_AVAILABLE or not self._citizen_engines:
+            return
+
+        for handle, runner in self._citizen_engines.items():
+            try:
+                runner.run_tick()  # No stimulus — background tick
+            except Exception as e:
+                logger.exception(f"Physics tick error for {handle}: {e}")
 
     # ── Public API ──────────────────────────────────────────────────────────
 

@@ -38,6 +38,7 @@ load_dotenv(project_root / ".env")
 
 from runtime.connectome import ConnectomeRunner
 from runtime.agents import AgentGraph
+from runtime.membrane.endpoint_registrar import auto_register
 from runtime.capability_integration import (
     init_capability_manager,
     CapabilityManager,
@@ -253,6 +254,9 @@ def main():
     """Run the MCP server on stdio."""
     server = MindServer()
     logger.info("Mind MCP server started (8 tools: THINK/ACT/SPEAK)")
+
+    # Auto-register this instance's endpoint in L4 graph
+    auto_register()
 
     for line in sys.stdin:
         line = line.strip()

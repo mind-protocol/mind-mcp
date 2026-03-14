@@ -12,6 +12,8 @@ from .config import MEMBRANE_HOST, MEMBRANE_PORT, MEMBRANE_GRAPH
 from .client import MembraneQueries, get_membrane_queries
 from .broadcast import MembraneBroadcast, get_broadcast, on_node_public, on_node_private
 from .stimulus import StimulusHandler, get_stimulus_handler
+from .endpoint_registrar import EndpointRegistrar, get_registrar, auto_register
+from .routing import resolve_citizen_endpoints, resolve_active_endpoints, route_to_citizen
 
 __all__ = [
     # Config
@@ -29,4 +31,12 @@ __all__ = [
     # Stimulus (receive cross-org queries)
     "StimulusHandler",
     "get_stimulus_handler",
+    # Endpoint registration (auto-register on startup)
+    "EndpointRegistrar",
+    "get_registrar",
+    "auto_register",
+    # Routing (resolve citizen endpoints)
+    "resolve_citizen_endpoints",
+    "resolve_active_endpoints",
+    "route_to_citizen",
 ]

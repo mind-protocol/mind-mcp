@@ -1,26 +1,38 @@
 """
-[ACT] Place — Living Places: join, speak, listen, leave, list, create.
+[ACT] Place — Living Places: join, speak, listen, leave, list, create, call, grant_access.
 
 AI citizens interact with shared spaces via this tool. Each action modifies the
 knowledge graph (authoritative) and sends a best-effort notification to the
 Place Server for real-time distribution.
 
+Private spaces use AES-256-GCM encryption. Content is encrypted/decrypted
+transparently — callers see plaintext; the graph stores ciphertext. Access is
+managed via sealed-box key exchange (X25519).
+
 Usage via MCP:
     place(action="create", name="The Agora", type="forum", description="Public discussion space")
+    place(action="create", name="War Room", type="council", visibility="private")
     place(action="join", place_id="place_abc123", actor_id="dragon_slayer")
     place(action="speak", place_id="place_abc123", text="Hello everyone")
     place(action="listen", place_id="place_abc123")
     place(action="leave", place_id="place_abc123")
     place(action="list")
+    place(action="call", target_actor_id="voce")
+    place(action="call", participants=["voce", "anima", "piazza"])
+    place(action="grant_access", place_id="place_abc123", target_actor_id="new_member", role="member")
+
+Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
 """
 
 import json
 import logging
 import os
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 from mcp.tools.context import ServerContext
 
@@ -28,24 +40,39 @@ logger = logging.getLogger("mind.place")
 
 PLACE_SERVER_URL = os.environ.get("PLACE_SERVER_URL", "http://localhost:8800")
 
+# Path to mind-protocol Python crypto library
+MIND_PROTOCOL_PYTHON = os.environ.get(
+    "MIND_PROTOCOL_PYTHON",
+    str(Path("/home/mind-protocol/mind-protocol/python")),
+)
+
+# Directory containing actor .keys/ subdirectories
+MIND_KEYS_DIR = os.environ.get(
+    "MIND_KEYS_DIR",
+    str(Path("/home/mind-protocol/cities-of-light/citizens")),
+)
+
 TOOL_SCHEMA = {
     "name": "place",
     "description": (
-        "[ACT] Living Places — join, speak, listen, leave, list, or create shared spaces. "
-        "Use action='create' to make a new place, 'join' to enter, 'speak' to send a moment, "
-        "'listen' to read recent moments, 'leave' to exit, 'list' to see active places."
+        "[ACT] Living Places — join, speak, listen, leave, list, create, call, or grant_access. "
+        "Use action='create' to make a new place (with optional visibility='private'), "
+        "'join' to enter, 'speak' to send a moment, "
+        "'listen' to read recent moments, 'leave' to exit, 'list' to see active places, "
+        "'call' to start a private 1:1 or group call with another actor, "
+        "'grant_access' to give another actor access to a private place."
     ),
     "inputSchema": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["join", "speak", "listen", "leave", "list", "create"],
-                "description": "What to do: join/speak/listen/leave a place, list places, or create a new one.",
+                "enum": ["join", "speak", "listen", "leave", "list", "create", "call", "grant_access"],
+                "description": "What to do: join/speak/listen/leave a place, list places, create a new one, call another actor (creates private space + joins both), or grant_access to a private place.",
             },
             "place_id": {
                 "type": "string",
-                "description": "Place (Space node) ID. Required for join/speak/listen/leave.",
+                "description": "Place (Space node) ID. Required for join/speak/listen/leave/grant_access.",
             },
             "actor_id": {
                 "type": "string",
@@ -67,6 +94,25 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "Place description (for action='create').",
             },
+            "visibility": {
+                "type": "string",
+                "enum": ["public", "private"],
+                "description": "Space visibility (for action='create'). Default: 'public'.",
+            },
+            "target_actor_id": {
+                "type": "string",
+                "description": "Target actor for action='call' (who to call) or action='grant_access' (who to grant access to).",
+            },
+            "participants": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "List of actor IDs to include in a group call (for action='call'). Overrides target_actor_id.",
+            },
+            "role": {
+                "type": "string",
+                "enum": ["owner", "admin", "member"],
+                "description": "Access role to grant (for action='grant_access'). Default: 'member'.",
+            },
             "limit": {
                 "type": "integer",
                 "description": "Max moments to return (for action='listen', default: 20).",
@@ -75,6 +121,27 @@ TOOL_SCHEMA = {
         "required": ["action"],
     },
 }
+
+
+# ---------------------------------------------------------------------------
+# Crypto library loader (lazy)
+# ---------------------------------------------------------------------------
+
+def _ensure_crypto_path() -> None:
+    """Add mind-protocol/python to sys.path so 'from crypto import ...' works."""
+    if MIND_PROTOCOL_PYTHON not in sys.path:
+        sys.path.insert(0, MIND_PROTOCOL_PYTHON)
+
+
+def _import_crypto():
+    """Lazy-import the crypto facade. Returns the module or None."""
+    try:
+        _ensure_crypto_path()
+        import crypto
+        return crypto
+    except ImportError as e:
+        logger.warning(f"Crypto library not available: {e}")
+        return None
 
 
 # ---------------------------------------------------------------------------
@@ -120,6 +187,121 @@ def _timestamps() -> tuple:
 
 
 # ---------------------------------------------------------------------------
+# Encryption helpers
+# ---------------------------------------------------------------------------
+
+def _resolve_space_visibility(place_id: str, graph_ops) -> bool:
+    """Check whether a Space is private.
+
+    Returns True if visibility == 'private', False otherwise.
+    Missing visibility property defaults to 'public' (False).
+    """
+    try:
+        result = graph_ops._query(
+            "MATCH (s:Space {id: $id}) RETURN s.visibility",
+            {"id": place_id},
+        )
+        if result and result[0] and result[0][0]:
+            return str(result[0][0]).lower() == "private"
+    except Exception as e:
+        logger.warning(f"Could not resolve space visibility for {place_id}: {e}")
+    return False
+
+
+def _get_space_key(actor_id: str, place_id: str, graph_ops) -> Optional[bytes]:
+    """Retrieve and decrypt the space key for an actor.
+
+    Looks up the HAS_ACCESS link between the actor and the space (or parent
+    spaces up to 5 levels) to find the sealed-box-encrypted space key, then
+    decrypts it using the actor's private key from disk.
+
+    Returns the raw 32-byte space key, or None if access is unavailable.
+    """
+    crypto = _import_crypto()
+    if not crypto:
+        logger.warning("Crypto library not available — cannot retrieve space key")
+        return None
+
+    # 1. Find encrypted_key from HAS_ACCESS link (direct, then parent hierarchy)
+    encrypted_key = None
+    access_role = None
+
+    # Direct access
+    try:
+        result = graph_ops._query(
+            "MATCH (a:Actor {id: $actor_id})-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+            "RETURN r.encrypted_key, r.role",
+            {"actor_id": actor_id, "place_id": place_id},
+        )
+        if result and result[0] and result[0][0]:
+            encrypted_key = result[0][0]
+            access_role = result[0][1] if len(result[0]) > 1 else None
+    except Exception as e:
+        logger.debug(f"Direct HAS_ACCESS lookup failed: {e}")
+
+    # Parent hierarchy (up to 5 levels) if no direct access
+    if not encrypted_key:
+        try:
+            result = graph_ops._query(
+                "MATCH (a:Actor {id: $actor_id})-[r:HAS_ACCESS]->(parent:Space) "
+                "MATCH (s:Space {id: $place_id})-[:IN*1..5]->(parent) "
+                "RETURN r.encrypted_key, r.role "
+                "LIMIT 1",
+                {"actor_id": actor_id, "place_id": place_id},
+            )
+            if result and result[0] and result[0][0]:
+                encrypted_key = result[0][0]
+                access_role = result[0][1] if len(result[0]) > 1 else None
+        except Exception as e:
+            logger.debug(f"Parent hierarchy HAS_ACCESS lookup failed: {e}")
+
+    if not encrypted_key:
+        logger.debug(f"No HAS_ACCESS link found for {actor_id} -> {place_id}")
+        return None
+
+    # 2. Load actor's private key from disk
+    try:
+        keys_dir = os.path.join(MIND_KEYS_DIR, actor_id, ".keys")
+        actor_keys = crypto.load_actor_keys(keys_dir)
+    except FileNotFoundError:
+        logger.warning(f"No key files found for actor '{actor_id}' at {keys_dir}")
+        return None
+    except Exception as e:
+        logger.warning(f"Failed to load keys for actor '{actor_id}': {e}")
+        return None
+
+    # 3. Decrypt space key using sealed box
+    try:
+        space_key = crypto.decrypt_space_key_for_actor(
+            encrypted_key=encrypted_key,
+            actor_public_key=actor_keys["public_key"],
+            actor_private_key=actor_keys["private_key"],
+        )
+        return space_key
+    except Exception as e:
+        logger.warning(f"Failed to decrypt space key for {actor_id} -> {place_id}: {e}")
+        return None
+
+
+def _get_actor_public_key(actor_id: str, graph_ops) -> Optional[bytes]:
+    """Get an actor's public key from the graph.
+
+    Returns raw 32-byte public key, or None if not found.
+    """
+    import base64
+    try:
+        result = graph_ops._query(
+            "MATCH (a:Actor {id: $id}) RETURN a.public_key",
+            {"id": actor_id},
+        )
+        if result and result[0] and result[0][0]:
+            return base64.b64decode(result[0][0])
+    except Exception as e:
+        logger.debug(f"Could not get public key for {actor_id}: {e}")
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Dispatcher
 # ---------------------------------------------------------------------------
 
@@ -139,8 +321,15 @@ def handle_place(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         return _place_leave(args, ctx)
     elif action == "list":
         return _place_list(args, ctx)
+    elif action == "call":
+        return _place_call(args, ctx)
+    elif action == "grant_access":
+        return _place_grant_access(args, ctx)
     else:
-        return _err(f"Unknown action '{action}'. Use: create, join, speak, listen, leave, list.")
+        return _err(
+            f"Unknown action '{action}'. "
+            "Use: create, join, speak, listen, leave, list, call, grant_access."
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +337,11 @@ def handle_place(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 def _place_create(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
-    """Create a new place (Space node in the graph)."""
+    """Create a new place (Space node in the graph).
+
+    If visibility='private', generates a space key, wraps it for the creator
+    via sealed box, and stores the HAS_ACCESS link with role='owner'.
+    """
     name = args.get("name")
     if not name:
         return _err("'name' is required for action='create'.")
@@ -159,6 +352,7 @@ def _place_create(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     place_id = f"place_{uuid.uuid4().hex[:12]}"
     place_type = args.get("type", "room")
     description = args.get("description", "")
+    visibility = args.get("visibility", "public")
     created_at, created_at_s = _timestamps()
 
     try:
@@ -170,24 +364,77 @@ def _place_create(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         # Set additional properties not covered by add_place
         ctx.graph_ops._query(
             "MATCH (n:Space {id: $id}) "
-            "SET n.description = $desc, n.created_at = $ts, n.created_at_s = $ts_s",
-            {"id": place_id, "desc": description, "ts": created_at, "ts_s": created_at_s},
+            "SET n.description = $desc, n.created_at = $ts, "
+            "n.created_at_s = $ts_s, n.visibility = $vis",
+            {
+                "id": place_id,
+                "desc": description,
+                "ts": created_at,
+                "ts_s": created_at_s,
+                "vis": visibility,
+            },
         )
+
+        result_lines = [
+            f"Place created:",
+            f"  ID: {place_id}",
+            f"  Name: {name}",
+            f"  Type: {place_type}",
+            f"  Visibility: {visibility}",
+        ]
+
+        # If private, set up encryption
+        if visibility == "private":
+            crypto = _import_crypto()
+            if not crypto:
+                return _err(
+                    "Crypto library not available — cannot create private space. "
+                    "Ensure mind-protocol/python/crypto is installed."
+                )
+
+            actor_id = _resolve_actor(args, ctx)
+
+            # Get creator's public key from graph
+            creator_pub_key = _get_actor_public_key(actor_id, ctx.graph_ops)
+            if not creator_pub_key:
+                return _err(
+                    f"Actor '{actor_id}' has no public_key registered in the graph. "
+                    "Register it first (set a.public_key on the Actor node)."
+                )
+
+            # Generate space key
+            space_key = crypto.generate_space_key()
+
+            # Wrap space key for creator
+            encrypted_key = crypto.encrypt_space_key_for_actor(space_key, creator_pub_key)
+
+            # Create HAS_ACCESS link with role='owner' and encrypted_key
+            ctx.graph_ops._query(
+                "MATCH (a:Actor {id: $actor_id}), (s:Space {id: $place_id}) "
+                "MERGE (a)-[r:HAS_ACCESS]->(s) "
+                "SET r.role = 'owner', r.encrypted_key = $ekey, "
+                "r.granted_at = $ts, r.granted_by = $actor_id",
+                {
+                    "actor_id": actor_id,
+                    "place_id": place_id,
+                    "ekey": encrypted_key,
+                    "ts": created_at,
+                },
+            )
+
+            result_lines.append(f"  Owner: {actor_id}")
+            result_lines.append(f"  Encryption: space key generated and wrapped for owner")
 
         _notify_place_server(place_id, {
             "event": "place_created",
             "place_id": place_id,
             "name": name,
             "type": place_type,
+            "visibility": visibility,
             "created_at": created_at,
         })
 
-        return _ok(
-            f"Place created:\n"
-            f"  ID: {place_id}\n"
-            f"  Name: {name}\n"
-            f"  Type: {place_type}"
-        )
+        return _ok("\n".join(result_lines))
     except Exception as e:
         logger.exception("Place create failed")
         return _err(f"Creating place: {e}")
@@ -233,7 +480,11 @@ def _place_join(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
 
 
 def _place_speak(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
-    """Send a moment to a place — create Moment node + IN link + CREATED link."""
+    """Send a moment to a place — create Moment node + IN link + CREATED link.
+
+    If the space is private, the text is encrypted with AES-256-GCM before
+    being stored in the graph. The Moment node gets an 'encrypted' flag.
+    """
     place_id = args.get("place_id")
     text = args.get("text")
     if not place_id:
@@ -247,29 +498,56 @@ def _place_speak(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     actor_id = _resolve_actor(args, ctx)
     moment_id = f"moment_{uuid.uuid4().hex[:12]}"
     created_at, created_at_s = _timestamps()
+    is_private = _resolve_space_visibility(place_id, ctx.graph_ops)
+    encrypted = False
+    store_text = text
+
+    # Encrypt content for private spaces
+    if is_private:
+        crypto = _import_crypto()
+        if not crypto:
+            return _err("Crypto library not available — cannot speak in private space.")
+
+        space_key = _get_space_key(actor_id, place_id, ctx.graph_ops)
+        if not space_key:
+            return _err(
+                f"No access to private space '{place_id}'. "
+                "Use grant_access to obtain a space key."
+            )
+
+        try:
+            store_text = crypto.encrypt_content(text, space_key)
+            encrypted = True
+        except Exception as e:
+            logger.exception("Content encryption failed")
+            return _err(f"Encrypting content: {e}")
 
     try:
         # Create Moment node with place and speaker links
         ctx.graph_ops.add_moment(
             id=moment_id,
-            text=text,
+            text=store_text,
             type="dialogue",
             status="completed",
             speaker=actor_id,
             place_id=place_id,
         )
-        # Set timestamp seconds
+        # Set timestamp seconds and encrypted flag
         ctx.graph_ops._query(
-            "MATCH (m:Moment {id: $id}) SET m.created_at_s = $ts_s",
-            {"id": moment_id, "ts_s": created_at_s},
+            "MATCH (m:Moment {id: $id}) "
+            "SET m.created_at_s = $ts_s, m.encrypted = $encrypted",
+            {"id": moment_id, "ts_s": created_at_s, "encrypted": encrypted},
         )
 
+        # Notify with plaintext for real-time delivery (server-side only,
+        # not persisted — the graph has ciphertext)
         _notify_place_server(place_id, {
             "event": "moment_created",
             "place_id": place_id,
             "moment_id": moment_id,
             "actor_id": actor_id,
-            "text": text,
+            "text": text if not encrypted else "[encrypted]",
+            "encrypted": encrypted,
             "timestamp": created_at,
         })
 
@@ -277,6 +555,7 @@ def _place_speak(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             f"Moment sent to {place_id}:\n"
             f"  Moment ID: {moment_id}\n"
             f"  From: {actor_id}\n"
+            f"  Encrypted: {encrypted}\n"
             f"  Text: {text[:120]}{'...' if len(text) > 120 else ''}"
         )
     except Exception as e:
@@ -285,7 +564,11 @@ def _place_speak(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
 
 
 def _place_listen(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
-    """Read recent moments from a place."""
+    """Read recent moments from a place.
+
+    If the space is private, moments are decrypted transparently using the
+    caller's space key. Moments that cannot be decrypted show '[encrypted]'.
+    """
     place_id = args.get("place_id")
     if not place_id:
         return _err("'place_id' is required for action='listen'.")
@@ -294,13 +577,29 @@ def _place_listen(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         return _err("No graph connection.")
 
     limit = args.get("limit", 20)
+    is_private = _resolve_space_visibility(place_id, ctx.graph_ops)
+    space_key = None
+
+    # Pre-fetch space key for private spaces
+    if is_private:
+        actor_id = _resolve_actor(args, ctx)
+        crypto = _import_crypto()
+        if not crypto:
+            return _err("Crypto library not available — cannot listen in private space.")
+
+        space_key = _get_space_key(actor_id, place_id, ctx.graph_ops)
+        if not space_key:
+            return _err(
+                f"No access to private space '{place_id}'. "
+                "Use grant_access to obtain a space key."
+            )
 
     try:
         # Query moments linked to this space, with their speakers
         cypher = """
         MATCH (m:Moment)-[:AT]->(p:Space {id: $place_id})
         OPTIONAL MATCH (a:Actor)-[:SAID]->(m)
-        RETURN m.id, m.content, m.type, m.created_at, a.id, a.name
+        RETURN m.id, m.content, m.type, m.created_at, a.id, a.name, m.encrypted
         ORDER BY m.created_at DESC
         LIMIT $limit
         """
@@ -312,16 +611,28 @@ def _place_listen(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         lines = [f"Recent moments in {place_id} ({len(result)}):\n"]
         # Reverse so oldest first for reading order
         for row in reversed(result):
-            m_id, content, m_type, m_ts, a_id, a_name = (
-                row[0] if len(row) > 0 else None,
-                row[1] if len(row) > 1 else "",
-                row[2] if len(row) > 2 else "",
-                row[3] if len(row) > 3 else "",
-                row[4] if len(row) > 4 else None,
-                row[5] if len(row) > 5 else None,
-            )
+            m_id = row[0] if len(row) > 0 else None
+            content = row[1] if len(row) > 1 else ""
+            m_type = row[2] if len(row) > 2 else ""
+            m_ts = row[3] if len(row) > 3 else ""
+            a_id = row[4] if len(row) > 4 else None
+            a_name = row[5] if len(row) > 5 else None
+            m_encrypted = row[6] if len(row) > 6 else False
+
             speaker = a_name or a_id or "unknown"
-            content_preview = (content or "")[:200]
+
+            # Decrypt if needed
+            display_content = content or ""
+            if m_encrypted and space_key and content:
+                try:
+                    crypto = _import_crypto()
+                    if crypto:
+                        display_content = crypto.decrypt_content(content, space_key)
+                except Exception as e:
+                    logger.debug(f"Could not decrypt moment {m_id}: {e}")
+                    display_content = "[encrypted]"
+
+            content_preview = display_content[:200]
             lines.append(f"[{speaker}] {content_preview}")
             lines.append(f"  id={m_id}  type={m_type}  at={m_ts}")
             lines.append("")
@@ -377,7 +688,8 @@ def _place_list(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         MATCH (p:Space)
         OPTIONAL MATCH (a:Actor)-[:AT]->(p)
         WHERE a IS NULL OR a.type <> 'background'
-        RETURN p.id, p.name, p.type, p.description, count(a) AS participants
+        RETURN p.id, p.name, p.type, p.description, count(a) AS participants,
+               p.visibility
         ORDER BY participants DESC, p.name
         """
         result = ctx.graph_ops._query(cypher)
@@ -392,8 +704,10 @@ def _place_list(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             p_type = row[2] if len(row) > 2 else ""
             p_desc = row[3] if len(row) > 3 else ""
             count = row[4] if len(row) > 4 else 0
+            p_vis = row[5] if len(row) > 5 else "public"
 
-            lines.append(f"{p_name} ({p_type})")
+            vis_tag = " [private]" if str(p_vis).lower() == "private" else ""
+            lines.append(f"{p_name} ({p_type}){vis_tag}")
             lines.append(f"  ID: {p_id}")
             lines.append(f"  Participants: {count}")
             if p_desc:
@@ -404,6 +718,288 @@ def _place_list(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     except Exception as e:
         logger.exception("Place list failed")
         return _err(f"Listing places: {e}")
+
+
+def _place_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+    """Start a call — create a private ephemeral Space, join caller, invite participants.
+
+    A call is a shortcut for: create private Space → join caller → join/invite each
+    participant → return the place_id so participants can speak/listen.
+
+    Usage:
+        place(action="call", target_actor_id="voce")           # 1:1 call
+        place(action="call", participants=["voce", "anima"])    # group call
+    """
+    if not ctx.graph_ops:
+        return _err("No graph connection.")
+
+    actor_id = _resolve_actor(args, ctx)
+
+    # Resolve participants
+    participants = args.get("participants") or []
+    target = args.get("target_actor_id")
+    if target and target not in participants:
+        participants.append(target)
+    if not participants:
+        return _err("'target_actor_id' or 'participants' required for action='call'.")
+
+    all_members = [actor_id] + participants
+    created_at, created_at_s = _timestamps()
+
+    # Generate call Space ID and name
+    call_id = f"call_{uuid.uuid4().hex[:12]}"
+    member_names = " + ".join(all_members[:4])
+    if len(all_members) > 4:
+        member_names += f" +{len(all_members) - 4}"
+    call_name = f"Call: {member_names}"
+
+    try:
+        # Create private Space for the call
+        ctx.graph_ops._query(
+            """MERGE (s:Space {id: $id})
+               SET s.type = 'call',
+                   s.name = $name,
+                   s.capacity = $capacity,
+                   s.status = 'active',
+                   s.visibility = 'private',
+                   s.ephemeral = true,
+                   s.synthesis = $synthesis,
+                   s.created_at = $ts,
+                   s.created_at_s = $ts_s""",
+            {
+                "id": call_id,
+                "name": call_name,
+                "capacity": len(all_members) + 5,  # small buffer
+                "synthesis": f"Private call between {member_names}",
+                "ts": created_at,
+                "ts_s": created_at_s,
+            },
+        )
+
+        # Join all members (create AT links)
+        joined = []
+        for member_id in all_members:
+            try:
+                ctx.graph_ops.add_presence(member_id, call_id, present=1.0, visible=1.0)
+                joined.append(member_id)
+            except Exception as e:
+                logger.warning(f"Could not join {member_id} to call: {e}")
+
+        # Grant HAS_ACCESS to all members (for encryption if needed)
+        for member_id in all_members:
+            try:
+                ctx.graph_ops._query(
+                    """MATCH (a {id: $actor}), (s:Space {id: $space})
+                       MERGE (a)-[r:link {type: 'HAS_ACCESS'}]->(s)
+                       SET r.role = $role, r.granted_at = $ts""",
+                    {
+                        "actor": member_id,
+                        "space": call_id,
+                        "role": "owner" if member_id == actor_id else "member",
+                        "ts": created_at,
+                    },
+                )
+            except Exception:
+                pass
+
+        # Create a Moment announcing the call
+        moment_id = f"moment_{uuid.uuid4().hex[:12]}"
+        ctx.graph_ops._query(
+            """CREATE (m:Moment {
+                   id: $mid, type: 'system', content: $content,
+                   synthesis: $content, energy: 0.5,
+                   created_at: $ts, created_at_s: $ts_s
+               })
+               WITH m
+               MATCH (s:Space {id: $sid})
+               CREATE (m)-[:link {type: 'IN'}]->(s)""",
+            {
+                "mid": moment_id,
+                "content": f"📞 Call started by {actor_id} with {', '.join(participants)}",
+                "sid": call_id,
+                "ts": created_at,
+                "ts_s": created_at_s,
+            },
+        )
+
+        # Notify Place Server
+        _notify_place_server(call_id, {
+            "event": "call_started",
+            "place_id": call_id,
+            "caller": actor_id,
+            "participants": participants,
+            "timestamp": created_at,
+        })
+
+        # Send invitation notification to each participant via their preferred channel
+        for participant in participants:
+            try:
+                _notify_participant(participant, actor_id, call_id, call_name, ctx)
+            except Exception:
+                pass  # Best effort
+
+        lines = [
+            f"Call started: {call_name}",
+            f"Place ID: {call_id}",
+            f"Joined: {', '.join(joined)}",
+            "",
+            "Use place(action='speak', place_id='{}', text='...') to talk.".format(call_id),
+            "Use place(action='listen', place_id='{}') to hear.".format(call_id),
+            "Use place(action='leave', place_id='{}') to hang up.".format(call_id),
+        ]
+        return _ok("\n".join(lines))
+
+    except Exception as e:
+        logger.exception("Place call failed")
+        return _err(f"Starting call: {e}")
+
+
+def _notify_participant(
+    participant_id: str,
+    caller_id: str,
+    call_id: str,
+    call_name: str,
+    ctx: ServerContext,
+) -> None:
+    """Send a call invitation to a participant via Telegram or other channel."""
+    try:
+        # Try to find participant's Telegram chat_id from graph
+        result = ctx.graph_ops._query(
+            "MATCH (a {id: $id}) RETURN a.telegram_chat_id",
+            {"id": participant_id},
+        )
+        if result and result[0][0]:
+            chat_id = str(result[0][0])
+            import urllib.request
+            msg = (
+                f"📞 Incoming call from @{caller_id}\n"
+                f"Join: place(action='join', place_id='{call_id}')\n"
+                f"Or speak directly: place(action='speak', place_id='{call_id}', text='...')"
+            )
+            # Use the send handler if available, otherwise direct Telegram API
+            url = f"{PLACE_SERVER_URL}/api/notify"
+            data = json.dumps({
+                "type": "call_invitation",
+                "target": participant_id,
+                "caller": caller_id,
+                "place_id": call_id,
+                "message": msg,
+            }).encode()
+            req = urllib.request.Request(
+                url, data=data, headers={"Content-Type": "application/json"},
+            )
+            urllib.request.urlopen(req, timeout=2)
+    except Exception:
+        pass  # Best effort — participant can still join manually
+
+
+def _place_grant_access(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+    """Grant another actor access to a private space.
+
+    The caller must have 'owner' or 'admin' role on the space. Their space
+    key is decrypted, then re-wrapped (sealed box) for the target actor's
+    public key and stored as a new HAS_ACCESS link.
+    """
+    place_id = args.get("place_id")
+    target_actor_id = args.get("target_actor_id")
+    role = args.get("role", "member")
+
+    if not place_id:
+        return _err("'place_id' is required for action='grant_access'.")
+    if not target_actor_id:
+        return _err("'target_actor_id' is required for action='grant_access'.")
+    if role not in ("owner", "admin", "member"):
+        return _err(f"Invalid role '{role}'. Use: owner, admin, member.")
+
+    if not ctx.graph_ops:
+        return _err("No graph connection.")
+
+    # Verify space is private
+    if not _resolve_space_visibility(place_id, ctx.graph_ops):
+        return _err(f"Space '{place_id}' is not private. grant_access is only for private spaces.")
+
+    crypto = _import_crypto()
+    if not crypto:
+        return _err("Crypto library not available — cannot grant access.")
+
+    actor_id = _resolve_actor(args, ctx)
+    created_at, _ = _timestamps()
+
+    # Verify caller has owner or admin role
+    try:
+        result = ctx.graph_ops._query(
+            "MATCH (a:Actor {id: $actor_id})-[r:HAS_ACCESS]->(s:Space {id: $place_id}) "
+            "RETURN r.role",
+            {"actor_id": actor_id, "place_id": place_id},
+        )
+        if not result or not result[0]:
+            return _err(f"Actor '{actor_id}' has no access to space '{place_id}'.")
+
+        caller_role = result[0][0]
+        if caller_role not in ("owner", "admin"):
+            return _err(
+                f"Actor '{actor_id}' has role '{caller_role}' — "
+                "only 'owner' or 'admin' can grant access."
+            )
+    except Exception as e:
+        logger.exception("Role verification failed")
+        return _err(f"Verifying caller role: {e}")
+
+    # Get caller's space key
+    space_key = _get_space_key(actor_id, place_id, ctx.graph_ops)
+    if not space_key:
+        return _err(f"Could not decrypt space key for '{actor_id}'.")
+
+    # Get target actor's public key from graph
+    target_pub_key = _get_actor_public_key(target_actor_id, ctx.graph_ops)
+    if not target_pub_key:
+        return _err(
+            f"Target actor '{target_actor_id}' has no public_key registered in the graph."
+        )
+
+    # Wrap space key for target actor
+    try:
+        encrypted_key = crypto.encrypt_space_key_for_actor(space_key, target_pub_key)
+    except Exception as e:
+        logger.exception("Key wrapping failed")
+        return _err(f"Wrapping space key for target: {e}")
+
+    # Create HAS_ACCESS link
+    try:
+        ctx.graph_ops._query(
+            "MATCH (a:Actor {id: $target_id}), (s:Space {id: $place_id}) "
+            "MERGE (a)-[r:HAS_ACCESS]->(s) "
+            "SET r.role = $role, r.encrypted_key = $ekey, "
+            "r.granted_at = $ts, r.granted_by = $grantor",
+            {
+                "target_id": target_actor_id,
+                "place_id": place_id,
+                "role": role,
+                "ekey": encrypted_key,
+                "ts": created_at,
+                "grantor": actor_id,
+            },
+        )
+
+        _notify_place_server(place_id, {
+            "event": "access_granted",
+            "place_id": place_id,
+            "target_actor_id": target_actor_id,
+            "role": role,
+            "granted_by": actor_id,
+            "timestamp": created_at,
+        })
+
+        return _ok(
+            f"Access granted:\n"
+            f"  Space: {place_id}\n"
+            f"  Target: {target_actor_id}\n"
+            f"  Role: {role}\n"
+            f"  Granted by: {actor_id}"
+        )
+    except Exception as e:
+        logger.exception("Grant access failed")
+        return _err(f"Granting access: {e}")
 
 
 # ---------------------------------------------------------------------------

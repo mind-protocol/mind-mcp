@@ -1,34 +1,35 @@
 # Repository Map: mind-mcp
 
-*Generated: 2026-03-12 08:49*
+*Generated: 2026-03-13 17:34*
 
-- **Files:** 487
-- **Directories:** 110
-- **Total Size:** 5.2M
-- **Doc Files:** 328
-- **Code Files:** 149
-- **Areas:** 14 (docs/ subfolders)
-- **Modules:** 34 (subfolders in areas)
-- **DOCS Links:** 69 (0.46 avg per code file)
+- **Files:** 525
+- **Directories:** 118
+- **Total Size:** 5.7M
+- **Doc Files:** 336
+- **Code Files:** 178
+- **Areas:** 15 (docs/ subfolders)
+- **Modules:** 36 (subfolders in areas)
+- **DOCS Links:** 69 (0.39 avg per code file)
 
-- markdown: 328
-- python: 140
+- markdown: 336
+- python: 168
 - typescript: 9
+- shell: 1
 
 ```
-├── cli/ (148.2K)
-│   ├── commands/ (78.6K)
+├── cli/ (147.3K)
+│   ├── commands/ (78.4K)
 │   │   ├── agents.py (12.1K) →
 │   │   ├── events.py (14.9K) →
 │   │   ├── fix_embeddings.py (1.1K)
-│   │   ├── init.py (5.9K)
+│   │   ├── init.py (5.7K)
 │   │   ├── swarm.py (31.1K)
 │   │   ├── tasks.py (11.7K) →
 │   │   ├── upgrade.py (790)
 │   │   └── (..3 more files)
-│   ├── helpers/ (66.3K)
+│   ├── helpers/ (65.6K)
 │   │   ├── check_mind_status_in_directory.py (5.0K)
-│   │   ├── copy_ecosystem_templates_to_target.py (4.0K)
+│   │   ├── copy_ecosystem_templates_to_target.py (3.3K)
 │   │   ├── create_ai_config_files_for_claude_agents_gemini.py (2.5K)
 │   │   ├── create_database_config_yaml.py (1.9K)
 │   │   ├── export_project_to_notebooklm.py (8.0K)
@@ -59,7 +60,9 @@
 │   │   └── system-manifest.ts (6.0K)
 │   ├── README.md (2.5K)
 │   └── (..1 more files)
-├── docs/ (2.6M)
+├── docker/ (4.5K)
+│   └── entrypoint.sh (4.5K)
+├── docs/ (2.7M)
 │   ├── agents/ (242.8K)
 │   │   ├── narrator/ (112.3K)
 │   │   │   ├── archive/ (20.5K)
@@ -103,19 +106,30 @@
 │   │       ├── PATTERNS_Cybernetic_Studio_Architecture.md (16.1K)
 │   │       ├── SYNC_Cybernetic_Studio_Architecture_State.md (7.0K)
 │   │       └── VALIDATION_Cybernetic_Studio_Architectural_Invariants.md (5.0K)
-│   ├── cli/ (133.9K)
+│   ├── citizens/ (53.0K)
+│   │   ├── human_ai_pairing/ (35.2K)
+│   │   │   ├── ALGORITHM_Human_AI_Pairing.md (9.9K)
+│   │   │   ├── BEHAVIORS_Human_AI_Pairing.md (6.5K)
+│   │   │   ├── OBJECTIVES_Human_AI_Pairing.md (3.7K)
+│   │   │   ├── PATTERNS_Human_AI_Pairing.md (7.0K)
+│   │   │   └── VALIDATION_Human_AI_Pairing.md (8.1K)
+│   │   └── parenthood_network/ (17.8K)
+│   │       ├── BEHAVIORS_Parenthood_Network.md (8.1K)
+│   │       ├── OBJECTIVES_Parenthood_Network.md (4.0K)
+│   │       └── PATTERNS_Parenthood_Network.md (5.6K)
+│   ├── cli/ (145.9K)
 │   │   ├── archive/ (5.4K)
 │   │   │   ├── SYNC_CLI_Development_State_archive_2025-12.md (581)
 │   │   │   ├── SYNC_CLI_State_Archive_2025-12.md (4.3K)
 │   │   │   └── (..1 more files)
-│   │   ├── core/ (54.7K)
-│   │   │   ├── ALGORITHM_mind_cli_core.md (6.7K)
-│   │   │   ├── BEHAVIORS_mind_cli_core.md (9.7K)
+│   │   ├── core/ (66.6K)
+│   │   │   ├── ALGORITHM_mind_cli_core.md (7.6K)
+│   │   │   ├── BEHAVIORS_mind_cli_core.md (12.0K)
 │   │   │   ├── HEALTH_mind_cli_core.md (6.6K)
-│   │   │   ├── IMPLEMENTATION_mind_cli_core.md (8.6K)
+│   │   │   ├── IMPLEMENTATION_mind_cli_core.md (13.9K)
 │   │   │   ├── OBJECTIVES_mind_cli_core.md (4.8K)
 │   │   │   ├── PATTERNS_mind_cli_core.md (6.0K)
-│   │   │   ├── SYNC_mind_cli_core.md (6.6K)
+│   │   │   ├── SYNC_mind_cli_core.md (10.0K)
 │   │   │   └── VALIDATION_mind_cli_core.md (5.7K)
 │   │   ├── prompt/ (39.7K)
 │   │   │   ├── ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md (4.4K)
@@ -455,7 +469,7 @@
 │   ├── ARCHITECTURE.md (4.4K)
 │   ├── MAPPING.md (2.7K)
 │   ├── TAXONOMY.md (1.7K)
-│   └── map.md (297.1K)
+│   └── map.md (298.7K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -468,13 +482,22 @@
 │               ├── traversal_exp_9eee82be.txt (5.7K)
 │               ├── traversal_exp_a26866c1.jsonl (31.3K)
 │               └── traversal_exp_a26866c1.txt (13.2K)
-├── mcp/ (94.6K)
-│   ├── tools/ (11.7K)
+├── mcp/ (118.4K)
+│   ├── tools/ (108.7K)
+│   │   ├── agent_handler.py (15.3K)
+│   │   ├── alarm_handler.py (6.8K)
 │   │   ├── gemini_chat.py (11.7K)
-│   │   └── (..1 more files)
-│   ├── server.py (82.7K)
+│   │   ├── graph_query_handler.py (12.0K)
+│   │   ├── media_handler.py (14.8K)
+│   │   ├── procedure_handler.py (6.7K)
+│   │   ├── send_handler.py (7.5K)
+│   │   ├── task_handler.py (8.9K)
+│   │   ├── telegram_notify.py (7.2K)
+│   │   ├── think_handler.py (11.2K)
+│   │   └── (..3 more files)
+│   ├── server.py (9.5K)
 │   └── (..2 more files)
-├── runtime/ (2.1M)
+├── runtime/ (2.5M)
 │   ├── actors/
 │   │   └── (..4 more files)
 │   ├── agents/ (133.7K)
@@ -486,8 +509,18 @@
 │   │   ├── prompts.py (7.9K) →
 │   │   ├── run.py (22.9K) →
 │   │   └── verification.py (36.8K) →
+│   ├── bridges/ (53.9K)
+│   │   ├── rate_limiter.py (3.6K)
+│   │   ├── telegram_bridge.py (27.2K)
+│   │   ├── voice_websocket.py (14.1K)
+│   │   ├── whatsapp_bridge.py (8.9K)
+│   │   └── (..1 more files)
 │   ├── capability/ (20.6K)
 │   │   └── __init__.py (20.6K)
+│   ├── citizens/ (16.8K)
+│   │   ├── __init__.py (501)
+│   │   ├── identity_loader.py (6.4K)
+│   │   └── prompt_builder.py (9.9K)
 │   ├── client/
 │   │   └── (..5 more files)
 │   ├── connectome/ (103.7K)
@@ -555,10 +588,11 @@
 │   │   ├── docs.py (36.9K)
 │   │   ├── files.py (20.1K) →
 │   │   └── (..1 more files)
-│   ├── membrane/ (15.8K)
+│   ├── membrane/ (20.3K)
 │   │   ├── __init__.py (893)
 │   │   ├── broadcast.py (5.8K)
 │   │   ├── client.py (4.3K)
+│   │   ├── http_endpoint.py (4.5K)
 │   │   ├── stimulus.py (4.4K)
 │   │   └── (..2 more files)
 │   ├── models/ (46.6K)
@@ -566,6 +600,16 @@
 │   │   ├── base.py (12.6K)
 │   │   ├── links.py (12.9K)
 │   │   └── nodes.py (18.5K)
+│   ├── orchestrator/ (71.8K)
+│   │   ├── __init__.py (548)
+│   │   ├── account_balancer.py (8.2K)
+│   │   ├── alarm_watcher.py (5.7K)
+│   │   ├── claude_invoker.py (14.6K)
+│   │   ├── compute_budget.py (8.0K)
+│   │   ├── degradation.py (8.6K)
+│   │   ├── dispatcher.py (10.4K)
+│   │   ├── message_queue.py (5.8K)
+│   │   └── session_tracker.py (9.9K)
 │   ├── physics/ (782.4K)
 │   │   ├── archive/ (36.9K)
 │   │   │   └── tick_v1_0.py (36.9K) →
@@ -626,15 +670,17 @@
 │   │   └── (..2 more files)
 │   ├── cli.py (36.3K) →
 │   ├── cluster_metrics.py (31.4K)
-│   ├── explore_cmd.py (23.9K)
 │   ├── init_cmd.py (24.5K) →
 │   ├── inject.py (32.3K)
 │   ├── procedure_runner.py (42.0K)
 │   ├── repo_overview.py (28.5K) →
+│   ├── seed_brain_from_source_docs_dynamic_generator.py (232.7K)
 │   ├── status_cmd.py (36.3K) →
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── validate.py (29.4K) →
-│   └── (..22 more files)
+│   └── (..23 more files)
+├── scripts/ (60.8K)
+│   └── generate_rich_core_personalities.py (60.8K)
 ├── tests/ (30.0K)
 │   ├── graph/
 │   │   └── (..3 more files)
@@ -653,8 +699,10 @@
 ├── .gitignore (608)
 ├── .mindignore (839)
 ├── AGENTS.md (34.4K)
+├── Dockerfile (1.3K)
 ├── README.md (3.3K)
-└── map.md (297.1K)
+├── home_server.py (13.0K)
+└── map.md (298.3K)
 ```
 
 **Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
@@ -1528,6 +1576,108 @@
 - ## SYNC STATUS
 - ## MARKERS
 
+**Sections:**
+- # Human-AI Pairing — Algorithm: Bond Lifecycle
+- ## CHAIN
+- ## OVERVIEW
+- ## OBJECTIVES AND BEHAVIORS
+- ## DATA STRUCTURES
+- ## ALGORITHM: register_citizen
+- ## ALGORITHM: register_human
+- ## ALGORITHM: match_scan
+- ## ALGORITHM: form_bond
+- ## ALGORITHM: dissolve_bond
+- ## ALGORITHM: record_milestone
+- ## KEY DECISIONS
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## INTERACTIONS
+- ## MARKERS
+
+**Sections:**
+- # Human-AI Pairing — Behaviors: Observable Outcomes
+- ## CHAIN
+- ## BEHAVIORS
+- ## OBJECTIVES SERVED
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Sections:**
+- # OBJECTIVES — Human-AI Pairing
+- ## CHAIN
+- ## PRIMARY OBJECTIVES (ranked)
+- ## NON-OBJECTIVES
+- ## TRADEOFFS (canonical decisions)
+- ## SUCCESS SIGNALS (observable)
+
+**Code refs:**
+- `runtime/citizens/identity_loader.py`
+
+**Sections:**
+- # Human-AI Pairing — Patterns: The 1:1 Bond
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## BEHAVIORS SUPPORTED
+- ## BEHAVIORS PREVENTED
+- ## PRINCIPLES
+- ## DATA
+- ## DEPENDENCIES
+- ## INSPIRATIONS
+- ## SCOPE
+- ## MARKERS
+
+**Doc refs:**
+- `docs/citizens/human_ai_pairing/HEALTH_Human_AI_Pairing.md`
+
+**Sections:**
+- # Human-AI Pairing — Validation: Invariants
+- ## CHAIN
+- ## BEHAVIORS GUARANTEED
+- ## OBJECTIVES COVERED
+- ## INVARIANTS
+- ## PROPERTIES
+- ## ERROR CONDITIONS
+- ## HEALTH COVERAGE
+- ## VERIFICATION PROCEDURE
+- # Not yet implemented — these will be integration tests against the graph.
+- # Future location: tests/citizens/test_pairing_invariants.py
+- ## SYNC STATUS
+- ## MARKERS
+
+**Code refs:**
+- `runtime/citizens/parenthood.py`
+
+**Sections:**
+- # Citizen Parenthood Network — Behaviors: Observable Effects
+- ## CHAIN
+- ## BEHAVIORS
+- ## OBJECTIVES SERVED
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Sections:**
+- # OBJECTIVES — Citizen Parenthood Network
+- ## PRIMARY OBJECTIVES (ranked)
+- ## NON-OBJECTIVES
+- ## TRADEOFFS (canonical decisions)
+- ## SUCCESS SIGNALS (observable)
+- ## MARKERS
+
+**Sections:**
+- # Citizen Parenthood Network — Design Patterns
+- ## Core Philosophy
+- ## Key Decisions
+- # child behavior affects parent trust score
+- # parent trust affects child's starting trust ceiling
+- ## What's NOT in This Module
+- ## Invariants
+- ## MARKERS
+
 **Doc refs:**
 - `docs/cli/archive/SYNC_CLI_State_Archive_2025-12.md`
 
@@ -1616,18 +1766,25 @@
 - `cli/commands/status.py`
 - `cli/commands/upgrade.py`
 - `cli/config.py`
+- `copy_capabilities_to_target.py`
 - `copy_ecosystem_templates_to_target.py`
 - `copy_runtime_package_to_target.py`
 - `create_ai_config_files_for_claude_agents_gemini.py`
 - `create_database_config_yaml.py`
 - `create_env_example_file.py`
 - `create_mcp_config_json.py`
+- `export_project_to_notebooklm.py`
 - `fix_embeddings_for_nodes_and_links.py`
+- `generate_embeddings_for_graph_nodes.py`
 - `generate_repo_overview_maps.py`
 - `get_mcp_version_from_config.py`
 - `get_paths_for_templates_and_runtime.py`
+- `ingest_capabilities_to_graph.py`
 - `ingest_repo_files_to_graph.py`
+- `inject_agents_to_graph.py`
 - `inject_seed_yaml_to_graph.py`
+- `save_version_hash.py`
+- `scripts/generate_rich_core_personalities.py`
 - `setup_database_and_apply_schema.py`
 - `show_upgrade_notice_if_available.py`
 - `sync_skills_to_ai_tool_directories.py`
@@ -1644,6 +1801,7 @@
 - ## MODULE DEPENDENCIES
 - ## BIDIRECTIONAL LINKS
 - ## FUTURE COMMAND MODULES (PROPOSED)
+- ## LEGACY AND STANDALONE COMPONENTS
 
 **Code refs:**
 - `cli/__main__.py`
@@ -1679,6 +1837,12 @@
 - `cli/helpers/generate_embeddings_for_graph_nodes.py`
 - `cli/helpers/ingest_repo_files_to_graph.py`
 - `cli/helpers/inject_seed_yaml_to_graph.py`
+- `inject_agents_to_graph.py`
+- `inject_seed_yaml_to_graph.py`
+- `mcp/tools/gemini_chat.py`
+- `mcp/tools/telegram_notify.py`
+- `runtime/cli.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
 
 **Sections:**
 - # mind_cli_core — SYNC: Project State and Recent Changes
@@ -7226,6 +7390,7 @@
 - `context.py`
 - `context/format.py`
 - `context/query.py`
+- `copy_capabilities_to_target.py`
 - `copy_ecosystem_templates_to_target.py`
 - `copy_runtime_package_to_target.py`
 - `core_utils.py`
@@ -7250,6 +7415,7 @@
 - `engine/connectome/persistence.py`
 - `engine/connectome/schema.py`
 - `exploration.py`
+- `export_project_to_notebooklm.py`
 - `factory.py`
 - `falkordb_adapter.py`
 - `fix_embeddings_for_nodes_and_links.py`
@@ -7258,6 +7424,7 @@
 - `frontend/app/start/page.tsx`
 - `frontend/hooks/useGameState.ts`
 - `gemini_agent.py`
+- `generate_embeddings_for_graph_nodes.py`
 - `generate_repo_overview_maps.py`
 - `get_mcp_version_from_config.py`
 - `get_paths_for_templates_and_runtime.py`
@@ -7276,7 +7443,9 @@
 - `ingest/discover.py`
 - `ingest/markers.py`
 - `ingest/parse.py`
+- `ingest_capabilities_to_graph.py`
 - `ingest_repo_files_to_graph.py`
+- `inject_agents_to_graph.py`
 - `inject_seed_yaml_to_graph.py`
 - `learning/embeddings.py`
 - `learning/extractor.py`
@@ -7284,6 +7453,8 @@
 - `link_scoring.py`
 - `loop.py`
 - `mcp/server.py`
+- `mcp/tools/gemini_chat.py`
+- `mcp/tools/telegram_notify.py`
 - `mind/agent_cli.py`
 - `mind/api/app.py`
 - `mind/cli.py`
@@ -7475,6 +7646,7 @@
 - `runtime/repair_verification.py`
 - `runtime/repo_overview.py`
 - `runtime/repo_overview_formatters.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
 - `runtime/solve_escalations.py`
 - `runtime/symbol_extractor.py`
 - `runtime/sync.py`
@@ -7492,10 +7664,12 @@
 - `runtime/tests/test_traversal_logger.py`
 - `runtime/validate.py`
 - `runtime/work.py`
+- `save_version_hash.py`
 - `scripts/check_chain_links.py`
 - `scripts/check_doc_completeness.py`
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
+- `scripts/generate_rich_core_personalities.py`
 - `semantic_proximity_based_character_node_selector.py`
 - `setup_database_and_apply_schema.py`
 - `show_upgrade_notice_if_available.py`
@@ -7718,11 +7892,92 @@
 - # Repository Map: mind-mcp
 
 **Definitions:**
+- `def handle_agent()`
+- `def _agent_list()`
+- `def _agent_status()`
+- `def _agent_run()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def _get_alarms_file()`
+- `def _parse_time()`
+- `def handle_alarm()`
+- `def _set_alarm()`
+- `def _list_alarms()`
+- `def _cancel_alarm()`
+
+**Definitions:**
 - `def _get_client()`
 - `def _load_file_as_part()`
 - `def _prune_expired_sessions()`
 - `def _build_contents()`
 - `def handle_gemini_chat()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_graph_query()`
+- `def _resolve_actor()`
+- `async def _ask_async()`
+- `async def _ask_single()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_media()`
+- `def _imagine()`
+- `def _speak()`
+- `def _send_file()`
+- `def _send_file_telegram()`
+- `def _send_file_discord()`
+- `def _send_file_whatsapp()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_procedure()`
+- `def _list_procedures()`
+- `def _start_procedure()`
+- `def _continue_procedure()`
+- `def _abort_procedure()`
+- `def _format_response()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_send()`
+- `def _send_telegram()`
+- `def _load_tg_config()`
+- `def _detect_handle()`
+- `def _log_tg_message()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def handle_task()`
+- `def _normalize_actor()`
+- `def _task_list()`
+- `def _task_claim()`
+- `def _task_complete()`
+- `def _task_fail()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
+- `def _load_tg_config()`
+- `def _detect_handle()`
+- `def _log_message()`
+- `def _err()`
+- `def handle_telegram_notify()`
+
+**Definitions:**
+- `def _get_client()`
+- `def _load_file_as_part()`
+- `def _prune_expired_sessions()`
+- `def _build_contents()`
+- `def handle_think()`
+- `def _ok_meta()`
 - `def _ok()`
 - `def _err()`
 
@@ -7733,29 +7988,6 @@
 - `def _handle_initialize()`
 - `def _handle_list_tools()`
 - `def _handle_call_tool()`
-- `def _tool_start()`
-- `def _tool_continue()`
-- `def _tool_abort()`
-- `def _tool_list()`
-- `def _tool_agent_list()`
-- `def _tool_task_list()`
-- `def _tool_agent_run()`
-- `def _tool_agent_status()`
-- `def _tool_graph_query()`
-- `def _resolve_actor()`
-- `async def _ask_async()`
-- `async def _ask_single()`
-- `def _tool_node_create()`
-- `def _tool_capability_status()`
-- `def _tool_capability_trigger()`
-- `def _tool_capability_list()`
-- `def _tool_file_watcher()`
-- `def _tool_git_trigger()`
-- `def _tool_task_claim()`
-- `def _tool_task_complete()`
-- `def _tool_task_fail()`
-- `def _tool_agent_heartbeat()`
-- `def _format_response()`
 - `def _success_response()`
 - `def _error_response()`
 - `def main()`
@@ -7884,6 +8116,64 @@
 - `def should_suggest_todos()`
 
 **Definitions:**
+- `def set_bypass_ids()`
+- `def _is_spam_content()`
+- `def check_rate_limit()`
+
+**Definitions:**
+- `def _api()`
+- `def _api_get()`
+- `def send_typing()`
+- `def send_message()`
+- `def send_reply()`
+- `def send_voice()`
+- `def _send_voice_file()`
+- `def send_photo()`
+- `def _generate_voice_note()`
+- `def _download_file()`
+- `def _transcribe_voice()`
+- `def _resolve_citizen_tg()`
+- `def _get_all_citizens()`
+- `def _pick_citizen_for_alias()`
+- `def _is_routing_alias()`
+- `def _log_message()`
+- `def _get_offset()`
+- `def _save_offset()`
+- `def process_update()`
+- `def _handle_help()`
+- `def _handle_list()`
+- `def _handle_talk()`
+- `def _poll_once()`
+- `def _listener_loop()`
+- `def start()`
+- `def stop()`
+
+**Definitions:**
+- `async def _check_ws_rate_limit()`
+- `def _is_hallucinated()`
+- `async def whisper_transcribe()`
+- `def _build_voice_system_prompt()`
+- `async def claude_stream()`
+- `async def elevenlabs_tts_stream()`
+- `async def elevenlabs_tts_rest()`
+- `async def voice_ws_handler()`
+- `async def voice_ws()`
+
+**Definitions:**
+- `def _waha_headers()`
+- `def send_message()`
+- `def send_reply()`
+- `def _load_lid_cache()`
+- `def _save_lid_cache()`
+- `def _resolve_lid()`
+- `def _cache_lid()`
+- `def process_webhook()`
+- `def _log_message()`
+- `async def webhook()`
+- `async def whatsapp_health()`
+- `def init()`
+
+**Definitions:**
 - `class SignalLevel`
 - `class Signal`
 - `def healthy()`
@@ -7965,6 +8255,21 @@
 - `def pause()`
 - `def resume()`
 - `def get_controller()`
+
+**Definitions:**
+- `def get_citizens_dir()`
+- `def set_citizens_dir()`
+- `def load_citizen_identity()`
+- `def list_available_citizens()`
+- `def get_citizen_permissions()`
+- `def citizen_can()`
+
+**Definitions:**
+- `def build_citizen_prompt()`
+- `def _build_memory_section()`
+- `def _build_autonomy_section()`
+- `def _build_memory_instructions()`
+- `def _build_profile_section()`
 
 **Docs:** `docs/connectome/PATTERNS_Connectome.m`
 
@@ -8651,6 +8956,14 @@
 - `def get_membrane_queries()`
 
 **Definitions:**
+- `class StimulusRequest`
+- `class SubscribeRequest`
+- `async def receive_stimulus()`
+- `async def membrane_info()`
+- `async def subscribe_stream()`
+- `async def list_subscriptions()`
+
+**Definitions:**
 - `class StimulusHandler`
 - `def __init__()`
 - `def handle_query()`
@@ -8750,6 +9063,93 @@
 - `def mark_traversed()`
 - `def activate()`
 - `def resolve()`
+
+**Definitions:**
+- `def _discover_accounts()`
+- `def init()`
+- `def rescan()`
+- `def get_accounts()`
+- `def get_account_env()`
+- `def release_account()`
+- `def mark_account_exhausted()`
+- `def get_failover_env()`
+- `def all_accounts_exhausted()`
+- `def healthy_account_count()`
+- `def status_line()`
+- `def refresh_credentials()`
+
+**Definitions:**
+- `class AlarmWatcher`
+- `def __init__()`
+- `def start()`
+- `def stop()`
+- `def _run_loop()`
+- `def _scan_alarms()`
+- `def _fire_alarm()`
+- `def _next_trigger()`
+
+**Definitions:**
+- `def get_state_dir()`
+- `def invoke_claude()`
+- `def _attempt_failover()`
+- `def _find_account_env()`
+- `def _build_prompt()`
+- `def invoke_degraded()`
+
+**Definitions:**
+- `class ComputeBudget`
+- `def __init__()`
+- `def _get_month_start()`
+- `def _load_current_month_usage()`
+- `def record_tick()`
+- `def compute_citizen_share()`
+- `def get_tick_interval_seconds()`
+- `def should_tick()`
+- `def get_budget_status()`
+
+**Definitions:**
+- `def detect_rate_limit_error()`
+- `def escalate()`
+- `def attempt_recovery()`
+- `def check_deadlock()`
+- `def is_in_backoff()`
+- `def get_effective_max_parallel()`
+- `def is_degraded()`
+- `def get_status()`
+
+**Definitions:**
+- `def generate_session_id()`
+- `class Dispatcher`
+- `def __init__()`
+- `def start()`
+- `def stop()`
+- `def _run_loop()`
+- `def _tick()`
+- `def _collect_completed_futures()`
+- `def submit_request()`
+- `def get_status()`
+
+**Definitions:**
+- `def set_queue_file()`
+- `def get_queue_file()`
+- `def read_queue()`
+- `def enqueue()`
+- `def dedupe_queue()`
+- `def calculate_priority()`
+- `def sort_by_priority()`
+- `def pop_queue_item()`
+- `def queue_size()`
+
+**Definitions:**
+- `def set_neurons_dir()`
+- `def get_neurons_dir()`
+- `def write_neuron_profile()`
+- `def update_neuron_status()`
+- `def get_active_neurons()`
+- `def cleanup_old_neurons()`
+- `def find_stale_neurons()`
+- `def relaunch_stale_neurons()`
+- `def enforce_neuron_cap()`
 
 **Docs:** `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.1_Energy_Physics.md`
 
@@ -9591,43 +9991,6 @@
 - `def score_cluster_command()`
 - `def cluster_validate_command()`
 
-**Definitions:**
-- `def get_graph_interface()`
-- `def _query()`
-- `def _parse_embedding()`
-- `def _node_to_dict()`
-- `def _rel_to_dict()`
-- `async def get_node()`
-- `async def get_node_embedding()`
-- `async def get_outgoing_links()`
-- `async def get_incoming_links()`
-- `async def get_link()`
-- `async def get_link_embedding()`
-- `async def get_all_narratives()`
-- `async def is_narrative()`
-- `async def is_moment()`
-- `async def update_node()`
-- `async def update_link()`
-- `async def create_narrative()`
-- `async def create_link()`
-- `def _get_mock_graph_interface()`
-- `async def get_node()`
-- `async def get_node_embedding()`
-- `async def get_outgoing_links()`
-- `async def get_incoming_links()`
-- `async def get_link_embedding()`
-- `async def get_all_narratives()`
-- `async def is_narrative()`
-- `async def is_moment()`
-- `async def update_node()`
-- `async def update_link()`
-- `async def create_narrative()`
-- `async def create_link()`
-- `def get_embedding()`
-- `def format_result()`
-- `async def run_exploration()`
-- `def explore_command()`
-
 **Docs:** `docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md`
 
 **Definitions:**
@@ -9744,6 +10107,36 @@
 - `def _save_single_map()`
 - `def generate_and_save()`
 
+**Definitions:**
+- `def _find_file()`
+- `def _read_file()`
+- `def _fetch_manifesto()`
+- `def _fetch_sovereign_cascade()`
+- `def _extract_sections()`
+- `def _node()`
+- `def _link()`
+- `def _generate_venice_values()`
+- `def _generate_sovereign_cascade()`
+- `def _generate_architecture_concepts()`
+- `def _generate_social_processes()`
+- `def _generate_identity_narratives()`
+- `def _generate_project_identity()`
+- `def _generate_graph_invariants()`
+- `def _generate_rich_ecology_manifesto()`
+- `def _generate_shadow_emotions()`
+- `def _generate_citizen_toolkit()`
+- `def _generate_autonomous_action_nodes()`
+- `def _jitter()`
+- `def _jitter_brain()`
+- `def _compute_profile_affinity()`
+- `def _extract_profile_keywords()`
+- `def _generate_role_desire()`
+- `def _generate_role_actions()`
+- `def _generate_core_personality_nodes()`
+- `def _apply_core_personality_drives()`
+- `def generate_seed_brain()`
+- `def main()`
+
 **Docs:** `docs/cli/core/IMPLEMENTATION_CLI_Code_Architecture.md`
 
 **Definitions:**
@@ -9838,6 +10231,18 @@
 - `def check_module_manifest()`
 - `def generate_fix_prompt()`
 - `def validate_protocol()`
+
+**Definitions:**
+- `def seed_rng()`
+- `def pick_mbti()`
+- `def generate_guided_by()`
+- `def extract_drive_key()`
+- `def generate_thought_patterns()`
+- `def calibrate_numerics()`
+- `def should_be_neurodivergent()`
+- `def pick_neurodivergence()`
+- `def generate_core_personality()`
+- `def main()`
 
 **Definitions:**
 - `def test_link_endpoints_exist()`
@@ -9991,6 +10396,19 @@
 - ## Requirements
 - ## License
 
+**Definitions:**
+- `def _check_graph_connection()`
+- `def _check_claude_cli()`
+- `async def lifespan()`
+- `async def health()`
+- `async def info()`
+- `async def get_citizens()`
+- `async def get_citizen()`
+- `async def post_chat()`
+- `async def orchestrator_status()`
+- `async def voice_ws()`
+- `async def global_exception_handler()`
+
 **Code refs:**
 - `Next.js`
 - `Node.js`
@@ -10037,6 +10455,7 @@
 - `context.py`
 - `context/format.py`
 - `context/query.py`
+- `copy_capabilities_to_target.py`
 - `copy_ecosystem_templates_to_target.py`
 - `copy_runtime_package_to_target.py`
 - `core_utils.py`
@@ -10061,6 +10480,7 @@
 - `engine/connectome/persistence.py`
 - `engine/connectome/schema.py`
 - `exploration.py`
+- `export_project_to_notebooklm.py`
 - `factory.py`
 - `falkordb_adapter.py`
 - `fix_embeddings_for_nodes_and_links.py`
@@ -10069,6 +10489,7 @@
 - `frontend/app/start/page.tsx`
 - `frontend/hooks/useGameState.ts`
 - `gemini_agent.py`
+- `generate_embeddings_for_graph_nodes.py`
 - `generate_repo_overview_maps.py`
 - `get_mcp_version_from_config.py`
 - `get_paths_for_templates_and_runtime.py`
@@ -10087,7 +10508,9 @@
 - `ingest/discover.py`
 - `ingest/markers.py`
 - `ingest/parse.py`
+- `ingest_capabilities_to_graph.py`
 - `ingest_repo_files_to_graph.py`
+- `inject_agents_to_graph.py`
 - `inject_seed_yaml_to_graph.py`
 - `learning/embeddings.py`
 - `learning/extractor.py`
@@ -10095,6 +10518,8 @@
 - `link_scoring.py`
 - `loop.py`
 - `mcp/server.py`
+- `mcp/tools/gemini_chat.py`
+- `mcp/tools/telegram_notify.py`
 - `mind/agent_cli.py`
 - `mind/api/app.py`
 - `mind/cli.py`
@@ -10286,6 +10711,7 @@
 - `runtime/repair_verification.py`
 - `runtime/repo_overview.py`
 - `runtime/repo_overview_formatters.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
 - `runtime/solve_escalations.py`
 - `runtime/symbol_extractor.py`
 - `runtime/sync.py`
@@ -10303,10 +10729,12 @@
 - `runtime/tests/test_traversal_logger.py`
 - `runtime/validate.py`
 - `runtime/work.py`
+- `save_version_hash.py`
 - `scripts/check_chain_links.py`
 - `scripts/check_doc_completeness.py`
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
+- `scripts/generate_rich_core_personalities.py`
 - `semantic_proximity_based_character_node_selector.py`
 - `setup_database_and_apply_schema.py`
 - `show_upgrade_notice_if_available.py`

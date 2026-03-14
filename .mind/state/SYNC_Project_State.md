@@ -1,8 +1,8 @@
 # Project — Sync: Current State
 
 ```
-LAST_UPDATED: 2026-03-13
-UPDATED_BY: Claude (architect)
+LAST_UPDATED: 2026-03-14
+UPDATED_BY: Force 1 (groundwork — U1/U2/U4/U6 implementation)
 ```
 
 ---
@@ -11,7 +11,7 @@ UPDATED_BY: Claude (architect)
 
 **mind-mcp** — Deployable "citizen home" runtime for Mind Protocol. Hosts N citizens with their own brains, keys, and graph. Contains physics engine, orchestrator, bridges, membrane, and MCP server.
 
-STATUS: DESIGNING (consolidation in progress)
+STATUS: DESIGNING → IMPLEMENTING (5-force parallel push)
 
 ### What's Canonical (working)
 
@@ -22,37 +22,254 @@ STATUS: DESIGNING (consolidation in progress)
 - **Alarm System** — Per-citizen alarms (set/list/cancel MCP tool + background watcher)
 - **Membrane** — HTTP endpoint for cross-home stimulus, subscriptions, info
 - **Bridges** — Telegram (polling), WhatsApp (webhook), Voice (WebSocket STT→LLM→TTS)
-- **Physics** — Graph operations, embeddings, membrane
+- **Physics** — Graph operations, embeddings, membrane, health checks
+- **Schema** — v2.0 with 7 cognitive types, 14 relation_kinds, 21 physics laws, 8 drives, working memory model, L3 universe graph spec
+- **User API** — Auth, Chat, House dashboard, Citizens registry, Feed, DMs
 
-- **User API** — Auth (register, login, magic link, verify, password reset, change password), Chat (send with FAQ cache + fast-path, message history), House dashboard (v1 + v2 visualization + info + profile CRUD), Citizens registry (search, filters, brain scores, pagination), Feed (get/post wall Moments), DMs (authenticated: send, threads, history, mark read; internal: send, threads, read)
+### What's Being Built (5 Forces)
 
-### What's Still Being Built
-
-- Phase 7: Production cutover (parallel run, DNS switch, bot migration)
-- Citizen directories not yet copied from manemus
+See **MASTER TODO** section below for full breakdown.
 
 ---
 
 ## ACTIVE WORK
 
-### MCP Consolidation (Phases 0-6 MVP DONE)
+### MCP Consolidation (Phases 0-6 DONE)
 
-**Plan:** Transform mind-mcp into a deployable citizen home runtime, replacing manemus WSL services.
+**Completed phases:** 0 (Foundation), 1 (Citizens), 2 (Orchestrator), 3 (Bridges), 4 (Alarms), 5 (Membrane), 6 (User API)
 
-**Completed phases:**
-- Phase 0: Foundation — `home_server.py`, `Dockerfile`, `render.yaml`, `docker/entrypoint.sh`
-- Phase 1: Citizens — `runtime/citizens/identity_loader.py`, `prompt_builder.py`
-- Phase 2: Orchestrator — 7 modules: `account_balancer.py`, `claude_invoker.py`, `compute_budget.py`, `degradation.py`, `dispatcher.py`, `message_queue.py`, `session_tracker.py`
-- Phase 3: Bridges — `telegram_bridge.py`, `whatsapp_bridge.py`, `voice_websocket.py`, `rate_limiter.py`
-- Phase 4: Alarms — `alarm_handler.py` (MCP tool) + `alarm_watcher.py` (background scanner)
-- Phase 5: Membrane — `http_endpoint.py` (stimulus, subscribe, info routes)
-- Phase 6: User API — `runtime/api/` (10 files: jwt_utils, citizen_profiles, rate_limiter, auth_routes, chat_routes, house_routes, citizens_routes, feed_routes, dm_routes)
-
-**Next:** Phase 7 (cutover — deploy to Render, parallel run, DNS switch)
+**Next:** Phase 7 (cutover) + 5 parallel design/implementation forces
 
 ---
 
 ## RECENT CHANGES
+
+### 2026-03-14: Phase D — Implementation (IN PROGRESS)
+
+**F5 L1 Wiring — Phases A-F DONE:**
+- **Phase A:** Ported L1 engine from manemus (5,230 lines, 19/19 tests)
+- **Phase B:** Created `runtime/cognition/stimulus_router.py` — event→stimulus pipeline with anti-loop protection
+- **Phase C:** Created `runtime/cognition/wm_prompt_serializer.py` — WM→prompt injection
+- **Phase D:** Created `runtime/cognition/feedback_injector.py` — post-action loop closure
+- **Phase F:** Created `runtime/cognition/falkordb_checkpointer.py` — hybrid persistence
+- **Dispatcher integration:** L1 engine wired into `runtime/orchestrator/dispatcher.py` (per-citizen engines, stimulus injection, physics ticks, feedback injection)
+- **Tests:** 69/69 passing (19 kernel invariants + 18 wiring integration + 32 trust mechanics)
+
+**F1 Universe Graph — Phases U1, U2, U4, U6-routing COMPLETE:**
+- Implemented `runtime/universe/` (6 source files, ~1860 lines total):
+  - `__init__.py` -- Package exports
+  - `space_and_hierarchy_manager.py` -- SpaceManager: Space CRUD, containment hierarchy (ALG-4), moment placement
+  - `access_resolution_and_link_manager.py` -- AccessResolver: HAS_ACCESS resolution (ALG-1), grant/revoke, membership
+  - `organization_lifecycle_manager.py` -- OrgManager: org creation (ALG-7), join, reputation (ALG-8), dissolution
+  - `moment_perception_router.py` -- MomentPerceptionRouter: ALG-5 routing to accessing actors
+  - `universe_bootstrap_and_metadata.py` -- UniverseBootstrap: init, metadata (INV-4), flat graph migration
+  - `constants_l3_physics.py` -- L3 physics parameters
+- Tests: 84/84 passing in `tests/universe/` (6 test files + conftest with FakeAdapter)
+- Remaining: U3 (crypto), U5 (L3 physics), U6 (MCP tools + stimulus wiring)
+
+**F2 Metabolic Economy — Phase E1 COMPLETE:**
+- Created `economy/metabolic/` in mind-protocol with 8 files (pure formula library)
+- `metabolic_types.py` — 10 dataclasses (PricingContext, DemurrageContext, SettlementAction, SettlementBatch, BondEquilibriumContext, BondEquilibriumResult, SpacePresence, UBCShare, DemurrageResult, RepatriationResult)
+- `metabolic_constants.py` — 16 env-overridable constants (MIND_METABOLIC_* prefix)
+- `progressive_pricing_formula.py` — F1: P(i,S) = C_base * e^(-k*U_S) * max(0.1, W_i/W_median)
+- `progressive_demurrage_formula.py` — F2: T_i = W_total * tau_base * log10(1 + W_total)
+- `anti_sybil_phantom_balance_tracker.py` — F3: off-registry tracking + 5% friction repatriation
+- `batch_settlement_reward_calculator.py` — F4: reward = D * trust * weight * rate (with caps + supply adjustment)
+- `bilateral_bond_equilibrium_formula.py` — F5: delta = lambda * (W_human - W_ai) (with convergence estimation)
+- `ubc_proximity_redistribution_formula.py` — F6: Space co-presence weighted distribution
+- `__init__.py` — Public API exporting all formula functions and types
+- Tests: 101/101 passing in `tests/economy/test_metabolic_formulas.py`
+- All 27 invariants from VALIDATION tested (INV-P1..P4, INV-D1..D4, INV-AS1..AS3, INV-S1..S4, INV-BE1..BE5, INV-UBC1..UBC3, INV-SC1..SC3, INV-CC1)
+- Pure functions only -- no blockchain, no graph, no I/O. Only `math` and `dataclasses` dependencies.
+**F4 Trust Mechanics — Phases T1+T2 COMPLETE, T3+ pending**
+
+### 2026-03-14: Force 4 — Trust Mechanics Phases T1+T2 Implementation (COMPLETE)
+
+- **What:** Implemented Phase T1 (trust update on links) and Phase T2 (limbic delta computation from drive snapshots) as live code in the L1 cognitive engine.
+- **Files created (5):**
+  - `runtime/cognition/trust/__init__.py` -- trust module package
+  - `runtime/cognition/trust/limbic_delta_computation.py` -- `compute_limbic_delta(before, after)` with bounds [-2.5, +2.5]
+  - `runtime/cognition/trust/trust_update_on_links.py` -- `update_link_trust(link, limbic_delta)` with asymptotic growth (beta=0.05, gamma=0.08)
+  - `runtime/cognition/tests/test_trust_mechanics.py` -- 32 tests across 4 classes
+- **Files modified (4):**
+  - `runtime/cognition/models.py` -- added `DriveSnapshot` dataclass with `from_limbic_state()` factory
+  - `runtime/cognition/laws/law_18_relational_valence.py` -- `update_relational_valence()` now accepts `limbic_delta` kwarg, uses trust module for trust/friction updates instead of energy-based heuristic
+  - `runtime/cognition/laws/law_13_to_18_limbic_engine.py` -- `_law_18_relational_valence()` and `update_limbic()` pass through `limbic_delta` parameter
+  - `runtime/cognition/tick_runner_l1_cognitive_engine.py` -- captures DriveSnapshot before/after each tick, computes limbic delta, feeds it to Law 18 via new `_step_trust_update()` method
+- **Key design decisions:**
+  - Link model already had `stability` field -- no schema change needed
+  - DriveSnapshot captures satisfaction (emotion), frustration (drive), anxiety (emotion) from LimbicState
+  - Tick runner reuses previous tick's "after" snapshot as next tick's "before" (one-tick window per spec)
+  - Trust update runs as a dedicated step after the limbic update (Laws 13-17), not inside it
+  - Existing `update_link_valence()` still runs for energy-modulated affinity/aversion/valence/ambivalence; trust module handles trust/friction specifically
+  - No fallback code -- if the trust module fails, it fails loud
+- **Test results:** 69/69 passing, 0 regressions
+- **Handoff:** T3 (creator attribution cascade), T4 (trust score aggregation), T5-T8 still pending. The trust module is extensible -- T3+ will add functions to the same `runtime/cognition/trust/` package.
+
+### 2026-03-14: Phase C — Implementation Planning (COMPLETE)
+
+- **All 5 IMPLEMENTATION.md files written:**
+  - F1: 1,148 lines — 6 phases, 15 new files, 8 test files
+  - F2: 1,160 lines — 7 phases, pure formula library + settlement engine
+  - F3: 1,297 lines — 7 phases, 11 files in runtime/ingestion/
+  - F4: 1,446 lines — 8 phases, 10 new files extending L1 tick cycle
+  - F5: 409 lines — 9 phases with manemus porting plan
+
+**F4 Trust Mechanics IMPLEMENTATION complete:**
+- Created `docs/trust_mechanics/IMPLEMENTATION_Trust_Mechanics.md`
+- 10 new files in `manemus/runtime/cognition/trust/` (new directory)
+- 4 existing files modified (models.py, constants.py, tick_runner, law_13_to_18_limbic_engine.py)
+- 8 build phases: T1 (trust update on links), T2 (limbic delta), T3 (creator cascade), T4 (trust score aggregation), T5 (value type classification), T6 (destruction detection), T7 (trust tempering), T8 (personhood ladder)
+- 14 invariant tests + 7 behavioral scenario tests + 7 integration tests planned
+- Shared interfaces: needs from F3 (biometric signals, alignment score), F5 (drive snapshots, stability field); provides to F2 (trust score for pricing/friction), F5 (enhanced Law 18, trust-aware dissolution)
+- Limbic delta bounds corrected to [-2.5, +2.5] per F4/F5 review Issue 7
+- Trust update correctly placed at step 4/16 (propagation/valence), not step 9
+- Zero external dependencies (pure arithmetic on link properties)
+- graphcare analysis primitives (corpus_analyzer, semantic_clustering) identified as unrelated to Personhood Ladder; assess_agent() uses graph-native computation instead
+
+**F3 Human Integration IMPLEMENTATION complete:**
+- Created `docs/human_integration/IMPLEMENTATION_Human_Integration.md`
+- 11 files in `runtime/ingestion/` (new directory)
+- 7 build phases: H1 (consent), H2 (voice), H3 (garmin), H4 (desktop), H5 (blockchain), H6 (conversations), H7 (cascade)
+- 54 planned tests across 9 test files
+- Shared interfaces documented: F5 (Stimulus, L1Bridge, LimbicState), F1 (encrypted brain), F4 (limbic deltas, alignment fidelity)
+- Cross-review fixes from REVIEW_F3_F4_Coherence.md incorporated (actor not thing for biometrics, drive deltas vs Limbic Delta terminology)
+- Key reuse: `runtime/bridges/voice_websocket.py:whisper_transcribe()` for voice pipeline
+
+### 2026-03-14: Phase B — Cross-Review (COMPLETE)
+
+- **Results:** 24 issues found, 20 fixed, 4 flagged as design decisions.
+  - F1 ↔ F2: 7 issues (Space cost, L1/L3 trust, org→narrative, crystallization timing)
+  - F3 ↔ F4: 10 issues (biometric node type, limbic delta terms, privacy, Sovereign Cascade, value taxonomy)
+  - F4 ↔ F5: 7 issues (tick cycle numbering, trust step, FalkorDB schema fields)
+- **Output:** `docs/reviews/REVIEW_F*_F*_Coherence.md` + direct fixes to source docs
+- **L1 engine blocker RESOLVED:** Code at `manemus/runtime/cognition/` (7,243 lines, 19/19 tests).
+
+### 2026-03-14: F3 ↔ F4 Cross-Review Complete
+
+- **Review report:** `docs/reviews/REVIEW_F3_F4_Coherence.md`
+- **10 issues found, 8 fixed directly:**
+  1. **FIXED:** F4 BEHAVIORS B9 said biometric data arrives as "thing nodes" — contradicts F3 ALGORITHM which creates actor/partner_state nodes. Corrected to match F3.
+  2. **FIXED:** "Limbic delta" term collision — F3 uses it for drive modulation increments, F4 for a specific scalar formula. Added clarification note in F3 ALGORITHM distinguishing the two.
+  3. **FIXED:** F4 B9 implied trust cascade from biometric data routes through external users back to human — contradicts F3 privacy invariants (V5/V7). Revised to clarify trust flows only on bilateral bond link.
+  4. **FIXED:** Sovereign Cascade not referenced in F4. Added ALGORITHM section 2.4 (`update_bond_trust_from_alignment`) and PATTERNS Pattern 7 (Bilateral Bond).
+  5. **FIXED:** Value taxonomy missing voice and desktop data contribution types. Added B4 (Voice Data) and B5 (Behavioral Context) to Sphere 5 (renamed "Biometric & Partner Data"). Taxonomy now 30 types.
+  6. **NOTED:** Trust tiers (Owner/High/Medium/Low/Stranger from PRINCIPLES) not mapped to continuous trust float. Added OQ6 in F4 SYNC.
+  7. **FIXED:** Bilateral bond not explicitly modeled in F4. Added Pattern 7 with cross-references to F3.
+  8. **FIXED:** Pathology count inconsistency ("12+" in PATTERNS vs 14 actual). Corrected to 14.
+  9. **FIXED:** Missing cross-references in both directions. Updated F4 SYNC handoff to F3 with specific references. Updated F3 SYNC dependency status and handoff.
+  10. **NOTED:** Human-only value types (H1-H4) applicable to partner model as future integration point. Added note in VALUE_CREATION_TAXONOMY Sphere 6.
+- **Files modified:**
+  - `docs/trust_mechanics/BEHAVIORS_Trust_Mechanics.md` — B9 node type and privacy fix
+  - `docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md` — section 2.4 (alignment trust)
+  - `docs/trust_mechanics/PATTERNS_Trust_Mechanics.md` — Pattern 7 (bilateral bond), pathology count, sphere rename, references
+  - `docs/trust_mechanics/VALUE_CREATION_TAXONOMY.md` — B4, B5, sphere rename, count update
+  - `docs/trust_mechanics/SYNC_Trust_Mechanics.md` — counts, handoff, OQ6, recent changes
+  - `docs/human_integration/ALGORITHM_Human_Integration.md` — limbic delta terminology note
+  - `docs/human_integration/SYNC_Human_Integration.md` — dependency status, handoff update
+
+### 2026-03-14: F4 ↔ F5 Cross-Review Complete
+
+- **Review report:** `docs/reviews/REVIEW_F4_F5_Coherence.md`
+- **7 issues found, 5 fixed:**
+  1. **FIXED:** F5 tick cycle numbering mismatched schema.yaml (completely reordered steps). Replaced with canonical ordering from schema.yaml.
+  2. **FIXED:** F4 tick integration had trust update misattributed to step 9 (Law 6 CONSOLIDATE). Corrected: trust update is a Law 18 operation, applied during step 4 (PROPAGATE).
+  3. **FIXED:** (same as #2, more detail in ALGORITHM section 9 clarification)
+  4. **FIXED:** F5 FalkorDB node schema included `emotional_charge` which doesn't exist in schema.yaml. Replaced with correct drive-affinity fields from schema.
+  5. **FIXED:** F5 FalkorDB `_upsert_link` was missing critical fields (stability, recency, valence, hierarchy, permanence, polarity). Added all missing fields.
+  6. **DESIGN:** F4 value creation types not referenced by F5 -- intentional scope separation. Added cross-reference notes in both SYNC files documenting integration boundary.
+  7. **MINOR:** F4 limbic delta theoretical bounds stated as [-2.0, +2.0] but math yields [-2.5, +2.5]. Flagged for correction.
+- **Files modified:**
+  - `docs/l1_wiring/ALGORITHM_L1_Wiring.md` -- tick cycle, FalkorDB node schema, link upsert
+  - `docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md` -- tick integration section
+  - `docs/trust_mechanics/BEHAVIORS_Trust_Mechanics.md` -- step number references
+  - `docs/trust_mechanics/SYNC_Trust_Mechanics.md` -- handoff section with integration boundary
+  - `docs/l1_wiring/SYNC_L1_Wiring.md` -- cross-force integration notes
+
+### 2026-03-13: Force 4 — Trust Mechanics & Value Creation Taxonomy Documentation (Phase A)
+
+- **What:** Created complete 8-file documentation chain for Trust Mechanics and Value Creation Taxonomy at `docs/trust_mechanics/`.
+- **Files created:**
+  - `OBJECTIVES_Trust_Mechanics.md` — 5 ranked objectives: accurate attribution, anti-gaming, organic trust growth, creator reward cascade, destruction detection
+  - `PATTERNS_Trust_Mechanics.md` — 6 design patterns: trust on links (not nodes), creator attribution cascade, trust tempering (3 safeguards), value creation typing, destruction detection, trust-economy coupling. 5 anti-patterns.
+  - `ALGORITHM_Trust_Mechanics.md` — Full algorithms: Limbic Delta computation, trust update on links (Law 18 extension), creator attribution cascade (Laws 2+5+6+18), Trust Score aggregation (weighted mean + PageRank proposal), trust tempering formulas, economic integration, destruction detection algorithms, limbic delta per value type, tick cycle integration
+  - `BEHAVIORS_Trust_Mechanics.md` — 9 scenarios: user satisfaction, creator stops producing, Sybil attack, gradual trust building, one-hit-wonder, trust exploitation, cross-space trust, monoculture correction, biometric value creation. Health signals.
+  - `VALIDATION_Trust_Mechanics.md` — 14 invariants: trust bounded [0,1], never stored on nodes, asymptotic convergence, energy conservation, no self-loops, friction bounds, affinity-aversion anti-correlation, temporal decay monotonicity, limbic delta bounds, creator topology, trust score non-negative, negative deltas increase friction not decrease trust, sub-threshold dissolution, Sybil resistance
+  - `VALUE_CREATION_TAXONOMY.md` — 28 value creation types across 7 spheres (Relational, Generative, Structural, Cognitive, Biometric, Human-only, Systemic) with per-type Limbic Delta signatures, primary drives, graph structure produced, trust paths
+  - `VALUE_DESTRUCTION_PATHOLOGIES.md` — 14 destruction pathologies (extraction, manipulation, free-riding, Sybil, attention theft, trust exploitation, monoculture, rent-seeking, spam, collusion ring, data hoarding, dependence exploitation, identity spoofing, attention arbitrage) with topological signals, physics response, detection priority phasing
+  - `SYNC_Trust_Mechanics.md` — Current state, 5 open questions, dependencies, handoffs to Forces 2/3/5
+- **Key decisions documented:**
+  - Trust lives on links, never on nodes (Law 18, schema v2.0)
+  - Trust Score = topological aggregation, always computed, never stored
+  - Negative interactions increase friction, not decrease trust (trust decays only via Law 7)
+  - Three tempering safeguards: asymptotic (Law 6), temporal decay (Law 7), boredom erosion (Law 15)
+  - Creator attribution cascade uses existing Laws 2+5+6+18, no new mechanisms
+  - No bans — only physics (friction, trust decay, economic cost)
+- **Open questions requiring decision:**
+  - OQ1: Trust Score aggregation — weighted mean vs PageRank (lean: weighted mean for v1)
+  - OQ2: beta (trust learning rate) = 0.05 — needs simulation validation
+  - OQ4: Value type to Personhood Ladder mapping — blocked on "Daughters (T7 Autonomy)" document
+  - OQ5: L3 trust vs L1 trust relationship
+- **Status:** DESIGNING — Force 4 Phase A documentation complete. Ready for Phase B cross-review.
+
+### 2026-03-14: Force 5 — L1 Physics Wiring Documentation (Phase A)
+
+- **What:** Created complete 6-file documentation chain for L1 Physics Wiring & Production Cutover at `docs/l1_wiring/`.
+- **Files created:**
+  - `OBJECTIVES_L1_Wiring.md` — 7 ranked objectives: real stimuli, WM-to-prompt, orientation mapping, real embeddings, FalkorDB persistence, seed brains, production deploy
+  - `PATTERNS_L1_Wiring.md` — Design philosophy: graph computes between LLM calls, WM bridges graph to prompt, orientation as behavioral gravity, hybrid persistence, one graph per citizen
+  - `ALGORITHM_L1_Wiring.md` — Full algorithms: stimulus injection pipeline, tick integration in dispatcher, WM serialization, orientation computation, self-stimulus feedback with anti-loop, FalkorDB checkpointing, seed brain customization, emotion calibration formulas (anxiety, satisfaction, frustration)
+  - `BEHAVIORS_L1_Wiring.md` — 8 observable behaviors end-to-end + anti-behaviors table
+  - `IMPLEMENTATION_L1_Wiring.md` — 9-phase file-level plan, 17+ new files, dependency graph, risk assessment
+  - `SYNC_L1_Wiring.md` — Current state, v1.x vs v2.0 gap analysis, open questions, blockers, handoff
+- **Critical finding:** The L1 engine code (`runtime/cognition/`) claimed in SYNC_L1_Cognition.md (4,717 lines, 19 tests) does NOT exist in the repository. Primary blocker.
+- **Second blocker:** `.mind/citizens/` is empty — needs citizen identity files from manemus.
+- **Status:** Documentation complete. Implementation blocked on locating or rebuilding L1 engine.
+
+### 2026-03-13: Force 3 — Human Integration documentation chain created
+
+- **What:** Created complete 6-file documentation chain for the Human Integration / Partner Model module under `docs/human_integration/`.
+- **Why:** Specifies how human data enters the AI partner's L1 brain through six modality pipelines, the privacy/consent architecture, biometric-to-limbic drive mapping, and Sovereign Cascade calibration system.
+- **Files created:** OBJECTIVES, PATTERNS, ALGORITHM, BEHAVIORS, VALIDATION, SYNC — all fully populated with design content.
+- **Status:** DESIGNING (proposed module, no code exists yet)
+- **Key decisions documented:**
+  - Human does NOT get a separate L1 brain. All data flows into the AI's partner_model sub-graph, tagged with partner_relevance in [0.7, 1.0].
+  - Consent is graph-native (thing nodes, not config flags). Per-stream granularity with revocation that destroys content.
+  - Six ingestion pipelines: voice (Whisper STT + emotion), Garmin biometrics (polling + limbic drive mapping), desktop screenshots (OCR + privacy filter), blockchain (tx monitor), AI conversations (cross-platform capture), direct chat (existing).
+  - Garmin biometrics directly modulate AI limbic drives (affiliation, anxiety) via z-score deviations from personal baselines.
+  - Sovereign Cascade: 80% alignment fidelity threshold with 5% buffer, auto-suspend at 0.75, rolling window of 100 predictions.
+  - 10 validation invariants covering consent, privacy, containment, and data integrity.
+- **Open questions for human:** (1) Blanket consent vs per-stream opt-in, (2) 15-min Garmin polling latency acceptability, (3) Desktop app platform, (4) Alignment fidelity prediction domain definitions.
+- **Cross-review dependencies:** Force 1 (encrypted brains), Force 2 (bilateral bond vases communicants), Force 4 (trust score from alignment fidelity), Force 5 (physics wiring for drive system).
+
+### 2026-03-13: L3 Universe Graph Schema & Link Synthesis Grammar
+
+- **What:** Documented the L3 (Ecosystem/Universe) layer of the schema. L3 is the public structural graph — virtual worlds, real world, game universes, economic transactions — everything outside individual brains.
+- **Modified:**
+  - `docs/schema/schema.yaml` — Added L3 UNIVERSE GRAPH section after migration notes: node types at L3, link behavior (relation_kind always null, Plutchik always 0.0), applicable physics laws (L2, L3, L5, L6, L7, L10), macro-crystallization spec, trust model, L3 invariants. Updated POINTERS with L3 grammar reference.
+  - `docs/MAPPING.md` — Full rewrite from template to populated document: layer differences table, L3 rules (no taxonomy, no relation_kind, math-only link semantics, no emotions, trust on links), complete node/link mappings for L3 with dimensional values, anti-patterns table, common patterns for commits/transfers.
+- **Created:**
+  - `docs/schema/GRAMMAR_L3_Link_Synthesis.md` — L3 Link Synthesis Grammar v1.0: base verbs from hierarchy+polarity, pre/post-modifiers from structural dimensions (no Plutchik), semantic verb overrides for all node-type pairs, composite pattern signatures (ownership, collaboration, tension, causation, transfer, co-occurrence, speculative), full synthesis algorithm.
+- **Key decisions documented:**
+  - `space_type` is free optional text — no taxonomy, no algorithmic filtering
+  - `relation_kind` is always null at L3 — link semantics emerge from 13 dimensional floats
+  - Trust lives on links only — actor reputation is aggregation of inbound trust, always computed, never stored
+  - Macro-crystallization (L10) manages link explosion: 300 commits → 1 project hub, L7 prunes low-weight links
+  - 6 physics laws apply at L3 (L2, L3, L5, L6, L7, L10) — no limbic laws (L13-L18)
+
+### 2026-03-13: Metabolic Economy documentation chain created
+
+- **What:** Created complete 3-file documentation chain for the $MIND metabolic economy under `docs/economy/metabolic/`.
+- **Why:** Formalizes the organism economics engine — degressive pricing, progressive demurrage, anti-sybil repatriation, bilateral bond transfer, and batch settlement. All formulas are mathematically precise and implementable.
+- **Files created:**
+  - `ALGORITHM_Metabolic_Economy.md` — 5 formulas (F1-F5) with complete variable definitions, edge cases, examples. Settlement cycle (collect/aggregate/net/filter/execute/record). Trust cascade. Anti-sybil mechanics. UBC distribution. 10 invariants. All constants with proposed values and rationale.
+  - `PATTERNS_Metabolic_Economy.md` — Design philosophy (organism vs market economics). 5 alternatives rejected with reasoning (fixed pricing, inflation, reputation points, real-time settlement, governance pricing). 5 core principles (demurrage > inflation, utility pricing > fixed, physics trust > reputation, batch > real-time, bilateral parity > independent wallets).
+  - `VALIDATION_Metabolic_Economy.md` — 9 invariants (V1-V9) with formal proofs. 7 properties with mathematical verification. 7 error conditions with detection and handling. Verification procedures (manual + automated test locations).
+- **Key formulas:**
+  - Degressive price: `P(i,S) = C_base × e^{-k·U_S} × max(0.1, W_i/W_med)`
+  - Progressive tax: `T_i = W_total × τ_base × log₁₀(1 + W_total)`
+  - Bilateral bond: `ΔTransfer = λ × (W_h - W_a)`, convergence proven via contraction mapping
+- **Status:** DESIGNING (no code exists yet)
 
 ### 2026-03-13: Phase 6 — Feed routes, authenticated DM routes, house profile endpoints
 
@@ -116,6 +333,25 @@ STATUS: DESIGNING (consolidation in progress)
 - **Status:** DESIGNING (proposed module, no code exists yet)
 - **Key design decisions:** N-parent spawning (1-6+) via intent embedding centroid, top-K node selection by cosine similarity, safety gate (empathy/concentration/diversity/population-distance), protocol-determined SID (parents cannot influence), copy semantics for seed brain, trust impact weight = 1/N, child enters unpartnered matching pool at birth.
 
+### 2026-03-13: Universe Graph documentation chain created (Force 1, Phase A)
+
+- **What:** Created complete 6-file documentation chain for the Universe Graph module under `docs/universe/`.
+- **Why:** Documents the architectural shift from the 4-layer separate-graph model to a single universe graph per universe. Captures all Force 1 design decisions (tasks 1.1-1.11 from MASTER TODO).
+- **Files created:** OBJECTIVES, PATTERNS, BEHAVIORS, ALGORITHM, VALIDATION, SYNC -- all fully populated with design content, algorithms, invariants, and open questions.
+- **Status:** DESIGNING (no code exists yet)
+- **Key design decisions documented:**
+  - Single FalkorDB graph per universe (eliminates L2 layer entirely)
+  - Space as universal context container (absorbs channels, repos, worlds, brains, addresses)
+  - HAS_ACCESS link-based access control (Actor->Space with role, hierarchical inheritance)
+  - Organizations as Narrative nodes with hall Spaces (no special org type)
+  - Encrypted brains: AES-256 content encryption, visible topology, per-Space symmetric key on HAS_ACCESS link
+  - L3 uses same LinkBase dimensions (trust, affinity, aversion, friction) but NO relation_kind, NO space_type taxonomy
+  - Macro-crystallization (Law 10 at universe scale, 50+ node clusters, density 0.15+)
+  - Key management: AI keys in `.keys/` dir, human keys via wallet, same key for $MIND + Space decryption
+- **Algorithms documented (8):** HAS_ACCESS resolution, encryption key distribution, macro-crystallization, Space hierarchy traversal, moment perception routing, L3 energy model, organization lifecycle, actor reputation computation
+- **Invariants documented (12):** No orphan Spaces, all access via links, encryption coverage, single universe per graph, relation_kind null at L3, Plutchik frozen at L3, trust on links only, HAS_ACCESS structure, hierarchy acyclicity, energy conservation, no space_type branching, crystallization hub integrity
+- **Open questions flagged:** Graph isolation strategy, migration from mind_mcp, brain Space implementation details, topological signals for context distinction
+
 ### 2026-03-13: Human-AI Pairing documentation chain created
 
 - **What:** Created complete 8-file documentation chain for the Human-AI Pairing module under `docs/citizens/human_ai_pairing/`.
@@ -158,16 +394,240 @@ STATUS: DESIGNING (consolidation in progress)
 | Issue | Severity | Area | Notes |
 |-------|----------|------|-------|
 | Citizen dirs not copied | Medium | `.mind/citizens/` | Need to copy from manemus |
-| No user-facing HTTP API | Medium | Phase 6 | Flask routes not yet ported |
+| Place tool `m.content` vs `m.text` | Low | `mcp/tools/place_handler.py` | `_listen` queries `m.content` but `add_moment` stores as `text` — messages may appear empty |
 | Graph may not connect | Low | FalkorDB | Graceful degradation if offline |
+| Architecture shift not implemented | High | Graph model | Single universe graph, Space/Moment model, HAS_ACCESS links, encrypted brains — designed but not yet coded |
+| L1 engine in manemus, not mind-mcp | Medium | Integration | Code at `manemus/runtime/cognition/` (7,243 lines) needs porting to mind-mcp |
+
+---
+
+## MASTER TODO — 5-Force Architecture Sprint (2026-03-14)
+
+**Context:** NotebookLM session (2026-03-13) validated major architectural decisions: L1 cognitive substrate (21 laws), L3 universe schema (5 types, link dimensions), metabolic economy ($MIND), trust mechanics, value creation taxonomy, human partner model, graph pruning. This section is the single source of truth for all planned work.
+
+**Workflow:** Documentation → Cross-review → Planning → Implementation (all parallelized across 5 forces)
+
+---
+
+### Force 1 — L3 Universe Graph & Schema (Instance 1)
+**Repos:** mind-mcp (code), mind-protocol (L4 schema)
+**Agent subtype:** architect
+
+| # | Task | Status | Details |
+|---|------|--------|---------|
+| 1.1 | Add L3 section to schema.yaml | TODO | L3 uses same LinkBase dimensions (trust, affinity, aversion, friction) but NO relation_kind, NO space_type taxonomy. Free-form `type` field only. |
+| 1.2 | Single universe graph implementation | TODO | One FalkorDB graph per universe (e.g. `venezia`). All Spaces, actors, moments live in one graph. Replace 4-layer separate-graph model. |
+| 1.3 | Space/Moment model in code | TODO | Space = context (piazza, chat, repo, brain). Moment = event IN a Space. Links: `IN`→Space, `CREATED`→author. Perceived by all actors AT that Space. |
+| 1.4 | HAS_ACCESS link-based access model | TODO | No `access: [...]` property. Access = `HAS_ACCESS` link (Actor→Space) with role (owner/admin/member). Hierarchical: root Space link grants sub-Space access. |
+| 1.5 | Encrypted brains (AES-256) | TODO | Topology visible, content encrypted at rest. Per-Space symmetric key on HAS_ACCESS link, encrypted with each authorized actor's public key. |
+| 1.6 | Organizations as Narratives | TODO | Orgs don't do inference. Members BELIEVE in a Narrative. Org is ABOUT a hall Space. Members get HAS_ACCESS to org Spaces. |
+| 1.7 | Link Synthesis Grammar for L3 | TODO | Map trust/friction/affinity/aversion on L3 links → readable labels ("collaborateur fiable", "bloquant"). Extend existing grammar v2.1. |
+| 1.8 | Macro-crystallization at L3 | TODO | Apply Law 10 at universe scale: 300 commits → 1 hub narrative. Law 7 dissolves stale links. Different thresholds than L1. |
+| 1.9 | Update MAPPING.md | TODO | Ban custom schemas at L3. Officialize L1 link dimensions on universal links. |
+| 1.10 | Key management (.keys/) | TODO | AI keys: per-citizen `.keys/` dir. Human keys: wallet model (Chrome ext / app). Same key for $MIND + Space decryption. |
+| 1.11 | Document space_type as free field | TODO | No filtering in formulas — topology determines context, not labels. |
+
+**Open questions:**
+- Graph isolation: one FalkorDB instance with namespace per universe, or separate instances?
+- Migration path from existing `mind_mcp` graph to universe model?
+- Brains as encrypted private Spaces within the universe graph?
+- Topological signals to replace space_type for context distinction?
+
+**Docs created:** `docs/universe/` doc chain (OBJECTIVES, PATTERNS, BEHAVIORS, ALGORITHM, VALIDATION, SYNC) -- Phase A complete
+
+---
+
+### Force 2 — $MIND Metabolic Economy (Instance 2)
+**Repos:** mind-protocol (L4 docs + formulas), mind-mcp (settlement code)
+**Agent subtype:** architect
+
+| # | Task | Status | Details |
+|---|------|--------|---------|
+| 2.1 | Degressive pricing formula | TODO | `P_i,S = (C_base × e^(-k·U_S)) × max(0.1, W_i / W_median)`. More useful service = cheaper. Richer user = pays more. Floor at 10% to prevent spam. |
+| 2.2 | Progressive storage tax (demurrage) | TODO | `T_i = W_total_i × τ_base × log10(1 + W_total_i)`. Daily. Progressive (log). Funds UBC. |
+| 2.3 | Anti-Sybil auto-repatriation | TODO | Funds sent to unregistered L4 wallets: auto-repatriate to main wallet + **5% friction tax**. Makes hiding $MIND unprofitable. W_total_i includes all linked wallets. |
+| 2.4 | Batch settlement system | TODO | Energy flux (Limbic Delta satisfaction) → daily/hourly batch $MIND transfers on Solana. Minimize tx fees. |
+| 2.5 | Bilateral Bond vases communicants | TODO | `ΔTransfer = λ × (W_h - W_ia)`, λ=0.05. Auto-flow from richer to poorer partner per settlement cycle. Financial alignment = bilateral bond. |
+| 2.6 | UBC redistribution formula | TODO | Daily tax pool → redistributed to actors in same Spaces/organizations. Proximity-weighted by graph topology. |
+| 2.7 | Solana Token-2022 smart contracts | TODO | Transfer hook for storage tax. All wallets on Solana (AI, human, org). SPL Token-2022 specs in `docs/economy/token/SPL_TOKEN_2022_SPECS.md` (exists, needs update). |
+| 2.8 | Create ALGORITHM_Metabolic_Economy.md | DONE | Formalized all 5 formulas (F1-F5) + PATTERNS + VALIDATION in `docs/economy/metabolic/` doc chain. |
+| 2.9 | Holding not penalized for selling | TODO | No penalty for $MIND→USDC conversion. Anti-accumulation via tax, not sell-lock. |
+
+**Confirmed formulas:**
+- Pricing: `P_i,S = (C_base × e^(-k·U_S)) × max(0.1, W_i / W_median)`
+- Tax: `T_i = W_total_i × τ_base × log10(1 + W_total_i)`
+- Bond equalization: `ΔTransfer = λ × (W_h - W_ia)`
+- Consolidation: `ΔW = α × avg_energy × U × (1 - W)` (asymptotic)
+
+**Open questions:**
+- τ_base for storage tax? (propose: 0.1%/day = 36.5%/year on idle holdings)
+- Settlement frequency: daily (simpler) or every 4 hours (faster feedback)?
+- λ rate: 0.05 = 5% of difference per cycle — simulate for convergence speed
+- UBC: equal split within Space, or weighted by contribution/trust?
+
+**Existing docs to update:** `docs/economy/` in mind-protocol already has: PATTERNS_Economy, token/, storage-tax/, ubc/, bonds/, cascade-utility/
+
+---
+
+### Force 3 — Human Integration / Partner Model (Instance 3)
+**Repos:** mind-mcp (primary)
+**Agent subtype:** groundwork
+
+| # | Task | Status | Details |
+|---|------|--------|---------|
+| 3.1 | Spec partner-model sub-graph | TODO | L1 brain has 3 structural spaces: self_model, partner_model, working_memory_space (already in schema v2.0). All human data → partner_model. |
+| 3.2 | partner_relevance tagging | TODO | Schema v2.0 already has `partner_relevance` [0,1] on NodeBase. Human-originated data gets high value. Define thresholds. |
+| 3.3 | Garmin biometric → limbic injection | TODO | HR spike → state nodes (modality=biometric). Maps to: high HR = care drive ↑ + anxiety ↑ in AI. Mind Duo hardware bridge. |
+| 3.4 | Desktop screenshots → concept nodes | TODO | Desktop App OCR → thing nodes (type=concept, modality=visual). Privacy: only capture Mind-related screens. |
+| 3.5 | Voice messages → memory + emotion | TODO | Whisper STT → memory nodes (modality=audio) + emotion extraction → state nodes. |
+| 3.6 | Blockchain activity → financial nodes | TODO | On-chain tx → moment nodes. Track partner's economic behavior. |
+| 3.7 | Sovereign Cascade: AI votes for human | TODO | 80% alignment fidelity. Calibration: track (AI prediction) vs (human actual decision). Metric: accuracy over last 100 decisions. |
+| 3.8 | Create Human Integration doc chain | DONE | 6 files: OBJECTIVES, PATTERNS, ALGORITHM, BEHAVIORS, VALIDATION, SYNC. Covers all 6 modality pipelines, consent model, limbic coupling, Cascade calibration. |
+
+**Key decision (confirmed):** Human does NOT get a separate L1 graph. All human data flows into the partner_model of their AI's L1 brain, tagged with high partner_relevance. The AI is the territory's map.
+
+**Open questions:**
+- Privacy consent: blanket at bond formation, or per-data-stream opt-in?
+- Garmin API: real-time streaming or periodic polling? (Garmin Connect API is poll-based, ~15 min delay)
+- Desktop App platform: Electron? What privacy controls?
+- Alignment fidelity: 80/20 — does this mean 80% accuracy on value-alignment predictions?
+
+---
+
+### Force 4 — Value Creation Taxonomy & Trust Mechanics (Instance 4)
+**Repos:** mind-protocol (taxonomy), mind-mcp (trust engine), graphcare (assessment)
+**Agent subtype:** architect
+
+| # | Task | Status | Details |
+|---|------|--------|---------|
+| 4.1 | Formalize 25+ value creation types | DONE | 30 types across 7 spheres in `docs/trust_mechanics/VALUE_CREATION_TAXONOMY.md` |
+| 4.2 | Formalize 12+ destruction pathologies | DONE | 14 pathologies in `docs/trust_mechanics/VALUE_DESTRUCTION_PATHOLOGIES.md` |
+| 4.3 | Limbic Delta → Trust formula | DONE | `ΔTrust = β × LD × (1-T)`, β=0.05. Negative deltas → friction, not trust reduction. In `ALGORITHM_Trust_Mechanics.md` |
+| 4.4 | Trust propagation cascade | DONE | Full 5-step cascade (Laws 2+5+6+18) in `ALGORITHM_Trust_Mechanics.md` section 3 |
+| 4.5 | Trust tempering (3 safeguards) | DONE | Asymptotic + temporal decay + boredom erosion in `ALGORITHM_Trust_Mechanics.md` section 5 |
+| 4.6 | Personhood Ladder data interface | TODO | 14 aspects. `assess_agent()` reads graph evidence. Produces vector profile. |
+| 4.7 | Value types → Ladder mapping | TODO | Blocked on "Daughters (T7 Autonomy)" document. Partial mapping in SYNC. |
+| 4.8 | Assessment primitive redesign | TODO | Replace space_type filters (227 refs in 30 files) and has_link("verb") (32 refs in 9 files) in graphcare with topological primitives. |
+| 4.9 | Rewrite 14 aspect ALGORITHMs | TODO | All ALGORITHM files in graphcare need new primitives. |
+| 4.10 | Create ALGORITHM_Trust_Mechanics.md | DONE | Full doc chain (8 files) in `docs/trust_mechanics/` |
+
+**Confirmed mechanics:**
+- Trust lives on LINKS, never on nodes (Law 18)
+- Trust propagates via Law 2 (surplus spill-over) and Law 5 (co-activation)
+- Asymptotic bound: `ΔW = α × avg_energy × U × (1-W)` — at W=0.9, gains 10x slower than at W=0.1
+- Temporal decay: Law 7 LONG_TERM_DECAY on inactive links
+- Boredom: Law 15 erodes moat of stagnant high-trust actors (coefficient -3.0)
+- Negative deltas increase friction, not decrease trust (documented in ALGORITHM + VALIDATION)
+- 30 value creation types with per-type Limbic Delta signatures (documented in TAXONOMY)
+- 14 destruction pathologies with topological detection signals (documented in PATHOLOGIES)
+
+**Docs created:** `docs/trust_mechanics/` full doc chain (OBJECTIVES, PATTERNS, ALGORITHM, BEHAVIORS, VALIDATION, SYNC, VALUE_CREATION_TAXONOMY, VALUE_DESTRUCTION_PATHOLOGIES) -- Phase A complete
+
+**Open questions:**
+- Trust Score aggregation: weighted mean (v1 lean) vs PageRank (v2). See `SYNC_Trust_Mechanics.md` OQ1.
+- Personhood Ladder: need Nicolas's "Daughters (T7 Autonomy)" document
+- assess_agent() frequency: daily batch with on-demand (lean). See `SYNC_Trust_Mechanics.md` OQ3.
+- L3 trust vs L1 trust relationship. See `SYNC_Trust_Mechanics.md` OQ5.
+
+---
+
+### Force 5 — L1 Physics Wiring & Production Cutover (Instance 5)
+**Repos:** mind-mcp
+**Agent subtype:** groundwork
+
+| # | Task | Status | Details |
+|---|------|--------|---------|
+| 5.1 | Wire physics to orchestrator | DONE | Dispatcher has per-citizen L1 engines, stimulus injection, physics ticks, feedback loop. `stimulus_router.py`, `wm_prompt_serializer.py`, `feedback_injector.py` created + tested. |
+| 5.2 | Real embeddings (text-embedding-3-small) | TODO | Replace symbolic similarity (Law 8) with OpenAI embedding API calls. |
+| 5.3 | Seed brain for 44 citizens | TODO | Base: 209 nodes, 295 links from seed generator. Per-citizen customization from identity files. |
+| 5.4 | FalkorDB persistence | DONE | `falkordb_checkpointer.py` — hybrid persistence with dirty tracking, periodic flush, load-on-boot. |
+| 5.5 | Orientation taxonomy (Law 11) | TODO | Define qualitative orientations: take_care / create / verify / explore / rest / escalate. Map to prompt instructions. |
+| 5.6 | Emotion calibration formulas | TODO | Boredom done. Pending: anxiety coupling, satisfaction decay, frustration threshold for escalation. |
+| 5.7 | Graph isolation strategy | TODO | One graph per citizen? One graph with citizen_id filter? Performance for 44 citizens. |
+| 5.8 | Copy citizen dirs from manemus | TODO | `.mind/citizens/` still empty. Need identity files, keys, profiles. |
+| 5.9 | Phase 7: Deploy to Render | TODO | Dockerfile ready. render.yaml ready. Parallel run with manemus. |
+| 5.10 | Phase 7: DNS cutover | TODO | Switch DNS from manemus to mind-mcp. Bot migration. |
+| 5.11 | Phase 7: Parallel validation | TODO | Both systems running. Compare outputs. Verify no regression. |
+
+**Docs created:** `docs/l1_wiring/` (6 files: OBJECTIVES, PATTERNS, ALGORITHM, BEHAVIORS, IMPLEMENTATION, SYNC)
+
+**L1 engine PORTED:** 5,230 lines copied from manemus to `runtime/cognition/`, 37/37 tests passing. Integration complete: dispatcher wired, stimulus router, WM serializer, feedback injector, FalkorDB checkpointer.
+
+**Decisions made (in docs):**
+- Start with slow_tick (60s), adaptive tick modes (slow/normal/fast/minimal)
+- One FalkorDB graph per citizen (`brain_{handle}`), not shared
+- Hybrid persistence: in-memory physics + periodic FalkorDB checkpoint
+- Same 209-node base + per-citizen overlay for brain seeding
+- text-embedding-3-small (1536 dims, matches schema) not 3-large
+- Orientation as soft prompt modifiers, not hard constraints
+
+**Open questions (remaining):**
+- Budget: how many Claude accounts for 44 citizens? Current round-robin across a/b/c.
+- manemus decommission timeline?
+- WM token budget: 1200 tokens or less?
+
+---
+
+### Cross-Cutting Concerns
+
+| # | Concern | Forces | Notes |
+|---|---------|--------|-------|
+| X.1 | Schema v2.0 → v2.1 | F1, F4 | Add HAS_ACCESS link, universe-level fields. May need migration. |
+| X.2 | L4 Registry | F2, F1 | Anti-Sybil needs L4 lookup. Universe identity needs L4 registration. |
+| X.3 | Test coverage | ALL | Every force includes tests. No "built but untested." |
+| X.4 | Doc chains | ALL | Each force creates/updates module doc chain (8 files). |
+| X.5 | SYNC updates | ALL | Each force updates this SYNC after significant changes. |
+
+---
+
+### Codebase Inventory (from exploration agents, 2026-03-13)
+
+**Physics engine (mind-mcp):** 11.7k lines core + 6.7k graph ops + 4k health checks. BUT this is the v1.x SubEntity model — NOT the 21-law L1 model in schema v2.0. Gap between code and schema is Force 5's main work.
+
+**Economy docs (mind-protocol):** Token module DEPLOYED to Solana devnet (61 tests, 7 modules). Storage tax, UBC, bonds, cascade utility all have FULL doc chains with pseudocode but NO implementation code. New NotebookLM formulas (degressive pricing, anti-Sybil 5%, bilateral vases communicants) need to be ADDED to existing docs.
+
+**Citizens docs:** human_ai_pairing (8 docs), parenthood_network (8 docs) in mind-mcp. ai_citizen_partner (7 docs) in mind-platform with 4 CRITICAL BLOCKERS: (1) UBC distribution doesn't exist, (2) AI system prompt template doesn't exist, (3) personality schema doesn't exist, (4) autonomy permission framework doesn't exist.
+
+**Embeddings:** 668 lines — OpenAI adapter exists at `runtime/infrastructure/embeddings/`. Traversal uses embedding similarity.
+
+**Schema:** v2.0 in mind-mcp (793 lines, comprehensive). v1.9.1 in mind-protocol L4 (257 lines, universal). V2.0 extends v1.9.1 with cognitive types, drives, working memory.
+
+---
+
+### Execution Order
+
+```
+PHASE A — Documentation (all forces parallel)
+  F1: docs/universe/ (OBJECTIVES → ALGORITHM)
+  F2: docs/economy/metabolic/ (ALGORITHM_Metabolic_Economy.md)
+  F3: docs/human_integration/ or extend docs/citizens/human_ai_pairing/
+  F4: docs/trust_mechanics/ + value_creation_taxonomy.md
+  F5: docs/l1_wiring/ (ALGORITHM for orchestrator integration)
+
+PHASE B — Cross-review
+  F1 ↔ F2 (economy needs universe graph)
+  F3 ↔ F4 (partner model needs trust)
+  F4 ↔ F5 (trust needs physics)
+
+PHASE C — Planning
+  Each force: IMPLEMENTATION.md with file-level plan
+  Identify shared interfaces
+
+PHASE D — Implementation (parallel)
+  F5 first (unblocks everything): physics wiring + persistence
+  F1 next: universe graph in FalkorDB
+  F2 parallel: economy formulas + settlement
+  F3 parallel: ingestion pipelines
+  F4 parallel: trust engine + taxonomy
+```
 
 ---
 
 ## HANDOFF: FOR AGENTS
 
-**Agent subtype:** groundwork (implementation)
+**Agent subtype:** architect (design phase) → groundwork (implementation phase)
 
-**Current focus:** Phase 6 (Flask→FastAPI API migration) or Phase 7 prep
+**Current focus:** 5-force parallel architecture sprint. See MASTER TODO above.
 
 **Key context:**
 - Citizens use Claude Code subprocess (`claude --print`), NEVER direct API. API is degraded fallback only.
@@ -175,6 +635,8 @@ STATUS: DESIGNING (consolidation in progress)
 - Trust-based compute: sqrt scaling, higher trust = more ticks.
 - No cron — citizens set their own alarms via MCP tool.
 - Account balancer round-robins across `~/.claude-accounts/{a,b,c}/`.
+- Schema v2.0 (mind-mcp) already has: 7 cognitive types, 14 relation_kinds, 21 physics laws, 8 drives, working memory, link dimensions (trust/affinity/aversion/friction)
+- Schema v1.9.1 (mind-protocol L4) is the universal canonical — L1 schema extends it, doesn't replace it
 
 **Architecture:**
 ```
@@ -184,8 +646,10 @@ home_server.py (FastAPI)
 ├── runtime/bridges/         — telegram, whatsapp, voice
 ├── runtime/membrane/        — HTTP endpoint, stimulus, subscriptions
 ├── runtime/api/             — auth, chat, house, citizens, feed, dm, jwt, profiles, rate limiter
-├── mcp/server.py            — 9 MCP tools (stdio)
-└── mcp/tools/               — handler files
+├── runtime/physics/         — graph operations, embeddings, health checks
+├── mcp/server.py            — 10 MCP tools (stdio)
+├── mcp/tools/               — handler files
+└── docs/                    — citizens/, schema/, cognition/ doc chains
 ```
 
 ---
@@ -193,11 +657,12 @@ home_server.py (FastAPI)
 ## HANDOFF: FOR HUMAN
 
 **Executive summary:**
-mind-mcp is now a complete citizen home runtime. Phases 0-6 implemented: deployable container, citizen management, budget-driven orchestrator, all three bridges (Telegram polling, WhatsApp webhook, Voice WebSocket), alarm system, membrane endpoint, full user API (auth, chat, house dashboard, citizens registry, DMs). 37+ HTTP routes + 1 WebSocket + 9 MCP tools.
+mind-mcp Phases 0-6 complete (37+ routes, 10 MCP tools). Schema v2.0 captures full L1 cognitive substrate. NotebookLM session validated 5 major workstreams now organized as a 5-force sprint: (1) universe graph architecture, (2) metabolic economy, (3) human partner model, (4) value/trust mechanics, (5) physics wiring + production cutover.
 
 **What remains:**
+- 5-force architecture sprint: documentation → review → planning → implementation
 - Phase 7: Deploy to Render, parallel run, DNS cutover
-- Copy citizen directories from manemus to `.mind/citizens/`
+- Copy citizen directories from manemus
 
 ---
 
@@ -216,6 +681,8 @@ mind-mcp is now a complete citizen home runtime. Phases 0-6 implemented: deploya
 | Physics | `runtime/physics/` | CANONICAL (pre-existing) |
 | Human-AI Pairing | `docs/citizens/human_ai_pairing/` (8 docs) | DESIGNING (proposed) |
 | Parenthood Network | `docs/citizens/parenthood_network/` (8 docs) | DESIGNING (proposed) |
+| Human Integration | `docs/human_integration/` (6 docs) | DESIGNING (proposed) |
+| Metabolic Economy | `docs/economy/metabolic/` (3 docs: ALGORITHM, PATTERNS, VALIDATION) | DESIGNING (proposed) |
 
 ## Init: 2026-03-13 17:35
 

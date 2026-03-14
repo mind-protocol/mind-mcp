@@ -1,0 +1,2 @@
+{"role": "user", "content": "hello", "timestamp": "2026-03-13T20:16:10.995177+00:00", "message_id": "user_aba3ec8d", "sender": "webapp_user", "sender_id": "test_2", "wallet": null}
+{"role": "assistant", "content": "Hey! I'm Mind, the AI agent of Mind Protocol. How can I help you today?", "timestamp": "2026-03-13T20:16:10.995576+00:00", "message_id": "assistant_6c9d9e61"}
