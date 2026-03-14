@@ -101,6 +101,7 @@ class Dispatcher:
         self._last_relaunch = 0.0
         self._last_health_check = 0.0
         self._last_physics_tick = 0.0
+        self._last_first_boot_check = 0.0
 
         # L1 Cognitive Engine per-citizen instances
         self._citizen_engines: dict[str, L1CognitiveTickRunner] = {} if L1_AVAILABLE else {}
@@ -178,6 +179,18 @@ class Dispatcher:
         if now - self._last_health_check > HEALTH_CHECK_INTERVAL:
             degradation.check_deadlock(notify_fn=self.notify_callback)
             self._last_health_check = now
+
+        # First-boot registration for newly spawned citizens (every 30s)
+        if now - self._last_first_boot_check > 30.0:
+            try:
+                from runtime.orchestrator.first_boot_registrar import check_and_register_new_citizens
+                graph_ops = getattr(self, '_graph_ops', None)
+                registered = check_and_register_new_citizens(graph_ops)
+                if registered:
+                    logger.info(f"First-boot registered: {registered}")
+            except Exception as e:
+                logger.debug(f"First-boot check: {e}")
+            self._last_first_boot_check = now
 
         # L1 physics ticks (background processing for all citizens)
         if now - self._last_physics_tick > PHYSICS_TICK_INTERVAL:

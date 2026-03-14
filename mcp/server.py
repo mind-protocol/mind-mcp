@@ -59,6 +59,8 @@ from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
 from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
 from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
 from mcp.tools.call_handler import TOOL_SCHEMA as CALL_SCHEMA, handle_call
+from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_profile
+from mcp.tools.spawn_handler import TOOL_SCHEMA as SPAWN_SCHEMA, handle_spawn
 
 logging.basicConfig(
     level=logging.INFO,
@@ -86,6 +88,9 @@ TOOL_SCHEMAS = [
     # ACT (living places)
     PLACE_SCHEMA,
     CALL_SCHEMA,
+    # ACT (identity)
+    PROFILE_SCHEMA,
+    SPAWN_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -103,6 +108,8 @@ TOOL_DISPATCH = {
     "alarm":       (handle_alarm,       False),
     "place":       (handle_place,       True),
     "call":        (handle_call,        True),
+    "profile":     (handle_profile,     True),
+    "spawn":       (handle_spawn,       True),
 }
 
 

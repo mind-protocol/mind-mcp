@@ -67,5 +67,8 @@ data/MESSAGES*.json
 # Citizen data (lives on persistent disk in prod, not in repo)
 /citizens/
 
+# Citizen keys (NEVER in repo — persistent disk only)
+/.keys/
+
 # Swarm logs
 .mind/swarm/

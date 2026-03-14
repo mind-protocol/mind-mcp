@@ -470,3 +470,177 @@ async def dm_mark_read(thread_id: str, request: Request):
         raise HTTPException(status_code=400, detail="reader field required")
     count = _mark_thread_read(thread_id, reader)
     return {"ok": True, "thread_id": thread_id, "marked_read": count}
+
+
+# ── Citizen Profile Update ────────────────────────────────────────────────
+
+# Fields a citizen can edit on their own profile
+_EDITABLE_FIELDS = {
+    "display_name", "first_name", "last_name", "nickname", "bio",
+    "tags", "links", "website", "spotify_track", "canvas_color",
+    "telegram_id", "emoji", "profile_pic",
+}
+
+# Profile field → (brain node type, content template)
+_BRAIN_FIELD_MAP = {
+    "bio": ("narrative", "My bio: {value}"),
+    "display_name": ("concept", "My name is {value}."),
+    "tags": ("concept", "My skills and interests: {value}"),
+    "website": ("concept", "My website: {value}"),
+    "spotify_track": ("memory", "My favorite track: {value}"),
+    "emoji": ("state", "My emoji: {value}"),
+    "nickname": ("concept", "People call me {value}."),
+}
+
+
+@router.put("/api/citizens/{citizen_id}")
+async def update_citizen(citizen_id: str, request: Request):
+    """Update a citizen's editable fields.
+
+    Ownership check: X-Citizen-Handle header must match citizen_id,
+    or caller must be a cofounder. Citizens can only edit themselves.
+
+    Updates profile.json on disk + upserts brain nodes for graph sync.
+
+    Editable fields: display_name, first_name, last_name, nickname, bio,
+    tags, links, website, spotify_track, canvas_color, telegram_id, emoji.
+    """
+    # Find citizen profile on disk
+    citizen_dir = CITIZENS_DIR / citizen_id
+    profile_path = citizen_dir / "profile.json"
+
+    if not profile_path.exists():
+        raise HTTPException(status_code=404, detail=f"Citizen '{citizen_id}' not found")
+
+    # Ownership check
+    caller_id = request.headers.get("X-Citizen-Handle", "")
+    if caller_id and caller_id != citizen_id:
+        # Check if caller is cofounder
+        all_citizens = _load_human_citizens()
+        caller = next((c for c in all_citizens if c["id"] == caller_id), None)
+        if not caller or caller.get("section") != "cofounder":
+            raise HTTPException(status_code=403, detail="You can only edit your own profile")
+
+    # Load current profile
+    try:
+        profile = json.loads(profile_path.read_text())
+    except (OSError, json.JSONDecodeError) as e:
+        raise HTTPException(status_code=500, detail=f"Cannot read profile: {e}")
+
+    updates = await request.json()
+    identity = profile.setdefault("identity", {})
+    caps = profile.setdefault("capabilities", {})
+    contacts = profile.setdefault("contacts", {})
+
+    # Map flat update fields to profile.json nested structure
+    _IDENTITY_FIELDS = {"display_name": "name", "first_name": "first_name",
+                        "last_name": "last_name", "nickname": "nickname",
+                        "bio": "bio", "emoji": "emoji", "profile_pic": "profile_pic"}
+    _CONTACT_FIELDS = {"telegram_id": "telegram_chat_id", "website": "website"}
+
+    updated_fields = []
+    for key, value in updates.items():
+        if key not in _EDITABLE_FIELDS:
+            continue
+
+        if key in _IDENTITY_FIELDS:
+            identity[_IDENTITY_FIELDS[key]] = value
+        elif key == "tags":
+            caps["primary_skills"] = value if isinstance(value, list) else [value]
+        elif key == "canvas_color":
+            identity["canvas_color"] = value
+        elif key == "links":
+            identity["links"] = value
+        elif key == "spotify_track":
+            identity["spotify_track"] = value
+        elif key in _CONTACT_FIELDS:
+            contacts[_CONTACT_FIELDS[key]] = value
+
+        updated_fields.append(key)
+
+        # Upsert brain node
+        _upsert_profile_field_to_brain(citizen_id, key, value)
+
+    if not updated_fields:
+        raise HTTPException(status_code=400, detail="No editable fields in request")
+
+    # Write back
+    profile_path.write_text(json.dumps(profile, indent=2, ensure_ascii=False))
+    logger.info(f"Profile updated: {citizen_id} fields={updated_fields}")
+
+    return {
+        "ok": True,
+        "citizen_id": citizen_id,
+        "updated_fields": updated_fields,
+    }
+
+
+def _upsert_profile_field_to_brain(citizen_id: str, field_name: str, field_value):
+    """Upsert a profile field as a brain node with high self_relevance.
+
+    Creates/updates a node `self:{field_name}` in the citizen's brain.json.
+    The node has high weight (0.7) and self_relevance (0.9) so it persists
+    through Law 7 forgetting and appears in the cognitive landscape.
+    """
+    if field_name not in _BRAIN_FIELD_MAP:
+        return
+    if not field_value:
+        return
+
+    node_type, template = _BRAIN_FIELD_MAP[field_name]
+
+    display_val = field_value
+    if isinstance(field_value, list):
+        display_val = ", ".join(str(v) for v in field_value)
+    content = template.format(value=display_val)
+    node_id = f"self:{field_name}"
+
+    # Find brain file
+    brain_path = None
+    for name in ("brain_full.json", "brain.json"):
+        candidate = CITIZENS_DIR / citizen_id / name
+        if candidate.exists():
+            brain_path = candidate
+            break
+
+    if not brain_path:
+        # Create minimal brain
+        citizen_dir = CITIZENS_DIR / citizen_id
+        if citizen_dir.exists():
+            brain_path = citizen_dir / "brain.json"
+            brain_path.write_text(json.dumps({
+                "citizen_id": citizen_id,
+                "drives": {},
+                "nodes": [],
+                "links": [],
+            }, indent=2))
+
+    if not brain_path:
+        return
+
+    try:
+        brain = json.loads(brain_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return
+
+    nodes = brain.get("nodes", [])
+    existing = next((n for n in nodes if n.get("id") == node_id), None)
+
+    new_node = {
+        "id": node_id,
+        "type": node_type,
+        "content": content,
+        "weight": 0.7,
+        "stability": 0.5,
+        "energy": 0.2,
+        "self_relevance": 0.9,
+    }
+
+    if existing:
+        existing.update(new_node)
+    else:
+        nodes.append(new_node)
+
+    brain["nodes"] = nodes
+    brain_path.write_text(json.dumps(brain, indent=2, ensure_ascii=False))
+    logger.info(f"Brain upsert: {citizen_id}/{node_id} ({node_type})")
