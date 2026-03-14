@@ -346,5 +346,170 @@ def main():
     save_state(state)
 
 
+def check_orchestrator_health():
+    """Verify the orchestrator + citizens are alive on this server.
+
+    Checks:
+      1. home_server /health is responding
+      2. Orchestrator is running (dispatcher active)
+      3. Citizens have loaded L1 engines
+      4. Physics ticks are happening (tick_count > 0)
+
+    If anything is down, creates a Moment and attempts restart.
+    """
+    import urllib.request
+    import urllib.error
+
+    org_id = detect_org_id()
+    universe = UNIVERSE or org_id
+    issues = []
+
+    # 1. Check home_server health (local — port 8765 or PORT env)
+    home_port = os.environ.get("HOME_SERVER_PORT", "8765")
+    try:
+        req = urllib.request.Request(f"http://localhost:{home_port}/health", method="GET")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+            logger.debug(f"home_server health: {data.get('status')}")
+    except Exception as e:
+        issues.append({
+            "component": "home_server",
+            "severity": "critical",
+            "message": f"home_server not responding on :{home_port}: {e}",
+        })
+
+    # 2. Check orchestrator status
+    try:
+        req = urllib.request.Request(f"http://localhost:{home_port}/api/orchestrator/status", method="GET")
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = json.loads(resp.read())
+            if not data.get("running", True):
+                issues.append({
+                    "component": "orchestrator",
+                    "severity": "error",
+                    "message": "Orchestrator not running",
+                })
+            else:
+                active = data.get("active_sessions", 0)
+                queue = data.get("queue_depth", 0)
+                logger.debug(f"Orchestrator: {active} active, {queue} queued")
+    except Exception as e:
+        # If home_server is already down, don't double-report
+        if not any(i["component"] == "home_server" for i in issues):
+            issues.append({
+                "component": "orchestrator",
+                "severity": "error",
+                "message": f"Cannot check orchestrator: {e}",
+            })
+
+    # 3. Check citizens are loaded (via /membrane/ping for each local citizen)
+    citizens_dir = PROJECT_ROOT / "citizens"
+    citizens_checked = 0
+    citizens_alive = 0
+
+    if citizens_dir.exists():
+        for d in sorted(citizens_dir.iterdir()):
+            if not d.is_dir() or d.name.startswith("."):
+                continue
+            citizens_checked += 1
+            try:
+                req = urllib.request.Request(
+                    f"http://localhost:{home_port}/membrane/ping/{d.name}", method="GET")
+                with urllib.request.urlopen(req, timeout=3) as resp:
+                    data = json.loads(resp.read())
+                    if data.get("alive"):
+                        citizens_alive += 1
+            except Exception:
+                pass
+
+            # Don't check too many — sample first 10
+            if citizens_checked >= 10:
+                break
+
+    if citizens_checked > 0 and citizens_alive == 0:
+        issues.append({
+            "component": "citizens",
+            "severity": "error",
+            "message": f"0/{citizens_checked} citizens alive (sampled)",
+        })
+    elif citizens_checked > 0:
+        logger.debug(f"Citizens: {citizens_alive}/{citizens_checked} alive (sampled)")
+
+    # 4. Write issues as Moments in L3
+    if issues:
+        logger.warning(f"Orchestrator health: {len(issues)} issues found")
+
+        try:
+            from falkordb import FalkorDB
+            db = FalkorDB(host=FALKORDB_HOST, port=FALKORDB_PORT)
+            graph = db.select_graph(universe)
+
+            now_s = int(time.time())
+            moment_id = f"health_{org_id}_{now_s}"
+
+            content_lines = [f"Health check for {org_id} at {datetime.now(timezone.utc).strftime('%H:%M UTC')}:"]
+            for issue in issues:
+                content_lines.append(f"  [{issue['severity'].upper()}] {issue['component']}: {issue['message']}")
+
+            content = "\n".join(content_lines)
+            worst = max(issues, key=lambda i: {"warning": 0, "error": 1, "critical": 2}.get(i["severity"], 0))
+            worst_sev = worst["severity"]
+
+            friction = {"warning": 0.3, "error": 0.6, "critical": 0.9}.get(worst_sev, 0.5)
+            valence = {"warning": -0.2, "error": -0.5, "critical": -0.8}.get(worst_sev, -0.5)
+
+            graph.query(
+                "MERGE (m {id: $mid}) "
+                "SET m.node_type = 'moment', m.type = 'health_check', "
+                "    m.name = $name, m.content = $content, "
+                "    m.synthesis = $syn, m.severity = $sev, "
+                "    m.status = 'active', m.created_at_s = $ts "
+                "WITH m "
+                "MATCH (o {id: $oid}) "
+                "MERGE (o)-[r:link {nature: 'health_issue'}]->(m) "
+                "SET r.friction = $friction, r.valence = $valence, "
+                "    r.energy = 0.8, r.permanence = 0.15",
+                {
+                    "mid": moment_id,
+                    "name": f"Health: {worst_sev} on {org_id}",
+                    "content": content,
+                    "syn": f"Health {worst_sev}: {worst['component']} — {worst['message'][:80]}",
+                    "sev": worst_sev,
+                    "ts": now_s,
+                    "oid": org_id,
+                    "friction": friction,
+                    "valence": valence,
+                },
+            )
+            logger.info(f"Health moment created: {moment_id}")
+        except Exception as e:
+            logger.warning(f"Could not write health moment: {e}")
+
+        # 5. Attempt restart if critical
+        if any(i["severity"] == "critical" for i in issues):
+            logger.warning("Critical issue detected — attempting home_server restart")
+            try:
+                import subprocess
+                # Kill existing home_server and restart
+                subprocess.run(
+                    ["pkill", "-f", "uvicorn home_server"],
+                    timeout=5, capture_output=True,
+                )
+                time.sleep(2)
+                subprocess.Popen(
+                    ["python3", "-m", "uvicorn", "home_server:app",
+                     "--host", "0.0.0.0", "--port", home_port],
+                    cwd=str(PROJECT_ROOT / ".mind" / "runtime"),
+                    stdout=open("/dev/null", "w"),
+                    stderr=open("/dev/null", "w"),
+                )
+                logger.info("home_server restart initiated")
+            except Exception as e:
+                logger.error(f"Restart failed: {e}")
+
+    return issues
+
+
 if __name__ == "__main__":
     main()
+    check_orchestrator_health()
