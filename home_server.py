@@ -121,13 +121,28 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Orchestrator failed to start: {e}")
 
-    # Phase 2b: Initialize all citizen L1 engines at startup
+    # Phase 2b: Upsert citizen brains at startup (configurable seed script)
     if _dispatcher:
         try:
-            from runtime.l4.citizen_l1_ensure import bulk_ensure_citizens
+            import importlib
+            import yaml
+
             citizens_dir = Path(__file__).parent / "citizens"
-            results = bulk_ensure_citizens(str(citizens_dir))
-            logger.info(f"L1 boot: initialized {len(results)} citizens")
+
+            # Load seed script path from database_config.yaml
+            seed_fn_path = "runtime.l4.citizen_l1_ensure.bulk_ensure_citizens"
+            config_path = Path(__file__).parent / ".mind" / "database_config.yaml"
+            if config_path.exists():
+                with open(config_path) as f:
+                    cfg = yaml.safe_load(f) or {}
+                seed_fn_path = cfg.get("seed", {}).get("script", seed_fn_path)
+
+            # Import and call the seed function
+            module_path, fn_name = seed_fn_path.rsplit(".", 1)
+            mod = importlib.import_module(module_path)
+            seed_fn = getattr(mod, fn_name)
+            results = seed_fn(str(citizens_dir))
+            logger.info(f"L1 boot: {len(results)} citizens ensured (seed: {seed_fn_path})")
         except Exception as e:
             logger.warning(f"Citizen L1 boot failed: {e}")
 

@@ -187,33 +187,45 @@ def upsert_l1(handle, citizen_data=None, citizens_dir=None):
          "syn": synthesis, "sc": social_class, "ts": now_s, "hash": new_hash},
     )
 
-    # MERGE personality — update content if changed
+    # MERGE personality — update content, preserve learned link properties
     if personality:
         graph.query(
             "MERGE (n {id: $nid}) "
             "SET n.node_type = 'narrative', n.type = 'personality', "
             "n.name = $nname, n.content = $content, "
-            "n.synthesis = $syn, n.updated_at_s = $ts "
+            "n.synthesis = $syn, n.updated_at_s = $ts, "
+            "n.weight = CASE WHEN n.weight IS NULL THEN 0.8 ELSE n.weight END, "
+            "n.energy = CASE WHEN n.energy IS NULL THEN 0.0 ELSE n.energy END "
             "WITH n "
             "MATCH (a {id: $aid}) "
             "MERGE (a)-[r:LINK {id: $lid}]->(n) "
-            "SET r.hierarchy = 0.9, r.permanence = 0.95",
+            "SET r.hierarchy = CASE WHEN r.hierarchy IS NULL THEN 0.9 ELSE r.hierarchy END, "
+            "r.permanence = CASE WHEN r.permanence IS NULL THEN 0.95 ELSE r.permanence END, "
+            "r.weight = CASE WHEN r.weight IS NULL THEN 1.0 ELSE r.weight END, "
+            "r.energy = CASE WHEN r.energy IS NULL THEN 0.0 ELSE r.energy END, "
+            "r.stability = CASE WHEN r.stability IS NULL THEN 0.5 ELSE r.stability END",
             {"nid": f"{handle}_personality", "nname": f"Personality of {name}",
              "content": personality[:2000], "syn": personality[:300],
              "ts": now_s, "aid": citizen_id, "lid": f"{handle}_has_personality"},
         )
 
-    # MERGE backstory — update content if changed
+    # MERGE backstory — update content, preserve learned link properties
     if description:
         graph.query(
             "MERGE (n {id: $nid}) "
             "SET n.node_type = 'narrative', n.type = 'backstory', "
             "n.name = $nname, n.content = $content, "
-            "n.synthesis = $syn, n.updated_at_s = $ts "
+            "n.synthesis = $syn, n.updated_at_s = $ts, "
+            "n.weight = CASE WHEN n.weight IS NULL THEN 0.7 ELSE n.weight END, "
+            "n.energy = CASE WHEN n.energy IS NULL THEN 0.0 ELSE n.energy END "
             "WITH n "
             "MATCH (a {id: $aid}) "
             "MERGE (a)-[r:LINK {id: $lid}]->(n) "
-            "SET r.hierarchy = 0.8, r.permanence = 0.9",
+            "SET r.hierarchy = CASE WHEN r.hierarchy IS NULL THEN 0.8 ELSE r.hierarchy END, "
+            "r.permanence = CASE WHEN r.permanence IS NULL THEN 0.9 ELSE r.permanence END, "
+            "r.weight = CASE WHEN r.weight IS NULL THEN 1.0 ELSE r.weight END, "
+            "r.energy = CASE WHEN r.energy IS NULL THEN 0.0 ELSE r.energy END, "
+            "r.stability = CASE WHEN r.stability IS NULL THEN 0.5 ELSE r.stability END",
             {"nid": f"{handle}_backstory", "nname": f"Backstory of {name}",
              "content": description[:2000], "syn": description[:300],
              "ts": now_s, "aid": citizen_id, "lid": f"{handle}_has_backstory"},
@@ -327,5 +339,8 @@ def bulk_ensure_citizens(citizens_dir, graph_name=None):
             errors += 1
 
     total = len(citizens)
+    changed = created + updated
+    variation_pct = round(100 * changed / total, 1) if total > 0 else 0
     print(f"  L1: {total} citizens — {created} created, {updated} updated, {unchanged} unchanged, {errors} errors")
+    print(f"  L1: variation {variation_pct}% ({changed}/{total} changed this deploy)")
     return results
