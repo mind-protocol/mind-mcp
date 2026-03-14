@@ -147,14 +147,40 @@ def invoke_claude(
     else:
         input_text = prompt
 
-    # Execute
+    # Execute with early subconscious response
+    # If Claude takes > SUBCONSCIOUS_THRESHOLD seconds, return a subconscious
+    # response immediately. The subprocess continues in background — when it
+    # finishes, the full response will be available via the response file.
+    SUBCONSCIOUS_THRESHOLD = float(os.environ.get("SUBCONSCIOUS_THRESHOLD", "10"))
     start_time = time.time()
+    early_subconscious_sent = False
+
     try:
-        stdout, stderr = process.communicate(input=input_text, timeout=SESSION_TIMEOUT)
+        stdout, stderr = process.communicate(input=input_text, timeout=SUBCONSCIOUS_THRESHOLD)
     except subprocess.TimeoutExpired:
-        process.kill()
-        stdout, stderr = process.communicate()
-        logger.warning(f"Session {session_id} timed out after {SESSION_TIMEOUT}s")
+        # Claude is still thinking — send subconscious response as interim
+        elapsed_so_far = time.time() - start_time
+        if citizen_handle:
+            subconscious_text = invoke_subconscious(request, session_id, citizen_handle)
+            if subconscious_text:
+                # Write subconscious as interim response
+                interim_path = state_dir / f"last_response_{session_id}.txt"
+                interim_path.write_text(
+                    subconscious_text + "\n\n---\n*Claude is still thinking... "
+                    "full response will follow.*"
+                )
+                early_subconscious_sent = True
+                logger.info(
+                    f"Subconscious interim after {elapsed_so_far:.0f}s for {citizen_handle}"
+                )
+
+        # Now wait for Claude to actually finish (full timeout)
+        try:
+            stdout, stderr = process.communicate(timeout=SESSION_TIMEOUT - SUBCONSCIOUS_THRESHOLD)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+            logger.warning(f"Session {session_id} timed out after {SESSION_TIMEOUT}s")
 
     elapsed = time.time() - start_time
     release_account(balanced_env, error=process.returncode != 0)
