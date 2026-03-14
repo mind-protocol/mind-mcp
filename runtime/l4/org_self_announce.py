@@ -140,7 +140,7 @@ def _mirror_org_to_l3(l3, org_id, display_name, website, description, now_s):
         "    s.updated_at_s = $now "
         "WITH s "
         "MATCH (o {id: $org_id}) "
-        "MERGE (o)-[r:link {id: $lid}]->(s) "
+        "MERGE (o)-[r:LINK {id: $lid}]->(s) "
         "SET r.hierarchy = 0.8, r.permanence = 0.9, "
         "    r.polarity = 0.5, "
         "    r.weight = 0.8, r.energy = 0.1",
@@ -201,7 +201,7 @@ def _claim_org(graph, org_id: str, endpoint_url: str, org_name: str = "", websit
         "    k.created_at_s = $now, k.updated_at_s = $now "
         "WITH k "
         "MATCH (o {id: $org_id}) "
-        "MERGE (o)-[r:link {id: $link_id}]->(k) "
+        "MERGE (o)-[r:LINK {id: $link_id}]->(k) "
         "SET r.hierarchy = 1.0, r.permanence = 1.0",
         {
             "key_id": f"{org_id}_public_key",
@@ -225,7 +225,7 @@ def _claim_org(graph, org_id: str, endpoint_url: str, org_name: str = "", websit
         "    e.created_at_s = $now, e.updated_at_s = $now "
         "WITH e "
         "MATCH (o {id: $org_id}) "
-        "MERGE (o)-[r:link {id: $link_id}]->(e) "
+        "MERGE (o)-[r:LINK {id: $link_id}]->(e) "
         "SET r.hierarchy = 1.0, r.permanence = 0.8",
         {
             "endpoint_id": f"{org_id}_endpoint",
@@ -251,7 +251,7 @@ def _claim_org(graph, org_id: str, endpoint_url: str, org_name: str = "", websit
         "    c.created_at_s = $now "
         "WITH c "
         "MATCH (o {id: $org_id}) "
-        "MERGE (o)-[r:link {id: $link_id}]->(c) "
+        "MERGE (o)-[r:LINK {id: $link_id}]->(c) "
         "SET r.hierarchy = 1.0, r.permanence = 1.0",
         {
             "claim_id": f"{org_id}_tofu_claim",
@@ -322,7 +322,7 @@ def _update_org(graph, org_id: str, endpoint_url: str, stored_public_key: str, o
         "SET e.content = $url, e.uri = $url, e.updated_at_s = $now "
         "WITH e "
         "MATCH (o {id: $org_id}) "
-        "MERGE (o)-[r:link {id: $link_id}]->(e) "
+        "MERGE (o)-[r:LINK {id: $link_id}]->(e) "
         "SET r.permanence = 0.8",
         {
             "endpoint_id": f"{org_id}_endpoint",
