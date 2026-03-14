@@ -392,6 +392,24 @@ def generate_relational_seeds(
 
 # ── Main seeder ────────────────────────────────────────────────────────────
 
+def _load_behaviors() -> dict:
+    """Load behavior flags from database_config.yaml."""
+    import os
+    try:
+        import yaml
+    except ImportError:
+        return {}
+    config_path = _PROJECT_ROOT / ".mind" / "database_config.yaml"
+    if not config_path.exists():
+        return {}
+    try:
+        with open(config_path) as f:
+            cfg = yaml.safe_load(f) or {}
+        return cfg.get("behaviors", {})
+    except Exception:
+        return {}
+
+
 def generate_citizen_brain(
     citizen_handle: str,
     base_brain: Optional[dict] = None,
@@ -399,6 +417,8 @@ def generate_citizen_brain(
     """Generate a customized brain for a citizen.
 
     Pattern: shared base (209+ nodes) + per-citizen overlay.
+    Respects behavior flags:
+      - relational_seeds: false → citizen is born alone, no pre-existing relationships
 
     Args:
         citizen_handle: The citizen's handle/id
@@ -409,6 +429,8 @@ def generate_citizen_brain(
         Brain dict with nodes, links, and drives.
         Compatible with seed_brain_from_source_docs_dynamic_generator format.
     """
+    behaviors = _load_behaviors()
+
     # Load citizen identity
     identity = _find_citizen_identity(citizen_handle)
 
@@ -436,9 +458,10 @@ def generate_citizen_brain(
             overlay_nodes.extend(desire_nodes)
             logger.info(f"Generated {len(desire_nodes)} desire nodes for {citizen_handle}")
 
-        # Relational seeds
+        # Relational seeds — only if enabled (default: true)
+        # Set relational_seeds: false to have citizens born alone
         relationships = identity.get("relationships", "")
-        if relationships:
+        if relationships and behaviors.get("relational_seeds", True):
             rel_nodes, rel_links = generate_relational_seeds(relationships)
             overlay_nodes.extend(rel_nodes)
             overlay_links.extend(rel_links)

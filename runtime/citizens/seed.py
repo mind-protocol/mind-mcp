@@ -5,9 +5,14 @@ function in task_assignment.py matches tasks to citizens using:
     score = cosine_similarity(task_emb, citizen_emb) * weight * energy * 0.5^active_tasks
 
 Idempotent: MERGE on id, recompute embedding only if synthesis changed.
+
+Respects behavior flag `know_all_citizens` from database_config.yaml:
+  - true (default): inject ALL citizens into graph (full directory knowledge)
+  - false: skip bulk injection (citizens only know those they meet)
 """
 
 import logging
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("mind.citizens.seed")
@@ -38,8 +43,25 @@ def _build_citizen_synthesis(citizen: dict) -> str:
     return ". ".join(parts)
 
 
+def _check_know_all_citizens() -> bool:
+    """Check if know_all_citizens behavior is enabled."""
+    try:
+        import yaml
+        config_path = Path(__file__).parent.parent.parent / ".mind" / "database_config.yaml"
+        if config_path.exists():
+            with open(config_path) as f:
+                cfg = yaml.safe_load(f) or {}
+            return cfg.get("behaviors", {}).get("know_all_citizens", True)
+    except Exception:
+        pass
+    return True
+
+
 def seed_citizen_actors(citizen_list: list[dict], adapter: Any) -> int:
     """Ensure all citizens exist as Actor nodes in the graph.
+
+    Respects `know_all_citizens` behavior flag. If false, skips entirely —
+    citizens only discover others through interaction, not bulk injection.
 
     Args:
         citizen_list: List of citizen dicts (from citizens.json or any source).
@@ -49,6 +71,9 @@ def seed_citizen_actors(citizen_list: list[dict], adapter: Any) -> int:
     Returns:
         Number of citizens seeded/updated.
     """
+    if not _check_know_all_citizens():
+        logger.info("know_all_citizens: disabled — skipping bulk citizen injection")
+        return 0
     from runtime.infrastructure.embeddings import get_embedding
 
     count = 0
