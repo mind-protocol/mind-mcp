@@ -335,22 +335,25 @@ def _enforce_readonly_for_templates(templates_root: Path) -> None:
 # GRAPH INITIALIZATION
 # =============================================================================
 
-def _init_graph(target_dir: Path, clear: bool = False) -> bool:
+def _init_graph(target_dir: Path, clear: bool = False, behaviors: dict = None) -> bool:
     """
     Initialize graph named after repo and ingest content.
 
-    1. Get repo name from directory
-    2. Connect to FalkorDB and create/select graph
-    3. Optionally clear existing data (if --clear)
-    4. Ingest docs/ and .mind/ files
+    Respects behavior flags from database_config.yaml:
+    - doc_ingest: ingest docs/ files
+    - mind_ingest: ingest .mind/ files
 
     Args:
         target_dir: Project directory
         clear: If True, delete all nodes/links before ingestion
+        behaviors: Dict of behavior flags (default: all True)
 
     Returns:
         True if successful, False if graph connection failed
     """
+    if behaviors is None:
+        behaviors = {}
+
     repo_name = target_dir.name
 
     print()
@@ -380,22 +383,28 @@ def _init_graph(target_dir: Path, clear: bool = False) -> bool:
             print(f"  ✗ Failed to clear graph: {e}")
 
     # Ingest docs/*.md files into graph
-    try:
-        from .ingest.docs import ingest_docs_to_graph
-        print("  Ingesting docs/*.md files...")
-        doc_stats = ingest_docs_to_graph(target_dir, graph_ops)
-        print(f"  ✓ Docs ingested: {doc_stats['docs_ingested']} docs, {doc_stats['spaces_created']} spaces")
-    except Exception as e:
-        print(f"  ○ Doc ingestion failed: {e}")
+    if behaviors.get("doc_ingest", True):
+        try:
+            from .ingest.docs import ingest_docs_to_graph
+            print("  Ingesting docs/*.md files...")
+            doc_stats = ingest_docs_to_graph(target_dir, graph_ops)
+            print(f"  ✓ Docs ingested: {doc_stats['docs_ingested']} docs, {doc_stats['spaces_created']} spaces")
+        except Exception as e:
+            print(f"  ○ Doc ingestion failed: {e}")
+    else:
+        print("  ○ Doc ingestion: disabled")
 
     # Ingest .mind/ files into graph (except runtime/)
-    try:
-        from .ingest.docs import ingest_mind_to_graph
-        print("  Ingesting .mind/ files...")
-        mind_stats = ingest_mind_to_graph(target_dir, graph_ops)
-        print(f"  ✓ Mind ingested: {mind_stats['files_ingested']} files, {mind_stats['spaces_created']} spaces")
-    except Exception as e:
-        print(f"  ○ Mind ingestion failed: {e}")
+    if behaviors.get("mind_ingest", True):
+        try:
+            from .ingest.docs import ingest_mind_to_graph
+            print("  Ingesting .mind/ files...")
+            mind_stats = ingest_mind_to_graph(target_dir, graph_ops)
+            print(f"  ✓ Mind ingested: {mind_stats['files_ingested']} files, {mind_stats['spaces_created']} spaces")
+        except Exception as e:
+            print(f"  ○ Mind ingestion failed: {e}")
+    else:
+        print("  ○ Mind ingestion: disabled")
 
     return True
 
@@ -440,6 +449,33 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         print(f"Error: {protocol_dest} already exists.")
         print("Use --force to overwrite.")
         return False
+
+    # Load behavior flags from database_config.yaml (all default to True)
+    _behaviors = {
+        "file_ingest": True,
+        "doc_ingest": True,
+        "mind_ingest": True,
+        "overview": True,
+        "embeddings": True,
+        "health_checks": True,
+        "capabilities_graph": True,
+        "citizen_seed": True,
+        "mcp_config": True,
+    }
+    db_config_path = protocol_dest / "database_config.yaml"
+    if db_config_path.exists():
+        try:
+            import yaml
+            with open(db_config_path) as f:
+                _cfg = yaml.safe_load(f) or {}
+            for k, v in _cfg.get("behaviors", {}).items():
+                if k in _behaviors:
+                    _behaviors[k] = bool(v)
+            disabled = [k for k, v in _behaviors.items() if not v]
+            if disabled:
+                print(f"  Behaviors disabled: {', '.join(disabled)}")
+        except Exception:
+            pass
 
     # Note: VIEWs are deprecated - replaced by agents, skills, and protocols
 
@@ -619,13 +655,16 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
             print(f"  ○ Skipped (permission): {manager_agents_md}")
 
     # Generate repository map
-    print()
-    print("Generating repository map...")
-    try:
-        output_path = generate_and_save(target_dir, output_format="md")
-        print(f"✓ Created: {output_path}")
-    except Exception as e:
-        print(f"○ Map generation skipped: {e}")
+    if _behaviors["overview"]:
+        print()
+        print("Generating repository map...")
+        try:
+            output_path = generate_and_save(target_dir, output_format="md")
+            print(f"✓ Created: {output_path}")
+        except Exception as e:
+            print(f"○ Map generation skipped: {e}")
+    else:
+        print("○ Overview: disabled")
 
     # Enforce read-only permissions for core protocol artifacts
     read_only_targets = [
@@ -640,11 +679,17 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         _remove_write_permissions(ro_path)
     _enforce_readonly_for_templates(protocol_dest / "templates")
 
-    # Initialize graph and ingest content
-    _init_graph(target_dir, clear=clear_graph)
+    # Initialize graph and ingest content (respects doc_ingest + mind_ingest flags)
+    if _behaviors["doc_ingest"] or _behaviors["mind_ingest"]:
+        _init_graph(target_dir, clear=clear_graph, behaviors=_behaviors)
+    else:
+        print("○ Graph ingestion: disabled (doc_ingest + mind_ingest both off)")
 
     # Configure MCP membrane server
-    _configure_mcp_membrane(target_dir)
+    if _behaviors["mcp_config"]:
+        _configure_mcp_membrane(target_dir)
+    else:
+        print("○ MCP config: disabled")
 
     print()
     print("mind initialized!")

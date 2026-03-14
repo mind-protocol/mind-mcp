@@ -121,28 +121,35 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Orchestrator failed to start: {e}")
 
-    # Phase 2b: Upsert citizen brains at startup (configurable seed script)
+    # Phase 2b: Upsert citizen brains at startup (configurable, togglable)
     if _dispatcher:
         try:
             import importlib
             import yaml
 
             citizens_dir = Path(__file__).parent / "citizens"
-
-            # Load seed script path from database_config.yaml
-            seed_fn_path = "runtime.l4.citizen_l1_ensure.bulk_ensure_citizens"
             config_path = Path(__file__).parent / ".mind" / "database_config.yaml"
+
+            # Load config
+            cfg = {}
             if config_path.exists():
                 with open(config_path) as f:
                     cfg = yaml.safe_load(f) or {}
-                seed_fn_path = cfg.get("seed", {}).get("script", seed_fn_path)
 
-            # Import and call the seed function
-            module_path, fn_name = seed_fn_path.rsplit(".", 1)
-            mod = importlib.import_module(module_path)
-            seed_fn = getattr(mod, fn_name)
-            results = seed_fn(str(citizens_dir))
-            logger.info(f"L1 boot: {len(results)} citizens ensured (seed: {seed_fn_path})")
+            # Check if citizen_seed behavior is enabled (default: true)
+            citizen_seed_enabled = cfg.get("behaviors", {}).get("citizen_seed", True)
+
+            if citizen_seed_enabled:
+                seed_fn_path = cfg.get("seed", {}).get(
+                    "script", "runtime.l4.citizen_l1_ensure.bulk_ensure_citizens"
+                )
+                module_path, fn_name = seed_fn_path.rsplit(".", 1)
+                mod = importlib.import_module(module_path)
+                seed_fn = getattr(mod, fn_name)
+                results = seed_fn(str(citizens_dir))
+                logger.info(f"L1 boot: {len(results)} citizens ensured (seed: {seed_fn_path})")
+            else:
+                logger.info("L1 boot: citizen_seed disabled in database_config.yaml")
         except Exception as e:
             logger.warning(f"Citizen L1 boot failed: {e}")
 
