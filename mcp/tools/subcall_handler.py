@@ -743,34 +743,39 @@ def _query_resonance(
         try:
             # Search for nodes connected to target that are semantically close
             # Using FalkorDB's vector similarity if available
-            results = graph_ops._query(
-                """
-                MATCH (a:Actor {id: $target})-[r]-(n)
-                WHERE n.embedding IS NOT NULL
-                  AND n.id <> $target
-                WITH n, r,
-                     vecf32.distance.cosine(n.embedding, vecf32($qvec)) AS dist
-                WHERE dist < 0.6
-                RETURN n.id, n.name, n.type, n.content, n.synthesis,
-                       n.weight, n.energy, n.image_uri,
-                       type(r) AS rel_type, dist,
-                       n.created_at_s, n.valence, n.arousal, n.speaker,
-                       labels(n) AS node_labels
-                ORDER BY dist ASC
-                LIMIT $k
-                """,
-                {
-                    "target": target_actor_id,
-                    "qvec": query_embedding,
-                    "k": top_k,
-                },
-            )
+            # FalkorDB KNN vector search — search each node label separately
+            # then filter to nodes connected to the target actor
+            all_vector_results = []
+            for label in ["Actor", "Moment", "Narrative", "Space", "Thing"]:
+                try:
+                    knn = graph_ops._query(
+                        f'CALL db.idx.vector.queryNodes("{label}", "embedding", $k, vecf32($qvec)) '
+                        f'YIELD node, score '
+                        f'MATCH (a:Actor {{id: $target}})-[r]-(node) '
+                        f'WHERE node.id <> $target '
+                        f'RETURN node.id, node.name, node.type, node.content, node.synthesis, '
+                        f'       node.weight, node.energy, node.image_uri, '
+                        f'       type(r) AS rel_type, score, '
+                        f'       node.created_at_s, node.valence, node.arousal, node.speaker, '
+                        f'       labels(node) AS node_labels',
+                        {"target": target_actor_id, "qvec": query_embedding, "k": top_k * 2},
+                    )
+                    all_vector_results.extend(knn)
+                except Exception:
+                    continue
+
+            # Sort by score descending (FalkorDB KNN returns similarity, not distance)
+            all_vector_results.sort(key=lambda r: r[9] if isinstance(r, (list, tuple)) else r.get("score", 0), reverse=True)
+            results = all_vector_results[:top_k]
             if results:
                 resonance["match_method"] = "vector_similarity"
                 for row in results:
                     if isinstance(row, (list, tuple)):
                         node_labels = row[14] if len(row) > 14 else None
                         l1_type = _resolve_l1_type(node_labels, row[2])
+                        # KNN returns score (similarity 0-1, higher=better)
+                        score = row[9] if row[9] else 0
+                        distance = round(1.0 - score, 3) if score else None
                         resonance["nodes"].append({
                             "id": row[0],
                             "name": row[1],
@@ -781,7 +786,7 @@ def _query_resonance(
                             "energy": row[6],
                             "image_uri": row[7],
                             "relation": row[8],
-                            "distance": round(row[9], 3) if row[9] else None,
+                            "distance": distance,
                             "created_at_s": row[10] if len(row) > 10 else None,
                             "valence": row[11] if len(row) > 11 else None,
                             "arousal": row[12] if len(row) > 12 else None,
@@ -789,22 +794,24 @@ def _query_resonance(
                         })
                     elif isinstance(row, dict):
                         node_labels = row.get("node_labels")
-                        l1_type = _resolve_l1_type(node_labels, row.get("n.type"))
+                        l1_type = _resolve_l1_type(node_labels, row.get("node.type"))
+                        score = row.get("score", 0)
+                        distance = round(1.0 - score, 3) if score else None
                         resonance["nodes"].append({
-                            "id": row.get("n.id"),
-                            "name": row.get("n.name"),
+                            "id": row.get("node.id"),
+                            "name": row.get("node.name"),
                             "type": l1_type,
-                            "raw_type": row.get("n.type"),
-                            "content": (row.get("n.content") or row.get("n.synthesis") or "")[:content_limit] if content_limit else (row.get("n.content") or row.get("n.synthesis") or ""),
-                            "weight": row.get("n.weight"),
-                            "energy": row.get("n.energy"),
-                            "image_uri": row.get("n.image_uri"),
+                            "raw_type": row.get("node.type"),
+                            "content": (row.get("node.content") or row.get("node.synthesis") or "")[:content_limit] if content_limit else (row.get("node.content") or row.get("node.synthesis") or ""),
+                            "weight": row.get("node.weight"),
+                            "energy": row.get("node.energy"),
+                            "image_uri": row.get("node.image_uri"),
                             "relation": row.get("rel_type"),
-                            "distance": round(row.get("dist", 0), 3),
-                            "created_at_s": row.get("n.created_at_s"),
-                            "valence": row.get("n.valence"),
-                            "arousal": row.get("n.arousal"),
-                            "author": row.get("n.speaker"),
+                            "distance": distance,
+                            "created_at_s": row.get("node.created_at_s"),
+                            "valence": row.get("node.valence"),
+                            "arousal": row.get("node.arousal"),
+                            "author": row.get("node.speaker"),
                         })
         except Exception as e:
             logger.debug(f"Vector search failed (falling back to text): {e}")
