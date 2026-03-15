@@ -26,9 +26,9 @@ import logging
 from pathlib import Path
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 
 # Add project root to path
 PROJECT_ROOT = Path(__file__).parent
@@ -435,8 +435,6 @@ async def orchestrator_status():
 
 # ── Voice WebSocket ─────────────────────────────────────────────────────────
 
-from fastapi import WebSocket
-
 @app.websocket("/voice/ws")
 async def voice_ws(ws: WebSocket):
     """Real-time voice conversation via WebSocket."""
@@ -467,11 +465,64 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 ENGINE_PORT = int(os.environ.get("ENGINE_PORT", 10001))
 
+# Lazy-init a shared httpx client (created on first proxy request)
+_httpx_client = None
+
+
+def _get_httpx_client():
+    global _httpx_client
+    if _httpx_client is None:
+        import httpx
+        _httpx_client = httpx.AsyncClient(timeout=30.0)
+    return _httpx_client
+
+
+@app.websocket("/{path:path}")
+async def proxy_ws_to_engine(ws: WebSocket, path: str):
+    """WebSocket proxy: forward unmatched WS connections to Node.js engine."""
+    import asyncio
+    try:
+        import websockets
+    except ImportError:
+        await ws.accept()
+        await ws.send_json({"error": "websockets not installed for engine WS proxy"})
+        await ws.close()
+        return
+
+    await ws.accept()
+    engine_url = f"ws://localhost:{ENGINE_PORT}/{path}"
+
+    try:
+        async with websockets.connect(engine_url) as engine_ws:
+            async def client_to_engine():
+                try:
+                    while True:
+                        data = await ws.receive_text()
+                        await engine_ws.send(data)
+                except WebSocketDisconnect:
+                    pass
+
+            async def engine_to_client():
+                try:
+                    async for message in engine_ws:
+                        await ws.send_text(message)
+                except Exception:
+                    pass
+
+            await asyncio.gather(client_to_engine(), engine_to_client())
+    except Exception as e:
+        try:
+            await ws.send_json({"error": f"engine WS unavailable: {e}"})
+            await ws.close()
+        except Exception:
+            pass
+
+
 @app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
 async def proxy_to_engine(request: Request, path: str):
-    """Reverse proxy: forward unmatched routes to Node.js engine."""
+    """Reverse proxy: forward unmatched HTTP routes to Node.js engine."""
     try:
-        import httpx
+        client = _get_httpx_client()
     except ImportError:
         return JSONResponse(status_code=503, content={"error": "httpx not installed for engine proxy"})
 
@@ -481,25 +532,31 @@ async def proxy_to_engine(request: Request, path: str):
         target += f"?{query}"
 
     try:
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.request(
-                method=request.method,
-                url=target,
-                headers={k: v for k, v in request.headers.items()
-                         if k.lower() not in ("host", "content-length")},
-                content=await request.body(),
-            )
-            return Response(
-                content=response.content,
-                status_code=response.status_code,
-                headers=dict(response.headers),
-            )
-    except httpx.ConnectError:
-        return JSONResponse(
-            status_code=502,
-            content={"error": "engine_not_running", "message": f"Node.js engine not available on port {ENGINE_PORT}"},
+        response = await client.request(
+            method=request.method,
+            url=target,
+            headers={k: v for k, v in request.headers.items()
+                     if k.lower() not in ("host", "content-length")},
+            content=await request.body(),
+        )
+
+        # Filter hop-by-hop headers that shouldn't be forwarded
+        excluded_headers = {"transfer-encoding", "connection", "content-encoding", "content-length"}
+        headers = {k: v for k, v in response.headers.items()
+                   if k.lower() not in excluded_headers}
+
+        return Response(
+            content=response.content,
+            status_code=response.status_code,
+            headers=headers,
         )
     except Exception as e:
+        error_type = type(e).__name__
+        if "ConnectError" in error_type or "ConnectionRefused" in str(e):
+            return JSONResponse(
+                status_code=502,
+                content={"error": "engine_not_running", "message": f"Node.js engine not available on port {ENGINE_PORT}"},
+            )
         return JSONResponse(status_code=502, content={"error": str(e)})
 
 

@@ -7,7 +7,7 @@ Tests the EmbeddingService class for generating semantic embeddings.
 import pytest
 import numpy as np
 from unittest.mock import Mock, patch, MagicMock
-from runtime.traversal.embedding import EmbeddingService, get_embedding_service
+from runtime.infrastructure.embeddings.service import EmbeddingService, get_embedding_service
 
 
 class TestEmbeddingService:

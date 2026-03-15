@@ -701,7 +701,7 @@ def _embed_query(query: str, ctx: ServerContext) -> Optional[List[float]]:
         if hasattr(ctx.graph_queries, 'embed'):
             return ctx.graph_queries.embed(query)
         # Fallback: try importing embedding service directly
-        from runtime.traversal.embedding import EmbeddingService
+        from runtime.infrastructure.embeddings.service import EmbeddingService
         svc = EmbeddingService()
         return svc.embed(query)
     except Exception as e:
