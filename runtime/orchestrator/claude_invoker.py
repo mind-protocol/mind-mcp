@@ -147,6 +147,10 @@ def invoke_claude(
     else:
         input_text = prompt
 
+    # Pass prompt as CLI argument (claude --print reads args, not stdin)
+    cmd.append(input_text)
+    input_text = None  # Don't also send via stdin
+
     # Execute with early subconscious response
     # If Claude takes > SUBCONSCIOUS_THRESHOLD seconds, return a subconscious
     # response immediately. The subprocess continues in background — when it
