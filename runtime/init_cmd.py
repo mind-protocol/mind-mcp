@@ -321,6 +321,70 @@ def _enforce_readonly_for_templates(templates_root: Path) -> None:
         _remove_write_permissions(child)
 
 
+def _enforce_readonly_for_runtime(mind_dir: Path) -> None:
+    """Lock down the .mind/runtime/ directory after mind init.
+
+    All files become read-only EXCEPT config files (database_config.yaml,
+    config.yaml, nature.yaml, modules.yaml) which remain writable.
+
+    This prevents accidental edits to the local copy of the runtime —
+    the canonical source is mind-mcp/runtime/, not .mind/runtime/.
+    """
+    runtime_dir = mind_dir / "runtime"
+    if not runtime_dir.exists():
+        return
+
+    # Config files that should stay writable
+    WRITABLE = {
+        "database_config.yaml",
+        "config.yaml",
+        "nature.yaml",
+        "modules.yaml",
+        ".env",
+    }
+
+    locked = 0
+    skipped = 0
+    for child in runtime_dir.rglob("*"):
+        if child.is_dir():
+            continue
+        if child.name in WRITABLE:
+            skipped += 1
+            continue
+        if child.name.endswith(".pyc"):
+            continue
+        try:
+            current_mode = child.stat().st_mode
+            readonly_mode = current_mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            child.chmod(readonly_mode)
+            locked += 1
+        except PermissionError:
+            pass
+
+    # Also lock the top-level .mind/ protocol files (schema, framework, etc.)
+    for proto_file in mind_dir.glob("*.yaml"):
+        if proto_file.name in WRITABLE:
+            continue
+        try:
+            current_mode = proto_file.stat().st_mode
+            readonly_mode = current_mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            proto_file.chmod(readonly_mode)
+            locked += 1
+        except PermissionError:
+            pass
+
+    for proto_file in mind_dir.glob("*.md"):
+        try:
+            current_mode = proto_file.stat().st_mode
+            readonly_mode = current_mode & ~(stat.S_IWUSR | stat.S_IWGRP | stat.S_IWOTH)
+            proto_file.chmod(readonly_mode)
+            locked += 1
+        except PermissionError:
+            pass
+
+    print(f"✓ Locked {locked} runtime files read-only ({skipped} config files remain writable)")
+
+
 # =============================================================================
 # GRAPH INITIALIZATION
 # =============================================================================
@@ -683,6 +747,10 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
 
     print()
     print("mind initialized!")
+    # Lock runtime files read-only to prevent accidental edits
+    # (canonical source is mind-mcp/runtime/, not .mind/runtime/)
+    _enforce_readonly_for_runtime(protocol_dest)
+
     print()
     print("Next steps:")
     print("  1. Read .mind/PROTOCOL.md")
