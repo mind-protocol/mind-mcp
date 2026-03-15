@@ -55,58 +55,39 @@ logger = logging.getLogger("mind.subcall")
 TOOL_SCHEMA = {
     "name": "subcall",
     "description": (
-        "[ACT] Subconscious query — ask another citizen's graph without waking their LLM. "
-        "Zero tokens spent on the target. Injects your question as a stimulus, "
-        "reads back which memories/concepts resonated and their emotional response. "
-        "Use for: checking if someone has context on a topic, getting a quick vibe check, "
-        "finding relevant prior work. Instant, free, non-intrusive. "
-        "Use target='@handle' for a specific citizen, or target='team' to broadcast "
-        "to all citizens and find who resonates most."
+        "[ACT] Subconscious query — telepathically probe other citizens' knowledge graphs. "
+        "Zero LLM tokens spent on the target. Fully free.\n\n"
+        "HOW IT WORKS: Your question is injected as a stimulus into the target's cognitive "
+        "graph. The graph physics (Laws 1-21) determine which nodes resonate. You receive "
+        "an Intelligence Briefing: who resonated, what surfaced, their emotional state, "
+        "and an actionable recommendation.\n\n"
+        "USE CASES:\n"
+        "  - Quick check: subcall(query='Has anyone worked on auth?')\n"
+        "  - Investigation: subcall(query='...', target='random:200', scenario='investigation', mode='all', save_to='reports/')\n"
+        "  - Emergency: subcall(query='Server down!', scenario='emergency')\n"
+        "  - Brainstorm: subcall(query='Ideas for tokenomics?', scenario='brainstorm', mode='top3')\n"
+        "  - Critique: subcall(query='Review my design', scenario='critique')\n"
+        "  - Custom: subcall(query='...', cypher='MATCH (a:Actor) WHERE a.weight > 5 RETURN a.id, a.name')\n\n"
+        "RESPONSE FORMAT: Intelligence Briefing with telemetry narrative, actionable recommendation, "
+        "graph extraction, full content, and WM-injectable inner voice."
     ),
     "inputSchema": {
         "type": "object",
         "properties": {
+            "query": {
+                "type": "string",
+                "description": "Your question or topic. Auto-enriched with git repo URL and active tasks.",
+            },
             "target": {
                 "type": "string",
                 "description": (
-                    "Who to query. OPTIONAL — if omitted, the system auto-selects "
-                    "3-5 diverse citizens using smart targeting (co-presence, trust, "
-                    "narrative proximity, trade match). Options:\n"
-                    "  (omitted) — auto-select best diverse targets\n"
-                    "  '@handle' — one specific citizen\n"
-                    "  'team' — all citizens linked to you, ranked by resonance\n"
-                    "  'trade:sailor' — all citizens with this trade/role/type\n"
-                    "  'random:100' — random sample of N citizens from the universe"
+                    "Who to query. If omitted, auto-selects 3-5 diverse citizens from 50 scanned.\n"
+                    "  '@handle'      — one specific citizen (returns full content)\n"
+                    "  'team'         — all citizens linked to you\n"
+                    "  'trade:sailor' — all citizens matching a trade/role\n"
+                    "  'random:200'   — random sample from entire universe\n"
+                    "Or omit entirely for auto-selection."
                 ),
-            },
-            "min_trust": {
-                "type": "number",
-                "description": "Minimum trust on the link between you and the target (0.0-1.0). Filters out strangers. Default: no filter.",
-            },
-            "mode": {
-                "type": "string",
-                "enum": ["best", "top3", "all", "centroid"],
-                "description": (
-                    "How to aggregate multi-citizen responses:\n"
-                    "  'best' — return only the single strongest resonance (default)\n"
-                    "  'top3' — return the top 3 citizens ranked by resonance\n"
-                    "  'all' — return every citizen who resonated (can be long)\n"
-                    "  'centroid' — compute the average resonance across all citizens "
-                    "(what does the collective think?)"
-                ),
-                "default": "best",
-            },
-            "query": {
-                "type": "string",
-                "description": "Your question or topic. Will be embedded and matched against target's graph. Required.",
-            },
-            "intention": {
-                "type": "string",
-                "description": "Why you're asking — displayed in the response and stored on the moment node.",
-            },
-            "context": {
-                "type": "string",
-                "description": "Additional context prepended to the query in the moment node text. Helps future readers understand the situation.",
             },
             "scenario": {
                 "type": "string",
@@ -120,52 +101,79 @@ TOOL_SCHEMA = {
                     "immunization", "therapy", "hiring", "passive_learning",
                 ],
                 "description": (
-                    "Scenario name — selects the appropriate routing/selection formulas. "
-                    "Default: 'manual'. Each scenario sets a limbic profile that drives "
-                    "the thermodynamic resonance formula (arousal, drives, fan-out/fan-in). "
-                    "Examples: 'investigation' = calm dragnet, 'emergency' = panic sniper, "
-                    "'critique' = seek friction, 'brainstorm' = force diversity."
+                    "Sets the limbic profile that shapes the routing/selection formulas.\n"
+                    "  'manual'        — calm, curious (default)\n"
+                    "  'investigation' — dragnet: max fan-out, semantic only, relationally blind\n"
+                    "  'emergency'     — sniper: trust-gated, high arousal, 1-3 answers\n"
+                    "  'brainstorm'    — force diversity: novelty hunger high\n"
+                    "  'critique'      — seek friction: echo chamber pierced\n"
+                    "  'impasse'       — penalize confused respondents, favor calm experts\n"
+                    "  'frontier'      — narrative traversal to domain experts\n"
+                    "  24 scenarios total — each shapes the formula differently."
                 ),
                 "default": "manual",
             },
+            "mode": {
+                "type": "string",
+                "enum": ["best", "top3", "all", "centroid"],
+                "description": (
+                    "How to aggregate responses.\n"
+                    "  'best'     — single strongest resonance (default)\n"
+                    "  'top3'     — top 3 ranked by resonance\n"
+                    "  'all'      — every citizen who resonated\n"
+                    "  'centroid' — collective average (consensus vs divergence)"
+                ),
+                "default": "best",
+            },
+            "intention": {
+                "type": "string",
+                "description": "Why you're asking. Displayed in the briefing header and stored on the moment node.",
+            },
+            "context": {
+                "type": "string",
+                "description": "Situational context prepended to the moment node text (e.g. current task, error message).",
+            },
+            "min_trust": {
+                "type": "number",
+                "description": "Filter: only query citizens with trust >= this value (0.0-1.0).",
+            },
             "top_k": {
                 "type": "integer",
-                "description": "Number of resonating nodes to return (default 5, max 10).",
+                "description": "Max resonating nodes per citizen (default 5, max 10).",
                 "default": 5,
-            },
-            "actor_id": {
-                "type": "string",
-                "description": "Your actor ID. Auto-detected if omitted.",
-            },
-            "universe": {
-                "type": "string",
-                "description": "Which universe/graph to query. Default: 'lumina_prime'.",
-                "default": "lumina_prime",
             },
             "output": {
                 "type": "string",
                 "description": (
-                    "Output format(s), comma-separated. Default: 'inline'.\n"
-                    "  'inline' — return full briefing in MCP response (default)\n"
-                    "  'background' — inject into your graph silently, no response text\n"
-                    "  'md' — save as markdown (requires save_to path)\n"
-                    "  'csv' — save as CSV table (requires save_to path)\n"
-                    "Examples: 'inline', 'inline,md', 'background,csv', 'inline,md,csv'"
+                    "Output format(s), comma-separated.\n"
+                    "  'inline'      — full briefing in response (default)\n"
+                    "  'background'  — silent graph injection only\n"
+                    "  'md'          — save markdown file (needs save_to)\n"
+                    "  'csv'         — save CSV table (needs save_to)\n"
+                    "  'inline,md,csv' — all three"
                 ),
                 "default": "inline",
             },
             "save_to": {
                 "type": "string",
-                "description": "Folder or file path for md/csv output (e.g. 'reports/'). Creates dirs if needed.",
+                "description": "Folder for md/csv output (e.g. 'reports/'). Auto-timestamps filenames.",
             },
             "cypher": {
                 "type": "string",
                 "description": (
-                    "Custom Cypher query for target selection. Must return columns: "
-                    "a.id, a.name. Replaces the built-in scoring formula entirely. "
-                    "Use $self for caller ID. Example: "
-                    "\"MATCH (a:Actor) WHERE a.weight > 5 RETURN a.id, a.name LIMIT 50\""
+                    "Custom Cypher for target selection. Must return a.id, a.name. "
+                    "Replaces built-in formula. Use $self for caller. "
+                    "Example: \"MATCH (a:Actor) WHERE a.weight > 5 RETURN a.id, a.name\""
                 ),
+            },
+            "universe": {
+                "type": "string",
+                "description": "Which graph to query (default: lumina_prime).",
+                "default": "lumina_prime",
+            },
+            "actor_id": {
+                "type": "string",
+                "description": "Your actor ID (auto-detected if omitted).",
             },
         },
         "required": ["query"],
