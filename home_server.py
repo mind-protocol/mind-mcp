@@ -437,6 +437,62 @@ async def orchestrator_status():
     return dispatcher.get_status()
 
 
+# ── Hot update — git pull + restart without Docker rebuild ──────────────────
+
+@app.post("/api/update")
+async def hot_update(request: Request):
+    """Pull latest mind-mcp code and restart uvicorn.
+
+    Called by GitHub webhook or manually. Avoids full Docker rebuild.
+    Pulls the mind-mcp repo, then restarts the Python process.
+    """
+    import subprocess
+    import signal
+
+    results = {}
+
+    # 1. Pull mind-mcp
+    mcp_dir = Path(__file__).parent
+    try:
+        pull = subprocess.run(
+            ["git", "pull", "--ff-only"],
+            cwd=str(mcp_dir),
+            capture_output=True, text=True, timeout=30,
+        )
+        results["mind_mcp"] = {
+            "stdout": pull.stdout.strip(),
+            "stderr": pull.stderr.strip(),
+            "returncode": pull.returncode,
+        }
+    except Exception as e:
+        results["mind_mcp"] = {"error": str(e)}
+
+    # 2. Pull the world repo (parent)
+    world_dir = mcp_dir.parent.parent.parent  # /app/.mind/mind-mcp -> /app
+    if (world_dir / ".git").exists() or (world_dir / "engine").exists():
+        try:
+            pull = subprocess.run(
+                ["git", "pull", "--ff-only"],
+                cwd=str(world_dir),
+                capture_output=True, text=True, timeout=30,
+            )
+            results["world"] = {
+                "stdout": pull.stdout.strip(),
+                "returncode": pull.returncode,
+            }
+        except Exception as e:
+            results["world"] = {"error": str(e)}
+
+    # 3. Restart Python process (uvicorn will be restarted by the parent start.sh)
+    restart = request.query_params.get("restart", "false").lower() == "true"
+    if restart:
+        results["restart"] = "sending SIGTERM to self"
+        # Signal ourselves — start.sh will detect exit and can restart
+        os.kill(os.getpid(), signal.SIGTERM)
+
+    return {"status": "updated", "results": results}
+
+
 # ── Voice WebSocket ─────────────────────────────────────────────────────────
 
 @app.websocket("/voice/ws")
