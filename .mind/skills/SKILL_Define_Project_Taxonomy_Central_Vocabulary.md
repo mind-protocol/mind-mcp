@@ -98,7 +98,7 @@ If this term replaces another, add to TERMINOLOGY DECISIONS table.
 
 ## Markers
 - `@mind:TODO` — Term needing better definition
-- `@mind:proposition` — Suggested terminology change
+- `NOTE` — Suggested terminology change
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

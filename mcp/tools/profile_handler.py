@@ -143,7 +143,7 @@ def _resolve_citizen(ctx: ServerContext) -> str:
 
     # Use shared detect_citizen_id (env var, cwd, .mind/citizen_id)
     try:
-        from runtime.agents.mapping import detect_citizen_id, extract_citizen_handle
+        from runtime.identity import detect_citizen_id, extract_citizen_handle
         citizen_id = detect_citizen_id(ctx.target_dir)
         if citizen_id:
             return extract_citizen_handle(citizen_id)

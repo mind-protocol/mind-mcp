@@ -172,7 +172,7 @@ def _resolve_actor(args: Dict[str, Any], ctx: ServerContext) -> str:
     """Resolve actor ID from args or detect citizen/agent from context."""
     actor_id = args.get("actor_id")
     try:
-        from runtime.agents import normalize_agent_id
+        from runtime.identity import resolve_actor_id as normalize_agent_id
         return normalize_agent_id(
             actor_id,
             target_dir=ctx.target_dir,

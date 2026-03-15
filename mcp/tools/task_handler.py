@@ -80,7 +80,7 @@ def handle_task(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
 
 def _normalize_actor(actor_id, ctx):
     """Normalize actor ID using the runtime helper."""
-    from runtime.agents import normalize_agent_id
+    from runtime.identity import resolve_actor_id as normalize_agent_id
     return normalize_agent_id(actor_id, graph_ops=ctx.graph_ops)
 
 

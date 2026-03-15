@@ -23,7 +23,7 @@ routing_table:
 
 No edits without routing: The routing table must exist before any code/doc changes. This prevents scattered, untracked changes.
 
-Ambiguous routing: If target is unclear, log `@mind:escalation` and route clear items first. Don't guess.
+Ambiguous routing: If target is unclear, log `TODO` and route clear items first. Don't guess.
 
 ---
 
@@ -59,7 +59,7 @@ seeded_todos:
 ## Gates
 
 - No code/doc edits until routing table exists — prevents scattered changes
-- If routing ambiguous → `@mind:escalation`, route clear items first — don't guess
+- If routing ambiguous → `TODO`, route clear items first — don't guess
 
 ---
 
@@ -81,7 +81,7 @@ For each item, determine:
 
 ### 3. Handle ambiguity
 If target unclear:
-- Log `@mind:escalation` with the ambiguous item
+- Log `TODO` with the ambiguous item
 - Route clear items first
 - Return to ambiguous items after escalation resolved
 
@@ -108,8 +108,8 @@ For each routed item, create `@mind:TODO` in target module's SYNC.
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

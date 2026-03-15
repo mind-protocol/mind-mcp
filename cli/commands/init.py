@@ -6,7 +6,6 @@ from pathlib import Path
 from ..helpers.copy_ecosystem_templates_to_target import copy_ecosystem_templates
 from ..helpers.copy_capabilities_to_target import copy_capabilities
 from ..helpers.copy_runtime_package_to_target import copy_runtime_package
-from ..helpers.create_ai_config_files_for_claude_agents_gemini import create_ai_config_files
 from ..helpers.sync_skills_to_ai_tool_directories import sync_skills_to_ai_tools
 from ..helpers.create_database_config_yaml import create_database_config
 from ..helpers.setup_database_and_apply_schema import setup_database
@@ -48,12 +47,7 @@ def run(target_dir: Path, database: str = "falkordb") -> bool:
     save_version_hash(target_dir)
     steps.append("runtime")
 
-    # 4. AI config files
-    print("\n## AI Configs")
-    create_ai_config_files(target_dir)
-    steps.append("ai_configs")
-
-    # 5. Skills sync
+    # 4. Skills sync
     print("\n## Skills")
     sync_skills_to_ai_tools(target_dir)
     steps.append("skills")

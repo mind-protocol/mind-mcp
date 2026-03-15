@@ -124,17 +124,7 @@ def _generate_mcp_config_file(target_dir: Path, mind_root: Path) -> None:
 
 
 def _escape_marker_tokens(content: str) -> str:
-    """Escape special markers so generated prompts don't trigger scanners."""
-    replacements = {
-        "@mind:doctor:escalation": "@mind&#58;doctor&#58;escalation",
-        "@mind:escalation": "@mind&#58;escalation",
-        "@mind:doctor:proposition": "@mind&#58;doctor&#58;proposition",
-        "@mind:proposition": "@mind&#58;proposition",
-        "@mind:doctor:todo": "@mind&#58;doctor&#58;todo",
-        "@mind:todo": "@mind&#58;todo",
-    }
-    for source, target in replacements.items():
-        content = content.replace(source, target)
+    """No-op — marker system removed. Kept for API compatibility."""
     return content
 
 

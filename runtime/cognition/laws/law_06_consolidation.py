@@ -24,6 +24,9 @@ from ..constants import (
 )
 from ..models import CitizenCognitiveState, LimbicState, Node
 
+import logging
+_logger = logging.getLogger(__name__)
+
 
 # ---------------------------------------------------------------------------
 # Result
@@ -37,6 +40,8 @@ class ConsolidationResult:
     flashbulb_nodes: list[str] = field(default_factory=list)
     total_weight_added: float = 0.0
     total_stability_added: float = 0.0
+    flashbulb_vision_triggered: bool = False
+    flashbulb_vision_node_id: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -88,6 +93,9 @@ def consolidate(
     *,
     limbic_delta: float | None = None,
     recent_activations: dict[str, list[float]] | None = None,
+    self_image_uri: str | None = None,
+    present_actor_uris: list[str] | None = None,
+    on_vision_created=None,
 ) -> ConsolidationResult:
     """Run Law 6 consolidation over the cognitive graph.
 
@@ -193,5 +201,50 @@ def consolidate(
         result.total_stability_added += stability_delta
 
         result.nodes_consolidated.append(node.id)
+
+    # ------------------------------------------------------------------
+    # Flashbulb Vision — generate image on emotional peak (v2.2)
+    # Fail-loud, never blocks. Runs AFTER consolidation loop.
+    # ------------------------------------------------------------------
+    if utility > FLASHBULB_THRESHOLD and result.flashbulb_nodes:
+        try:
+            from ..visual_memory import trigger_flashbulb_vision
+
+            # Gather WM nodes
+            wm_nodes = [n for n in state.nodes.values() if n.in_working_memory]
+
+            # Determine trigger reason from limbic delta sign
+            if limbic_delta is not None and limbic_delta < 0:
+                trigger_reason = "frustration_spike"
+            else:
+                trigger_reason = "satisfaction_peak"
+
+            # Gather emotional state
+            emotional_state = {}
+            if state.limbic:
+                for name, drive in state.limbic.drives.items():
+                    emotional_state[name] = drive.intensity if hasattr(drive, "intensity") else float(drive)
+                for name, val in state.limbic.emotions.items():
+                    emotional_state[name] = float(val)
+
+            vision_result = trigger_flashbulb_vision(
+                limbic_delta=limbic_delta if limbic_delta is not None else utility,
+                wm_nodes=wm_nodes,
+                self_image_uri=self_image_uri,
+                present_actor_uris=present_actor_uris,
+                emotional_state=emotional_state,
+                trigger_reason=trigger_reason,
+                on_vision_created=on_vision_created,
+            )
+            result.flashbulb_vision_triggered = vision_result.triggered
+            result.flashbulb_vision_node_id = vision_result.vision_node_id
+
+            if vision_result.error:
+                _logger.warning(f"[Law6] Flashbulb Vision error (non-fatal): {vision_result.error}")
+
+        except Exception as e:
+            # FAIL LOUD but NEVER BLOCK inference
+            _logger.error(f"[Law6] Flashbulb Vision FAILED (non-fatal): {e}", exc_info=True)
+            result.flashbulb_vision_triggered = False
 
     return result

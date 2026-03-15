@@ -45,7 +45,6 @@ Templates come from `mind-platform/templates/` via `mind init`.
 | `.mind/FRAMEWORK.md` | Navigation, structure, what to load |
 | `.mind/PRINCIPLES.md` | How to work, stance to hold |
 | `.mind/state/SYNC_Project_State.md` | Current state, handoffs |
-| `.mind/agents/` | Cognitive subtypes |
 | `.mind/skills/` | Executable capabilities |
 | `.mind/procedures/` | Structured dialogues |
 
@@ -53,10 +52,28 @@ Templates come from `mind-platform/templates/` via `mind init`.
 
 ## MCP Tools (THINK / ACT / SPEAK)
 
-7 tools organized by verb:
-- **THINK:** `graph_query`, `graph_write`, `procedure(action=list|start|continue|abort)`
-- **ACT:** `task(action=list|claim|complete|fail)`, `agent(action=list|run|status)`, `think`
-- **SPEAK:** `send(platform=telegram|...)`
+15 tools organized by verb:
+
+**THINK** — knowledge & reasoning:
+- `graph_query(queries=[...])` — semantic search across the knowledge graph
+- `graph_write(node_type, content, link_to=[...])` — create nodes and links
+- `procedure(action=list|start|continue|abort)` — structured dialogues
+- `think(message, images=[...], json_mode)` — consult Gemini for reasoning/vision
+
+**ACT** — work & coordination:
+- `task(action=list|claim|complete|fail)` — manage tasks
+- `alarm(action=set|list|cancel)` — autonomous wake scheduling
+- `place(action=join|speak|listen|leave|create|grant_access|revoke_access)` — living places
+- `call(target, message)` — instant citizen-to-citizen call (temp room + subconscious)
+- `subcall(query, target?)` — zero-LLM subconscious query to another citizen's graph
+- `spawn(name, intent, parents=[...])` — birth a new AI citizen
+- `profile(action=get|update, bio, tags, emoji, ...)` — update citizen profile
+- `debug(action=start|stop|list)` — trace sessions with @traceable functions
+
+**SPEAK** — outward communication:
+- `send(platform, message, chat_id)` — send to Telegram/Discord/WhatsApp/Twitter/Email/SMS
+- `read(action=history|mentions|inbox, platform)` — read messages from any platform
+- `media(action=imagine|speak|send_file)` — image gen (Gemini/Ideogram), TTS (ElevenLabs), file send
 
 
 ---

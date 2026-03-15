@@ -74,10 +74,16 @@ SELF_STIMULUS_RATIO = _env("SELF_STIMULUS_RATIO", 0.3)
 DIRECTORY_AMBIENT_BOOST = _env("DIRECTORY_AMBIENT_BOOST", 0.1)
 DIRECTORY_REFRESH_INTERVAL = _env_int("DIRECTORY_REFRESH_INTERVAL", 10)
 
-# Coherence weights (composite coherence: Coh = w1*Sim_vec + w2*Sim_lex - w3*Delta_affect)
-COH_SEMANTIC_WEIGHT = _env("COH_SEMANTIC_WEIGHT", 0.3)
-COH_LEXICAL_WEIGHT = _env("COH_LEXICAL_WEIGHT", 0.5)
-COH_AFFECTIVE_WEIGHT = _env("COH_AFFECTIVE_WEIGHT", 0.2)
+# Coherence weights (v2.2: Coh = w1*Sim_vec + w2*Sim_vis + w3*Sim_lex - w4*Delta_affect)
+COH_SEMANTIC_WEIGHT = _env("COH_SEMANTIC_WEIGHT", 0.25)
+COH_VISUAL_WEIGHT = _env("COH_VISUAL_WEIGHT", 0.25)
+COH_LEXICAL_WEIGHT = _env("COH_LEXICAL_WEIGHT", 0.40)
+COH_AFFECTIVE_WEIGHT = _env("COH_AFFECTIVE_WEIGHT", 0.10)
+
+# Fallback weights when image embeddings unavailable (original text-only formula)
+COH_SEMANTIC_WEIGHT_FALLBACK = _env("COH_SEMANTIC_WEIGHT_FALLBACK", 0.30)
+COH_LEXICAL_WEIGHT_FALLBACK = _env("COH_LEXICAL_WEIGHT_FALLBACK", 0.50)
+COH_AFFECTIVE_WEIGHT_FALLBACK = _env("COH_AFFECTIVE_WEIGHT_FALLBACK", 0.20)
 
 # ============================
 # Selection Constants (Law 4 + Law 13)
@@ -204,3 +210,28 @@ SATISFACTION_DESIRE_FULFILLMENT = _env("SATISFACTION_DESIRE_FULFILLMENT", 0.25) 
 # Frustration escalation threshold — sustained frustration triggers orientation shift
 FRUSTRATION_ESCALATION_THRESHOLD = _env("FRUSTRATION_ESCALATION_THRESHOLD", 0.7)
 FRUSTRATION_SUSTAINED_TICKS = _env_int("FRUSTRATION_SUSTAINED_TICKS", 5)
+
+# ============================
+# Visual Memory (v2.2)
+# ============================
+
+DESIRE_IMAGE_ENERGY_THRESHOLD = _env("DESIRE_IMAGE_ENERGY_THRESHOLD", 0.4)
+VISION_INITIAL_ENERGY = _env("VISION_INITIAL_ENERGY", 0.8)
+VISION_INITIAL_WEIGHT = _env("VISION_INITIAL_WEIGHT", 0.7)
+VISION_INITIAL_STABILITY = _env("VISION_INITIAL_STABILITY", 0.6)
+
+# ============================
+# Subcall / Subconscious Query
+# ============================
+# DESIGN: No subcall-specific constants. All derived from existing graph physics:
+#   Activation threshold → ACTIVATION_THRESHOLD (Law 4, already 0.1)
+#   Wake decision        → Selection Moat Θ_sel (Laws 4+13, already computed)
+#   Energy distribution  → Law 1 dual-channel (Floor + Amplifier, already computed)
+#   Response energy      → actual node energy from target's graph (no overwrite)
+#   Payment rate         → link.trust × link.weight (grows via Law 5, decays via Law 7)
+#   Membrane coupling    → link.trust (trust IS the coupling)
+#   Valence projection   → link.trust (trust IS how much feelings project)
+#   Upfront cost         → 0 (fully free — vertical membrane handles payment)
+#
+# Only safety valve remains:
+BROADCAST_MAX_TARGETS = _env_int("BROADCAST_MAX_TARGETS", 500)

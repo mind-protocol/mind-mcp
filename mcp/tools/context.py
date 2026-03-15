@@ -1,7 +1,7 @@
 """
 Shared context object passed to all MCP tool handlers.
 
-Holds references to graph, agent, procedure, and capability subsystems
+Holds references to graph, procedure, and capability subsystems
 so handlers don't depend on the server class directly.
 """
 
@@ -15,7 +15,6 @@ class ServerContext:
     """Dependencies shared across all tool handlers."""
     graph_ops: Any = None
     graph_queries: Any = None
-    agent_graph: Any = None
     runner: Any = None  # ConnectomeRunner
     target_dir: Path = field(default_factory=Path.cwd)
     capability_manager: Any = None

@@ -69,7 +69,7 @@ Read PATTERNS, BEHAVIORS, VALIDATION, IMPLEMENTATION before coding.
 ### 2. Verify feature fits
 - Does feature align with PATTERNS scope?
 - Will feature violate any VALIDATION invariants?
-- If no → proceed. If uncertain → `@mind:escalation`.
+- If no → proceed. If uncertain → `TODO`.
 
 ### 3. Implement with canon naming
 Use terms from PATTERNS/CONCEPT. Follow structure from IMPLEMENTATION.
@@ -101,8 +101,8 @@ Run existing tests/health checks. Confirm VALIDATION invariants still hold.
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

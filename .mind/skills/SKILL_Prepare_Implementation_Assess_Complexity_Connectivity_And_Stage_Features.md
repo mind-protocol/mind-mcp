@@ -255,7 +255,7 @@ summary:
   critical_decisions_needed: ["<decisions that block progress>"]
 ```
 
-If any `@mind:escalation` was generated during assessment (unclear requirements, missing docs, ambiguous coupling), list them explicitly. These must be resolved before implementation begins.
+If any `TODO` was generated during assessment (unclear requirements, missing docs, ambiguous coupling), list them explicitly. These must be resolved before implementation begins.
 
 ---
 
@@ -285,8 +285,8 @@ If any `@mind:escalation` was generated during assessment (unclear requirements,
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked (missing docs, unclear coupling, ambiguous requirements) → `@mind:escalation` with what's missing + `@mind:proposition` with best guess → proceed with proposition, flag uncertainty.
+If blocked (missing docs, unclear coupling, ambiguous requirements) → `TODO` with what's missing + `NOTE` with best guess → proceed with proposition, flag uncertainty.

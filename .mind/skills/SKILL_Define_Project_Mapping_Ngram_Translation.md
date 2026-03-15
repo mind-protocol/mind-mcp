@@ -113,7 +113,7 @@ Insert in NODE MAPPINGS or LINK MAPPINGS section.
 
 ## Markers
 - `@mind:TODO` — Mapping that needs clarification
-- `@mind:proposition` — Suggested mapping improvement
+- `NOTE` — Suggested mapping improvement
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

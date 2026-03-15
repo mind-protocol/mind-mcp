@@ -6,8 +6,7 @@ Any implementation (FalkorDB, etc.) must satisfy this interface.
 
 DOCS: docs/physics/graph/PATTERNS_Graph.md
 
-@mind:proposition
-    SCOPE DECISION: This interface captures the minimal read contract for
+NOTE: This interface captures the minimal read contract for
     external consumers (Orchestrator, tick.py, blood-ledger proxy). Methods
     are added when a consumer actually needs them, not speculatively.
 
@@ -112,7 +111,7 @@ class GraphClient(Protocol):
         # This is a protocol method and is implemented by concrete graph clients.
 
 
-# @mind:todo Verify blood-ledger proxy is updated with new methods:
+# TODO: Verify blood-ledger proxy is updated with new methods:
 #   - get_path_between
 #   - get_player_location
 #   - get_narrative_believers

@@ -12,8 +12,7 @@ You have a limited context window. You can't load everything. But you need:
 - To not hallucinate structure that doesn't exist
 
 This protocol solves these problems through:
-1. **Agents** — Cognitive subtypes that shape how you approach work
-2. **Procedures** — Structured dialogues for common tasks
+1. **Procedures** — Structured dialogues for common tasks
 3. **Skills** — Executable capabilities with gates and processes
 4. **Documentation chains** — Bidirectional links between code and docs
 5. **SYNC files** — Explicit state tracking for handoffs
@@ -46,7 +45,6 @@ Mind Protocol operates across four layers:
 
 ```
 mind-platform/templates/     ──(mind init)──▶    .mind/
-├── agents/                                      ├── agents/
 ├── skills/                                      ├── skills/
 ├── procedures/                                  ├── procedures/
 ├── docs/                                        ├── templates/
@@ -110,25 +108,6 @@ The chain: OBJECTIVES → PATTERNS → BEHAVIORS → ALGORITHM → VALIDATION �
 ```
 
 Understand what's happening, what changed recently, any handoffs for you.
-
-### 3. Choose Your Agent Subtype
-
-Agents are cognitive stances that shape how you approach work. Pick the one matching your task:
-
-| Agent | Subtype | When to Use |
-|-------|---------|-------------|
-| **witness** | Observe → trace → name | Before fixing, when behavior doesn't match docs, investigating |
-| **groundwork** | Act → ship → iterate | Implementing features, writing code, making things work |
-| **architect** | Design → structure → connect | System design, defining boundaries, planning structure |
-| **fixer** | Diagnose → patch → verify | Bug fixes, repairs, targeted corrections |
-| **scout** | Explore → map → report | Codebase exploration, finding related code |
-| **keeper** | Guard → validate → enforce | Maintaining invariants, enforcing constraints |
-| **weaver** | Connect → integrate → blend | Cross-module work, integration tasks |
-| **voice** | Name → explain → document | Documentation, naming, explaining |
-| **herald** | Announce → summarize → handoff | Status updates, handoffs, summaries |
-| **steward** | Maintain → clean → organize | Refactoring, cleanup, organization |
-
-Agent files live in `.mind/agents/{agent}/CLAUDE.md`
 
 ### 3. Use Procedures for Structured Work
 
@@ -209,11 +188,10 @@ After changes, update SYNC files:
 | `CONCEPT_*.md` | Cross-cutting idea — WHAT it means | When concept spans modules |
 | `TOUCHES_*.md` | Index — WHERE concept appears | Finding related code |
 
-### Agents, Skills, Procedures
+### Skills and Procedures
 
 | Pattern | Purpose | When to Load |
 |---------|---------|--------------|
-| `.mind/agents/{name}/` | Cognitive subtype files | When adopting a subtype |
 | `.mind/skills/SKILL_*.md` | Executable capabilities | When performing that capability |
 | `procedures/*.yaml` | Structured dialogues | Via procedure tools |
 
@@ -463,18 +441,6 @@ This naming approach reduces ambiguity, surfaces when refactors are necessary, a
 
 ---
 
-## MARKERS
-
-Use markers to communicate across sessions and agents:
-
-| Marker | Purpose |
-|--------|---------|
-| `@mind:TODO` | Actionable task that needs doing |
-| `@mind:escalation` | Blocked, need decision from human/other agent |
-| `@mind:proposition` | Improvement idea or future possibility |
-
-When blocked: Add `@mind:escalation`, then `@mind:proposition` with your best guess, then proceed with the proposition.
-
 ---
 
 ## CLI COMMANDS
@@ -489,7 +455,6 @@ mind validate                           # Check protocol invariants
 mind doctor                             # Health checks
 mind sync                               # Show SYNC status
 mind work [path] [objective]            # AI-assisted work on a path
-mind solve-markers                      # Review escalations and propositions
 mind context <file>                     # Get doc context for a file
 mind prompt                             # Generate bootstrap prompt for LLM
 mind overview                           # Generate repo map
@@ -504,7 +469,7 @@ mind docs-fix                           # Create minimal missing docs
 ```
 .mind/
 ├── PRINCIPLES.md, FRAMEWORK.md    # Protocol docs
-├── agents/, skills/, procedures/   # Agent definitions
+├── skills/, procedures/            # Capabilities and structured dialogues
 ├── state/                          # SYNC files
 ├── database_config.yaml            # Database configuration
 └── mind/                           # Python runtime (186 files)
@@ -589,9 +554,6 @@ graph_query(queries: ["What characters exist?", "How does physics work?"], top_k
 |------|---------|
 | `doctor_check` | Run health checks, find issues |
 | `task_list` | List pending tasks by module/objective |
-| `agent_list` | Show available work agents |
-| `agent_run` | Run agent for task/issue |
-| `agent_status` | Get/set agent status |
 
 ---
 

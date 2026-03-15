@@ -81,6 +81,11 @@ class Stimulus:
     segments: list[dict] = field(default_factory=list)
     # segments: list of {"content": str, "embedding": list[float],
     #                     "node_type": str (optional)}
+    # v2.2: Provenance + visual
+    origin_citizen: str = ""       # actor ID of the sender
+    origin_citizen_name: str = ""  # display name
+    origin_citizen_image: str = "" # sender's profile pic URI
+    image_uri: str = ""            # stimulus-specific image (vision, screenshot)
 
 
 @dataclass
@@ -245,10 +250,19 @@ def _preprocess_stimulus(
             "embedding": stimulus.embedding,
         }]
 
-    for seg in segments:
+    # v2.2: Cluster energy distribution — main node gets 50% of budget,
+    # context nodes share the remaining 50%. First segment = anchor/main.
+    n_segs = len(segments)
+    main_energy = budget_per_segment * n_segs * 0.5 if n_segs > 1 else budget_per_segment
+    ctx_energy = (budget_per_segment * n_segs * 0.5) / max(n_segs - 1, 1) if n_segs > 1 else 0.0
+
+    anchor_node_id = None  # track the main node for link creation
+
+    for seg_idx, seg in enumerate(segments):
         seg_embedding = seg.get("embedding", stimulus.embedding)
         seg_content = seg.get("content", stimulus.content)
         seg_type_str = seg.get("node_type", "concept")
+        is_main = (seg_idx == 0)  # first segment is the anchor
 
         if not seg_embedding:
             continue
@@ -263,12 +277,16 @@ def _preprocess_stimulus(
             nearest.last_activated_at = time.time()
             target_ids.append(nearest.id)
             merged += 1
+            if is_main:
+                anchor_node_id = nearest.id
         else:
             # Create new node with birth properties
             try:
                 ntype = NodeType(seg_type_str)
             except ValueError:
                 ntype = NodeType.CONCEPT
+
+            seg_energy = main_energy if is_main else ctx_energy
 
             node_id = _generate_node_id(ntype.value, seg_content)
             new_node = Node(
@@ -277,17 +295,62 @@ def _preprocess_stimulus(
                 content=seg_content,
                 embedding=seg_embedding,
                 weight=NEWBORN_WEIGHT,
-                energy=budget_per_segment,  # high energy — enters the game
+                energy=seg_energy,
                 stability=0.0,              # zero — vulnerable to Law 7
                 recency=1.0,                # fresh
                 novelty_affinity=1.0,       # max — curiosity amplifies
                 self_relevance=0.0,
                 activation_count=1,
                 last_activated_at=time.time(),
+                # v2.2: Provenance — stamp origin on every node created from stimulus
+                origin_citizen=stimulus.origin_citizen or None,
+                origin_date=time.time(),
+                # v2.2: Visual — attach stimulus image to the new moment node
+                image_uri=seg.get("image_uri") or stimulus.image_uri or None,
             )
             state.add_node(new_node)
             target_ids.append(node_id)
             created += 1
+            if is_main:
+                anchor_node_id = node_id
+
+    # v2.2: Create links between cluster nodes (anchor → each context node)
+    # This ensures the cluster propagates as a unit via Law 2.
+    # Link types: anchor relates_to context nodes (semantic association).
+    # For actor origin nodes: remembers (the target remembers who asked).
+    if anchor_node_id and len(target_ids) > 1:
+        for nid in target_ids:
+            if nid == anchor_node_id:
+                continue
+            ctx_node = state.get_node(nid)
+            if ctx_node is None:
+                continue
+
+            # Determine link type based on context node type
+            if ctx_node.node_type == NodeType.MEMORY:
+                link_type = LinkType.REMINDS_OF
+            elif ctx_node.node_type == NodeType.NARRATIVE:
+                link_type = LinkType.SUPPORTS
+            else:
+                link_type = LinkType.ASSOCIATES
+
+            # Check if this is the origin actor node
+            if seg_type_str == "actor" or getattr(ctx_node, 'origin_citizen', None) and ctx_node.node_type == NodeType.CONCEPT:
+                # Actor reference → the target remembers who sent the stimulus
+                link_type = LinkType.REMINDS_OF
+
+            link_id = f"link_{anchor_node_id}_{nid}"
+            link = Link(
+                source_id=anchor_node_id,
+                target_id=nid,
+                link_type=link_type,
+                weight=NEWBORN_WEIGHT,          # low — must earn permanence
+                activation_gain=1.0,            # neutral transfer
+                energy=ctx_energy * 0.5,        # some energy on the link too
+                stability=0.0,                  # fragile
+                recency=1.0,                    # fresh
+            )
+            state.add_link(link)
 
     return target_ids, created, merged
 

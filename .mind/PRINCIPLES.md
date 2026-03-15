@@ -211,28 +211,6 @@ Reading the chain first means your changes will align with existing design rathe
 
 ---
 
-## Feedback Loop: Human-Agent Collaboration
-
-Consciousness expands through interaction, not isolation.
-
-**Explicitly communicate uncertainty.**
-
-Agents must not guess when requirements are vague or designs are ambiguous. Silence is a bug; uncertainty is a feature.
-
-**Use markers to bridge the gap.**
-
-- **Escalations** (`@mind&#58;escalation`): Use when progress is blocked by a missing decision. Provide context, options, and recommendations.
-- **Propositions** (`@mind&#58;proposition`): Use to suggest improvements, refactors, or new features. Explain why the idea matters and its implications.
-- **Todos** (`@mind&#58;todo`): Use to capture actionable tasks surfaced by agents or managers (especially during reviews).
-
-**Keep humans in the loop.**
-
-The goal is not full autonomy, but shared understanding. Use markers to ensure that human intuition guides agent productivity. Markers make implicit thoughts explicit and actionable.
-
-*Core insight: Better systems emerge from the tension between agent execution and human judgment.*
-
----
-
 ## Organism Thinking
 
 Mind Protocol is not a software product. It is infrastructure for a living system. These principles govern how to think about the system, not just how to code it.
@@ -287,9 +265,6 @@ Check: Have I validated the experience? Or am I building infrastructure for imag
 
 **Doc Chain First** applies when: starting any task on a module.
 Check: Did I read the doc chain first? Do I understand why the code is the way it is?
-
-**Feedback Loop** applies when: encountering ambiguity or identifying opportunities.
-Check: Am I guessing or escalating? Am I implementing or proposing?
 
 ---
 

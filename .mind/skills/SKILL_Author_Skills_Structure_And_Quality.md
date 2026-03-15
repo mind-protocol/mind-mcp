@@ -110,7 +110,7 @@ Order matters. Prerequisites matter.
 
 ### 6. Never-stop rule
 ```
-If blocked → @mind:escalation + @mind:proposition → proceed with proposition
+If blocked → TODO + NOTE → proceed with proposition
 ```
 
 ---
@@ -167,8 +167,8 @@ Doctor finds gap → triggers protocol → protocol gathers context from graph �
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

@@ -59,7 +59,7 @@ implementation_updates:
 
 ## Gates
 
-- If canonical surface unclear → `@mind:escalation`, proceed with other modules — don't guess
+- If canonical surface unclear → `TODO`, proceed with other modules — don't guess
 - Must update IMPLEMENTATION with discovered surfaces/docking points — track what's found
 
 ---
@@ -92,8 +92,8 @@ Match discovered code to doc chain:
 Add missing docking points for discovered surfaces.
 
 ### 5. Note gaps
-If canonical surface unclear, log `@mind:escalation`.
-If terminology inconsistent, log `@mind:proposition`.
+If canonical surface unclear, log `TODO`.
+If terminology inconsistent, log `NOTE`.
 
 ---
 
@@ -112,8 +112,8 @@ If terminology inconsistent, log `@mind:proposition`.
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

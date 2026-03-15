@@ -31,14 +31,12 @@ from pathlib import Path
 from typing import Optional
 
 # Import from submodules
-from .agent_cli import AGENT_CHOICES, DEFAULT_AGENT
 from .init_cmd import init_protocol
 from .validate import validate_protocol
 from .prompt import print_bootstrap_prompt
 from .context import print_module_context
 from .project_map import print_project_map
 from .sync import sync_command
-from .solve_escalations import solve_special_markers_command
 from .refactor import refactor_command
 from .status_cmd import status_command
 from .repo_overview import generate_and_save as generate_overview
@@ -50,15 +48,10 @@ from .procedure_validator import validate_cluster_command
 from .cluster_metrics import ClusterMetrics, ClusterValidator
 from .explore_cmd import explore_command
 
-
-from .agent_cli import build_agent_command
-
 # Import new CLI commands
 try:
-    from cli.commands.agents import agents_command
     from cli.commands.tasks import tasks_command
     from cli.commands.events import events_command, errors_command
-    from cli.commands.swarm import run as swarm_run
     HAS_NEW_COMMANDS = True
 except ImportError:
     HAS_NEW_COMMANDS = False
@@ -107,19 +100,7 @@ def main():
     """CLI entry point."""
     parser = argparse.ArgumentParser(
         prog="mind",
-        description="mind - Memory for AI agents. Protocol for context, state, and handoffs."
-    )
-    parser.add_argument(
-        "--model",
-        choices=AGENT_CHOICES,
-        default="all",
-        help="Agent model for work (default: all, randomly picks a provider per task)",
-    )
-    parser.add_argument(
-        "--agents",
-        choices=AGENT_CHOICES,
-        dest="model",
-        help=argparse.SUPPRESS,
+        description="mind - Memory protocol for AI citizens. Context, state, and handoffs."
     )
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
@@ -190,18 +171,6 @@ def main():
         help="File path to get context for"
     )
     context_parser.add_argument(
-        "--dir", "-d",
-        type=Path,
-        default=Path.cwd(),
-        help="Project directory (default: current directory)"
-    )
-
-    # solve-markers command
-    markers_parser = subparsers.add_parser(
-        "solve-markers",
-        help="List @mind special markers (escalations, propositions) for human review"
-    )
-    markers_parser.add_argument(
         "--dir", "-d",
         type=Path,
         default=Path.cwd(),
@@ -626,54 +595,6 @@ def main():
         help="Output format (default: text)"
     )
 
-    # agents command
-    agents_parser = subparsers.add_parser(
-        "agents",
-        help="Agent lifecycle management (list, pause, stop, kill, enable)"
-    )
-    agents_parser.add_argument(
-        "--dir", "-d",
-        type=Path,
-        default=Path.cwd(),
-        help="Project directory (default: current directory)"
-    )
-    agents_subparsers = agents_parser.add_subparsers(dest="agents_action")
-
-    agents_list_parser = agents_subparsers.add_parser(
-        "list",
-        help="List all agents and their status"
-    )
-    agents_list_parser.add_argument(
-        "--format", "-f",
-        choices=["text", "json"],
-        default="text",
-        help="Output format (default: text)"
-    )
-
-    agents_pause_parser = agents_subparsers.add_parser(
-        "pause",
-        help="Pause an agent (keeps state)"
-    )
-    agents_pause_parser.add_argument("actor_id", type=str, help="Agent ID to pause")
-
-    agents_stop_parser = agents_subparsers.add_parser(
-        "stop",
-        help="Stop an agent gracefully"
-    )
-    agents_stop_parser.add_argument("actor_id", type=str, help="Agent ID to stop")
-
-    agents_kill_parser = agents_subparsers.add_parser(
-        "kill",
-        help="Force kill an agent"
-    )
-    agents_kill_parser.add_argument("actor_id", type=str, help="Agent ID to kill")
-
-    agents_enable_parser = agents_subparsers.add_parser(
-        "enable",
-        help="Enable a paused agent"
-    )
-    agents_enable_parser.add_argument("actor_id", type=str, help="Agent ID to enable")
-
     # tasks command
     tasks_parser = subparsers.add_parser(
         "tasks",
@@ -787,44 +708,6 @@ def main():
         help="Output format (default: text)"
     )
 
-    # swarm command
-    swarm_parser = subparsers.add_parser(
-        "swarm",
-        help="Run multiple agents in parallel with live streaming"
-    )
-    swarm_parser.add_argument(
-        "--agents", "-n",
-        type=int,
-        default=0,
-        help="Number of agents to spawn"
-    )
-    swarm_parser.add_argument(
-        "--status",
-        action="store_true",
-        help="Show swarm status"
-    )
-    swarm_parser.add_argument(
-        "--stop",
-        action="store_true",
-        help="Stop all agents"
-    )
-    swarm_parser.add_argument(
-        "--stream",
-        action="store_true",
-        help="Stream moments live"
-    )
-    swarm_parser.add_argument(
-        "--logs",
-        action="store_true",
-        help="Tail log files"
-    )
-    swarm_parser.add_argument(
-        "--log-file",
-        type=str,
-        default=None,
-        help="Custom log file path"
-    )
-
     # cluster command
     cluster_parser = subparsers.add_parser(
         "cluster",
@@ -875,9 +758,6 @@ def main():
     elif args.command == "context":
         success = print_module_context(args.dir, args.file)
         sys.exit(0 if success else 1)
-    elif args.command == "solve-markers":
-        exit_code = solve_special_markers_command(args.dir)
-        sys.exit(exit_code)
     elif args.command == "map":
         print_project_map(args.dir, args.output)
         sys.exit(0)
@@ -1116,23 +996,6 @@ def main():
 
             sys.exit(0 if result.get('valid', False) else 1)
 
-    elif args.command == "agents":
-        if not HAS_NEW_COMMANDS:
-            print("Error: CLI commands module not found")
-            sys.exit(1)
-
-        action = args.agents_action or "list"
-        actor_id = getattr(args, 'actor_id', None)
-        format_output = getattr(args, 'format', 'text')
-
-        exit_code = agents_command(
-            target_dir=args.dir,
-            action=action,
-            actor_id=actor_id,
-            format_output=format_output,
-        )
-        sys.exit(exit_code)
-
     elif args.command == "tasks":
         if not HAS_NEW_COMMANDS:
             print("Error: CLI commands module not found")
@@ -1175,21 +1038,6 @@ def main():
             format_output=args.format,
         )
         sys.exit(exit_code)
-
-    elif args.command == "swarm":
-        if not HAS_NEW_COMMANDS:
-            print("Error: CLI commands module not found")
-            sys.exit(1)
-
-        swarm_run(
-            agents=args.agents,
-            status=args.status,
-            stop=args.stop,
-            stream=args.stream,
-            logs=args.logs,
-            log_file=args.log_file,
-        )
-        sys.exit(0)
 
     else:
         parser.print_help()

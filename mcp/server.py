@@ -2,21 +2,28 @@
 """
 Mind MCP Server — Membrane Dispatcher
 
-Exposes the mind graph system as 10 MCP tools organized by THINK / ACT / SPEAK.
+Exposes the mind graph system as 15 MCP tools organized by THINK / ACT / SPEAK.
 
 THINK (knowledge & reasoning):
   1. graph_query   — semantic search across the knowledge graph
   2. graph_write   — create nodes and links in the graph
   3. procedure     — structured dialogues (list/start/continue/abort)
+  4. think         — consult Gemini for reasoning, vision, structured output
 
 ACT (work & coordination):
-  4. task          — manage tasks (list/claim/complete/fail)
-  5. agent         — manage work agents (list/run/status)
-  6. think         — consult another LLM (Gemini)
+  5. task          — manage tasks (list/claim/complete/fail)
+  6. alarm         — autonomous wake scheduling (set/list/cancel)
+  7. place         — living places (join/speak/listen/leave/create/grant/revoke)
+  8. call          — instant citizen-to-citizen call via temporary room
+  9. subcall       — zero-LLM subconscious query to another citizen's graph
+  10. spawn        — birth a new AI citizen (identity → brain → wallet → L4)
+  11. profile      — update citizen profile (bio, tags, emoji, pic, partner)
+  12. debug        — trace sessions with @traceable functions
 
 SPEAK (outward communication):
-  7. send          — send message to any platform (telegram/discord/whatsapp/twitter/email/sms)
-  8. read          — read messages/mentions from any platform
+  13. send         — send message to any platform (telegram/discord/whatsapp/twitter/email/sms)
+  14. read         — read messages/mentions from any platform
+  15. media        — image generation, text-to-speech, file send
 
 Usage:
   python mcp/server.py
@@ -37,7 +44,6 @@ from dotenv import load_dotenv
 load_dotenv(project_root / ".env")
 
 from runtime.connectome import ConnectomeRunner
-from runtime.agents import AgentGraph
 from runtime.membrane.endpoint_registrar import auto_register
 from runtime.capability_integration import (
     init_capability_manager,
@@ -51,7 +57,6 @@ from mcp.tools.graph_query_handler import TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, han
 from mcp.tools.graph_write_handler import TOOL_SCHEMA as GRAPH_WRITE_SCHEMA, handle_graph_write
 from mcp.tools.procedure_handler import TOOL_SCHEMA as PROCEDURE_SCHEMA, handle_procedure
 from mcp.tools.task_handler import TOOL_SCHEMA as TASK_SCHEMA, handle_task
-from mcp.tools.agent_handler import TOOL_SCHEMA as AGENT_SCHEMA, handle_agent
 from mcp.tools.think_handler import TOOL_SCHEMA as THINK_SCHEMA, handle_think
 from mcp.tools.send_handler import TOOL_SCHEMA as SEND_SCHEMA, handle_send
 from mcp.tools.read_handler import TOOL_SCHEMA as READ_SCHEMA, handle_read
@@ -77,10 +82,9 @@ TOOL_SCHEMAS = [
     GRAPH_QUERY_SCHEMA,
     GRAPH_WRITE_SCHEMA,
     PROCEDURE_SCHEMA,
+    THINK_SCHEMA,
     # ACT
     TASK_SCHEMA,
-    AGENT_SCHEMA,
-    THINK_SCHEMA,
     # SPEAK
     SEND_SCHEMA,
     READ_SCHEMA,
@@ -105,7 +109,6 @@ TOOL_DISPATCH = {
     "graph_write": (handle_graph_write, True),
     "procedure":   (handle_procedure,   True),
     "task":        (handle_task,        True),
-    "agent":       (handle_agent,       True),
     "think":       (handle_think,       False),
     "send":        (handle_send,        False),
     "read":        (handle_read,        False),
@@ -156,15 +159,6 @@ class MindServer:
             logger.warning(f"No membrane connection: {e}")
             self.membrane_queries = None
 
-        # Agent graph
-        try:
-            self.agent_graph = AgentGraph()
-            self.agent_graph.ensure_agents_exist()
-            logger.info("Agent graph initialized")
-        except Exception as e:
-            logger.warning(f"No agent graph: {e}")
-            self.agent_graph = AgentGraph()
-
         # Capability manager (internal — not exposed as tools)
         self.capability_manager: Optional[CapabilityManager] = None
         if CAPABILITY_RUNTIME_AVAILABLE:
@@ -204,7 +198,6 @@ class MindServer:
         self.ctx = ServerContext(
             graph_ops=self.graph_ops,
             graph_queries=self.graph_queries,
-            agent_graph=self.agent_graph,
             runner=self.runner,
             target_dir=self.target_dir,
             capability_manager=self.capability_manager,
@@ -236,7 +229,7 @@ class MindServer:
         return {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
-            "serverInfo": {"name": "mind", "version": "0.2.0"},
+            "serverInfo": {"name": "mind", "version": "0.3.0"},
         }
 
     def _handle_list_tools(self) -> Dict[str, Any]:
@@ -267,7 +260,7 @@ class MindServer:
 def main():
     """Run the MCP server on stdio."""
     server = MindServer()
-    logger.info("Mind MCP server started (8 tools: THINK/ACT/SPEAK)")
+    logger.info("Mind MCP server started (15 tools: THINK/ACT/SPEAK)")
 
     # Auto-register this instance's endpoint in L4 graph
     auto_register()

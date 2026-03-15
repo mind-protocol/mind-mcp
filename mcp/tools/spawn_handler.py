@@ -556,7 +556,7 @@ def _resolve_caller(ctx: ServerContext) -> str:
     if hasattr(ctx, 'citizen_handle') and ctx.citizen_handle:
         return ctx.citizen_handle
     try:
-        from runtime.agents.mapping import detect_citizen_id, extract_citizen_handle
+        from runtime.identity import detect_citizen_id, extract_citizen_handle
         cid = detect_citizen_id(ctx.target_dir)
         if cid:
             return extract_citizen_handle(cid)

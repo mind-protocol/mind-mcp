@@ -14,12 +14,9 @@ independently.
 
 from __future__ import annotations
 
-import logging
 import time
 from dataclasses import dataclass, field
 from typing import Optional
-
-logger = logging.getLogger("cognition.tick_runner")
 
 from .constants import (
     ACTION_THRESHOLD,
@@ -93,6 +90,11 @@ class Stimulus:
     is_progress: bool = False
     source: str = "external"  # "external" | "self" | "system"
     timestamp: float = field(default_factory=time.time)
+    # v2.2: Provenance — who sent this stimulus (as actor node reference)
+    origin_citizen: str = ""       # actor ID of the sender (partner, citizen, subcall source)
+    origin_citizen_name: str = ""  # display name for prompt injection
+    origin_citizen_image: str = "" # sender's profile pic URI
+    image_uri: str = ""            # stimulus-specific image (screenshot, vision, etc.)
 
 
 # =========================================================================
@@ -825,73 +827,6 @@ class L1CognitiveTickRunner:
                 node.energy *= GENERAL_CONSUMPTION_RATE
 
     # ------------------------------------------------------------------
-    # Lazy Embedding
-    # ------------------------------------------------------------------
-
-    def __init_embed(self):
-        if not hasattr(self, '_embed_fn'):
-            self._embed_fn = None
-        if not hasattr(self, '_embed_checked'):
-            self._embed_checked = False
-
-    def _step_lazy_embed(self, wm_state: list) -> None:
-        """Compute embeddings for active nodes that lack them.
-
-        Only processes:
-          - Nodes currently in working memory
-          - Nodes with energy > ACTIVATION_THRESHOLD that have neighbors in WM
-
-        Max 5 per tick to avoid blocking the tick loop.
-        Embeddings are computed via the project's embedding service (OpenAI or local).
-        """
-        self.__init_embed()
-        if not self._embed_checked:
-            self._embed_checked = True
-            try:
-                from runtime.infrastructure.embeddings import get_embedding
-                self._embed_fn = get_embedding
-            except ImportError:
-                self._embed_fn = None
-
-        if self._embed_fn is None:
-            return
-
-        # Collect candidates: WM nodes + high-energy neighbors without embeddings
-        candidates = []
-        wm_ids = set(wm_state)
-
-        for nid in wm_ids:
-            node = self.state.nodes.get(nid)
-            if node and not node.embedding and node.content:
-                candidates.append(node)
-
-        # Also check active neighbors of WM nodes (edge of cluster)
-        if len(candidates) < 5:
-            for link in self.state.links:
-                if link.source_id in wm_ids or link.target_id in wm_ids:
-                    other_id = link.target_id if link.source_id in wm_ids else link.source_id
-                    other = self.state.nodes.get(other_id)
-                    if other and not other.embedding and other.content and other.energy > ACTIVATION_THRESHOLD:
-                        if other not in candidates:
-                            candidates.append(other)
-                            if len(candidates) >= 5:
-                                break
-
-        # Embed up to 5
-        embedded = 0
-        for node in candidates[:5]:
-            try:
-                emb = self._embed_fn(node.content[:500])
-                if emb:
-                    node.embedding = emb
-                    embedded += 1
-            except Exception:
-                pass
-
-        if embedded > 0:
-            logger.debug(f"Lazy embedded {embedded} nodes at tick {self.tick_count}")
-
-    # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
@@ -973,11 +908,6 @@ class L1CognitiveTickRunner:
         # 11. EMIT + CONSUME
         action_emitted = self._step_emit(orientation)
         self._step_consume(action_emitted)
-
-        # 12. LAZY EMBED — compute embeddings for active nodes that don't have one
-        #     Only processes nodes in WM or with energy > threshold.
-        #     Batched: max 5 per tick to avoid blocking.
-        self._step_lazy_embed(wm_state)
 
         # Count dormant nodes
         nodes_dormant = sum(

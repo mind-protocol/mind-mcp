@@ -156,6 +156,14 @@ class Node:
     achievement_affinity: float = 0.0  # [0, 1]
     risk_affinity: float = 0.0       # [0, 1]
 
+    # Visual memory (v2.2) — images as URI + CLIP/SigLIP embedding
+    image_uri: Optional[str] = None          # URI to object storage, NEVER base64
+    image_embedding: list[float] = field(default_factory=list)  # CLIP/SigLIP vector
+
+    # Provenance (v2.2) — who created this node and when
+    origin_citizen: Optional[str] = None     # citizen handle who created/injected this node
+    origin_date: Optional[float] = None      # timestamp of creation (for stats, attribution)
+
     # Operational dimensions
     activation_count: int = 0
     in_working_memory: bool = False
