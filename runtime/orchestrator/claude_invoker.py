@@ -94,7 +94,7 @@ def invoke_claude(
 
     # Build command — simple: cd into citizen dir, claude reads CLAUDE.md automatically
     cmd = [
-        "claude", "-p",
+        "claude", "--print",
         "--output-format", "text",
         "--dangerously-skip-permissions",
     ]
