@@ -559,6 +559,73 @@ def _init_graph(target_dir: Path, clear: bool = False, behaviors: dict = None) -
     return True
 
 
+def _clean_legacy(target_dir: Path) -> None:
+    """Remove deprecated files and folders from previous mind versions."""
+    mind_dir = target_dir / ".mind"
+    if not mind_dir.exists():
+        return
+
+    legacy_dirs = [
+        "actors",           # old agent actor definitions
+        "capabilities",     # old capability system
+        "swarm",            # old swarm logs
+        "views",            # old VIEW files
+        "cache",            # embedding cache
+        "mcp",              # old MCP system prompts
+        "prompts",          # old Force Sprint prompts
+        "procedures",       # old structured dialogues
+        "runtime",          # local runtime copy (canonical is mind-mcp/runtime/)
+        "scripts",          # old scripts
+    ]
+
+    legacy_files = [
+        "CLAUDE.md",        # replaced by root CLAUDE.md
+        "GEMINI.md",        # deprecated
+        "STYLE.md",         # replaced by BEHAVIORS.md
+        "FRAMEWORK.md",     # replaced by templates/FRAMEWORK.md
+        "PRINCIPLES.md",    # merged into templates
+        "schema.yaml",      # canonical is docs/schema/schema.yaml
+        "doctor-ignore.yaml",
+        "problems.yaml",
+        "AGENTS.md",
+    ]
+
+    # Also clean from project root
+    root_legacy = [
+        "AGENTS.md",
+        "modules.yaml",     # moved to .mind/
+        ".mindignore",      # moved to .mind/
+    ]
+
+    cleaned = 0
+    for d in legacy_dirs:
+        path = mind_dir / d
+        if path.exists():
+            shutil.rmtree(path, ignore_errors=True)
+            cleaned += 1
+
+    for f in legacy_files:
+        path = mind_dir / f
+        if path.exists():
+            path.unlink(missing_ok=True)
+            cleaned += 1
+
+    # Clean state files
+    repair = mind_dir / "state" / "REPAIR_REPORT.md"
+    if repair.exists():
+        repair.unlink(missing_ok=True)
+        cleaned += 1
+
+    for f in root_legacy:
+        path = target_dir / f
+        if path.exists():
+            path.unlink(missing_ok=True)
+            cleaned += 1
+
+    if cleaned > 0:
+        print(f"✓ Cleaned {cleaned} legacy files/folders")
+
+
 def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = False, mode: str = None) -> bool:
     """
     Initialize the mind in a project directory.
@@ -579,6 +646,9 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     except FileNotFoundError as e:
         print(f"Error: {e}")
         return False
+
+    # Clean legacy files/folders from previous versions
+    _clean_legacy(target_dir)
 
     # Source paths (templates/ is the root, no nested /mind/)
     protocol_source = templates_path
