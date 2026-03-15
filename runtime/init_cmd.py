@@ -175,60 +175,134 @@ def _update_or_add_section(file_path: Path, section_content: str, section_marker
 
 
 def _update_root_claude_md(target_dir: Path) -> None:
-    """Update or create root CLAUDE.md with mind section using @ references."""
-    root_claude = target_dir / "CLAUDE.md"
-    mind_section = _build_root_claude_section()
-    _update_or_add_section(root_claude, mind_section, "# mind")
+    """Update or create root CLAUDE.md from system prompt template.
 
-
-def _build_root_claude_section() -> str:
-    """Build mind section for root CLAUDE.md using @ references.
-
-    Root CLAUDE.md uses @ references which Claude expands automatically.
-    This is preferred over inlined content for the root file.
+    Reads mode from database_config.yaml (system_prompt_mode):
+      project-team (default), universe, roleplay
+    Populates with project structure, git URL, team roster.
     """
-    return """# mind
+    root_claude = target_dir / "CLAUDE.md"
+    content = _build_root_claude_section(target_dir)
+    root_claude.write_text(content, encoding="utf-8")
+    print(f"✓ Generated: {root_claude}")
 
-@.mind/PRINCIPLES.md
 
----
+def _build_root_claude_section(target_dir: Path = None) -> str:
+    """Build CLAUDE.md from the appropriate system prompt template.
 
-@.mind/FRAMEWORK.md
+    Reads the mode from database_config.yaml (system_prompt_mode):
+      "project-team"  → PROJECT_TEAM_SYSTEM.md (default)
+      "universe"      → UNIVERSE_CITIZEN.md
+      "roleplay"      → ROLEPLAY.md
 
----
+    Populates placeholders with project-specific data.
+    """
+    import subprocess
 
-## Before Any Task
+    # Determine mode
+    mode = "project-team"
+    if target_dir:
+        config_file = target_dir / ".mind" / "database_config.yaml"
+        if config_file.exists():
+            try:
+                import yaml
+                config = yaml.safe_load(config_file.read_text())
+                mode = config.get("system_prompt_mode", "project-team")
+            except Exception:
+                pass
 
-Check project state:
-```
-.mind/state/SYNC_Project_State.md
-```
+    # Load template
+    templates_dir = Path(__file__).parent.parent / "templates" / "system_prompts"
+    template_map = {
+        "project-team": "PROJECT_TEAM_SYSTEM.md",
+        "universe": "UNIVERSE_CITIZEN.md",
+        "roleplay": "ROLEPLAY.md",
+    }
+    template_file = templates_dir / template_map.get(mode, "PROJECT_TEAM_SYSTEM.md")
 
-What's happening? What changed recently? Any handoffs for you?
+    if template_file.exists():
+        template = template_file.read_text(encoding="utf-8")
+    else:
+        # Fallback
+        return "# mind\n\nRun `mind init` to generate the system prompt.\n"
 
-## Choose Your VIEW
+    # Populate placeholders
+    project_name = (target_dir.name if target_dir else "project").replace("-", " ").replace("_", " ").title()
 
-Based on your task, load ONE view from `.mind/views/`:
+    # Git URL
+    github_url = ""
+    if target_dir:
+        try:
+            result = subprocess.run(
+                ["git", "-C", str(target_dir), "remote", "get-url", "origin"],
+                capture_output=True, text=True, timeout=2,
+            )
+            if result.returncode == 0:
+                github_url = result.stdout.strip()
+        except Exception:
+            pass
 
-| Task | VIEW |
-|------|------|
-| Processing raw data (chats, PDFs) | VIEW_Ingest_Process_Raw_Data_Sources.md |
-| Getting oriented | VIEW_Onboard_Understand_Existing_Codebase.md |
-| Analyzing structure | VIEW_Analyze_Structural_Analysis.md |
-| Defining architecture | VIEW_Specify_Design_Vision_And_Architecture.md |
-| Writing/modifying code | VIEW_Implement_Write_Or_Modify_Code.md |
-| Adding features | VIEW_Extend_Add_Features_To_Existing.md |
-| Pair programming | VIEW_Collaborate_Pair_Program_With_Human.md |
-| Health checks | VIEW_Health_Define_Health_Checks_And_Verify.md |
-| Debugging | VIEW_Debug_Investigate_And_Fix_Issues.md |
-| Reviewing changes | VIEW_Review_Evaluate_Changes.md |
-| Refactoring | VIEW_Refactor_Improve_Code_Structure.md |
+    # Project structure (top 2 levels)
+    project_structure = ""
+    if target_dir:
+        try:
+            result = subprocess.run(
+                ["find", str(target_dir), "-maxdepth", "2", "-type", "d",
+                 "-not", "-path", "*/.git/*", "-not", "-path", "*/node_modules/*",
+                 "-not", "-path", "*/__pycache__/*"],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                lines = sorted(result.stdout.strip().split("\n"))
+                rel_lines = [str(Path(l).relative_to(target_dir)) for l in lines if l]
+                project_structure = "\n".join(rel_lines[:20])
+        except Exception:
+            pass
 
-## After Any Change
+    # Team roster (from citizens/ or .mind/actors/)
+    team_roster = ""
+    if target_dir:
+        for citizens_dir in [target_dir / "citizens", target_dir / ".mind" / "actors"]:
+            if citizens_dir.is_dir():
+                members = []
+                for member_dir in sorted(citizens_dir.iterdir()):
+                    if member_dir.is_dir() and not member_dir.name.startswith("."):
+                        claude_md = member_dir / "CLAUDE.md"
+                        role = ""
+                        if claude_md.exists():
+                            for line in claude_md.read_text(encoding="utf-8").split("\n")[:20]:
+                                if "Role:" in line:
+                                    role = line.split("Role:")[-1].strip()
+                                    break
+                        members.append(f"- **@{member_dir.name}** — {role or 'team member'}")
+                if members:
+                    team_roster = "\n".join(members)
+                    break
 
-Update `.mind/state/SYNC_Project_State.md` with what you did.
-If you changed a module, update its `docs/{area}/{module}/SYNC_*.md` too.
-"""
+    if not team_roster:
+        team_roster = "- (No team members found. Add citizens to `citizens/` or `.mind/actors/`.)"
+
+    # Apply substitutions
+    replacements = {
+        "{{PROJECT_NAME}}": project_name,
+        "{{GITHUB_URL}}": github_url or "(not configured)",
+        "{{PROJECT_DESCRIPTION}}": f"A Mind Protocol project at {github_url or target_dir}",
+        "{{PROJECT_STRUCTURE}}": project_structure or "(run `mind init` to populate)",
+        "{{TEAM_ROSTER}}": team_roster,
+        "{{CITIZEN_NAME}}": "AI Citizen",
+        "{{CITIZEN_HANDLE}}": "citizen",
+        "{{UNIVERSE_NAME}}": project_name,
+        "{{UNIVERSE_DESCRIPTION}}": f"A living world powered by Mind Protocol",
+        "{{CITIZEN_COUNT}}": "—",
+        "{{SPACE_COUNT}}": "—",
+        "{{GRAPH_NAME}}": (target_dir.name if target_dir else "default").replace("-", "_"),
+    }
+
+    content = template
+    for placeholder, value in replacements.items():
+        content = content.replace(placeholder, value)
+
+    return content
 
 
 def _build_system_prompt(templates_path: Path, model: str = "claude") -> str:
