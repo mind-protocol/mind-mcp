@@ -209,7 +209,10 @@ def _build_profile_section(profile: dict, handle: str) -> str:
         sections.append("\n".join(fear_lines))
 
     # --- Values ---
-    primary_values = values.get("primary_values", [])
+    if isinstance(values, list):
+        primary_values = values
+    else:
+        primary_values = values.get("primary_values", []) if isinstance(values, dict) else []
     if primary_values:
         val_lines = ["## Values"]
         for v in primary_values:
