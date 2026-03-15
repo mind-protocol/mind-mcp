@@ -463,4 +463,4 @@ Fix: Improve skill decision criteria, add protocol selection guidance
 - Validation: `docs/physics/subentity/VALIDATION_SubEntity.md`
 
 ## Never-stop
-If diagnosis inconclusive at one layer → document findings → move to next layer → if all layers checked with no cause → `@mind:escalation` with full analysis → `@mind:proposition` for additional investigation approaches.
+If diagnosis inconclusive at one layer → document findings → move to next layer → if all layers checked with no cause → `TODO` with full analysis → `NOTE` for additional investigation approaches.

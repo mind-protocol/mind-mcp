@@ -566,8 +566,8 @@ Temporal event.
 ## Markers
 
 - `@mind:TODO <plan>`
-- `@mind:escalation <blocker>`
-- `@mind:proposition <suggestion>`
+- `TODO <blocker>`
+- `NOTE <suggestion>`
 
 ## Never-stop Rule
 

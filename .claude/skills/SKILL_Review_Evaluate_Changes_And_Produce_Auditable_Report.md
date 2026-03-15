@@ -85,8 +85,8 @@ Include evidence (test output, health stream, manual check notes).
 ### 4. List remaining gaps
 Scan for:
 - `@mind:TODO` in changed files/docs
-- `@mind:escalation` in SYNC
-- `@mind:proposition` in SYNC
+- `TODO` in SYNC
+- `NOTE` in SYNC
 
 ### 5. Produce report
 Structured output with all sections filled.
@@ -108,8 +108,8 @@ Structured output with all sections filled.
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

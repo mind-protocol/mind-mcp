@@ -15,7 +15,7 @@ Pipeline order:
 2. **Per-module loop** → For each module: scaffold → document → implement → verify
 3. **Close-out** → Update project SYNC, collect remaining escalations
 
-Work conservation: Work never halts. If blocked on one module, switch to next unblocked. Track all blockers as `@mind:escalation`.
+Work conservation: Work never halts. If blocked on one module, switch to next unblocked. Track all blockers as `TODO`.
 
 Task graph: Deterministic mapping of modules to todos and verification plans.
 
@@ -85,7 +85,7 @@ For each module in task graph:
 1. Load module context (PATTERNS, SYNC, IMPLEMENTATION)
 2. Execute chosen VIEW skill
 3. Update module SYNC
-4. If blocked → `@mind:escalation`, switch to next module
+4. If blocked → `TODO`, switch to next module
 
 ### 4. Close-out
 - Update project SYNC (`SYNC_Project_State.md`)
@@ -122,8 +122,8 @@ For each module in task graph:
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → switch to next unblocked module.
+If blocked → `TODO` + `NOTE` → switch to next unblocked module.

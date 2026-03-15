@@ -20,7 +20,7 @@ SYNC purpose:
 
 SYNC is always updated: After every module/task, SYNC must reflect current state. This is the handoff mechanism.
 
-Markers must be collected: All `@mind:TODO`, `@mind:escalation`, `@mind:proposition` from the session.
+Markers must be collected: All `@mind:TODO`, `TODO`, `NOTE` from the session.
 
 ---
 
@@ -39,8 +39,8 @@ verification:
     evidence: "<reference>"
 markers:
   todos: ["<@mind:TODO text>"]
-  escalations: ["<@mind:escalation text>"]
-  propositions: ["<@mind:proposition text>"]
+  escalations: ["<TODO text>"]
+  propositions: ["<NOTE text>"]
 ```
 
 ## Outputs
@@ -76,8 +76,8 @@ batch_questions:
 ### 2. Collect markers
 Scan session output for:
 - `@mind:TODO` — future work
-- `@mind:escalation` — blockers
-- `@mind:proposition` — suggestions
+- `TODO` — blockers
+- `NOTE` — suggestions
 
 ### 3. Update SYNC sections
 
@@ -127,8 +127,8 @@ STATUS: <DESIGNING|CANONICAL|etc>
 
 ## Markers
 - `@mind:TODO`
-- `@mind:escalation`
-- `@mind:proposition`
+- `TODO`
+- `NOTE`
 
 ## Never-stop
-If blocked → `@mind:escalation` + `@mind:proposition` → proceed with proposition.
+If blocked → `TODO` + `NOTE` → proceed with proposition.

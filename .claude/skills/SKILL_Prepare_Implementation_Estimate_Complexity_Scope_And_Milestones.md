@@ -371,10 +371,10 @@ membrane_hook:
 
 ## Markers
 - `@mind:TODO` — for deferred analysis
-- `@mind:escalation` — for unresolvable dependency cycles or missing data
-- `@mind:proposition` — for judgment calls on milestone assignment
+- `TODO` — for unresolvable dependency cycles or missing data
+- `NOTE` — for judgment calls on milestone assignment
 
 ## Never-stop
-If blocked on module data → `@mind:escalation` + `@mind:proposition` with best estimate → proceed.
-If milestone assignment is ambiguous → assign to earlier milestone with `@mind:proposition` → reviewable later.
+If blocked on module data → `TODO` + `NOTE` with best estimate → proceed.
+If milestone assignment is ambiguous → assign to earlier milestone with `NOTE` → reviewable later.
 If dependency cycle detected → document it as risk → break cycle with interface stub → proceed.
