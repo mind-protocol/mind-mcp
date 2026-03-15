@@ -265,8 +265,8 @@ class FalkorDBBrainCheckpointer:
 
                 node = Node(
                     id=node_id,
-                    name=name or node_id,
                     node_type=nt,
+                    content=row[9] or name or node_id,
                     weight=float(row[4] or 0),
                     energy=float(row[5] or 0),
                     activation_count=int(row[7] or 0),
@@ -300,7 +300,6 @@ class FalkorDBBrainCheckpointer:
                     lt = LinkType.ASSOCIATES
 
                 link = Link(
-                    id=link_id,
                     source_id=row[1],
                     target_id=row[2],
                     link_type=lt,
@@ -312,8 +311,7 @@ class FalkorDBBrainCheckpointer:
                 link.affinity = float(row[8] or 0)
                 link.aversion = float(row[9] or 0)
                 link.stability = float(row[10] or 0.5)
-                link.permanence = float(row[11] or 0.5)
-                state.links[link_id] = link
+                state.links.append(link)
 
             logger.info(
                 f"Brain loaded for {self.citizen_handle}: "
