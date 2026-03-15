@@ -165,11 +165,9 @@ class Dispatcher:
             self._last_cleanup = now
 
         if now - self._last_relaunch > NEURON_RELAUNCH_INTERVAL:
-            active_ids = {sid for _, (sid, _) in self.active_futures.items() if not _.done() for _ in [_]}
-            # Simplified: just get session_ids from active futures
             active_session_ids = set()
             for f, (sid, _req) in self.active_futures.items():
-                if not f.done():
+                if hasattr(f, 'done') and not f.done():
                     active_session_ids.add(sid)
             relaunch_stale_neurons(active_session_ids, enqueue_fn=enqueue)
             self._last_relaunch = now
