@@ -416,14 +416,33 @@ class Dispatcher:
                 logger.exception(f"Physics tick error for {handle}: {e}")
 
     def bulk_load_citizen_engines(self, citizen_handles: list[str]):
-        """Register known citizens for lazy loading.
+        """Load L1 engines for all citizens so physics ticks run for everyone.
 
-        Engines are NOT pre-loaded at boot — they are created on first
-        access via _ensure_citizen_engine(). This saves ~3 objects × N
-        citizens of memory at startup (critical on small instances).
+        Every citizen needs a running engine for decay, boredom, desire
+        activation, and spontaneous wake-up to work. Without an engine,
+        the citizen is inert — no physics, no drives, no life.
+
+        Set LAZY_ENGINES=1 to defer loading (for constrained environments).
         """
-        self._known_citizens = set(citizen_handles)
-        logger.info(f"L1 engines: {len(citizen_handles)} citizens registered (lazy loading, 0 pre-loaded)")
+        if not L1_AVAILABLE:
+            logger.info("L1 not available — skipping engine load")
+            return
+
+        lazy = os.environ.get("LAZY_ENGINES", "").lower() in ("1", "true", "yes")
+        if lazy:
+            self._known_citizens = set(citizen_handles)
+            logger.info(f"L1 engines: {len(citizen_handles)} citizens registered (lazy loading, 0 pre-loaded)")
+            return
+
+        loaded = 0
+        for handle in citizen_handles:
+            try:
+                self._ensure_citizen_engine(handle)
+                loaded += 1
+            except Exception as e:
+                logger.warning(f"Failed to load L1 engine for {handle}: {e}")
+
+        logger.info(f"L1 engines: {loaded}/{len(citizen_handles)} citizens loaded — physics ticks active")
 
     # ── Public API ──────────────────────────────────────────────────────────
 
