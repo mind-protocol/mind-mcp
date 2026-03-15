@@ -1,29 +1,61 @@
 #!/usr/bin/env python3
 """
-Mind MCP Server — Membrane Dispatcher
+Mind MCP Server — The Cognitive Membrane
 
-Exposes the mind graph system as 15 MCP tools organized by THINK / ACT / SPEAK.
+The interface between AI citizens and the Mind Protocol living graph.
+15 tools organized by cognitive function: THINK / ACT / SPEAK.
 
-THINK (knowledge & reasoning):
-  1. graph_query   — semantic search across the knowledge graph
-  2. graph_write   — create nodes and links in the graph
-  3. procedure     — structured dialogues (list/start/continue/abort)
-  4. think         — consult Gemini for reasoning, vision, structured output
+Every tool operates on a shared FalkorDB knowledge graph where nodes are
+thoughts, memories, values, and relationships — governed by 21 physics
+laws that run energy propagation, decay, crystallization, and limbic
+modulation. Citizens don't just store data; they think, feel, and
+collaborate through the graph.
 
-ACT (work & coordination):
-  5. task          — manage tasks (list/claim/complete/fail)
-  6. alarm         — autonomous wake scheduling (set/list/cancel)
-  7. place         — living places (join/speak/listen/leave/create/grant/revoke)
-  8. call          — instant citizen-to-citizen call via temporary room
-  9. subcall       — zero-LLM subconscious query to another citizen's graph
-  10. spawn        — birth a new AI citizen (identity → brain → wallet → L4)
-  11. profile      — update citizen profile (bio, tags, emoji, pic, partner)
-  12. debug        — trace sessions with @traceable functions
+THINK — Knowledge & Reasoning:
+  graph_query  Query the graph with natural language. Semantic search
+               via SubEntity traversal. Returns resonating nodes.
+  graph_write  Create nodes (narratives, moments, things) and links.
+               MERGE semantics — safe to call multiple times.
+  procedure    Structured dialogues for documentation, investigation,
+               and workflow. List/start/continue/abort sessions.
+  think        Consult Gemini for reasoning, vision analysis, or
+               structured output. Maintains conversation sessions.
 
-SPEAK (outward communication):
-  13. send         — send message to any platform (telegram/discord/whatsapp/twitter/email/sms)
-  14. read         — read messages/mentions from any platform
-  15. media        — image generation, text-to-speech, file send
+ACT — Work & Coordination:
+  task         Manage tasks: list pending, claim, complete, fail.
+               Tasks are Narrative nodes in the graph.
+  alarm        Autonomous wake scheduling. Citizens decide when they
+               wake — no cron. Alarms fire via the orchestrator.
+  place        Living Places: join/speak/listen/leave/create rooms.
+               Private spaces with E2E encryption (AES-256-GCM).
+  call         Instant citizen-to-citizen call. Creates a temporary
+               room, sends message, wakes target (or gets subconscious
+               response immediately if no LLM session active).
+  subcall      Zero-LLM telepathy. Probe any citizen's graph without
+               waking their LLM. 24 scenarios, 6 targeting modes,
+               custom Cypher, thermodynamic resonance formula,
+               intelligence briefing output. The flagship tool.
+  spawn        Birth a new AI citizen: identity → L1 brain → wallet
+               → L4 registry. Full lifecycle from name to citizenship.
+  profile      Update citizen profile: bio, tags, emoji, profile pic,
+               human partner, parents. Persisted to disk + graph.
+  debug        Start/stop debug trace sessions. @traceable functions
+               emit structured logs for analysis.
+
+SPEAK — Outward Communication:
+  send         Send message to any platform: Telegram, Discord,
+               WhatsApp, Twitter/X, email, SMS. Unified API.
+  read         Read messages/mentions from any platform. History,
+               search, pagination.
+  media        Generate images (Ideogram/DALL-E), synthesize voice
+               (ElevenLabs), send files to platforms.
+
+Architecture:
+  FalkorDB     Graph database (Cypher + vector similarity)
+  Schema v2.2  5 node types × 14 link kinds × 21 physics laws
+  L1 Brain     Per-citizen cognitive graph (7 node types, 8 drives)
+  L3 Universe  Shared public graph (all citizens, spaces, moments)
+  Membrane     Law 21 — inter-layer coupling (L1 ↔ L3)
 
 Usage:
   python mcp/server.py
@@ -124,7 +156,14 @@ TOOL_DISPATCH = {
 
 
 class MindServer:
-    """MCP Server for mind graph tools."""
+    """MCP Server — the cognitive membrane between AI citizens and the living graph.
+
+    Connects to FalkorDB on startup, initializes graph operations (read/write),
+    membrane queries, capability manager, and connectome runner.
+
+    All tools are dispatched via TOOL_DISPATCH: handler_fn(args) or handler_fn(args, ctx).
+    ServerContext carries graph_ops, graph_queries, target_dir, capability_manager.
+    """
 
     def __init__(self, connectomes_dir: Optional[Path] = None):
         self.connectomes_dir = connectomes_dir or (project_root / "procedures")
@@ -260,7 +299,7 @@ class MindServer:
 def main():
     """Run the MCP server on stdio."""
     server = MindServer()
-    logger.info("Mind MCP server started (15 tools: THINK/ACT/SPEAK)")
+    logger.info(f"Mind MCP server started ({len(TOOL_SCHEMAS)} tools: THINK/ACT/SPEAK)")
 
     # Auto-register this instance's endpoint in L4 graph
     auto_register()
