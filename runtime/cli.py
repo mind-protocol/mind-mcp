@@ -127,6 +127,12 @@ def main():
         action="store_true",
         help="Clear existing graph data before injecting seeds"
     )
+    init_parser.add_argument(
+        "--mode",
+        choices=["project-team", "universe", "roleplay"],
+        default=None,
+        help="System prompt mode for CLAUDE.md (default: project-team)"
+    )
 
     # ... (the rest of the original subparsers)
 
@@ -747,7 +753,7 @@ def main():
     args = parser.parse_args()
 
     if args.command == "init":
-        success = init_protocol(args.dir, not args.no_force, clear_graph=args.clear)
+        success = init_protocol(args.dir, not args.no_force, clear_graph=args.clear, mode=args.mode)
         sys.exit(0 if success else 1)
     elif args.command == "validate":
         success = validate_protocol(args.dir, args.verbose)

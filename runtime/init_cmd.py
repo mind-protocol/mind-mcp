@@ -174,35 +174,39 @@ def _update_or_add_section(file_path: Path, section_content: str, section_marker
         print(f"✓ Created: {file_path}")
 
 
-def _update_root_claude_md(target_dir: Path) -> None:
-    """Generate root CLAUDE.md from system prompt template + FRAMEWORK + BEHAVIORS.
+def _update_root_claude_md(target_dir: Path, mode: str = None) -> None:
+    """Generate root CLAUDE.md from template + FRAMEWORK + BEHAVIORS inlined.
 
-    Reads mode from database_config.yaml (system_prompt_mode):
+    Reads mode from arg or database_config.yaml (system_prompt_mode):
       project-team (default), universe, roleplay
     Populates with project structure, git URL, team roster.
-    Appends FRAMEWORK.md and BEHAVIORS.md as @ references.
+    Appends full text of FRAMEWORK.md and BEHAVIORS.md (not @ references).
     """
     root_claude = target_dir / "CLAUDE.md"
+
+    # If mode provided, write it to config so future inits remember
+    if mode:
+        config_file = target_dir / ".mind" / "database_config.yaml"
+        if config_file.exists():
+            try:
+                import yaml
+                config = yaml.safe_load(config_file.read_text())
+                config["system_prompt_mode"] = mode
+                config_file.write_text(yaml.dump(config, default_flow_style=False))
+            except Exception:
+                pass
+
     content = _build_root_claude_section(target_dir)
 
-    # Append FRAMEWORK and BEHAVIORS as @ references
-    content += "\n\n---\n\n@.mind/FRAMEWORK.md\n\n---\n\n@.mind/BEHAVIORS.md\n"
-
-    root_claude.write_text(content, encoding="utf-8")
-    print(f"✓ Generated: {root_claude}")
-
-    # Copy FRAMEWORK.md and BEHAVIORS.md to .mind/ for @ reference resolution
+    # Inline FRAMEWORK.md and BEHAVIORS.md (full text, not @ references)
     templates_dir = Path(__file__).parent.parent / "templates"
-    mind_dir = target_dir / ".mind"
-    mind_dir.mkdir(parents=True, exist_ok=True)
-
     for doc in ["FRAMEWORK.md", "BEHAVIORS.md"]:
         src = templates_dir / doc
-        dst = mind_dir / doc
         if src.exists():
-            import shutil
-            shutil.copy2(src, dst)
-            print(f"✓ Copied: {dst}")
+            content += "\n\n---\n\n" + src.read_text(encoding="utf-8")
+
+    root_claude.write_text(content, encoding="utf-8")
+    print(f"✓ Generated: {root_claude} (mode: {mode or 'from config'})")
 
 
 def _build_root_claude_section(target_dir: Path = None) -> str:
@@ -555,16 +559,18 @@ def _init_graph(target_dir: Path, clear: bool = False, behaviors: dict = None) -
     return True
 
 
-def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = False) -> bool:
+def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = False, mode: str = None) -> bool:
     """
     Initialize the mind in a project directory.
 
-    Copies protocol files and updates .mind/CLAUDE.md and root AGENTS.md with inlined content.
+    Generates CLAUDE.md from templates, copies protocol files, seeds graph.
 
     Args:
         target_dir: The project directory to initialize
         force: If True, overwrite existing .mind/
         clear_graph: If True, clear existing graph data before injection
+        mode: System prompt mode ('project-team', 'universe', 'roleplay').
+              If provided, overrides database_config.yaml setting.
     Returns:
         True if successful, False otherwise
     """
@@ -710,6 +716,12 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     docs_dir = target_dir / "docs"
     docs_dir.mkdir(parents=True, exist_ok=True)
 
+    # Create citizens/ directory if it doesn't exist
+    citizens_dir = target_dir / "citizens"
+    if not citizens_dir.exists():
+        citizens_dir.mkdir(parents=True, exist_ok=True)
+        print(f"✓ Created: {citizens_dir}/")
+
     taxonomy_template = templates_path / "docs" / "TAXONOMY_TEMPLATE.md"
     mapping_template = templates_path / "docs" / "MAPPING_TEMPLATE.md"
     taxonomy_dest = docs_dir / "TAXONOMY.md"
@@ -775,7 +787,7 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
 
     # Update root CLAUDE.md with mind section (using @ references)
     try:
-        _update_root_claude_md(target_dir)
+        _update_root_claude_md(target_dir, mode=mode)
     except PermissionError:
         print(f"  ○ Skipped (permission): {target_dir / 'CLAUDE.md'}")
 
