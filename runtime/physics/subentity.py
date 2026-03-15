@@ -441,8 +441,6 @@ class SubEntity:
         The injected energy doesn't decay but converts to weight based on
         the node's permanence. Higher permanence = more weight gain.
 
-        v2.2: Also checks if desire nodes need image generation.
-
         Formula:
             energy_injection = criticality × STATE_MULTIPLIER[state]
             weight_gain = energy_injection × node.permanence
@@ -471,135 +469,7 @@ class SubEntity:
         current_weight = node.get('weight', 0.0)
         node['weight'] = current_weight + weight_gain
 
-        # --- v2.2: Desire image generation on traversal ---
-        # If this is a desire node with enough energy but no image, trigger generation.
-        # Fail-loud, never blocks traversal.
-        self._check_desire_image(node)
-
-        # --- v2.2: Actor profile pic auto-attachment ---
-        # When traversing a citizen node, fetch their profile pic from L3/L4
-        # and attach it if missing. Fail-loud, never blocks.
-        self._check_actor_profile_pic(node)
-
         return (injection, weight_gain)
-
-    def _check_desire_image(self, node: Dict) -> None:
-        """Check if a desire node needs image generation during traversal (v2.2).
-
-        Conditions: type == 'desire', energy > threshold, no image_uri.
-        NEVER blocks. NEVER crashes traversal. Errors are logged loudly.
-        """
-        try:
-            node_type = node.get('type', '')
-            if node_type != 'desire':
-                return
-
-            from ...cognition.constants import DESIRE_IMAGE_ENERGY_THRESHOLD
-            energy = node.get('energy', 0.0)
-            image_uri = node.get('image_uri')
-
-            if energy <= DESIRE_IMAGE_ENERGY_THRESHOLD or image_uri:
-                return
-
-            # Lazy import to avoid circular deps
-            from ...cognition.visual_memory import trigger_desire_image
-            from ...cognition.models import Node, NodeType, Modality
-
-            # Convert dict to Node for the visual_memory API
-            desire_node = Node(
-                id=node.get('id', ''),
-                node_type=NodeType.DESIRE,
-                content=node.get('content', node.get('synthesis', '')),
-                energy=energy,
-                weight=node.get('weight', 0.0),
-                image_uri=image_uri,
-                modality=Modality.TEXT,
-            )
-
-            # Gather neighbor image URIs from path
-            neighbor_uris = []
-            for visited_id in self.visited_ids[-5:]:  # last 5 visited nodes
-                # We don't have access to full node data here, but the
-                # image generation adapter can resolve URIs from node IDs
-                pass
-
-            import logging
-            _logger = logging.getLogger(__name__)
-            _logger.info(
-                f"[SubEntity] Desire node {node.get('id')} needs image "
-                f"(energy={energy:.2f}, threshold={DESIRE_IMAGE_ENERGY_THRESHOLD})"
-            )
-
-            def _on_image_ready(n, uri, embedding):
-                # Update the original dict so the graph sees the change
-                node['image_uri'] = uri
-                if embedding:
-                    node['image_embedding'] = embedding
-
-            trigger_desire_image(
-                desire_node=desire_node,
-                self_image_uri=None,  # caller can set via SubEntity config
-                neighbor_image_uris=neighbor_uris,
-                on_image_ready=_on_image_ready,
-            )
-
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).error(
-                f"[SubEntity] Desire image check FAILED (non-fatal): {e}",
-                exc_info=True,
-            )
-
-    def _check_actor_profile_pic(self, node: Dict) -> None:
-        """Auto-attach profile pic URI to actor nodes during traversal (v2.2).
-
-        When traversing a citizen/actor node that has no image_uri,
-        query the L3 graph for their profile pic and attach it.
-        NEVER blocks. NEVER crashes traversal.
-        """
-        try:
-            # Only actors/citizens
-            node_type = node.get('node_type') or node.get('type', '')
-            if node_type not in ('actor', 'citizen', 'ai', 'human'):
-                return
-
-            # Already has image — skip
-            if node.get('image_uri'):
-                return
-
-            node_id = node.get('id', '')
-            if not node_id:
-                return
-
-            # Try to resolve profile pic from L3 graph
-            # Check if there's a graph_ops available via the context
-            graph_ops = getattr(self, '_graph_ops', None)
-            if not graph_ops:
-                # Try to get it from the exploration context
-                ctx = getattr(self, '_context', None)
-                if ctx and hasattr(ctx, 'graph_ops'):
-                    graph_ops = ctx.graph_ops
-
-            if not graph_ops:
-                return
-
-            # Query L3 for the actor's image_uri
-            result = graph_ops._query(
-                "MATCH (a:Actor {id: $id}) RETURN a.image_uri",
-                {"id": node_id},
-            )
-
-            if result:
-                row = result[0]
-                uri = row[0] if isinstance(row, (list, tuple)) else row.get("a.image_uri")
-                if uri:
-                    node['image_uri'] = uri
-                    import logging
-                    logging.getLogger(__name__).debug(
-                        f"[SubEntity] Attached profile pic to {node_id}: {uri}"
-                    )
-        except Exception:
-            pass  # Silent — profile pic is nice-to-have, not critical
 
     def inject_energy_to_link(self, link: Dict) -> Tuple[float, float]:
         """
