@@ -92,10 +92,9 @@ def invoke_claude(
     else:
         working_dir = project_root
 
-    # Build command
+    # Build command — simple: cd into citizen dir, claude reads CLAUDE.md automatically
     cmd = [
-        "claude",
-        "--print",
+        "claude", "-p",
         "--output-format", "text",
         "--dangerously-skip-permissions",
     ]
@@ -111,14 +110,7 @@ def invoke_claude(
         claude_session_uuid = str(uuid.uuid4())
         cmd.extend(["--session-id", claude_session_uuid])
 
-    # Add context directories
     state_dir = get_state_dir()
-    if is_citizen_session:
-        cmd.extend(["--add-dir", str(state_dir.parent)])  # shrine for journal
-    elif is_task and task_cwd:
-        cmd.extend(["--add-dir", str(state_dir.parent)])
-    else:
-        cmd.extend(["--add-dir", ".."])
 
     # Build clean env (strip CLAUDECODE to allow nested invocation)
     clean_env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
@@ -141,15 +133,15 @@ def invoke_claude(
         env=balanced_env,
     )
 
-    # For resumed sessions, send lean follow-up
+    # Simple message — CLAUDE.md in the citizen dir provides all context
     if is_resuming and voice_text:
-        input_text = f"[FOLLOW-UP from {sender}]\n{voice_text}\n\nRespond naturally. Write to state/last_response_{session_id}.txt with ---VOICE--- separator."
+        message = f"[FOLLOW-UP from {sender}]\n{voice_text}"
     else:
-        input_text = prompt
+        message = voice_text or "Wake up and check your messages."
 
-    # Pass prompt as CLI argument (claude --print reads args, not stdin)
-    cmd.append(input_text)
-    input_text = None  # Don't also send via stdin
+    # Pass message as CLI arg (short enough for arg, CLAUDE.md gives context)
+    cmd.append(message)
+    input_text = None
 
     # Execute with early subconscious response
     # If Claude takes > SUBCONSCIOUS_THRESHOLD seconds, return a subconscious
