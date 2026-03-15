@@ -756,7 +756,7 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     for schema_file in ["schema-l1.yaml", "schema-l3.yaml"]:
         src = mcp_root / schema_file
         dst = target_dir / schema_file
-        if src.exists():
+        if src.exists() and src.resolve() != dst.resolve():
             shutil.copy2(src, dst)
             print(f"✓ Schema: {dst}")
 

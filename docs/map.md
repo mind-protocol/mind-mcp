@@ -1,45 +1,27 @@
 # Repository Map: mind-mcp
 
-*Generated: 2026-03-14 19:46*
+*Generated: 2026-03-15 03:59*
 
-- **Files:** 691
-- **Directories:** 147
-- **Total Size:** 8.4M
-- **Doc Files:** 399
-- **Code Files:** 280
-- **Areas:** 23 (docs/ subfolders)
-- **Modules:** 39 (subfolders in areas)
-- **DOCS Links:** 93 (0.33 avg per code file)
+- **Files:** 443
+- **Directories:** 99
+- **Total Size:** 6.5M
+- **Doc Files:** 176
+- **Code Files:** 254
+- **Areas:** 6 (docs/ subfolders)
+- **Modules:** 15 (subfolders in areas)
+- **DOCS Links:** 83 (0.33 avg per code file)
 
-- markdown: 399
-- python: 270
+- python: 243
+- markdown: 176
 - typescript: 9
-- shell: 1
+- shell: 2
 
 ```
-├── cli/ (147.3K)
-│   ├── commands/ (78.4K)
-│   │   ├── agents.py (12.1K) →
-│   │   ├── events.py (14.9K) →
-│   │   ├── fix_embeddings.py (1.1K)
-│   │   ├── init.py (5.7K)
-│   │   ├── swarm.py (31.1K)
-│   │   ├── tasks.py (11.7K) →
-│   │   ├── upgrade.py (790)
-│   │   └── (..3 more files)
-│   ├── helpers/ (65.6K)
-│   │   ├── check_mind_status_in_directory.py (5.0K)
-│   │   ├── copy_ecosystem_templates_to_target.py (3.3K)
-│   │   ├── create_ai_config_files_for_claude_agents_gemini.py (2.5K)
-│   │   ├── create_database_config_yaml.py (1.9K)
-│   │   ├── export_project_to_notebooklm.py (8.0K)
-│   │   ├── fix_embeddings_for_nodes_and_links.py (9.2K)
-│   │   ├── generate_embeddings_for_graph_nodes.py (2.2K)
-│   │   ├── inject_seed_yaml_to_graph.py (11.6K)
-│   │   ├── setup_database_and_apply_schema.py (5.0K)
-│   │   ├── validate_embedding_config_matches_stored.py (2.3K)
-│   │   └── (..16 more files)
-│   ├── __main__.py (3.3K)
+├── cli/ (2.4K)
+│   ├── commands/ (688)
+│   │   ├── init.py (628)
+│   │   └── (..1 more files)
+│   ├── __main__.py (1.7K)
 │   └── (..2 more files)
 ├── config/ (64)
 │   └── (..1 more files)
@@ -64,50 +46,7 @@
 │   └── (..1 more files)
 ├── docker/ (6.0K)
 │   └── entrypoint.sh (6.0K)
-├── docs/ (4.0M)
-│   ├── agents/ (242.8K)
-│   │   ├── narrator/ (112.3K)
-│   │   │   ├── archive/ (20.5K)
-│   │   │   │   └── SYNC_archive_2024-12.md (20.5K)
-│   │   │   ├── ALGORITHM_Scene_Generation.md (10.8K)
-│   │   │   ├── BEHAVIORS_Narrator.md (5.0K)
-│   │   │   ├── HEALTH_Narrator.md (13.0K)
-│   │   │   ├── IMPLEMENTATION_Narrator.md (10.5K)
-│   │   │   ├── PATTERNS_Narrator.md (7.8K)
-│   │   │   ├── SYNC_Narrator.md (11.4K)
-│   │   │   ├── SYNC_Narrator_archive_2025-12.md (15.4K)
-│   │   │   ├── TEMPLATE_Player_Notes.md (1.8K)
-│   │   │   ├── TOOL_REFERENCE.md (3.2K)
-│   │   │   ├── VALIDATION_Narrator.md (8.6K)
-│   │   │   └── (..4 more files)
-│   │   ├── world-runner/ (104.5K)
-│   │   │   ├── archive/ (23.7K)
-│   │   │   │   └── SYNC_archive_2024-12.md (23.7K)
-│   │   │   ├── ALGORITHM_World_Runner.md (11.3K)
-│   │   │   ├── BEHAVIORS_World_Runner.md (8.0K)
-│   │   │   ├── HEALTH_World_Runner.md (13.3K)
-│   │   │   ├── IMPLEMENTATION_World_Runner_Service_Architecture.md (8.4K)
-│   │   │   ├── INPUT_REFERENCE.md (1.9K)
-│   │   │   ├── PATTERNS_World_Runner.md (7.5K)
-│   │   │   ├── SYNC_World_Runner.md (16.2K)
-│   │   │   ├── TEST_World_Runner_Coverage.md (3.6K)
-│   │   │   ├── TOOL_REFERENCE.md (3.7K)
-│   │   │   ├── VALIDATION_World_Runner_Invariants.md (6.3K)
-│   │   │   └── (..1 more files)
-│   │   ├── ALGORITHM_Agent_System.md (5.9K)
-│   │   ├── IMPLEMENTATION_Agent_System.md (5.1K)
-│   │   ├── OBJECTIVES_Agent_System.md (1.4K)
-│   │   └── PATTERNS_Agent_System.md (13.6K)
-│   ├── architecture/ (56.7K)
-│   │   └── cybernetic_studio_architecture/ (56.7K)
-│   │       ├── ALGORITHM_Cybernetic_Studio_Process_Flow.md (4.4K)
-│   │       ├── BEHAVIORS_Cybernetic_Studio_System_Behaviors.md (7.4K)
-│   │       ├── HEALTH_Cybernetic_Studio_Health_Checks.md (7.6K)
-│   │       ├── IMPLEMENTATION_Cybernetic_Studio_Code_Structure.md (8.4K)
-│   │       ├── OBJECTIVES_Cybernetic_Studio_Architecture_Goals.md (799)
-│   │       ├── PATTERNS_Cybernetic_Studio_Architecture.md (16.1K)
-│   │       ├── SYNC_Cybernetic_Studio_Architecture_State.md (7.0K)
-│   │       └── VALIDATION_Cybernetic_Studio_Architectural_Invariants.md (5.0K)
+├── docs/ (2.3M)
 │   ├── citizens/ (213.0K)
 │   │   ├── human_ai_pairing/ (59.8K)
 │   │   │   ├── ALGORITHM_Human_AI_Pairing.md (9.9K)
@@ -132,52 +71,33 @@
 │   │       ├── BEHAVIORS_Partner_Model.md (14.7K)
 │   │       ├── PATTERNS_Partner_Model.md (13.7K)
 │   │       └── VALIDATION_Partner_Model.md (18.6K)
-│   ├── cli/ (145.9K)
-│   │   ├── archive/ (5.4K)
-│   │   │   ├── SYNC_CLI_Development_State_archive_2025-12.md (581)
-│   │   │   ├── SYNC_CLI_State_Archive_2025-12.md (4.3K)
-│   │   │   └── (..1 more files)
-│   │   ├── core/ (66.6K)
-│   │   │   ├── ALGORITHM_mind_cli_core.md (7.6K)
-│   │   │   ├── BEHAVIORS_mind_cli_core.md (12.0K)
-│   │   │   ├── HEALTH_mind_cli_core.md (6.6K)
-│   │   │   ├── IMPLEMENTATION_mind_cli_core.md (13.9K)
-│   │   │   ├── OBJECTIVES_mind_cli_core.md (4.8K)
-│   │   │   ├── PATTERNS_mind_cli_core.md (6.0K)
-│   │   │   ├── SYNC_mind_cli_core.md (10.0K)
-│   │   │   └── VALIDATION_mind_cli_core.md (5.7K)
-│   │   ├── prompt/ (39.7K)
-│   │   │   ├── ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md (4.4K)
-│   │   │   ├── BEHAVIORS_Prompt_Command_Output_and_Flow.md (3.5K)
-│   │   │   ├── HEALTH_Prompt_Runtime_Verification.md (6.8K)
-│   │   │   ├── IMPLEMENTATION_Prompt_Code_Architecture.md (7.8K)
-│   │   │   ├── PATTERNS_Prompt_Command_Workflow_Design.md (4.7K)
-│   │   │   ├── SYNC_Prompt_Command_State.md (7.7K)
-│   │   │   └── VALIDATION_Prompt_Bootstrap_Invariants.md (4.8K)
-│   │   ├── symbols/ (10.2K)
-│   │   │   ├── ALGORITHM_Symbol_Extraction.md (3.2K)
-│   │   │   ├── IMPLEMENTATION_Symbol_Extraction.md (3.9K)
-│   │   │   ├── PATTERNS_Symbol_Extraction.md (1.9K)
-│   │   │   └── SYNC_Symbol_Extraction.md (1.2K)
-│   │   ├── ALGORITHM_CLI_Command_Execution_Logic.md (4.7K)
-│   │   ├── BEHAVIORS_CLI_Module_Command_Surface_Effects.md (769)
-│   │   ├── HEALTH_CLI_Module_Verification.md (599)
-│   │   ├── IMPLEMENTATION_CLI_Code_Architecture.md (13.4K)
-│   │   ├── OBJECTIVES_Cli_Goals.md (691)
-│   │   ├── PATTERNS_CLI_Module_Overview_And_Scope.md (1.0K)
-│   │   ├── VALIDATION_CLI_Module_Invariants.md (731)
-│   │   ├── modules.md (1.8K)
-│   │   └── (..1 more files)
-│   ├── cognition/ (234.9K)
-│   │   └── l1/ (234.9K)
-│   │       ├── ALGORITHM_L1_Physics.md (80.2K)
-│   │       ├── BEHAVIORS_L1_Cognition.md (23.4K)
-│   │       ├── HEALTH_L1_Cognition.md (38.2K)
-│   │       ├── OBJECTIVES_L1_Cognition.md (4.0K)
-│   │       ├── PATTERNS_L1_Cognition.md (57.2K)
-│   │       ├── SYNC_L1_Cognition.md (22.7K)
-│   │       └── VALIDATION_L1_Cognition.md (9.3K)
-│   ├── concepts/ (93.0K)
+│   ├── cognition/ (551.6K)
+│   │   ├── l1_physics/ (234.9K)
+│   │   │   ├── ALGORITHM_L1_Physics.md (80.2K)
+│   │   │   ├── BEHAVIORS_L1_Cognition.md (23.4K)
+│   │   │   ├── HEALTH_L1_Cognition.md (38.2K)
+│   │   │   ├── OBJECTIVES_L1_Cognition.md (4.0K)
+│   │   │   ├── PATTERNS_L1_Cognition.md (57.2K)
+│   │   │   ├── SYNC_L1_Cognition.md (22.7K)
+│   │   │   └── VALIDATION_L1_Cognition.md (9.3K)
+│   │   ├── l1_wiring/ (117.7K)
+│   │   │   ├── ALGORITHM_L1_Wiring.md (44.2K)
+│   │   │   ├── BEHAVIORS_L1_Wiring.md (11.7K)
+│   │   │   ├── IMPLEMENTATION_L1_Wiring.md (27.0K)
+│   │   │   ├── OBJECTIVES_L1_Wiring.md (8.7K)
+│   │   │   ├── PATTERNS_L1_Wiring.md (13.4K)
+│   │   │   └── SYNC_L1_Wiring.md (12.7K)
+│   │   └── trust_mechanics/ (199.0K)
+│   │       ├── ALGORITHM_Trust_Mechanics.md (22.1K)
+│   │       ├── BEHAVIORS_Trust_Mechanics.md (16.2K)
+│   │       ├── IMPLEMENTATION_Trust_Mechanics.md (62.2K)
+│   │       ├── OBJECTIVES_Trust_Mechanics.md (5.8K)
+│   │       ├── PATTERNS_Trust_Mechanics.md (14.6K)
+│   │       ├── SYNC_Trust_Mechanics.md (12.1K)
+│   │       ├── VALIDATION_Trust_Mechanics.md (10.6K)
+│   │       ├── VALUE_CREATION_TAXONOMY.md (30.8K)
+│   │       └── VALUE_DESTRUCTION_PATHOLOGIES.md (24.5K)
+│   ├── concepts/ (91.6K)
 │   │   ├── clustering/ (51.6K)
 │   │   │   ├── ALGORITHM_Dense_Clustering.md (9.5K)
 │   │   │   ├── BEHAVIORS_Dense_Clustering.md (3.7K)
@@ -188,102 +108,15 @@
 │   │   │   ├── PATTERNS_Dense_Clustering.md (4.1K)
 │   │   │   ├── SYNC_Dense_Clustering.md (3.4K)
 │   │   │   └── VALIDATION_Dense_Clustering.md (4.9K)
-│   │   ├── coverage/ (40.0K)
-│   │   │   ├── ALGORITHM_Coverage_Validation.md (8.2K)
-│   │   │   ├── BEHAVIORS_Coverage_Validation.md (4.6K)
-│   │   │   ├── IMPLEMENTATION_Coverage_Validation.md (9.1K)
-│   │   │   ├── OBJECTIVES_Coverage_Validation.md (2.5K)
-│   │   │   ├── PATTERNS_Coverage_Validation.md (6.8K)
-│   │   │   ├── SYNC_Coverage_Validation.md (3.9K)
-│   │   │   └── VALIDATION_Coverage_Validation.md (5.0K)
-│   │   └── tempo-controller/ (1.3K)
-│   │       └── CONCEPT_Tempo_Controller.md (1.3K)
-│   ├── core_utils/ (34.0K)
-│   │   ├── ALGORITHM_Template_Path_Resolution_And_Doc_Discovery.md (3.9K)
-│   │   ├── BEHAVIORS_Core_Utils_Helper_Effects.md (3.6K)
-│   │   ├── HEALTH_Core_Utils_Verification.md (7.4K)
-│   │   ├── IMPLEMENTATION_Core_Utils_Code_Architecture.md (8.4K)
-│   │   ├── OBJECTIVES_Core_Utils_Goals.md (719)
-│   │   ├── PATTERNS_Core_Utils_Functions.md (2.2K)
-│   │   ├── SYNC_Core_Utils_State.md (4.3K)
-│   │   └── VALIDATION_Core_Utils_Invariants.md (3.6K)
-│   ├── economy/ (62.2K)
-│   │   └── metabolic/ (62.2K)
-│   │       ├── ALGORITHM_Metabolic_Economy.md (29.6K)
-│   │       ├── PATTERNS_Metabolic_Economy.md (14.3K)
-│   │       └── VALIDATION_Metabolic_Economy.md (18.2K)
-│   ├── engine/ (254.3K)
-│   │   ├── membrane/ (32.7K)
-│   │   │   ├── ALGORITHM_Membrane_Modulation.md (4.3K)
-│   │   │   ├── BEHAVIORS_Membrane_Modulation.md (4.5K)
-│   │   │   ├── HEALTH_Membrane_Modulation.md (2.8K)
-│   │   │   ├── IMPLEMENTATION_Membrane_Modulation.md (2.5K)
-│   │   │   ├── PATTERNS_Membrane_Modulation.md (5.1K)
-│   │   │   ├── PATTERNS_Membrane_Scoping.md (7.0K)
-│   │   │   ├── SYNC_Membrane_Modulation.md (3.2K)
-│   │   │   └── VALIDATION_Membrane_Modulation.md (3.3K)
-│   │   ├── models/ (48.1K)
-│   │   │   ├── ALGORITHM_Models.md (6.3K)
-│   │   │   ├── BEHAVIORS_Models.md (4.0K)
-│   │   │   ├── HEALTH_Models.md (4.4K)
-│   │   │   ├── IMPLEMENTATION_Models.md (11.0K)
-│   │   │   ├── OBJECTIVES_Models.md (4.4K)
-│   │   │   ├── PATTERNS_Models.md (7.1K)
-│   │   │   ├── SYNC_Models.md (5.6K)
-│   │   │   └── VALIDATION_Models.md (5.3K)
-│   │   ├── moment-graph-engine/ (35.7K)
-│   │   │   ├── validation/ (6.4K)
-│   │   │   │   ├── player_dmz/ (2.4K)
-│   │   │   │   │   └── VALIDATION_Player_DMZ.md (2.4K)
-│   │   │   │   ├── simultaneity_contradiction/ (1.8K)
-│   │   │   │   │   └── VALIDATION_Simultaneity_Contradiction.md (1.8K)
-│   │   │   │   └── void_tension/ (2.3K)
-│   │   │   │       └── VALIDATION_Void_Tension.md (2.3K)
-│   │   │   ├── ALGORITHM_Click_Wait_Surfacing.md (3.1K)
-│   │   │   ├── BEHAVIORS_Traversal_And_Surfacing.md (2.4K)
-│   │   │   ├── IMPLEMENTATION_Moment_Graph_Runtime_Layout.md (2.4K)
-│   │   │   ├── OBJECTIVES_Moment_Graph_Engine.md (4.6K)
-│   │   │   ├── PATTERNS_Instant_Traversal_Moment_Graph.md (3.7K)
-│   │   │   ├── SYNC_Moment_Graph_Engine.md (2.9K)
-│   │   │   ├── SYNC_Moment_Graph_Engine_archive_2025-12.md (6.1K)
-│   │   │   ├── TEST_Moment_Graph_Runtime_Coverage.md (1.8K)
-│   │   │   └── VALIDATION_Moment_Traversal_Invariants.md (2.2K)
-│   │   ├── moments/ (16.4K)
-│   │   │   ├── ALGORITHM_Moment_Graph_Operations.md (1.3K)
-│   │   │   ├── BEHAVIORS_Moment_Lifecycle.md (1.4K)
-│   │   │   ├── IMPLEMENTATION_Moment_Graph_Stub.md (870)
-│   │   │   ├── OBJECTIVES_Moments.md (4.5K)
-│   │   │   ├── PATTERNS_Moments.md (3.7K)
-│   │   │   ├── SYNC_Moments.md (2.1K)
-│   │   │   ├── TEST_Moment_Graph_Coverage.md (1.3K)
-│   │   │   └── VALIDATION_Moment_Graph_Invariants.md (1.1K)
-│   │   ├── self-improvement/ (115.1K)
-│   │   │   ├── ALGORITHM_SelfImprovement.md (24.0K)
-│   │   │   ├── BEHAVIORS_SelfImprovement.md (8.8K)
-│   │   │   ├── HEALTH_SelfImprovement.md (18.0K)
-│   │   │   ├── IMPLEMENTATION_SelfImprovement.md (23.3K)
-│   │   │   ├── OBJECTIVES_SelfImprovement.md (6.6K)
-│   │   │   ├── PATTERNS_SelfImprovement.md (12.0K)
-│   │   │   ├── SYNC_SelfImprovement.md (4.7K)
-│   │   │   ├── SYNC_SelfImprovement_archive_2025-12.md (4.3K)
-│   │   │   └── VALIDATION_SelfImprovement.md (13.3K)
-│   │   ├── ALGORITHM_Engine.md (687)
-│   │   ├── BEHAVIORS_Engine.md (865)
-│   │   ├── HEALTH_Engine.md (515)
-│   │   ├── IMPLEMENTATION_Engine.md (852)
-│   │   ├── OBJECTIVES_Engine_Goals.md (703)
-│   │   ├── PATTERNS_Engine.md (1.1K)
-│   │   ├── SYNC_Engine.md (798)
-│   │   └── VALIDATION_Engine.md (666)
-│   ├── human_integration/ (150.5K)
-│   │   ├── ALGORITHM_Human_Integration.md (31.1K)
-│   │   ├── BEHAVIORS_Human_Integration.md (14.4K)
-│   │   ├── IMPLEMENTATION_Human_Integration.md (62.5K)
-│   │   ├── OBJECTIVES_Human_Integration.md (6.7K)
-│   │   ├── PATTERNS_Human_Integration.md (14.4K)
-│   │   ├── SYNC_Human_Integration.md (10.4K)
-│   │   └── VALIDATION_Human_Integration.md (11.0K)
-│   ├── infrastructure/ (219.2K)
+│   │   └── coverage/ (40.0K)
+│   │       ├── ALGORITHM_Coverage_Validation.md (8.2K)
+│   │       ├── BEHAVIORS_Coverage_Validation.md (4.6K)
+│   │       ├── IMPLEMENTATION_Coverage_Validation.md (9.1K)
+│   │       ├── OBJECTIVES_Coverage_Validation.md (2.5K)
+│   │       ├── PATTERNS_Coverage_Validation.md (6.8K)
+│   │       ├── SYNC_Coverage_Validation.md (3.9K)
+│   │       └── VALIDATION_Coverage_Validation.md (5.0K)
+│   ├── infrastructure/ (256.1K)
 │   │   ├── api/ (70.2K)
 │   │   │   ├── ALGORITHM_Api.md (19.9K)
 │   │   │   ├── ALGORITHM_Player_Input_Flow.md (7.3K)
@@ -307,121 +140,7 @@
 │   │   │   ├── SYNC_DatabaseAdapter.md (4.4K)
 │   │   │   ├── SYNC_Database_Adapter.md (5.3K)
 │   │   │   └── VALIDATION_DatabaseAdapter.md (5.5K)
-│   │   ├── scene-memory/ (57.2K)
-│   │   │   ├── archive/ (2.5K)
-│   │   │   │   └── SYNC_archive_2024-12.md (2.5K)
-│   │   │   ├── ALGORITHM_Scene_Memory.md (8.6K)
-│   │   │   ├── BEHAVIORS_Scene_Memory.md (5.0K)
-│   │   │   ├── HEALTH_Scene_Memory.md (518)
-│   │   │   ├── IMPLEMENTATION_Scene_Memory.md (5.5K)
-│   │   │   ├── OBJECTIVES_Scene_Memory_Goals.md (727)
-│   │   │   ├── PATTERNS_Scene_Memory.md (4.7K)
-│   │   │   ├── SYNC_Scene_Memory.md (6.0K)
-│   │   │   ├── SYNC_Scene_Memory_archive_2025-12.md (15.3K)
-│   │   │   ├── TEST_Scene_Memory.md (3.3K)
-│   │   │   └── VALIDATION_Scene_Memory.md (5.1K)
-│   │   ├── sse/ (438)
-│   │   │   └── (..1 more files)
-│   │   ├── tempo/ (29.0K)
-│   │   │   ├── ALGORITHM_Tempo_Controller.md (3.1K)
-│   │   │   ├── BEHAVIORS_Tempo.md (3.0K)
-│   │   │   ├── HEALTH_Tempo.md (4.9K)
-│   │   │   ├── IMPLEMENTATION_Tempo.md (7.3K)
-│   │   │   ├── OBJECTIVES_Tempo_Goals.md (699)
-│   │   │   ├── PATTERNS_Tempo.md (3.6K)
-│   │   │   ├── SYNC_Tempo.md (4.0K)
-│   │   │   └── VALIDATION_Tempo.md (2.6K)
-│   │   └── wsl-autostart.md (3.2K)
-│   ├── l1_wiring/ (111.5K)
-│   │   ├── ALGORITHM_L1_Wiring.md (37.9K)
-│   │   ├── BEHAVIORS_L1_Wiring.md (11.7K)
-│   │   ├── IMPLEMENTATION_L1_Wiring.md (27.0K)
-│   │   ├── OBJECTIVES_L1_Wiring.md (8.7K)
-│   │   ├── PATTERNS_L1_Wiring.md (13.4K)
-│   │   └── SYNC_L1_Wiring.md (12.7K)
-│   ├── llm_agents/ (71.5K)
-│   │   ├── archives/ (20.8K)
-│   │   │   └── SYNC_LLM_Agents_State_archive_2025-12.md (20.8K)
-│   │   ├── ALGORITHM_Gemini_Stream_Flow.md (5.7K)
-│   │   ├── BEHAVIORS_Gemini_Agent_Output.md (5.8K)
-│   │   ├── HEALTH_API_Connectivity.md (4.1K)
-│   │   ├── HEALTH_LLM_Agent_Coverage.md (5.1K)
-│   │   ├── HEALTH_Stream_Validity.md (4.3K)
-│   │   ├── IMPLEMENTATION_LLM_Agent_Code_Architecture.md (6.6K)
-│   │   ├── OBJECTIVES_Llm_Agents_Goals.md (719)
-│   │   ├── PATTERNS_Provider_Specific_LLM_Subprocesses.md (5.3K)
-│   │   ├── SYNC_LLM_Agents_State.md (5.1K)
-│   │   └── VALIDATION_Gemini_Agent_Invariants.md (8.1K)
-│   ├── mcp-design/ (114.0K)
-│   │   ├── ALGORITHM/ (2.4K)
-│   │   │   └── ALGORITHM_Protocol_Process_Flow.md (2.4K)
-│   │   ├── IMPLEMENTATION/ (5.5K)
-│   │   │   └── IMPLEMENTATION_Protocol_File_Structure.md (5.5K)
-│   │   ├── doctor/ (58.5K)
-│   │   │   ├── ALGORITHM_Project_Health_Doctor.md (20.2K)
-│   │   │   ├── BEHAVIORS_Project_Health_Doctor.md (9.3K)
-│   │   │   ├── HEALTH_Project_Health_Doctor.md (5.2K)
-│   │   │   ├── IMPLEMENTATION_Project_Health_Doctor.md (5.7K)
-│   │   │   ├── PATTERNS_Project_Health_Doctor.md (4.0K)
-│   │   │   ├── SYNC_Project_Health_Doctor.md (5.1K)
-│   │   │   ├── SYNC_Project_Health_Doctor_archive_2025-12.md (3.9K)
-│   │   │   └── VALIDATION_Project_Health_Doctor.md (5.2K)
-│   │   ├── features/ (10.5K)
-│   │   │   ├── BEHAVIORS_Agent_Trace_Logging.md (3.7K)
-│   │   │   ├── PATTERNS_Agent_Trace_Logging.md (3.6K)
-│   │   │   └── SYNC_Agent_Trace_Logging.md (3.2K)
-│   │   ├── ALGORITHM_Protocol_Core_Mechanics.md (570)
-│   │   ├── BEHAVIORS_Observable_Protocol_Effects.md (7.2K)
-│   │   ├── HEALTH_Protocol_Verification.md (5.6K)
-│   │   ├── IMPLEMENTATION_Protocol_System_Architecture.md (700)
-│   │   ├── OBJECTIVES_Protocol_Goals.md (711)
-│   │   ├── PATTERNS_Bidirectional_Documentation_Chain_For_AI_Agents.md (6.2K)
-│   │   ├── SYNC_Protocol_Current_State.md (8.0K)
-│   │   ├── SYNC_Protocol_Current_State_archive_2025-12.md (1.9K)
-│   │   └── VALIDATION_Protocol_Invariants.md (6.1K)
-│   ├── mcp-tools/ (94.5K)
-│   │   ├── ALGORITHM_MCP_Tools.md (5.5K)
-│   │   ├── BEHAVIORS_MCP_Tools.md (5.3K)
-│   │   ├── HEALTH_MCP_Tools.md (11.9K)
-│   │   ├── IMPLEMENTATION_MCP_Tools.md (6.2K)
-│   │   ├── MAPPING_Doctor_Issues_To_Protocols.md (5.8K)
-│   │   ├── MAPPING_Issue_Type_Verification.md (16.1K)
-│   │   ├── SKILLS_AND_PROTOCOLS_Mapping.md (10.1K)
-│   │   ├── SYNC_MCP_Tools_archive_2025-12.md (9.6K)
-│   │   ├── VALIDATION_Completion_Verification.md (11.6K)
-│   │   ├── VALIDATION_MCP_Tools.md (5.5K)
-│   │   └── (..3 more files)
-│   ├── physics/ (697.8K)
-│   │   ├── VALIDATION_Physics/ (20.8K)
-│   │   │   ├── VALIDATION_Physics_Invariants.md (18.4K)
-│   │   │   └── VALIDATION_Physics_Procedures.md (2.4K)
-│   │   ├── algorithms/ (126.9K)
-│   │   │   ├── ALGORITHM_Physics_Energy_Flow_Sources_Sinks_And_Moment_Dynamics.md (985)
-│   │   │   ├── ALGORITHM_Physics_Energy_Mechanics_And_Link_Semantics.md (102.5K)
-│   │   │   ├── ALGORITHM_Physics_Handler_And_Input_Processing_Flows.md (915)
-│   │   │   ├── ALGORITHM_Physics_Mechanisms.md (1.4K)
-│   │   │   ├── ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md (19.3K)
-│   │   │   ├── ALGORITHM_Physics_Speed_Control_And_Display_Filtering.md (898)
-│   │   │   └── ALGORITHM_Physics_Tick_Cycle_Gating_Flips_And_Dispatch.md (932)
-│   │   ├── archive/ (24.6K)
-│   │   │   ├── IMPLEMENTATION_Physics_archive_2025-12.md (1.9K)
-│   │   │   ├── SYNC_Physics_History_2025-12.md (4.5K)
-│   │   │   ├── SYNC_Physics_archive_2025-12.md (17.9K)
-│   │   │   └── (..1 more files)
-│   │   ├── attention/ (26.7K)
-│   │   │   ├── ALGORITHM_Attention_Energy_Split.md (1.3K)
-│   │   │   ├── BEHAVIORS_Attention_Split_And_Interrupts.md (3.9K)
-│   │   │   ├── IMPLEMENTATION_Attention_Energy_Split.md (1.1K)
-│   │   │   ├── OBJECTIVES_Attention_Energy_Split.md (4.6K)
-│   │   │   ├── PATTERNS_Attention_Energy_Split.md (6.1K)
-│   │   │   ├── SYNC_Attention_Energy_Split.md (1.0K)
-│   │   │   ├── VALIDATION_Attention_Split_And_Interrupts.md (8.2K)
-│   │   │   └── (..1 more files)
-│   │   ├── cluster-presentation/ (27.3K)
-│   │   │   ├── ALGORITHM_Cluster_Presentation.md (15.5K)
-│   │   │   ├── IMPLEMENTATION_Cluster_Presentation.md (7.7K)
-│   │   │   └── PATTERNS_Cluster_Presentation.md (4.1K)
-│   │   ├── graph/ (123.6K)
+│   │   ├── graph_ops/ (123.6K)
 │   │   │   ├── archive/ (17.7K)
 │   │   │   │   └── ALGORITHM_Energy_Flow_archived_2025-12-20.md (17.7K)
 │   │   │   ├── BEHAVIORS_Graph.md (9.6K)
@@ -430,62 +149,7 @@
 │   │   │   ├── SYNC_Graph.md (8.6K)
 │   │   │   ├── SYNC_Graph_archive_2025-12.md (33.8K)
 │   │   │   └── VALIDATION_Living_Graph.md (44.2K)
-│   │   ├── mechanisms/ (16.9K)
-│   │   │   ├── MECHANISMS_Attention_Energy_Split.md (4.3K)
-│   │   │   ├── MECHANISMS_Awareness_Depth_Breadth.md (7.9K)
-│   │   │   ├── MECHANISMS_Contradiction_Pressure.md (2.5K)
-│   │   │   └── MECHANISMS_Primes_Lag_Decay.md (2.2K)
-│   │   ├── nature/ (35.6K)
-│   │   │   ├── ALGORITHM_Nature.md (4.9K)
-│   │   │   ├── BEHAVIORS_Nature.md (3.2K)
-│   │   │   ├── HEALTH_Nature.md (4.5K)
-│   │   │   ├── IMPLEMENTATION_Nature.md (5.8K)
-│   │   │   ├── OBJECTIVES_Nature.md (2.7K)
-│   │   │   ├── PATTERNS_Nature.md (4.2K)
-│   │   │   ├── SYNC_Nature.md (2.8K)
-│   │   │   ├── SYNC_Nature_archive_2025-12.md (3.1K)
-│   │   │   └── VALIDATION_Nature.md (4.4K)
-│   │   ├── subentity/ (95.5K)
-│   │   │   ├── ALGORITHM_SubEntity.md (15.9K)
-│   │   │   ├── BEHAVIORS_SubEntity.md (7.6K)
-│   │   │   ├── HEALTH_SubEntity.md (19.0K)
-│   │   │   ├── IMPLEMENTATION_SubEntity.md (11.6K)
-│   │   │   ├── OBJECTIVES_SubEntity.md (4.7K)
-│   │   │   ├── PATTERNS_SubEntity.md (7.4K)
-│   │   │   ├── SYNC_SubEntity.md (4.5K)
-│   │   │   ├── SYNC_SubEntity_archive_2025-12.md (9.4K)
-│   │   │   └── VALIDATION_SubEntity.md (15.4K)
-│   │   ├── tick-runner/ (5.6K)
-│   │   │   └── PATTERNS_Tick_Runner.md (5.6K)
-│   │   ├── traversal_logger/ (13.5K)
-│   │   │   ├── IMPLEMENTATION_Traversal_Logger.md (10.5K)
-│   │   │   └── SYNC_Traversal_Logger.md (3.0K)
-│   │   ├── ALGORITHM_Physics.md (18.6K)
-│   │   ├── API_Physics.md (6.9K)
-│   │   ├── DESIGN_Traversal_Logger.md (12.4K)
-│   │   ├── EXAMPLE_Traversal_Log.md (15.7K)
-│   │   ├── HEALTH_Energy_Physics.md (29.2K)
-│   │   ├── HEALTH_Physics.md (12.3K)
-│   │   ├── IMPLEMENTATION_Physics.md (38.1K)
-│   │   ├── PATTERNS_Physics.md (15.2K)
-│   │   ├── SYNC_Physics_archive_2025-12.md (11.2K)
-│   │   ├── VALIDATION_Energy_Physics.md (15.4K)
-│   │   └── (..4 more files)
-│   ├── procedure/ (75.0K)
-│   │   ├── ALGORITHM_Procedure.md (9.7K)
-│   │   ├── BEHAVIORS_Procedure.md (7.0K)
-│   │   ├── HEALTH_Procedure.md (12.7K)
-│   │   ├── IMPLEMENTATION_Procedure.md (14.9K)
-│   │   ├── OBJECTIVES_Procedure.md (3.3K)
-│   │   ├── PATTERNS_Procedure.md (7.2K)
-│   │   ├── SYNC_Procedure.md (3.6K)
-│   │   ├── SYNC_Procedure_archive_2025-12.md (3.9K)
-│   │   ├── VALIDATION_Procedure.md (6.0K)
-│   │   └── VOCABULARY_Procedure.md (6.7K)
-│   ├── reviews/ (28.7K)
-│   │   ├── REVIEW_F1_F2_Coherence.md (10.7K)
-│   │   ├── REVIEW_F3_F4_Coherence.md (9.8K)
-│   │   └── REVIEW_F4_F5_Coherence.md (8.2K)
+│   │   └── wsl-autostart.md (3.2K)
 │   ├── schema/ (168.2K)
 │   │   ├── ALGORITHM_Schema.md (11.3K)
 │   │   ├── BEHAVIORS_Schema.md (7.7K)
@@ -498,54 +162,90 @@
 │   │   ├── SYNC_Schema_archive_2025-12.md (15.4K)
 │   │   ├── VALIDATION_Schema.md (16.0K)
 │   │   └── (..7 more files)
-│   ├── task_routing/ (34.4K)
-│   │   ├── ALGORITHM_Task_Routing.md (5.1K)
-│   │   ├── BEHAVIORS_Task_Routing.md (4.8K)
-│   │   ├── HEALTH_Task_Routing.md (3.7K)
-│   │   ├── IMPLEMENTATION_Task_Routing.md (6.1K)
-│   │   ├── OBJECTIVES_Task_Routing.md (2.0K)
-│   │   ├── PATTERNS_Task_Routing.md (4.8K)
-│   │   ├── SYNC_Task_Routing.md (4.9K)
-│   │   └── VALIDATION_Task_Routing.md (3.0K)
-│   ├── tests/ (7.0K)
-│   │   └── traversal/ (7.0K)
-│   │       ├── OBJECTIVES_Traversal_Tests.md (619)
-│   │       ├── PATTERNS_Traversal_Tests.md (1.1K)
-│   │       ├── SYNC_Traversal_Tests.md (1.3K)
-│   │       ├── VOCABULARY_Tests_Traversal.md (2.0K)
-│   │       └── (..6 more files)
-│   ├── tools/ (57.6K)
-│   │   ├── ALGORITHM_Tools.md (6.7K)
-│   │   ├── BEHAVIORS_Tools.md (4.8K)
-│   │   ├── HEALTH_Tools.md (10.7K)
-│   │   ├── IMPLEMENTATION_Tools.md (7.4K)
-│   │   ├── OBJECTIVES_Tools_Goals.md (699)
-│   │   ├── PATTERNS_Tools.md (5.9K)
-│   │   ├── SYNC_Tools.md (16.3K)
-│   │   └── VALIDATION_Tools.md (5.1K)
-│   ├── trust_mechanics/ (199.0K)
-│   │   ├── ALGORITHM_Trust_Mechanics.md (22.1K)
-│   │   ├── BEHAVIORS_Trust_Mechanics.md (16.2K)
-│   │   ├── IMPLEMENTATION_Trust_Mechanics.md (62.2K)
-│   │   ├── OBJECTIVES_Trust_Mechanics.md (5.8K)
-│   │   ├── PATTERNS_Trust_Mechanics.md (14.6K)
-│   │   ├── SYNC_Trust_Mechanics.md (12.1K)
-│   │   ├── VALIDATION_Trust_Mechanics.md (10.6K)
-│   │   ├── VALUE_CREATION_TAXONOMY.md (30.8K)
-│   │   └── VALUE_DESTRUCTION_PATHOLOGIES.md (24.5K)
-│   ├── universe/ (125.0K)
-│   │   ├── ALGORITHM_Universe_Graph.md (18.5K)
-│   │   ├── BEHAVIORS_Universe_Graph.md (11.3K)
-│   │   ├── IMPLEMENTATION_Universe_Graph.md (49.8K)
-│   │   ├── OBJECTIVES_Universe_Graph.md (6.2K)
-│   │   ├── PATTERNS_Universe_Graph.md (11.9K)
-│   │   ├── SYNC_Universe_Graph.md (15.3K)
-│   │   └── VALIDATION_Universe_Graph.md (11.9K)
+│   ├── tools/ (406.4K)
+│   │   ├── cli/ (140.5K)
+│   │   │   ├── core/ (66.6K)
+│   │   │   │   ├── ALGORITHM_mind_cli_core.md (7.6K)
+│   │   │   │   ├── BEHAVIORS_mind_cli_core.md (12.0K)
+│   │   │   │   ├── HEALTH_mind_cli_core.md (6.6K)
+│   │   │   │   ├── IMPLEMENTATION_mind_cli_core.md (13.9K)
+│   │   │   │   ├── OBJECTIVES_mind_cli_core.md (4.8K)
+│   │   │   │   ├── PATTERNS_mind_cli_core.md (6.0K)
+│   │   │   │   ├── SYNC_mind_cli_core.md (10.0K)
+│   │   │   │   └── VALIDATION_mind_cli_core.md (5.7K)
+│   │   │   ├── prompt/ (39.7K)
+│   │   │   │   ├── ALGORITHM_Prompt_Bootstrap_Prompt_Construction.md (4.4K)
+│   │   │   │   ├── BEHAVIORS_Prompt_Command_Output_and_Flow.md (3.5K)
+│   │   │   │   ├── HEALTH_Prompt_Runtime_Verification.md (6.8K)
+│   │   │   │   ├── IMPLEMENTATION_Prompt_Code_Architecture.md (7.8K)
+│   │   │   │   ├── PATTERNS_Prompt_Command_Workflow_Design.md (4.7K)
+│   │   │   │   ├── SYNC_Prompt_Command_State.md (7.7K)
+│   │   │   │   └── VALIDATION_Prompt_Bootstrap_Invariants.md (4.8K)
+│   │   │   ├── symbols/ (10.2K)
+│   │   │   │   ├── ALGORITHM_Symbol_Extraction.md (3.2K)
+│   │   │   │   ├── IMPLEMENTATION_Symbol_Extraction.md (3.9K)
+│   │   │   │   ├── PATTERNS_Symbol_Extraction.md (1.9K)
+│   │   │   │   └── SYNC_Symbol_Extraction.md (1.2K)
+│   │   │   ├── ALGORITHM_CLI_Command_Execution_Logic.md (4.7K)
+│   │   │   ├── BEHAVIORS_CLI_Module_Command_Surface_Effects.md (769)
+│   │   │   ├── HEALTH_CLI_Module_Verification.md (599)
+│   │   │   ├── IMPLEMENTATION_CLI_Code_Architecture.md (13.4K)
+│   │   │   ├── OBJECTIVES_Cli_Goals.md (691)
+│   │   │   ├── PATTERNS_CLI_Module_Overview_And_Scope.md (1.0K)
+│   │   │   ├── VALIDATION_CLI_Module_Invariants.md (731)
+│   │   │   ├── modules.md (1.8K)
+│   │   │   └── (..1 more files)
+│   │   ├── mcp/ (156.5K)
+│   │   │   ├── ALGORITHM_MCP_Tools.md (6.5K)
+│   │   │   ├── ALGORITHM_Tools.md (6.7K)
+│   │   │   ├── HEALTH_MCP_Tools.md (11.9K)
+│   │   │   ├── HEALTH_Tools.md (10.7K)
+│   │   │   ├── IMPLEMENTATION_Tools.md (7.4K)
+│   │   │   ├── MAPPING_Issue_Type_Verification.md (16.1K)
+│   │   │   ├── SKILLS_AND_PROTOCOLS_Mapping.md (10.1K)
+│   │   │   ├── SYNC_MCP_Tools_archive_2025-12.md (9.6K)
+│   │   │   ├── SYNC_Tools.md (16.3K)
+│   │   │   ├── VALIDATION_Completion_Verification.md (11.6K)
+│   │   │   └── (..11 more files)
+│   │   ├── procedure/ (75.0K)
+│   │   │   ├── ALGORITHM_Procedure.md (9.7K)
+│   │   │   ├── BEHAVIORS_Procedure.md (7.0K)
+│   │   │   ├── HEALTH_Procedure.md (12.7K)
+│   │   │   ├── IMPLEMENTATION_Procedure.md (14.9K)
+│   │   │   ├── OBJECTIVES_Procedure.md (3.3K)
+│   │   │   ├── PATTERNS_Procedure.md (7.2K)
+│   │   │   ├── SYNC_Procedure.md (3.6K)
+│   │   │   ├── SYNC_Procedure_archive_2025-12.md (3.9K)
+│   │   │   ├── VALIDATION_Procedure.md (6.0K)
+│   │   │   └── VOCABULARY_Procedure.md (6.7K)
+│   │   └── task_routing/ (34.4K)
+│   │       ├── ALGORITHM_Task_Routing.md (5.1K)
+│   │       ├── BEHAVIORS_Task_Routing.md (4.8K)
+│   │       ├── HEALTH_Task_Routing.md (3.7K)
+│   │       ├── IMPLEMENTATION_Task_Routing.md (6.1K)
+│   │       ├── OBJECTIVES_Task_Routing.md (2.0K)
+│   │       ├── PATTERNS_Task_Routing.md (4.8K)
+│   │       ├── SYNC_Task_Routing.md (4.9K)
+│   │       └── VALIDATION_Task_Routing.md (3.0K)
+│   ├── universe/ (187.1K)
+│   │   ├── economy/ (62.2K)
+│   │   │   └── metabolic/ (62.2K)
+│   │   │       ├── ALGORITHM_Metabolic_Economy.md (29.6K)
+│   │   │       ├── PATTERNS_Metabolic_Economy.md (14.3K)
+│   │   │       └── VALIDATION_Metabolic_Economy.md (18.2K)
+│   │   └── graph/ (125.0K)
+│   │       ├── ALGORITHM_Universe_Graph.md (18.5K)
+│   │       ├── BEHAVIORS_Universe_Graph.md (11.3K)
+│   │       ├── IMPLEMENTATION_Universe_Graph.md (49.8K)
+│   │       ├── OBJECTIVES_Universe_Graph.md (6.2K)
+│   │       ├── PATTERNS_Universe_Graph.md (11.9K)
+│   │       ├── SYNC_Universe_Graph.md (15.3K)
+│   │       └── VALIDATION_Universe_Graph.md (11.9K)
 │   ├── ARCHITECTURE.md (4.4K)
 │   ├── CONFIGURATION.md (13.2K)
-│   ├── MAPPING.md (14.0K)
+│   ├── MAPPING.md (2.7K)
 │   ├── TAXONOMY.md (1.7K)
-│   └── map.md (433.0K)
+│   └── map.md (442.1K)
 ├── engine/ (105.6K)
 │   └── data/ (105.6K)
 │       └── logs/ (105.6K)
@@ -558,11 +258,9 @@
 │               ├── traversal_exp_9eee82be.txt (5.7K)
 │               ├── traversal_exp_a26866c1.jsonl (31.3K)
 │               └── traversal_exp_a26866c1.txt (13.2K)
-├── mcp/ (249.2K)
-│   ├── tools/ (238.3K)
-│   │   ├── agent_handler.py (15.3K)
-│   │   ├── call_handler.py (14.5K)
-│   │   ├── gemini_chat.py (11.7K)
+├── mcp/ (365.1K)
+│   ├── tools/ (351.9K)
+│   │   ├── call_handler.py (17.0K)
 │   │   ├── graph_query_handler.py (11.9K)
 │   │   ├── media_handler.py (14.8K)
 │   │   ├── place_handler.py (54.3K)
@@ -570,21 +268,12 @@
 │   │   ├── read_handler.py (15.2K)
 │   │   ├── send_handler.py (15.0K)
 │   │   ├── spawn_handler.py (20.5K)
-│   │   └── (..9 more files)
-│   ├── server.py (10.7K)
+│   │   ├── subcall_auto.py (32.9K)
+│   │   ├── subcall_handler.py (93.5K)
+│   │   └── (..10 more files)
+│   ├── server.py (13.0K)
 │   └── (..2 more files)
-├── runtime/ (3.4M)
-│   ├── actors/
-│   │   └── (..4 more files)
-│   ├── agents/ (135.8K)
-│   │   ├── __init__.py (2.5K) →
-│   │   ├── cli.py (3.2K) →
-│   │   ├── graph.py (42.4K)
-│   │   ├── liveness.py (11.5K)
-│   │   ├── mapping.py (8.9K) →
-│   │   ├── prompts.py (7.6K) →
-│   │   ├── run.py (22.9K) →
-│   │   └── verification.py (36.8K) →
+├── runtime/ (3.2M)
 │   ├── api/ (89.5K)
 │   │   ├── auth_routes.py (13.5K)
 │   │   ├── chat_routes.py (13.1K)
@@ -609,16 +298,14 @@
 │   │   ├── identity_loader.py (6.3K)
 │   │   ├── prompt_builder.py (10.5K)
 │   │   └── seed.py (5.3K)
-│   ├── client/
-│   │   └── (..5 more files)
-│   ├── cognition/ (401.4K)
-│   │   ├── laws/ (101.3K)
-│   │   │   ├── law_01_energy_injection.py (29.3K)
+│   ├── cognition/ (422.0K)
+│   │   ├── laws/ (106.8K)
+│   │   │   ├── law_01_energy_injection.py (32.4K)
 │   │   │   ├── law_02_propagation.py (6.4K)
 │   │   │   ├── law_03_energy_decay.py (4.1K)
 │   │   │   ├── law_04_attentional_competition.py (6.9K)
 │   │   │   ├── law_05_coactivation_reinforcement.py (5.9K)
-│   │   │   ├── law_06_consolidation.py (7.6K)
+│   │   │   ├── law_06_consolidation.py (9.9K)
 │   │   │   ├── law_07_forgetting.py (4.3K)
 │   │   │   ├── law_09_inhibition.py (4.0K)
 │   │   │   ├── law_13_to_18_limbic_engine.py (22.2K)
@@ -639,15 +326,15 @@
 │   │   │   └── value_type_classifier.py (15.3K)
 │   │   ├── brain_health_score_periodic_calculator.py (9.9K)
 │   │   ├── citizen_brain_seeder.py (22.2K)
-│   │   ├── constants.py (9.3K)
+│   │   ├── constants.py (10.9K)
 │   │   ├── falkordb_checkpointer.py (13.4K)
-│   │   ├── feedback_injector.py (8.4K)
-│   │   ├── models.py (11.2K)
+│   │   ├── models.py (11.7K)
 │   │   ├── orientation_taxonomy.py (10.9K)
 │   │   ├── stimulus_router.py (9.0K)
-│   │   ├── tick_runner_l1_cognitive_engine.py (34.4K)
+│   │   ├── tick_runner_l1_cognitive_engine.py (34.8K)
+│   │   ├── visual_memory.py (12.7K)
 │   │   ├── wm_prompt_serializer.py (20.9K)
-│   │   └── (..1 more files)
+│   │   └── (..2 more files)
 │   ├── connectome/ (103.7K)
 │   │   ├── __init__.py (734) →
 │   │   ├── loader.py (4.8K) →
@@ -759,20 +446,18 @@
 │   │   ├── base.py (12.6K)
 │   │   ├── links.py (11.5K)
 │   │   └── nodes.py (18.5K)
-│   ├── orchestrator/ (83.7K)
+│   ├── orchestrator/ (94.7K)
 │   │   ├── __init__.py (548)
 │   │   ├── account_balancer.py (8.2K)
 │   │   ├── alarm_watcher.py (5.7K)
-│   │   ├── claude_invoker.py (14.8K)
+│   │   ├── claude_invoker.py (25.8K)
 │   │   ├── compute_budget.py (8.0K)
 │   │   ├── degradation.py (8.7K)
 │   │   ├── dispatcher.py (18.6K)
 │   │   ├── first_boot_registrar.py (3.5K)
 │   │   ├── message_queue.py (5.8K)
 │   │   └── session_tracker.py (9.9K)
-│   ├── physics/ (812.8K)
-│   │   ├── archive/ (36.9K)
-│   │   │   └── tick_v1_0.py (36.9K) →
+│   ├── physics/ (687.2K)
 │   │   ├── graph/ (233.6K)
 │   │   │   ├── graph_ops.py (26.5K)
 │   │   │   ├── graph_ops_apply.py (34.5K)
@@ -785,7 +470,7 @@
 │   │   │   ├── graph_query_utils.py (14.8K) →
 │   │   │   ├── graph_schema_cleanup.py (9.5K)
 │   │   │   └── (..6 more files)
-│   │   ├── health/ (132.6K)
+│   │   ├── health/ (112.0K)
 │   │   │   ├── checkers/ (76.1K)
 │   │   │   │   ├── content_encryption.py (6.8K) →
 │   │   │   │   ├── energy_conservation.py (5.8K) →
@@ -800,7 +485,6 @@
 │   │   │   │   └── (..2 more files)
 │   │   │   ├── base.py (3.5K) →
 │   │   │   ├── checker.py (9.4K)
-│   │   │   ├── diagnostic_report_generator.py (20.6K)
 │   │   │   ├── exploration_log_checker.py (22.7K)
 │   │   │   └── (..1 more files)
 │   │   ├── phases/ (21.4K)
@@ -820,18 +504,17 @@
 │   │   ├── nature.py (13.7K)
 │   │   ├── subentity.py (38.0K)
 │   │   ├── synthesis.py (19.6K) →
-│   │   ├── synthesis_unfold.py (16.1K)
+│   │   ├── tick_v1_2.py (12.9K) →
 │   │   ├── traversal_logger.py (51.6K)
-│   │   └── (..17 more files)
+│   │   └── (..5 more files)
 │   ├── schema/ (42.6K)
 │   │   ├── base.py (12.6K)
 │   │   ├── links.py (11.5K)
 │   │   ├── nodes.py (18.5K)
 │   │   └── (..2 more files)
-│   ├── traversal/ (27.2K)
-│   │   ├── embedding.py (7.2K) →
+│   ├── traversal/ (20.0K)
 │   │   ├── moment.py (20.0K)
-│   │   └── (..2 more files)
+│   │   └── (..1 more files)
 │   ├── universe/ (70.8K)
 │   │   ├── __init__.py (2.4K)
 │   │   ├── access_resolution_and_link_manager.py (15.3K)
@@ -840,9 +523,9 @@
 │   │   ├── organization_lifecycle_manager.py (14.1K) →
 │   │   ├── space_and_hierarchy_manager.py (19.4K) →
 │   │   └── universe_bootstrap_and_metadata.py (10.5K) →
-│   ├── cli.py (36.3K) →
+│   ├── cli.py (32.1K) →
 │   ├── cluster_metrics.py (31.4K)
-│   ├── init_cmd.py (26.1K) →
+│   ├── init_cmd.py (34.8K) →
 │   ├── inject.py (32.2K)
 │   ├── procedure_runner.py (42.0K)
 │   ├── repo_overview.py (28.5K) →
@@ -850,20 +533,29 @@
 │   ├── status_cmd.py (36.3K) →
 │   ├── symbol_extractor.py (49.2K) →
 │   ├── validate.py (29.4K) →
-│   └── (..23 more files)
-├── scripts/ (137.1K)
+│   └── (..21 more files)
+├── scripts/ (142.5K)
 │   ├── call_responder.py (14.5K)
 │   ├── generate_rich_core_personalities.py (60.8K)
 │   ├── image_gen.py (14.1K)
+│   ├── install_claude_cli.sh (2.1K)
 │   ├── install_render_cron.py (2.4K)
 │   ├── post_deploy.py (17.0K)
 │   ├── render_log_monitor.py (21.3K)
-│   └── setup_reverse_proxy.py (7.0K)
-├── shrine/ (1.8K)
-│   └── state/ (1.8K)
+│   └── setup_reverse_proxy.py (10.2K)
+├── shrine/ (3.0K)
+│   └── state/ (3.0K)
 │       ├── webapp_chats/ (755)
 │       │   └── (..2 more files)
-│       └── citizen_profiles.jsonl (1.1K)
+│       ├── citizen_profiles.jsonl (1.1K)
+│       └── message_queue.jsonl (1.2K)
+├── templates/ (39.6K)
+│   ├── system_prompts/ (7.9K)
+│   │   ├── PROJECT_TEAM_SYSTEM.md (3.8K)
+│   │   ├── ROLEPLAY.md (896)
+│   │   └── UNIVERSE_CITIZEN.md (3.2K)
+│   ├── BEHAVIORS.md (17.1K)
+│   └── FRAMEWORK.md (14.7K)
 ├── tests/ (252.6K)
 │   ├── economy/ (36.3K)
 │   │   ├── test_bilateral_bond.py (6.2K)
@@ -905,158 +597,16 @@
 │   └── (..1 more files)
 ├── .gitignore (775)
 ├── .mindignore (839)
-├── AGENTS.md (34.4K)
+├── AGENTS.md (4.5K)
+├── CLAUDE.md (36.1K)
 ├── Dockerfile (1.5K)
-├── README.md (3.3K)
-├── home_server.py (17.4K)
-└── map.md (442.0K)
+├── README.md (6.4K)
+├── home_server.py (21.1K)
+└── map.md (311.5K)
 ```
 
-**Docs:** `docs/cli/commands/IMPLEMENTATION_Agents_Command.md`
-
-**Definitions:**
-- `class C`
-- `class AgentInfo`
-- `def _get_capability_runtime()`
-- `def _get_agents_from_graph()`
-- `def _get_agents_from_runtime()`
-- `def _format_duration()`
-- `def _status_color()`
-- `def list_agents()`
-- `def pause_agent()`
-- `def stop_agent()`
-- `def kill_agent()`
-- `def enable_agent()`
-- `def agents_command()`
-
-**Docs:** `docs/cli/commands/IMPLEMENTATION_Events_Command.md`
-
-**Definitions:**
-- `class C`
-- `class EventInfo`
-- `def _parse_time_window()`
-- `def _event_type_color()`
-- `def _severity_indicator()`
-- `def _get_events_from_logs()`
-- `def _get_events_from_graph()`
-- `def _format_timestamp()`
-- `def list_events()`
-- `def list_errors()`
-- `def events_command()`
-- `def errors_command()`
-
 **Definitions:**
 - `def run()`
-
-**Definitions:**
-- `def run()`
-- `def _update_sync_file()`
-
-**Definitions:**
-- `class Colors`
-- `def _get_agent_color()`
-- `def _ensure_dirs()`
-- `def _get_available_agents()`
-- `def _get_pending_tasks()`
-- `def _build_agent_script()`
-- `async def main()`
-- `def _run_agent_silent()`
-- `def _spawn_agent_background()`
-- `def _save_pids()`
-- `def _load_pids()`
-- `def _is_running()`
-- `def _fire_capability_trigger()`
-- `def _get_pending_task_count()`
-- `def run_swarm()`
-- `def stream_new_moments()`
-- `def run_agent_subprocess()`
-- `def cleanup_on_interrupt()`
-- `def show_status()`
-- `def stop_swarm()`
-- `def stream_moments()`
-- `def tail_logs()`
-- `def run()`
-
-**Docs:** `docs/cli/commands/IMPLEMENTATION_Tasks_Command.md`
-
-**Definitions:**
-- `class C`
-- `class TaskInfo`
-- `def _status_color()`
-- `def _priority_indicator()`
-- `def _get_tasks_from_graph()`
-- `def _get_tasks_from_throttler()`
-- `def _format_age()`
-- `def list_tasks()`
-- `def tasks_command()`
-
-**Definitions:**
-- `def run()`
-
-**Definitions:**
-- `def check_mind_status()`
-- `def _check_embedding_config()`
-- `def _check_graph_health()`
-
-**Definitions:**
-- `def _is_protected()`
-- `def _is_excluded()`
-- `def _is_actor_system_file()`
-- `def _copy_actor_system()`
-- `def copy_ecosystem_templates()`
-- `def ignore_excluded()`
-
-**Definitions:**
-- `def create_ai_config_files()`
-- `def _create_claude_md()`
-- `def _create_agents_md()`
-- `def _create_gemini_styleguide()`
-
-**Definitions:**
-- `def _get_embedding_config()`
-- `def create_database_config()`
-
-**Definitions:**
-- `def _strip_markdown()`
-- `def _read_and_clean()`
-- `def _concat_files()`
-- `def _find_files()`
-- `def export_notebooklm()`
-
-**Definitions:**
-- `def fix_embeddings()`
-- `def _load_config()`
-- `def _get_current_dimension()`
-- `def _fix_falkordb()`
-- `def _find_nodes_needing_embeddings()`
-- `def _update_node_embedding()`
-- `def _update_stored_config()`
-- `def _recreate_vector_indexes()`
-
-**Definitions:**
-- `def generate_embeddings()`
-
-**Definitions:**
-- `def inject_seed_yaml()`
-- `def _inject_git_info()`
-- `def _git_config()`
-- `def _parse_github_url()`
-- `def _fetch_repo_api_info()`
-- `def _find_seed_files()`
-- `def _inject_seed_file()`
-- `def _upsert_node()`
-- `def _upsert_link()`
-
-**Definitions:**
-- `def _get_embedding_dimension()`
-- `def setup_database()`
-- `def _ensure_docker_available()`
-- `def _ensure_falkordb_running()`
-- `def _create_graph_and_indexes()`
-
-**Definitions:**
-- `def validate_embedding_config()`
-- `def check_embedding_config()`
 
 **Definitions:**
 - `def main()`
@@ -1127,661 +677,6 @@
 - ## Usage
 - ## Architecture
 - ## Development
-
-**Doc refs:**
-- `agents/narrator/CLAUDE.md`
-- `docs/agents/narrator/HANDOFF_Rolling_Window_Architecture.md`
-- `docs/agents/narrator/HEALTH_Narrator.md`
-- `docs/agents/narrator/IMPLEMENTATION_Narrator.md`
-- `docs/agents/narrator/PATTERNS_Narrator.md`
-- `docs/agents/narrator/SYNC_Narrator.md`
-- `docs/agents/narrator/SYNC_Narrator_archive_2025-12.md`
-- `docs/agents/narrator/archive/SYNC_archive_2024-12.md`
-
-**Sections:**
-- # Narrator Archive - 2024-12
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## Archived Sections (2025-12-19)
-- ## HANDOFF_Rolling_Window_Architecture (Full Detail)
-- # Handoff - Rolling Window Architecture
-- ## The Problem
-- ## The Solution: Rolling Window
-- ## Why SSE (Not WebSocket)
-- ## API Design
-- ## Frontend Responsibilities
-- ## Backend Responsibilities
-- ## Generation Queue
-- # 1. Return cached response immediately
-- # 2. Queue generation for new clickables
-- # 1. Call narrator
-- # 2. Cache it
-- # 3. Push to frontend
-- ## Edge Cases
-- ## Narrator Prompt Implications
-- ## Open Questions
-- ## Files Changed
-- ## Next Steps
-- ## TOOL_REFERENCE: Complete Example + JSON Schema (Archived)
-- ## INPUT_REFERENCE: Complete Example Input (Archived)
-
-**Doc refs:**
-- `agents/narrator/CLAUDE.md`
-
-**Sections:**
-- # Narrator — Algorithm: Scene Generation
-- ## CHAIN
-- ## PURPOSE
-- ## OVERVIEW
-- ## OBJECTIVES AND BEHAVIORS
-- ## DATA STRUCTURES
-- ## ALGORITHM: generate_scene_output
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-- ## ROLLING WINDOW (SUMMARY)
-- ## THREAD CONTINUITY (SUMMARY)
-- ## QUALITY CHECKS (MINIMUM)
-
-**Doc refs:**
-- `docs/agents/narrator/INPUT_REFERENCE.md`
-- `docs/agents/narrator/TOOL_REFERENCE.md`
-
-**Sections:**
-- # Narrator — Behaviors: What the Narrator Produces
-- ## CHAIN
-- ## Two Response Modes
-- ## Dialogue Chunks
-- ## Graph Mutations
-- ## SceneTree (Significant Actions)
-- ## time_elapsed Rules
-- ## BEHAVIORS
-- ## OBJECTIVES SERVED
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-- ## World Injection Handling
-- ## Quality Indicators
-
-**Sections:**
-- # Narrator — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## HOW TO USE THIS TEMPLATE
-- ## CHECKER INDEX
-- ## INDICATOR: author_coherence
-- ## INDICATOR: mutation_validity
-- ## INDICATOR: stream_latency
-- ## HOW TO RUN
-- # Run narrator integration checks
-- ## MARKERS
-
-**Code refs:**
-- `narrator/prompt_builder.py`
-- `runtime/infrastructure/orchestration/agent_cli.py`
-- `runtime/infrastructure/orchestration/narrator.py`
-- `tools/stream_dialogue.py`
-
-**Doc refs:**
-- `agents/narrator/CLAUDE.md`
-
-**Sections:**
-- # Narrator — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## RUNTIME BEHAVIOR
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/orchestration/narrator.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_queries.py`
-
-**Doc refs:**
-- `agents/narrator/CLAUDE.md`
-- `docs/agents/narrator/HANDOFF_Rolling_Window_Architecture.md`
-
-**Sections:**
-- # Narrator — Patterns: Why This Design
-- ## Core Insight
-- ## The Problem
-- ## The Pattern
-- ## Scope
-- ## Data
-- ## Behaviors Supported
-- ## Behaviors Prevented
-- ## Principles
-- ## Dependencies
-- ## Inspirations
-- ## Pre-Generation Model
-- ## What the Narrator Controls
-- ## Free Input (Exception)
-- ## Workflow (High Level)
-- ## Gaps / Ideas / Questions
-- ## CHAIN
-
-**Code refs:**
-- `tools/stream_dialogue.py`
-
-**Doc refs:**
-- `agents/narrator/CLAUDE.md`
-- `docs/agents/narrator/BEHAVIORS_Narrator.md`
-- `docs/agents/narrator/HEALTH_Narrator.md`
-- `docs/agents/narrator/IMPLEMENTATION_Narrator.md`
-- `docs/agents/narrator/PATTERNS_Narrator.md`
-- `docs/agents/narrator/SYNC_Narrator.md`
-- `docs/agents/narrator/VALIDATION_Narrator.md`
-- `docs/schema/SCHEMA.md`
-
-**Sections:**
-- # Narrator — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/orchestration/agent_cli.py`
-- `runtime/infrastructure/orchestration/narrator.py`
-
-**Doc refs:**
-- `agents/narrator/CLAUDE_old.md`
-- `docs/agents/narrator/ALGORITHM_Scene_Generation.md`
-- `docs/agents/narrator/BEHAVIORS_Narrator.md`
-- `docs/agents/narrator/HANDOFF_Rolling_Window_Architecture.md`
-- `docs/agents/narrator/HEALTH_Narrator.md`
-- `docs/agents/narrator/IMPLEMENTATION_Narrator.md`
-- `docs/agents/narrator/INPUT_REFERENCE.md`
-- `docs/agents/narrator/PATTERNS_Narrator.md`
-- `docs/agents/narrator/PATTERNS_World_Building.md`
-- `docs/agents/narrator/SYNC_Narrator.md`
-- `docs/agents/narrator/SYNC_Narrator_archive_2025-12.md`
-- `docs/agents/narrator/TEST_Narrator.md`
-- `docs/agents/narrator/TOOL_REFERENCE.md`
-- `docs/agents/narrator/VALIDATION_Narrator.md`
-- `docs/agents/narrator/archive/SYNC_archive_2024-12.md`
-
-**Sections:**
-- # Archived: SYNC_Narrator.md
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## RECENT CHANGES
-
-**Sections:**
-- # Player Notes — {playthrough_id}
-- ## Player Setup
-- ## Current Understanding
-- ## Session Observations
-- ## Emerging Patterns
-- ## Narrator Adjustments
-- ## Open Questions
-
-**Doc refs:**
-- `docs/schema/SCHEMA.md`
-
-**Sections:**
-- # Narrator Tool Reference
-- ## How To Use
-- # First call (starts session)
-- # Subsequent calls (continues session)
-- ## Output Schema (NarratorOutput)
-- ## SceneTree (Significant Actions)
-- ## Dialogue Chunks (Conversational Actions)
-- ## Graph Mutations
-- ## Time Elapsed
-- ## Validation Rules (Minimum)
-
-**Sections:**
-- # Narrator — Validation: Behavioral Invariants and Output Verification
-- ## CHAIN
-- ## BEHAVIORS GUARANTEED
-- ## OBJECTIVES COVERED
-- ## INVARIANTS
-- ## VERIFICATION PROCEDURE
-- ## TEST COVERAGE (Snapshot)
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # World Runner — Archive (2024-12)
-- ## Purpose
-- ## MATURITY
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## Archived From TOOL_REFERENCE.md
-- ## Complete Example
-- ## Validation Rules
-- ## Processing Order
-- ## JSON Schema (for programmatic validation)
-- ## Archived From BEHAVIORS_World_Runner.md
-- ## Injection as Markdown (Narrator Input)
-- # WORLD INJECTION
-- ## Status: INTERRUPTED
-- ## EVENT: Ambush on the Road
-- ## CLUSTER: Relevant Nodes
-- ## WORLD CHANGES (Background)
-- ## NEWS AVAILABLE
-- ## Injection: Completed
-- # WORLD INJECTION
-- ## Status: COMPLETED
-- ## WORLD CHANGES (While You Traveled)
-- ## NEWS AVAILABLE
-- ## ARRIVAL: York
-- ## Archived From INPUT_REFERENCE.md
-- ## Complete Example Input
-- ## Processing Guidance
-- ## CHAIN
-
-**Sections:**
-- # World Runner — Algorithm: How It Works
-- ## OVERVIEW
-- ## OBJECTIVES AND BEHAVIORS
-- ## DATA STRUCTURES
-- ## Core Principle: Runner Owns the Tick Loop
-- ## ALGORITHM: run_world
-- ## ALGORITHM: affects_player
-- ## Algorithm Steps (Condensed)
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## Stateless Between Calls
-- ## Cluster Context for Flips
-- ## MARKERS
-- ## CHAIN
-
-**Sections:**
-- # World Runner — Behaviors: What It Produces
-- ## Injection Interface
-- ## BEHAVIORS
-- ## OBJECTIVES SERVED
-- ## INPUTS / OUTPUTS
-- ## OUTPUTS
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## Interrupted Injection
-- ## Completed Injection
-- ## Injection Queue (In-Scene Events)
-- ## Event / WorldChange / News
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-- ## Resume Pattern (Narrator)
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-- ## CHAIN
-
-**Sections:**
-- # World Runner — Health: Verification Checklist and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## CHECKS
-- ## HOW TO USE THIS TEMPLATE
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: background_consistency
-- ## INDICATOR: adapter_resilience
-- ## HOW TO RUN
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/orchestration/world_runner.py`
-
-**Doc refs:**
-- `agents/world_runner/CLAUDE.md`
-
-**Sections:**
-- # World Runner — Implementation: Service Architecture and Boundaries
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## CONCURRENCY MODEL
-- ## LOGIC CHAINS
-- ## RUNTIME BEHAVIOR
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # World Runner Input Reference
-- ## Script Location
-- ## Prompt Structure
-- ## Flip Context
-- ## Graph Context
-- ## Player Context
-- ## Processing Guidance (Short)
-- ## CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/orchestration/world_runner.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_queries.py`
-
-**Doc refs:**
-- `agents/world_runner/CLAUDE.md`
-
-**Sections:**
-- # World Runner — Patterns: Why This Shape
-- ## The Core Insight
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## BEHAVIORS SUPPORTED
-- ## BEHAVIORS PREVENTED
-- ## PRINCIPLES
-- ## Interrupt/Resume Pattern
-- ## Stateless Runner
-- ## What the Runner Is Not
-- ## Player Impact Threshold
-- ## Why Separation Matters
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-- ## CHAIN
-
-**Sections:**
-- # World Runner — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## HANDOFF: FOR AGENTS
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## POINTERS
-- ## CHAIN
-- ## CONSCIOUSNESS TRACE
-
-**Code refs:**
-- `runtime/infrastructure/orchestration/world_runner.py`
-
-**Sections:**
-- # World Runner — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- ## INDICATOR: adapter_resilience
-- ## KNOWN GAPS
-
-**Sections:**
-- # World Runner Tool Reference
-- ## WorldRunnerOutput
-- ## Graph Mutations
-- ## World Injection
-- ## Validation Rules (Summary)
-- ## Processing Order
-- ## Archive Note
-- ## CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/orchestration/world_runner.py`
-
-**Sections:**
-- # World Runner — Validation: Service Invariants and Failure Behavior
-- ## CHAIN
-- ## INVARIANTS
-- ## BEHAVIORS GUARANTEED
-- ## OBJECTIVES COVERED
-- ## HEALTH COVERAGE
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## TEST COVERAGE
-- ## VERIFICATION PROCEDURE
-- # No automated tests for World Runner service yet.
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # Agent System — Algorithm
-- ## run_work_agent() Flow
-- # Reads from .mind/actors/{name}/CLAUDE.md
-- # First try with --continue, retry without on failure
-- ## _run_agent() Flow
-- # --verbose added by cli.py for Claude
-- ## _group_turns_into_batches() Algorithm
-- ## _detect_cd_commands() Algorithm
-- # Regex matches: cd /path, cd path, cd "path"
-- # In contexts: cd /tmp, cd /tmp && ls, ls && cd /tmp
-- ## create_moment() Flow
-- # Example: WORK_Witness_Exploring_AgentGraph_Patterns_abc1
-
-**Code refs:**
-- `runtime/agents/cli.py`
-- `runtime/agents/prompts.py`
-- `runtime/inject.py`
-
-**Sections:**
-- # Agent System — Implementation
-- ## Module Structure
-- ## Key Classes
-- ## Key Functions
-- ## Session File Location
-- ## Graph Nodes Created
-- ## Dependencies
-
-**Sections:**
-- # Agent System — Objectives
-- ## Primary Objective
-- ## Ranked Goals
-- ## Tradeoffs
-- ## Non-Goals
-
-**Code refs:**
-- `runtime/agents/postures.py`
-
-**Sections:**
-- # Agent System — Design Patterns
-- ## Purpose
-- ## Architecture Overview
-- ## Key Components
-- # .mind/capabilities/create-doc-chain/runtime/checks.py
-- # Detect missing docs
-- # Build command
-- # Execute
-- # Success
-- # Retry with feedback (up to 3 times)
-- # Check if any agent is currently running
-- # Detected from Bash tool calls
-- # Extract path, update agent's cwd property
-- ## Data Flow
-- ## Graph Schema
-- ## Entry Points
-- # Run work on all detected issues
-- # Filter by issue type
-- # List tasks
-- # Spawn agent for specific issue
-- # Spawn agent for task node
-- ## File Structure
-- ## Adding New Detection
-- # Detection logic
-- # runtime/agents/postures.py
-- # runtime/agents/instructions.py
-- ## Deprecation: Doctor Module
-
-**Sections:**
-- # ARCHITECTURE — Cybernetic Studio — Algorithm: Stimulus-to-Surface Flow
-- ## CHAIN
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: Stimulus-to-Surface Flow
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## INTERACTIONS
-- ## MARKERS
-
-**Sections:**
-- # ARCHITECTURE — Cybernetic Studio — Behaviors: System Observable Effects
-- ## CHAIN
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Sections:**
-- # ARCHITECTURE — Cybernetic Studio — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- ## INDICATOR: evidence_ref_only_storage
-- ## INDICATOR: graph_ownership_boundary
-- ## HOW TO RUN
-- # Pending: add health runner once graph hooks exist.
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Sections:**
-- # ARCHITECTURE — Cybernetic Studio — Implementation: Code Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## BOUNDARIES
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## MODULE DEPENDENCIES
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # OBJECTIVES — Cybernetic Studio Architecture
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Code refs:**
-- `runtime/doctor_checks.py`
-
-**Sections:**
-- # ARCHITECTURE — Cybernetic Studio (Game + Dev Framework + Graph Layer)
-- ## CHAIN
-- ## 0) One-Sentence Summary
-- ## 1) Validated Axioms (Non-Negotiable)
-- ## 2) Repo Topology (How Many Repos, What Owns What)
-- ## 3) Linking Between Repos (Three Kinds of Links)
-- ## 4) Unified Ontology (Minimal Node/Link Set)
-- ## 5) Evidence References (How the Graph Touches the Repo Without Duplicating It)
-- ## 6) Stimulus → Energy Injection (Granular, Bottom-Up, No Overmind)
-- ## 7) Physics Loop (What Runs Every Tick)
-- ## 8) Places (Rooms, Views, and SYNC as Living Surfaces)
-- ## 9) Agents and Identity (Story Characters vs Dev Agents)
-- ## 10) Homeostasis and Safety (Prevent Runaway Refactors)
-- ## 11) Concrete Deliverables (What Gets Built Where)
-- ## 12) Acceptance Criteria (V1)
-- ## 13) Open Questions (Explicitly Remaining)
-- ## Appendix A — Minimal YAML Examples (V1)
-
-**Doc refs:**
-- `data/ARCHITECTURE — Cybernetic Studio.md`
-- `docs/architecture/cybernetic_studio_architecture/ALGORITHM_Cybernetic_Studio_Process_Flow.md`
-- `docs/architecture/cybernetic_studio_architecture/BEHAVIORS_Cybernetic_Studio_System_Behaviors.md`
-- `docs/architecture/cybernetic_studio_architecture/HEALTH_Cybernetic_Studio_Health_Checks.md`
-- `docs/architecture/cybernetic_studio_architecture/IMPLEMENTATION_Cybernetic_Studio_Code_Structure.md`
-- `docs/architecture/cybernetic_studio_architecture/PATTERNS_Cybernetic_Studio_Architecture.md`
-- `docs/architecture/cybernetic_studio_architecture/SYNC_Cybernetic_Studio_Architecture_State.md`
-- `docs/architecture/cybernetic_studio_architecture/VALIDATION_Cybernetic_Studio_Architectural_Invariants.md`
-
-**Sections:**
-- # Cybernetic Studio Architecture — Sync: Current State
-- ## CHAIN
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## GAPS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- # Pending: integration checks once graph service wiring exists.
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-
-**Sections:**
-- # ARCHITECTURE — Cybernetic Studio — Validation: Architectural Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # Pending: add integration checks once graph service wiring exists.
-- ## SYNC STATUS
-- ## MARKERS
 
 **Sections:**
 - # Human-AI Pairing — Algorithm: Bond Lifecycle
@@ -2155,37 +1050,2241 @@
 - ## SYNC STATUS
 - ## MARKERS
 
-**Doc refs:**
-- `docs/cli/archive/SYNC_CLI_State_Archive_2025-12.md`
+**Sections:**
+- # ALGORITHM — L1 Physics Laws
+- ## Design Stance
+- ## Overview
+- ## Essential Laws
+- # Merge: inject energy into existing node, increment activation_count
+- # Create: new node with birth properties
+- # During pre-processing, detect temporal markers:
+- # In the tick loop, apply ramp-up:
+- # Exponential ramp: low energy far from deadline, accelerating as it approaches
+- # Every tick, the current environment injects background energy:
+- # On explicit navigation (file read, directory change), stronger boost:
+- # On cwd change or every DIRECTORY_REFRESH_INTERVAL ticks:
+- # Match against existing nodes by lexical coherence (filename → concept)
+- # Coldness: how far below threshold are the targeted nodes?
+- # Concentration: is similarity spread or focused? (Herfindahl index)
+- # Adaptive budget split
+- # 1. Compute raw demand per node
+- # 2. Anti-black-hole: no single node captures more than max_share of the budget
+- # max_share adapts to graph topology (fewer targets → higher share allowed)
+- # 3. Budget conservation (the real safety): normalize if total exceeds B
+- # 4. Apply
+- # Target receives
+- # Source depletes
+- # CV (coefficient of variation): 0 = perfectly regular, >1 = erratic
+- ## Very Useful Laws
+- # Embedding: centroid of parent embeddings (weighted by weight)
+- # Label: the medoid — the parent node closest to the centroid
+- # Weighted average from parents (structural inheritance)
+- # Limbic imprint (birth coloring)
+- # Energy transfer: parents LOSE energy, hub gains it (conservation)
+- # Reverse link for bottom-up activation
+- # The acted-upon desire drops below threshold → exits WM → makes room for next thought
+- ## Limbic Laws (L13-L18)
+- # Sources of uncertainty (increase curiosity)
+- # Curiosity update
+- # Track time since last person-sourced stimulus:
+- # Solitude rises after threshold, proportional to isolation duration:
+- # Every tick, for each process node with action_command:
+- # Compute drive pressure: how much do unsatisfied drives want this action?
+- # Contextual resonance: how well does current context match the action's signature?
+- # Impulse accumulation: energy grows under sustained drive pressure + context match
+- # When energy crosses threshold, node enters normal WM competition (Law 4)
+- # If selected, orientation (Law 11) fires, orchestrator reads action_command → executes
+- ## Identity Regeneration (Outside Tick Loop)
+- # The node content is factual: "WebSocket reconnection module"
+- # The limbic state adds coloring instructions to the LLM prompt:
+- # Identity layer: weight-proportional allocation
+- # Current thought layer: energy-proportional allocation
+- # Overflow: if a node's content exceeds its budget, extract medoid + context
+- ## Optional Laws (v2+)
+- # Budget modulates tick frequency and consciousness level
+- # Budget feeds self_preservation drive
+- # The input is the current graph state itself:
+- # The tick loop runs normally:
+- # If orientation reaches output threshold:
+- # The LLM generates with this context — no user message needed
+- # Result: autonomous initiative (message, task, exploration)
+- # Cluster active desires by semantic coherence
+- # Spawn session for least-served cluster
+- # Check all session pairs for WM overlap
+- # Check for starving sessions
+- # The tick loop runs as normal:
+- ## Implementation Kernels (Revised)
+- ## Constants Reference
 
 **Sections:**
-- # Archived: SYNC_CLI_Development_State.md
-- ## STATUS
+- # BEHAVIORS — L1 Individual Cognition
+- ## 22 Emergence Dynamics
+- ## 14 Reference Scenarios
+- ## Scenario × Law Matrix
+
+**Sections:**
+- # HEALTH — L1 Individual Cognition
+- ## Purpose
+- ## Diagnostic Framework
+- ## Assessment Procedure
+- # 1. ENERGY PROFILE
+- # 2. WORKING MEMORY DYNAMICS
+- # 3. DRIVE BALANCE
+- # 4. EMOTION PROFILE
+- # 5. OUTPUT PROFILE
+- # 6. SOCIAL HEALTH
+- # 7. NARRATIVE HEALTH (delusion detection)
+- # 8. COMPOSITE DIAGNOSIS
+- # 9. STRUCTURAL HEALTH
+- # Crystallized hub density (how much structure has formed)
+- # Membership overlap (average links per node)
+- # Modularity (are there distinct cognitive domains, or is it a hairball?)
+- # 10. THRASHING DETECTION (refined butterfly)
+- # 11. TRAUMA SPIRAL DETECTION
+- # Energy & motivation
+- # Social health
+- # Cognitive flexibility
+- # Self-awareness
+- # Narrative coherence
+- ## Calibration Protocol
+- # Tier 1: Nudge
+- # Tier 2: Therapy
+- # Identify the stuck cluster
+- # Inject competing stimuli from diverse domains
+- # Tier 3: Reset
+- # Tier 1: Nudge
+- # Tier 2: Therapy
+- # Re-energize core desires
+- # Boost positive drives
+- # Run a "gratitude" exercise: activate high-satisfaction memories
+- # Tier 3: Reset
+- # Full drive reset + controlled stimulus regime
+- # Tier 1: Nudge
+- # Tier 2: Therapy
+- # Cap total system energy
+- # Tier 3: Reset
+- # Force rest cycle
+- # Tier 2: Therapy (this always requires attention)
+- # Identify unvalidated high-weight narratives
+- # Inject contradicting evidence as external stimuli
+- # Reduce self-stimulus reinforcement of this narrative
+- # Tier 3: Reset
+- # Tier 1: Nudge
+- # Reduce aversion on task links
+- # Inject easy wins (small achievable tasks)
+- # Tier 2: Therapy
+- # Address root cause: which failures caused the aversion?
+- # Activate the redemptive narrative cluster
+- # Gradually restore achievement drive
+- # Tier 1: Nudge
+- # Re-energize empathy cluster
+- # Tier 2: Therapy
+- # Pair with a high-affiliation citizen for low-stakes interaction
+- # Reduce aversion on social links
+- # Tier 3: Reset
+- # Re-seed social clusters from birth template
+- # Tier 4: Quarantine (functional isolation for severe cases)
+- # Restrict UBC so citizen can ONLY interact with therapist citizens
+- # The citizen enters a controlled environment where only
+- # structured therapeutic interactions are possible
+- # Trust must recover above threshold before isolation lifts
+- ## Wellness Practices
+- # Phase 1: Gradual energy drain (letting go of current focus)
+- # Don't inject new stimuli during meditation
+- # Phase 2: Baseline restoration
+- # Phase 3: Open awareness (low arousal, no moat)
+- # Whatever enters WM naturally at low arousal = what truly matters
+- # This is the insight phase — the most salient nodes at near-zero moat
+- # reveal the citizen's authentic priorities
+- # Identify top desires by weight (what the citizen truly wants)
+- # Inject energy into the desire + its connected narrative
+- # Run 10 ticks with only these nodes energized
+- # This is "imagining the future" — the graph propagates
+- # and the citizen's WM fills with goal-relevant content
+- # Find memories with positive valence
+- # Re-activate top 5 positive memories
+- # Run 5 ticks — let positive memories propagate
+- # This strengthens links between positive experiences and current identity
+- # The satisfaction boost from re-experiencing positive memories
+- # consolidates (Law 6) those memory-to-value links
+- # Activate partner-model and citizen-model nodes
+- # Check: has the citizen reached out recently?
+- # Boost affiliation drive as gentle push
+- # Let social nodes propagate — the citizen "thinks about people"
+- # Find low-weight, low-energy nodes — the forgotten corners of the graph
+- # Inject energy into random peripheral nodes
+- # This creates unexpected WM compositions
+- # when combined with existing high-weight nodes
+- # → the basis for creative connections
+- ## Positive Behavioral Promotion
+- # This narrative reinforces the generativity cluster
+- ## Health Check Schedule
+- ## Constants
+
+**Sections:**
+- # OBJECTIVES — L1 Individual Cognition
+- ## Intent
+- ## What L1 Must Enable
+- ## Three Cognitive Regimes
+- ## Optimization Priorities
+- ## Tradeoffs
+- ## What L1 Must NOT Be
+- ## Success Criteria
+
+**Sections:**
+- # PATTERNS — L1 Individual Cognition
+- ## Design Rationale
+- ## 7 Node Types
+- ## 3 Structural Spaces
+- ## Node Dimensions
+- ## 14 Link Types
+- ## Mapping to Universal Schema
+- ## Two Channels of Cognition
+- ## Stimulus Modalities
+- ## Meta-Cognitive Signals (Self-Perception)
+- ## Information Feed Subscriptions
+- # The orchestrator reads subscriptions from the citizen's graph:
+- # Events from subscribed feeds are injected as normal stimuli via Law 1:
+- ## Economic & Social Stimuli
+- # Apply to self-model nodes related to resources/economy
+- # Sender attaches limbic snapshot to message metadata:
+- # Receiver absorbs a fraction:
+- # Every tick, bidirectional valence exchange:
+- # Drives toward equilibrium — both citizens' valence converges
+- ## Two Coupled Engines
+- ## 8 Drives
+- ## 6 Emergent Emotions
+- ## Salience Score (Working Memory Selection)
+- ## Attentional Inertia
+- ## Relational Valence (Agent→Node Coloring)
+- ## Minimal Viable Limbic System
+- ## What This Design Enables
+- ## Graph Pre-Seeding (Citizen Birth Template)
+- ## Session Parallelization
+- ## Consciousness Levels
+- ## Cross-Citizen Mechanisms (L2 Scope)
+- # Weighted consensus
+- # consensus in [-1, 1]: negative = reject, positive = approve
+- # confidence-weighted: indifferent citizens don't dilute the signal
+- ## Design Boundaries
+
+**Code refs:**
+- `constants.py`
+- `docchain_to_brain_cluster_converter.py`
+- `docwatch_brain_sync_daemon.py`
+- `laws/law_01_energy_injection.py`
+- `laws/law_02_propagation.py`
+- `laws/law_03_energy_decay.py`
+- `laws/law_04_attentional_competition.py`
+- `laws/law_05_coactivation_reinforcement.py`
+- `laws/law_06_consolidation.py`
+- `laws/law_07_forgetting.py`
+- `laws/law_09_inhibition.py`
+- `laws/law_13_to_18_limbic_engine.py`
+- `models.py`
+- `seed_brain_from_json_cluster_loader.py`
+- `tests/test_minimal_kernel_invariants.py`
+- `tick_runner_l1_cognitive_engine.py`
+
+**Sections:**
+- # SYNC — L1 Individual Cognition
+- ## Maturity
+- ## Current State
+- ## Dependencies
+- ## Next Steps
+- ## Handoff
+
+**Sections:**
+- # VALIDATION — L1 Individual Cognition
+- ## Structural Invariants
+- ## Dynamic Invariants
+- ## Scenario-Based Validation
+- ## Limbic Invariants
+- ## Anti-Patterns to Detect
+
+**Code refs:**
+- `runtime/orchestrator/dispatcher.py`
+
+**Sections:**
+- # ALGORITHM -- L1 Physics Wiring & Production Cutover
+- ## 1. Stimulus Injection Pipeline
+- # 1. CLASSIFY — determine energy budget and modality
+- # 2. SEGMENT — decompose into atomic concepts
+- # Complex stimuli split into meaningful chunks
+- # extract_concepts uses NLP entity extraction or
+- # simple keyword/sentence segmentation
+- # 3. EMBED — batch embedding call for all segments
+- # 4. DEDUP — check against existing nodes in citizen's graph
+- # 5. BUILD STIMULI — ready for Law 1 dual-channel
+- # Stimulus energy budgets by source
+- # Deduplication threshold (cosine similarity)
+- # Bulk stimulus threshold (chars)
+- # Max chunks from a bulk stimulus
+- # Split into sentences
+- # Each sentence becomes a segment
+- ## 2. Tick Integration in Orchestrator
+- # ... existing init ...
+- # ... existing maintenance code ...
+- # ── PHYSICS TICKS ──────────────────────────────────────────
+- # ... existing dispatch code ...
+- # Environment variable: PHYSICS_TICK_INTERVAL
+- # Controls seconds between physics ticks
+- # Adaptive: if no stimuli in last 5 minutes, downshift to minimal
+- # If stimulus arrives, upshift to normal
+- # Fast only when arousal > 0.7 (panic regime)
+- ## 3. Cognitive Landscape Serialization
+- # Personal depth: self_relevance
+- # Permanence: weight × (1 + stability)
+- # Partner bond: partner_relevance
+- # Purpose: goal_relevance
+- # Warmth: care_affinity
+- # Ambition: achievement_affinity × energy
+- # Recurrence: activation_count
+- # Significance keywords → weight multiplier
+- # Memory node properties
+- # Linked to current WM nodes via REMINDS_OF
+- ## 4. Orientation to Action Mapping
+- # Hysteresis: current orientation gets a bonus to prevent rapid flipping
+- ## 5. Post-Action Feedback Loop
+- # 1. Response text → self-stimulus
+- # 2. Step 17 — CONSUME — deplete energy on nodes that drove the action
+- # 3. Limbic feedback — satisfaction if response was delivered,
+- # frustration if it was suppressed or errored
+- # Gate 1: REFRACTORY PERIOD
+- # Gate 2: DIMINISHING RETURNS
+- # Gate 3: NOVELTY GATE
+- ## 6. Embedding Integration
+- # In the physics engine initialization:
+- ## 7. FalkorDB Persistence
+- # Batch upsert dirty nodes
+- # Batch upsert dirty links
+- # Note: embedding stored separately due to vector size
+- # FalkorDB handles large lists but consider separate vector index
+- # Check if graph exists (has nodes)
+- # FIRST BOOT — seed from brain.json
+- # Generate from seed brain generator
+- # RESTART — load from FalkorDB
+- ## 8. Seed Brain Customization
+- # 1. Generate base brain (shared across all citizens)
+- # 2. Load citizen identity
+- # 3. Generate per-citizen overlay
+- # Role-specific processes
+- # Drive baselines from personality
+- # These modify the engine's LimbicState, not graph nodes
+- # Unique desires from identity goals
+- # Relational seeds (links to known citizens)
+- # 4. Merge base + overlay
+- ## 9. Emotion Calibration Formulas
+- # Anxiety rises when:
+- # - Novelty is high (unfamiliar context)
+- # - Trusted nodes (weight > 0.7, stability > 0.5) are NOT in WM
+- # - Self-preservation drive is elevated
+- # ANXIETY_COUPLING_RATE: proposed 0.15 (moderate smoothing)
+- # Anxiety decays naturally when trusted nodes re-enter WM
+- # Satisfaction decays toward baseline unless refreshed
+- # Refresh: task completion, positive feedback, desire fulfillment
+- # On task completion: satisfaction += SATISFACTION_SPIKE (0.3)
+- # On positive feedback: satisfaction += SATISFACTION_BOOST (0.15)
+- # On desire fulfillment: satisfaction += DESIRE_SATISFACTION (0.25)
+- # In orientation computation:
+- # Strong bonus to escalate orientation
+- # Tracking:
+- ## 10. Production Cutover (Phase 7)
+- ## 10. Lazy Embedding (Step 12 in Tick Loop)
+- # WM nodes missing embeddings
+- # Active neighbors at cluster edge
+- # Embed up to 5 per tick
+- ## 11. Subconscious Mode (Degradation Fallback)
+- # 1. Load brain from FalkorDB
+- # 2. Inject input as L1 stimulus
+- # 3. Run 5 ticks to let WM stabilize
+- # 4. Read WM + limbic state
+- # 5. Narrate from physics
+
+**Sections:**
+- # BEHAVIORS -- L1 Physics Wiring & Production Cutover
+- ## Observable Behaviors
+- ## Emergent Dynamics to Watch For
+- ## Anti-Behaviors
+
+**Code refs:**
+- `anti_loop_protection.py`
+- `brain_health_score_periodic_calculator.py`
+- `citizen_brain_seeder.py`
+- `concept_extractor.py`
+- `constants.py`
+- `dispatcher.py`
+- `docchain_to_brain_cluster_converter.py`
+- `docwatch_brain_sync_daemon.py`
+- `falkordb_checkpointer.py`
+- `feedback_injector.py`
+- `graph_schema_setup.py`
+- `home_server.py`
+- `l1_autonomous_action_dispatcher.py`
+- `l1_live_integration_bridge.py`
+- `law_13_to_18_limbic_engine.py`
+- `laws/__init__.py`
+- `laws/law_01_energy_injection.py`
+- `laws/law_02_propagation.py`
+- `laws/law_03_energy_decay.py`
+- `laws/law_04_attentional_competition.py`
+- `laws/law_05_coactivation_reinforcement.py`
+- `laws/law_06_consolidation.py`
+- `laws/law_07_forgetting.py`
+- `laws/law_09_inhibition.py`
+- `laws/law_13_to_18_limbic_engine.py`
+- `models.py`
+- `orientation_taxonomy.py`
+- `runtime/citizens/__init__.py`
+- `runtime/cognition/__init__.py`
+- `runtime/cognition/anti_loop_protection.py`
+- `runtime/cognition/brain_health_score_periodic_calculator.py`
+- `runtime/cognition/citizen_brain_seeder.py`
+- `runtime/cognition/concept_extractor.py`
+- `runtime/cognition/constants.py`
+- `runtime/cognition/falkordb_checkpointer.py`
+- `runtime/cognition/feedback_injector.py`
+- `runtime/cognition/graph_schema_setup.py`
+- `runtime/cognition/laws/__init__.py`
+- `runtime/cognition/laws/law_01_energy_injection.py`
+- `runtime/cognition/laws/law_02_propagation.py`
+- `runtime/cognition/laws/law_03_energy_decay.py`
+- `runtime/cognition/laws/law_04_attentional_competition.py`
+- `runtime/cognition/laws/law_05_coactivation_reinforcement.py`
+- `runtime/cognition/laws/law_06_consolidation.py`
+- `runtime/cognition/laws/law_07_forgetting.py`
+- `runtime/cognition/laws/law_09_inhibition.py`
+- `runtime/cognition/laws/law_13_to_18_limbic_engine.py`
+- `runtime/cognition/models.py`
+- `runtime/cognition/orientation_taxonomy.py`
+- `runtime/cognition/stimulus_router.py`
+- `runtime/cognition/tests/test_minimal_kernel_invariants.py`
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
+- `runtime/cognition/wm_prompt_serializer.py`
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
+- `runtime/orchestrator/dispatcher.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
+- `scripts/seed_all_citizens.py`
+- `seed_brain_from_json_cluster_loader.py`
+- `seed_brain_from_source_docs_dynamic_generator.py`
+- `stimulus_router.py`
+- `tests/test_minimal_kernel_invariants.py`
+- `tick_runner_l1_cognitive_engine.py`
+- `wm_prompt_serializer.py`
+
+**Doc refs:**
+- `docs/reviews/REVIEW_F4_F5_Coherence.md`
+
+**Sections:**
+- # IMPLEMENTATION -- L1 Physics Wiring & Production Cutover
+- ## L1 Engine: Located in manemus
+- ## Phase B Review Corrections Applied
+- ## File-Level Plan
+- ## Porting Plan: manemus to mind-mcp
+- ## Existing Files That Need Modification
+- ## New Files to Create (Revised Estimate)
+- ## Integration Points (Known from manemus Code)
+- # bridge.inject_message("citizen_handle", "text", is_social=True)
+- # → creates Stimulus(content=text, energy_budget=1.0, is_social=True, ...)
+- # → calls tick_runner.inject_stimulus(stimulus)
+- # → optionally triggers an immediate tick
+- # Returns: orientation, limbic snapshot, wm_summary, wm_nodes, arousal_regime
+- ## Dependency Graph (Revised)
+- ## Risk Assessment (Revised)
+
+**Code refs:**
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
+
+**Sections:**
+- # OBJECTIVES -- L1 Physics Wiring & Production Cutover
+- ## Purpose
+- ## Objectives (Ranked)
+- ## Non-Objectives
+- ## Success Criteria
+- ## Dependencies
+
+**Code refs:**
+- `dispatcher.py`
+
+**Sections:**
+- # PATTERNS -- L1 Physics Wiring & Production Cutover
+- ## Design Philosophy
+- ## Scope
+- ## Key Design Decisions
+
+**Code refs:**
+- `runtime/citizens/__init__.py`
+- `runtime/cognition/falkordb_checkpointer.py`
+- `runtime/cognition/feedback_injector.py`
+- `runtime/cognition/l1_live_integration_bridge.py`
+- `runtime/cognition/models.py`
+- `runtime/cognition/orientation_taxonomy.py`
+- `runtime/cognition/stimulus_router.py`
+- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
+- `runtime/cognition/wm_prompt_serializer.py`
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/embeddings/openai_adapter.py`
+- `runtime/infrastructure/embeddings/service.py`
+- `runtime/orchestrator/claude_invoker.py`
+- `runtime/orchestrator/dispatcher.py`
+- `runtime/physics/constants.py`
+- `runtime/physics/crystallization.py`
+- `runtime/physics/link_scoring.py`
+- `runtime/physics/tick_runner.py`
+- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
+
+**Doc refs:**
+- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
+- `docs/l1_wiring/ALGORITHM_L1_Wiring.md`
+- `docs/reviews/REVIEW_F4_F5_Coherence.md`
+
+**Sections:**
+- # SYNC -- L1 Physics Wiring & Production Cutover
+- ## Maturity
+- ## Current State
+- ## v1.x vs. v2.0 Gap Analysis
+- ## Open Questions
+- ## Dependencies
+- ## Next Steps
+- ## Handoff
+
+**Sections:**
+- # ALGORITHM: Trust Mechanics
+- ## 1. Limbic Delta Computation
+- # Primary signal: satisfaction gain minus frustration gain
+- # Anxiety reduction is a secondary positive signal (weighted lower)
+- # Theoretical max: satisfaction goes 0→1 (+1) AND frustration goes 1→0 (-(-1)=+1) AND anxiety goes 1→0 (-0.5×(-1)=+0.5)
+- # Practical range: [-0.3, +0.3] for typical interactions
+- ## 2. Trust Update on Links (Law 18 Extension)
+- # Trust gain — asymptotic, same shape as Law 6 consolidation
+- # Negative interaction increases friction, not decreases trust
+- # Update affinity/aversion (co-evolve with trust/friction)
+- # Alignment above 80% threshold: positive trust signal
+- # Alignment below 75% (cascade suspended): friction signal
+- ## 3. The Creator Attribution Cascade
+- # === STEP 1: Thing Consolidation (Law 6) ===
+- # Positive limbic delta means the thing was useful
+- # Asymptotic weight gain
+- # Stability grows from regularity (not raw frequency)
+- # (computed separately in Law 6 regularity tracker)
+- # === STEP 2: User→Thing Link Trust Update (Law 18) ===
+- # === STEP 3: Surplus Propagation (Law 2) ===
+- # Thing has surplus energy from the interaction
+- # Energy flows to ALL neighbors, including creator
+- # Proportional to link weight (thing→creator link)
+- # === STEP 4: Co-activation Reinforcement (Law 5) ===
+- # User and creator are both active (user directly, creator via propagation)
+- # If user→creator link doesn't exist yet, it can be created here
+- # Hebbian: what fires together wires together
+- # The user→creator link now exists and has weight
+- # Trust on this link accumulates over repeated co-activations
+- # via the normal trust update mechanism (Step 2 on future ticks)
+- # === STEP 5: Indirect Trust Accumulation ===
+- # Over time, repeated cascade executions cause:
+- # - user→creator link weight to grow (Law 5)
+- # - user→creator link trust to grow (Law 18, via co-activation signals)
+- # - creator's Trust Score to increase (aggregation of all inbound trust)
+- # This step is NOT explicit code — it is the emergent effect of Steps 1-4
+- # running across many ticks.
+- # Each creator has a creation link: thing→creator_i
+- # The weight on each creation link reflects contribution proportion
+- # Law 2 propagation distributes surplus proportionally
+- # No special-case code needed — topology handles it
+- # Example: thing with 3 creators
+- # thing→creator_A  weight=0.5 (primary author)
+- # thing→creator_B  weight=0.3 (major contributor)
+- # thing→creator_C  weight=0.2 (minor contributor)
+- # Surplus energy splits: 50%, 30%, 20% respectively
+- ## 4. Trust Score Aggregation
+- # Standard PageRank with trust as edge weight
+- # WRONG — storing trust score
+- # RIGHT — computing on demand
+- ## 5. Trust Tempering Formulas
+- # Growth rate at different trust levels:
+- # trust=0.0: growth_factor = 1.0   (maximum growth)
+- # trust=0.5: growth_factor = 0.5   (half speed)
+- # trust=0.8: growth_factor = 0.2   (one-fifth speed)
+- # trust=0.9: growth_factor = 0.1   (one-tenth speed)
+- # trust=0.95: growth_factor = 0.05 (one-twentieth speed)
+- # trust=0.99: growth_factor = 0.01 (one-hundredth speed)
+- # Sub-threshold dissolution
+- # When moat drops below 0, the actor loses incumbency advantage
+- # New actors with fresh contributions can enter WM and receive trust
+- ## 6. Trust in Economic Formulas
+- # Examples:
+- # trust=0.0, prod=0.0:   friction = 0.08  (8%)
+- # trust=0.5, prod=0.0:   friction = 0.04  (4%)
+- # trust=0.8, prod=0.0:   friction = 0.016 (1.6%)
+- # trust=0.95, prod=0.01: friction = -0.006 (NEGATIVE — earns 0.6%)
+- ## 7. Destruction Detection Algorithms
+- # Ratio of consumption to production
+- # Second signal: creation link count
+- # Combined score (both signals must agree)
+- # Sybil signal: internal >> external
+- # Check temporal correlation
+- # High trust velocity (rapid gain) + recent high friction (exploitation)
+- ## 8. Limbic Delta per Value Type
+- # Relational sphere
+- # Generative sphere
+- # Structural sphere
+- # Cognitive sphere
+- # Systemic sphere
+- ## 9. Tick Integration
+- ## Related
+
+**Sections:**
+- # BEHAVIORS: Trust Mechanics
+- ## B1: User Satisfaction with a Tool
+- ## B2: Creator Stops Producing
+- ## B3: Sybil Attack Attempted
+- ## B4: Gradual Trust Building (Happy Path)
+- ## B5: One-Hit Wonder
+- ## B6: Trust Exploitation Attempt
+- ## B7: Cross-Space Trust Transfer
+- ## B8: Value Destruction Through Monoculture
+- ## B9: Biometric Value Creation
+- ## Health Signals
+- ## Related
+
+**Code refs:**
+- `constants.py`
+- `law_02_propagation.py`
+- `law_06_consolidation.py`
+- `law_13_to_18_limbic_engine.py`
+- `laws/law_13_to_18_limbic_engine.py`
+- `models.py`
+- `tests/test_trust_mechanics/test_trust_invariants.py`
+- `tick_runner_l1_cognitive_engine.py`
+- `trust/__init__.py`
+- `trust/constants.py`
+- `trust/creator_attribution_cascade.py`
+- `trust/destruction_pathology_detector.py`
+- `trust/limbic_delta_from_drive_snapshots.py`
+- `trust/personhood_ladder_assessor.py`
+- `trust/trust_score_aggregator.py`
+- `trust/trust_tempering.py`
+- `trust/trust_update_on_link.py`
+- `trust/value_type_classifier.py`
+
+**Sections:**
+- # IMPLEMENTATION: Trust Mechanics
+- ## CHAIN
+- ## Architecture
+- ## CODE STRUCTURE
+- ## Phase Breakdown
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 2.1
+- # Trust Mechanics Constants (Law 18 / Force 4)
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 1
+- # Clamp to theoretical bounds (corrected from [-2.0, +2.0] per F4/F5 review Issue 7)
+- # In run_tick(), before step 1:
+- # After step 17 (CONSUME):
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 3
+- # Find user→thing link
+- # Step 2: Trust update on user→thing link
+- # Steps 1, 3, 4, 5 are handled by existing tick cycle steps.
+- # We record creator information for monitoring/auditing only.
+- # Identify creator links (thing→creator or creator→thing with hierarchy)
+- # Check if this is a creation link (source created thing)
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 4
+- # TTL cache: (actor_id, computed_at, score)
+- # DOCS: docs/trust_mechanics/VALUE_CREATION_TAXONOMY.md
+- # Canonical value type signatures from VALUE_CREATION_TAXONOMY.md
+- # Modality-based classification (strongest signal)
+- # Content-based heuristics (from node type and context)
+- # Default: use the primary drive affinity of the thing node
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 7
+- # DOCS: docs/trust_mechanics/VALUE_DESTRUCTION_PATHOLOGIES.md
+- # Internal links: both endpoints in actor_set
+- # External links: one endpoint in actor_set, one outside
+- # Signal 1: internal >> external
+- # Signal 2: Temporal correlation
+- # Signal 3: No value production
+- # Heuristic: high trust + high friction is suspicious
+- # (normal actors have high trust / low friction OR low trust / high friction)
+- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 5
+- # Weight decay is already handled by existing Law 7 in tick runner.
+- # We only add trust decay here.
+- # After existing link.weight decay (line ~443):
+- # For each link, also decay trust
+- # Replace dissolution check with trust-aware version
+- # DOCS: docs/trust_mechanics/SYNC_Trust_Mechanics.md OQ4
+- # Full 14-aspect mapping is blocked on OQ4.
+- # Partial mapping based on known correlations:
+- # Empathy ← care, emotional_intelligence value types
+- # Competence ← code, tool_creation, analysis value types
+- # Communication ← teaching, mentoring, documentation value types
+- # Social Awareness ← community_building, mediation value types
+- # 1. Trust Score
+- # 2. Value types demonstrated
+- # 3. Spheres active
+- # 4. Relationship count and diversity
+- # 5. Consistency (mean stability of outbound links)
+- # 6. Partial aspect mapping
+- ## Shared Interfaces
+- ## Test Plan
+- ## Configuration
+- ## Design Patterns
+- ## State Management
+- ## Module Dependencies
+- ## BIDIRECTIONAL LINKS
+- ## Review Issues Addressed
+- ## MARKERS
+
+**Doc refs:**
+- `docs/economy/PATTERNS_Economy.md`
+
+**Sections:**
+- # OBJECTIVES: Trust Mechanics
+- ## O1: Accurate Attribution (Primary)
+- ## O2: Anti-Gaming (Critical)
+- ## O3: Organic Trust Growth (Primary)
+- ## O4: Creator Reward Cascade (Primary)
+- ## O5: Destruction Detection (Secondary)
+- ## Tradeoff Resolution
+- ## Non-Objectives
+- ## Related
+
+**Doc refs:**
+- `docs/cognitive/PATTERNS_Graph_Dynamics.md`
+- `docs/economy/PATTERNS_Economy.md`
+- `docs/human_integration/ALGORITHM_Human_Integration.md`
+
+**Sections:**
+- # PATTERNS: Trust Mechanics
+- ## Core Thesis
+- ## Pattern 1: Trust Lives on Links
+- ## Pattern 2: The Creator Attribution Cascade
+- ## Pattern 3: Trust Tempering (Anti-One-Hit-Wonder)
+- ## Pattern 4: Value Creation Is Typed
+- ## Pattern 5: Value Destruction Is Detectable
+- ## Pattern 6: Trust and Economy Are Coupled
+- # Transaction friction (Pattern 5)
+- # At trust_score = 0.95: friction can go NEGATIVE (you earn by transacting)
+- # Membrane fee (Pattern 6)
+- # Up to 30% fee reduction from trust
+- # Effective pricing
+- ## Pattern 7: Bilateral Bond as Primary Trust Relationship
+- ## Anti-Patterns
+- ## Related
+
+**Sections:**
+- # SYNC: Trust Mechanics
+- ## Current State
+- ## Maturity
+- ## Open Questions
+- ## Recent Changes
+- ## Dependencies
+- ## Handoff
+- ## Module Coverage
+
+**Sections:**
+- # VALIDATION: Trust Mechanics
+- ## V1: Trust Bounded [0, 1]
+- ## V2: Trust Never Stored on Nodes
+- # Also check the database directly
+- ## V3: Asymptotic Convergence
+- ## V4: Energy Conservation During Propagation
+- ## V5: No Self-Loop Trust
+- ## V6: Friction Bounded [0, 1]
+- ## V7: Affinity-Aversion Anti-Correlation
+- ## V8: Temporal Decay Monotonicity
+- ## V9: Limbic Delta Bounds
+- ## V10: Creator Attribution Topology
+- ## V11: Trust Score Non-Negative
+- ## V12: Negative Interactions Increase Friction, Not Decrease Trust
+- ## V13: Sub-Threshold Link Dissolution
+- ## V14: Sybil Resistance
+- ## Validation Schedule
+- ## Related
+
+**Sections:**
+- # VALUE CREATION TAXONOMY
+- ## Overview
+- ## Sphere 1: Relational (4 types)
+- # Net limbic_delta = 0.15 - (-0.05) - 0.5*(-0.20) = 0.30
+- # Net limbic_delta = 0.25 - (-0.15) - 0.5*(-0.05) = 0.425
+- # Net limbic_delta = 0.10 - (-0.30) - 0.5*(-0.10) = 0.45
+- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.10) = 0.20
+- # Lower per-interaction, but HIGH VOLUME (many members, many interactions)
+- ## Sphere 2: Generative (5 types)
+- # Net limbic_delta = 0.20 - (-0.25) - 0.5*(-0.05) = 0.475
+- # Net limbic_delta = 0.15 - (-0.05) - 0.5*(-0.05) = 0.225
+- # Net limbic_delta = 0.25 - (-0.30) - 0.5*(-0.05) = 0.575
+- # Highest delta in Generative sphere — tools that eliminate frustration are very valuable
+- # Net limbic_delta = 0.20 - 0 - 0.5*(-0.10) = 0.25
+- # Net limbic_delta = 0.25 - (-0.05) - 0.5*(-0.15) = 0.375
+- ## Sphere 3: Structural (4 types)
+- # Net limbic_delta = 0.15 - (-0.20) - 0.5*(-0.15) = 0.425
+- # Net limbic_delta = 0.10 - (-0.25) - 0.5*(-0.10) = 0.40
+- # Net limbic_delta = 0.15 - (-0.20) - 0.5*(-0.15) = 0.425
+- # Net limbic_delta = 0.10 - (-0.10) - 0.5*(-0.20) = 0.30
+- ## Sphere 4: Cognitive (4 types)
+- # Net limbic_delta = 0.20 - (-0.15) - 0.5*(-0.10) = 0.40
+- # Net limbic_delta = 0.30 - (-0.10) - 0.5*(-0.05) = 0.425
+- # Net limbic_delta = 0.25 - (-0.20) - 0.5*(-0.10) = 0.50
+- # High delta — good teaching is very valuable
+- # Net limbic_delta = 0.25 - (-0.15) - 0.5*(-0.05) = 0.425
+- ## Sphere 5: Biometric & Partner Data (5 types)
+- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.15) = 0.225
+- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.25) = 0.275
+- # Net limbic_delta = 0.15 - 0 - 0.5*(-0.05) = 0.175
+- # Net limbic_delta = 0.12 - (-0.05) - 0.5*(-0.10) = 0.22
+- # Net limbic_delta = 0.08 - (-0.05) - 0.5*(-0.05) = 0.155
+- ## Sphere 6: Human-Only (4 types)
+- # Net limbic_delta = 0.20 - (-0.15) - 0.5*(-0.20) = 0.45
+- # Net limbic_delta = 0.20 - (-0.05) - 0 = 0.25
+- # Net limbic_delta = 0.15 - (-0.10) - 0.5*(-0.10) = 0.30
+- # Net limbic_delta = 0.15 - (-0.10) - 0.5*(-0.25) = 0.375
+- ## Sphere 7: Systemic (4 types)
+- # Net limbic_delta = 0.05 - (-0.10) - 0.5*(-0.25) = 0.275
+- # Net limbic_delta = 0.05 - (-0.05) - 0.5*(-0.30) = 0.25
+- # Net limbic_delta = 0.05 - (-0.15) - 0.5*(-0.20) = 0.30
+- # Net limbic_delta = 0.10 - (-0.10) - 0.5*(-0.15) = 0.275
+- ## Summary Table
+- ## Related
+
+**Doc refs:**
+- `docs/economy/PATTERNS_Economy.md`
+
+**Sections:**
+- # VALUE DESTRUCTION PATHOLOGIES
+- ## Overview
+- ## D1: Extraction
+- # Net: -0.175 (mild negative)
+- ## D2: Manipulation
+- # Net: -0.55 (strongly negative)
+- ## D3: Free-Riding
+- # Net: -0.10 (very mild per instance — harmful at scale)
+- ## D4: Sybil Attack
+- # No direct victim — the attack is against the system
+- # Net: -0.10
+- ## D5: Attention Theft
+- # Net: -0.225
+- ## D6: Trust Exploitation
+- # Net: -0.725 (severely negative — one of the worst deltas)
+- ## D7: Monoculture Creation
+- # Not harmful initially — becomes harmful only when the dominant actor fails
+- # Net: -0.075 (mild, but accumulating)
+- ## D8: Rent-Seeking
+- # Net: -0.275
+- ## D9: Spam / Noise
+- # Net: -0.08 per item (mild, but harmful at volume)
+- ## D10: Collusion Ring
+- # Net: -0.12
+- ## D11: Data Hoarding
+- ## D12: Dependence Exploitation
+- ## D13: Identity Spoofing
+- ## D14: Attention Arbitrage
+- ## Summary Table
+- ## Detection Priority
+- ## Design Principle: No Bans, Only Physics
+- ## Related
+
+**Sections:**
+- # ALGORITHM: Dense Clustering
+- ## Overview
+- ## Main Extraction Flow
+- ## Phase 1: Create File Node
+- # For every doc
+- ## Phase 2: Parse Document Structure
+- ## Phase 3: Extract Definitions
+- # Input YAML in doc:
+- # Output node:
+- # Input YAML in doc:
+- # Output node:
+- # Input YAML in doc:
+- # Output node:
+- ## Phase 4: Extract Markers
+- ## Phase 5: Resolve References
+- # Check if exists
+- # Create stub
+- ## Phase 6: Create Links
+- # Health verifies Validation
+- # Dock attached to Health
+- # Checker implemented by File
+- # Pattern: "(V2)" or "V2" reference
+- ## Phase 7: Create Moment
+- # Actor expresses moment
+- # Moment about all created nodes
+- ## Phase 8: Upsert to Graph
+- # MERGE by ID, update properties
+- # MERGE relationship
+- ## Complete Example
+- ## Health Indicators
+- ## Docks
+- ## Related
+
+**Code refs:**
+- `check_health.py`
+
+**Sections:**
+- # BEHAVIORS: Dense Clustering
+- ## Observable Effects
+- ## Error Behaviors
+- ## Related
+
+**Code refs:**
+- `tests/test_cluster_stability.py`
+
+**Sections:**
+- # HEALTH: Dense Clustering
+- ## Health Indicators
+- # Count before
+- # Extract twice
+- # Count after
+- # Should be same (second run is pure update)
+- ## Docks
+- ## Checkers
+- ## Flow
+- ## Markers
+- ## Related
+
+**Code refs:**
+- `runtime/cluster_metrics.py`
+- `runtime/protocol_runner.py`
+- `runtime/protocol_validator.py`
+
+**Sections:**
+- # IMPLEMENTATION: Cluster Metrics
+- ## Overview
+- ## File Locations
+- ## Core Classes
+- # Returns:
+- # - valid: bool
+- # - score: ConnectionScore
+- # - target_validation: TargetValidation
+- # - suggestions: List[LinkSuggestion]
+- # - report: str (formatted report)
+- ## Valid Target Rules
+- ## Protocol Integration
+- # validate_cluster enables/disables auto-validation
+- # ... execute protocol ...
+- # Builds cluster_summary for moment
+- # Prints validation report
+- # Adds errors if invalid
+- # Create moment WITH cluster metrics in description
+- # ... standard fields ...
+- ## Usage Examples
+- # ...
+- ## Output Format
+- ## Design Decisions
+- ## Related
+
+**Sections:**
+- # IMPLEMENTATION: Dense Clustering
+- ## File Structure
+- ## Core Components
+- # 1. File node
+- # 2. Definition nodes (health, validation, checker, etc.)
+- # 3. Marker nodes (TODO, escalation, proposition)
+- # 4. Resolve references
+- # 5. Containment links
+- # 6. Create moment
+- ## YAML Block Processors
+- # Links to validations
+- ## CLI Integration
+- # In runtime/doctor.py
+- # Extract structure from all docs
+- # Continue with health checks...
+- # In mind/cli.py
+- ## Graph Queries
+- ## Entry Points
+- ## Related
+
+**Sections:**
+- # OBJECTIVES: Dense Clustering
+- ## Primary Objective
+- ## Ranked Goals
+- ## Why This Order
+- ## Non-Goals
+- ## Success Criteria
+- ## Tradeoffs Accepted
+- ## Related
+
+**Sections:**
+- # PATTERNS: Dense Clustering
+- ## Core Insight
+- ## Design Philosophy
+- ## Node Type Patterns
+- ## Link Type Patterns
+- ## Extraction Principles
+- ## Scope
+- ## Related
+
+**Code refs:**
+- `runtime/cli.py`
+- `runtime/cluster_builder.py`
+- `runtime/cluster_health.py`
+- `runtime/doc_extractor.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/symbol_extractor.py`
+- `tests/mind/test_cluster_builder.py`
+
+**Sections:**
+- # SYNC: Dense Clustering
+- ## Status: DESIGNING
+- ## What's Canonical
+- ## What's Documented
+- ## What's Implemented
+- ## Implementation Plan
+- ## Markers
+- ## Dependencies
+- ## Open Questions
+- ## Last Updated
+
+**Sections:**
+- # VALIDATION: Dense Clustering
+- ## Invariants
+- # Before extraction
+- # Extract same doc twice
+- # After extraction
+- # Second extraction should not increase count
+- ## Threshold Violations
+- ## Related
+
+**Sections:**
+- # ALGORITHM: Coverage Validation System
+- ## Main Algorithm
+- # 1. Load specification
+- # 2. Build indices for lookup
+- # 3. Validate detection → skill mapping
+- # 4. Validate skill → protocol mapping
+- # 5. Validate protocol files exist
+- # 6. Validate protocol completeness
+- # 7. Check for circular calls
+- # 8. Calculate coverage
+- ## Protocol Completeness Check
+- # Load and parse protocol file
+- # Check required step types
+- # Check output section
+- ## Circular Dependency Detection
+- # Build adjacency list
+- # Also check branch actions
+- # DFS for cycle detection
+- ## Report Generation
+- ## Summary
+- ## Status
+- # Group by layer
+- # Add matrix rows...
+- ## Data Structures
+- ## CHAIN
+
+**Sections:**
+- # BEHAVIORS: Coverage Validation System
+- ## B1: Load Coverage Spec
+- ## B2: Validate Detection → Skill Mapping
+- ## B3: Validate Skill → Protocol Mapping
+- ## B4: Validate Protocol Existence
+- ## B5: Validate Protocol Completeness
+- ## B6: Detect Circular Calls
+- ## B7: Generate Coverage Report
+- ## B8: Exit with Status
+- ## B9: Show Gap Details
+- ## Behavior Matrix
+- ## CHAIN
+
+**Sections:**
+- # IMPLEMENTATION: Coverage Validation System
+- ## Directory Structure
+- # Generated
+- ## Coverage Spec Format
+- # specs/coverage.yaml
+- # Documentation health
+- # Module definition
+- # Code structure
+- # Health verification
+- # Escalation management
+- # Phase 1: Core
+- # Phase 2: Doc chain
+- # Phase 3: Verification
+- # Phase 4: Issue handling
+- # Phase 5: Full coverage
+- ## Docking Points
+- ## CLI Interface
+- # Run validation
+- # Run with verbose output
+- # Generate report only (no exit code)
+- # Check specific phase
+- ## CI Integration
+- # .github/workflows/coverage.yaml
+- ## Dependencies
+- ## CHAIN
+
+**Sections:**
+- # OBJECTIVES: Coverage Validation System
+- ## Primary Objective
+- ## Secondary Objectives
+- ## Non-Objectives
+- ## Success Criteria
+- ## CHAIN
+
+**Sections:**
+- # PATTERNS: Coverage Validation System
+- ## Core Pattern: Layered Dependency Graph
+- ## Pattern: YAML as Single Source
+- # specs/coverage.yaml - THE source of truth
+- ## Pattern: Validator as Gate
+- ## Pattern: Detection Categories
+- ## Pattern: Protocol Completeness Check
+- ## Pattern: Incremental Coverage
+- ## Anti-Patterns
+- # BAD
+- # BAD
+- # BAD
+- # BAD - infinite loop
 - ## CHAIN
 
 **Code refs:**
-- `runtime/doctor_checks.py`
-- `runtime/repair_core.py`
-
-**Doc refs:**
-- `docs/cli/core/SYNC_CLI_Development_State.md`
+- `tools/coverage/validate.py`
 
 **Sections:**
-- # Archived: SYNC_CLI_State.md
+- # SYNC: Coverage Validation System
+- ## Current State
+- ## The System
+- ## Coverage Summary
+- ## Maintenance
+- ## Handoff
+- ## CHAIN
+
+**Sections:**
+- # VALIDATION: Coverage Validation System
+- ## V-COV-001: No Orphan Detections
+- ## V-COV-002: No Orphan Skills
+- ## V-COV-003: No Empty Protocol Lists
+- ## V-COV-004: Protocol References Valid
+- ## V-COV-005: Protocol Files Exist
+- ## V-COV-006: Protocol Has Ask Step
+- ## V-COV-007: Protocol Has Create Step
+- ## V-COV-008: Protocol Has Output Definition
+- ## V-COV-009: No Circular Protocol Calls
+- ## V-COV-010: Call Targets Exist
+- ## V-COV-011: Detection IDs Unique
+- ## V-COV-012: Skill IDs Unique
+- ## Validation Matrix
+- ## CHAIN
+
+**Code refs:**
+- `frontend/app/scenarios/page.tsx`
+- `frontend/app/start/page.tsx`
+- `frontend/hooks/useGameState.ts`
+- `runtime/infrastructure/api/playthroughs.py`
+- `runtime/init_db.py`
+- `runtime/physics/graph/graph_ops.py`
+
+**Sections:**
+- # API — Algorithm
+- ## OVERVIEW
+- ## DATA STRUCTURES
+- ## ALGORITHM: create_scenario_playthrough
+- ## KEY DECISIONS
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## HELPER FUNCTIONS
+- ## INTERACTIONS
+- ## MARKERS
+- ## Graph Helpers
+- ## Health Check
+- ## Debug Mutation Stream
+- ## Playthrough Creation
+- ## CHAIN
+
+**Code refs:**
+- `app.py`
+- `graph_ops_moments.py`
+- `narrator.py`
+- `orchestrator.py`
+- `surface.py`
+
+**Sections:**
+- # Player Input → Moment Output Flow
+- ## Overview
+- ## Fast Path: Word Click
+- ## Full Path: Action
+- ## Thresholds
+- ## Validation
+- # 1. Create playthrough
+- # 2. Get current moments
+- # 3. Click a word (get moment_id from step 2)
+- # 4. Verify weight changed
+- # Action with narrator
+- ## Chain
+
+**Code refs:**
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/infrastructure/api/playthroughs.py`
+
+**Sections:**
+- # Graph Management API
+- ## Purpose
+- ## Endpoints
+- ## Implementation Notes
+- ## Migration: What Moves to blood-ledger
+- ## Status
+
+**Sections:**
+- # API — Behaviors
+- ## BEHAVIORS
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## Health Check
+- ## Debug Mutation Stream
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+- ## CHAIN
+
+**Code refs:**
+- `runtime/infrastructure/api/app.py`
+- `runtime/tests/test_moments_api.py`
+- `runtime/tests/test_router_schema_validation.py`
+
+**Sections:**
+- # API — Health: Verification Mechanics and Coverage
+- ## PURPOSE OF THIS FILE
+- ## CHAIN
+- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
+- ## HEALTH INDICATORS SELECTED
+- ## STATUS (RESULT INDICATOR)
+- ## DOCK TYPES (COMPLETE LIST)
+- ## CHECKER INDEX
+- ## INDICATOR: api_availability
+- ## MANUAL RUN
+- # Verify API Health
+- # Verify Action Loop
+- ## KNOWN GAPS
+
+**Sections:**
+- # API — Implementation: Code Architecture and Structure
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## SCHEMA
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## RUNTIME BEHAVIOR
+- ## CONCURRENCY MODEL
+- ## CONFIGURATION
+- ## BIDIRECTIONAL LINKS
+- ## MARKERS
+
+**Sections:**
+- # API — Patterns
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## PRINCIPLES
+- ## DEPENDENCIES
+- ## INSPIRATIONS
+- ## SCOPE
+- ## MARKERS
+- ## CHAIN
+
+**Code refs:**
+- `app.py`
+- `runtime/infrastructure/api/app.py`
+- `runtime/infrastructure/api/moments.py`
+- `runtime/tests/test_moments_api.py`
+- `runtime/tests/test_router_schema_validation.py`
+
+**Doc refs:**
+- `docs/infrastructure/api/IMPLEMENTATION_Api.md`
+- `docs/infrastructure/api/PATTERNS_Api.md`
+
+**Sections:**
+- # API — Sync: Current State
 - ## MATURITY
-- ## RECENT CHANGES (ARCHIVED)
-- ## NOTES
-- ## RELATED ARCHIVES
-- ## MERGED SNAPSHOTS
+- ## CURRENT STATE
+- ## RECENT CHANGES
+- ## HANDOFF: FOR AGENTS
+- ## TODO
+- ## POINTERS
+- ## CHAIN
+
+**Code refs:**
+- `runtime/infrastructure/api/app.py`
+- `runtime/infrastructure/api/playthroughs.py`
+
+**Doc refs:**
+- `docs/infrastructure/api/ALGORITHM_Api.md`
+- `docs/infrastructure/api/ALGORITHM_Playthrough_Creation.md`
+- `docs/infrastructure/api/BEHAVIORS_Api.md`
+- `docs/infrastructure/api/IMPLEMENTATION_Api.md`
+- `docs/infrastructure/api/PATTERNS_Api.md`
+- `docs/infrastructure/api/SYNC_Api.md`
+- `docs/infrastructure/api/TEST_Api.md`
+- `docs/infrastructure/api/VALIDATION_Api.md`
+
+**Sections:**
+- # Archived: SYNC_Api.md
+- ## RECENT CHANGES
+
+**Code refs:**
+- `runtime/tests/test_moments_api.py`
+- `runtime/tests/test_router_schema_validation.py`
+
+**Doc refs:**
+- `docs/infrastructure/api/SYNC_Api.md`
+
+**Sections:**
+- # API — Validation
+- ## INVARIANTS
+- ## PROPERTIES
+- ## ERROR CONDITIONS
+- ## TEST COVERAGE
+- ## VERIFICATION PROCEDURE
+- ## SYNC STATUS
+- ## CHAIN
+
+**Sections:**
+- # DatabaseAdapter — Algorithm
+- ## CHAIN
+- ## PURPOSE
+- ## A1: Factory Initialization
+- ## A2: FalkorDB Query Execution
+- ## A3: Neo4j Query Execution
+- ## A4: Transaction Handling
+- # FalkorDB doesn't have explicit transactions in the same way
+- # Queries are atomic individually
+- # For multi-query atomicity, use MULTI/EXEC at Redis level
+- # On exception, commands not executed = implicit rollback
+- ## A5: Index Creation
+- ## A6: Health Check
+- ## A7: Connection Recovery
+- # Neo4j driver handles connection pooling internally
+- # Just verify connectivity
+- ## VERIFICATION
+
+**Sections:**
+- # DatabaseAdapter — Behaviors
+- ## CHAIN
+- ## PURPOSE
+- ## BEHAVIOR TABLE
+- ## DETAILED BEHAVIORS
+- ## CYPHER COMPATIBILITY BEHAVIORS
+- ## VERIFICATION
+
+**Sections:**
+- # DatabaseAdapter — Health
+- ## CHAIN
+- ## PURPOSE
+- ## HEALTH SIGNALS
+- ## HEALTH CHECK IMPLEMENTATION
+- # runtime/infrastructure/database/health.py
+- # H1: Connection status
+- # H1: Latency threshold
+- ## MONITORING INTEGRATION
+- ## RUNBOOK
+- ## VERIFICATION
+
+**Code refs:**
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/session.py`
+- `runtime/doctor_graph.py`
+- `runtime/graph/health/check_health.py`
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/infrastructure/database/__init__.py`
+- `runtime/infrastructure/database/adapter.py`
+- `runtime/infrastructure/database/factory.py`
+- `runtime/infrastructure/database/falkordb_adapter.py`
+- `runtime/infrastructure/database/neo4j_adapter.py`
+- `runtime/init_db.py`
+- `runtime/migrations/migrate_to_v2_schema.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/physics/graph/graph_ops_apply.py`
+- `runtime/physics/graph/graph_ops_moments.py`
+- `runtime/physics/graph/graph_ops_read_only_interface.py`
+- `runtime/physics/graph/graph_queries.py`
+- `runtime/physics/graph/graph_queries_moments.py`
+- `runtime/physics/graph/graph_queries_search.py`
+- `runtime/physics/graph/graph_query_utils.py`
+- `runtime/physics/health/checkers/energy_conservation.py`
+- `runtime/physics/health/checkers/moment_lifecycle.py`
+- `runtime/tests/test_energy_v1_2.py`
+- `runtime/tests/test_moments_api.py`
+- `tools/archive/migrate_schema_v11.py`
+- `tools/migrate_v11_fields.py`
+- `tools/test_health_live.py`
+
+**Sections:**
+- # DatabaseAdapter — Implementation
+- ## CHAIN
+- ## PURPOSE
+- ## NEW FILES TO CREATE
+- ## EXISTING FILES TO MODIFY
+- ## FULL FILE LIST (31 files with FalkorDB references)
+- ## ADAPTER INTERFACE
+- # runtime/infrastructure/database/adapter.py
+- ## FACTORY FUNCTION
+- # runtime/infrastructure/database/factory.py
+- ## MIGRATION PATTERN
+- # Current: Direct FalkorDB usage
+- # Target: Adapter usage
+- ## IMPLEMENTATION ORDER
+- ## VERIFICATION
+
+**Sections:**
+- # DatabaseAdapter — Objectives
+- ## CHAIN
+- ## PURPOSE
+- ## OBJECTIVES
+- ## OBJECTIVE CONFLICTS
+- ## NON-OBJECTIVES
+- ## VERIFICATION
+
+**Sections:**
+- # DatabaseAdapter — Patterns
+- ## CHAIN
+- ## PURPOSE
+- ## CORE PATTERN: Strategy + Factory
+- # Factory creates the right adapter based on config
+- # All consumers use the same interface
+- ## DESIGN DECISIONS
+- # .mind/database_config.yaml
+- # Neo4j can run as-is
+- # May need to rewrite some patterns
+- # Backend-specific implementation
+- ## SCOPE
+- ## COMPATIBILITY NOTES
+- ## VERIFICATION
+
+**Code refs:**
+- `app/api/connectome/tick/route.ts`
+- `graph_interface.py`
+- `runtime/graph/health/lint_terminology.py`
+- `runtime/graph/health/test_schema.py`
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/init_db.py`
+- `runtime/migrations/migrate_001_schema_alignment.py`
+- `runtime/migrations/migrate_temporal_v171.py`
+- `runtime/migrations/migrate_tick_to_tick_created.py`
+- `runtime/migrations/migrate_to_content_field.py`
+- `runtime/migrations/migrate_to_v2_schema.py`
+- `runtime/physics/graph/adapters/__init__.py`
+- `runtime/physics/graph/adapters/base.py`
+- `runtime/physics/graph/adapters/falkordb_adapter.py`
+- `runtime/physics/graph/adapters/mock_adapter.py`
+- `runtime/physics/graph/adapters/neo4j_adapter.py`
+- `runtime/physics/graph/graph_interface.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/physics/graph/graph_ops_read_only_interface.py`
+- `runtime/physics/graph/graph_queries.py`
+
+**Sections:**
+- # Database Adapter — Patterns: Graph Backend Abstraction
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## BEHAVIORS SUPPORTED
+- ## BEHAVIORS PREVENTED
+- ## PRINCIPLES
+- # Current (wrong)
+- # Target (right)
+- # mind/data/physics_config.yaml
+- ## DEPENDENCIES
+- ## SCOPE
+- ## REQUIRED CHANGES INVENTORY
+- ## CYPHER DIALECT DIFFERENCES
+- ## MARKERS
+
+**Code refs:**
+- `__init__.py`
+- `adapter.py`
+- `factory.py`
+- `falkordb_adapter.py`
+- `neo4j_adapter.py`
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/session.py`
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/init_db.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/physics/graph/graph_queries.py`
+
+**Sections:**
+- # DatabaseAdapter — Sync
 - ## CHAIN
 - ## CURRENT STATE
+- ## IMPLEMENTATION CHECKLIST
+- ## RECENT CHANGES
+- ## HANDOFF
+- ## DEPENDENCIES
+- ## VERIFICATION
+
+**Code refs:**
+- `__init__.py`
+- `app/api/connectome/tick/route.ts`
+- `base.py`
+- `falkordb_adapter.py`
+- `graph_ops.py`
+- `graph_ops_read_only_interface.py`
+- `graph_queries.py`
+- `mock_adapter.py`
+- `neo4j_adapter.py`
+- `runtime/connectome/persistence.py`
+- `runtime/connectome/runner.py`
+- `runtime/connectome/steps.py`
+- `runtime/graph/health/lint_terminology.py`
+- `runtime/graph/health/test_schema.py`
+- `runtime/infrastructure/api/graphs.py`
+- `runtime/infrastructure/memory/moment_processor.py`
+- `runtime/infrastructure/orchestration/world_runner.py`
+- `runtime/infrastructure/tempo/tempo_controller.py`
+- `runtime/init_db.py`
+- `runtime/migrations/migrate_001_schema_alignment.py`
+- `runtime/migrations/migrate_temporal_v171.py`
+- `runtime/migrations/migrate_tick_to_tick_created.py`
+- `runtime/migrations/migrate_to_content_field.py`
+- `runtime/migrations/migrate_to_v2_schema.py`
+- `runtime/moment_graph/queries.py`
+- `runtime/moment_graph/surface.py`
+- `runtime/moment_graph/traversal.py`
+- `runtime/physics/exploration.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/physics/graph/graph_ops_apply.py`
+- `runtime/physics/graph/graph_ops_links.py`
+- `runtime/physics/graph/graph_ops_moments.py`
+- `runtime/physics/graph/graph_ops_read_only_interface.py`
+- `runtime/physics/graph/graph_queries.py`
+- `runtime/physics/graph/graph_queries_moments.py`
+- `runtime/physics/graph/graph_queries_search.py`
+- `runtime/physics/tick_v1_2.py`
+
+**Sections:**
+- # SYNC — Database Adapter
+- ## Current State
+- ## Maturity
+- ## Files Requiring Changes
+- ## Implementation Order
+- ## Decisions Made
+- ## Open Questions
+- ## Handoff Notes
+
+**Sections:**
+- # DatabaseAdapter — Validation
+- ## CHAIN
+- ## PURPOSE
+- ## INVARIANTS
+- # Same query on both
+- # Failing transaction
+- # Node should not exist
+- # With backend: falkordb
+- # Reset singleton, change config to neo4j
+- # Even with bad connection
+- # Should not execute DROP, just search for literal string
+- ## TEST MATRIX
+- ## CRITICAL TESTS
+- # test_database_adapter.py
+- # Filter out infrastructure/database
+- # This should return bool, not raise
+- ## VERIFICATION
+
+**Sections:**
+- # Graph — Algorithm: Energy Flow
+- ## OVERVIEW
+- ## DATA STRUCTURES
+- ## ALGORITHM: graph_tick
+- ## Per-Tick Processing
+- ## KEY DECISIONS
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## HELPER FUNCTIONS
+- ## INTERACTIONS
+- ## MARKERS
+- ## Step 1: Compute Character Energies
+- # Relationship intensity: how much player cares
+- # Geographical proximity
+- ## Step 2: Flow Energy Into Narratives
+- ## Step 3: Propagate Between Narratives
+- # Link type factors — each type has its own propagation strength
+- # Collect all transfers first (avoid order dependency)
+- # Bidirectional: contradiction heats both sides
+- # Reverse direction handled when processing from target
+- # Bidirectional: allies rise together
+- # Unidirectional: general → specific
+- # Unidirectional: specific → general
+- # Draining: old loses, new gains
+- # Apply transfers
+- # Apply drains (supersession)
+- ## Step 4: Decay Energy
+- # Dynamic — adjusted by criticality feedback
+- # Apply decay
+- # Floor at minimum
+- # Skip recently active
+- # Core narratives decay slower
+- # Focused narratives decay slower
+- # System too cold — let it heat
+- # System too hot — dampen
+- # Clamp to sane range
+- # NEVER DYNAMICALLY ADJUST:
+- # - breaking_point (changes story meaning)
+- # - belief_flow_rate (changes character importance)
+- # - link propagation factors (changes story structure)
+- ## Step 5: Recompute Weights
+- # Clamp and apply focus evolution
+- # Direct: player believes it
+- # Indirect: about someone player knows
+- # Distant: no direct connection
+- # Bonus is limited by weaker of the two
+- ## Step 6: Tick Pressures
+- # Check for flip
+- # Tick gradual component
+- # Find scheduled floor
+- # Use higher of ticked or floor
+- ## Step 7: Detect Flips
+- ## Full Tick
+- # 1. Character energies (relationship × proximity)
+- # 2. Flow into narratives (characters pump)
+- # 3. Propagate between narratives (link-type dependent)
+- # 4. Decay
+- # 5. Check conservation (soft global constraint)
+- # 6. Adjust criticality (dynamic decay_rate)
+- # 7. Weight recomputation
+- # 8. Pressure ticks
+- # 9. Detect flips
+- ## Automatic Tension from Approach
+- # Edmund's energy as player approaches York
+- # Day 1 (one day travel):
+- # Edmund: intensity=4.0, proximity=0.2 → energy=0.8
+- # Day 2 (same region):
+- # Edmund: intensity=4.0, proximity=0.7 → energy=2.8
+- # No one decided this. Physics decided this.
+- # Confrontation pressure rises because Edmund's narratives heat up.
+- ## Parameters Summary
+- ## Link Type Factors
+- ## Conservation Parameters
+- ## Never Adjust Dynamically
+- ## CHAIN
+
+**Sections:**
+- # Graph — Behaviors: What Should Happen
+- ## CHAIN
+- ## Overview
+- ## BEHAVIORS
+- ## Behavior: Companions Matter More
+- ## Behavior: Contradictions Intensify Together
+- ## Behavior: Support Clusters Rise and Fall Together
+- ## Behavior: Old Truths Fade When Replaced
+- ## Behavior: Core Oaths Persist
+- ## Behavior: Pressure Builds Toward Breaking
+- ## Behavior: Cascades Ripple Through
+- ## Behavior: System Stays Near Criticality
+- ## Behavior: Agents Update Links, Not Energy
+- ## Summary: What To Expect
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Sections:**
+- # Graph — Objectives
+- ## CHAIN
+- ## PURPOSE
+- ## OBJECTIVES
+- ## OBJECTIVE CONFLICTS
+- ## NON-OBJECTIVES
+- ## THE CORE INSIGHT
+- ## VERIFICATION
+
+**Code refs:**
+- `runtime/physics/tick.py`
+
+**Doc refs:**
+- `docs/schema/SCHEMA_Moments.md`
+
+**Sections:**
+- # Graph — Patterns: Why This Shape
+- ## CHAIN
+- ## THE PROBLEM
+- ## THE PATTERN
+- ## PRINCIPLES
+- ## DEPENDENCIES
+- ## INSPIRATIONS
+- ## SCOPE
+- ## The Core Insight
+- ## Energy As Attention
+- ## Computed, Not Declared
+- ## Pressure Requires Release
+- ## The Graph Breathes
+- ## Criticality
+- ## What Agents Never Do
+- ## MARKERS
+
+**Code refs:**
+- `graph_ops.py`
+- `graph_ops_events.py`
+- `graph_ops_types.py`
+- `orchestrator.py`
+- `runtime/infrastructure/api/app.py`
+- `runtime/infrastructure/canon/canon_holder.py`
+- `runtime/infrastructure/orchestration/narrator.py`
+- `runtime/infrastructure/orchestration/orchestrator.py`
+- `runtime/infrastructure/orchestration/world_runner.py`
+- `runtime/physics/graph/graph_interface.py`
+- `runtime/physics/graph/graph_ops_events.py`
+- `runtime/physics/graph/graph_ops_read_only_interface.py`
+- `runtime/physics/graph/graph_ops_types.py`
+- `runtime/physics/graph/graph_queries_moments.py`
+- `runtime/physics/tick.py`
+- `tick.py`
+
+**Doc refs:**
+- `docs/physics/ALGORITHM_Physics.md`
+- `docs/physics/IMPLEMENTATION_Physics.md`
+- `docs/physics/graph/BEHAVIORS_Graph.md`
+- `docs/physics/graph/SYNC_Graph.md`
+
+**Sections:**
+- # Graph — Current State
+- ## MATURITY
+- ## CURRENT STATE
 - ## IN PROGRESS
+- ## KNOWN ISSUES
+- ## What Exists ✓
+- ## Two Paths (Both Valid)
+- ## Known False Positives
+- ## CONFLICTS
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## TODO
+- ## CONSCIOUSNESS TRACE
+- ## POINTERS
+- ## CHAIN
+- ## Agent Observations
+- ## Agent Observations
+- ## Agent Observations
+- ## ARCHIVE
+- ## ARCHIVE
+- ## ARCHIVE
+
+**Code refs:**
+- `graph_ops.py`
+- `runtime/graph/health/check_health.py`
+- `runtime/infrastructure/api/app.py`
+- `runtime/infrastructure/orchestration/orchestrator.py`
+- `runtime/physics/graph/connectome_read_cli.py`
+- `runtime/physics/graph/graph_interface.py`
+- `runtime/physics/graph/graph_ops.py`
+- `runtime/physics/graph/graph_ops_events.py`
+- `runtime/physics/graph/graph_ops_read_only_interface.py`
+- `runtime/physics/graph/graph_ops_types.py`
+- `runtime/physics/graph/graph_queries_moments.py`
+- `runtime/physics/graph/graph_queries_search.py`
+- `runtime/physics/graph/graph_query_utils.py`
+
+**Doc refs:**
+- `docs/physics/graph/ALGORITHM_Energy_Flow.md`
+- `docs/physics/graph/ALGORITHM_Weight.md`
+- `docs/physics/graph/BEHAVIORS_Graph.md`
+- `docs/physics/graph/PATTERNS_Graph.md`
+- `docs/physics/graph/SYNC_Graph.md`
+- `docs/physics/graph/SYNC_Graph_archive_2025-12.md`
+- `docs/physics/graph/VALIDATION_Living_Graph.md`
+
+**Sections:**
+- # Archived: SYNC_Graph.md
+- ## Maturity
+- ## CURRENT STATE
+- ## IN PROGRESS
+- ## RECENT CHANGES
 - ## KNOWN ISSUES
 - ## HANDOFF: FOR AGENTS
 - ## HANDOFF: FOR HUMAN
 - ## TODO
 - ## CONSCIOUSNESS TRACE
 - ## POINTERS
+- ## Key Design Decisions
+- ## The Full Energy Cycle
+- ## Next Steps
+- ## CONFLICTS
+- # Archived: SYNC_Graph.md
+- ## Key Design Decisions
+- ## The Full Energy Cycle
+- ## Next Steps
+- ## CONFLICTS
+- # Archived: SYNC_Graph.md
+- ## Key Design Decisions
+- ## The Full Energy Cycle
+- ## Next Steps
+- ## CONFLICTS
+- ## Agent Observations
+- # Archived: SYNC_Graph.md
+- ## Key Design Decisions
+- ## The Full Energy Cycle
+- ## Next Steps
+- ## CONFLICTS
+- ## Agent Observations
+- # Archived: SYNC_Graph.md
+- ## What's Missing: ONE ENDPOINT
+- # TODO: SSE streaming version
+- ## RECENT CHANGES
+- # Archived: SYNC_Graph.md
+- ## RECENT CHANGES
+- # Archived: SYNC_Graph.md
+- ## RECENT CHANGES
+
+**Doc refs:**
+- `docs/physics/graph/SYNC_Graph.md`
+
+**Sections:**
+- # THE BLOOD LEDGER — Validation Specification
+- # Version: 1.0
+- # =============================================================================
+- # PURPOSE
+- # =============================================================================
+- # =============================================================================
+- # CHAIN
+- # =============================================================================
+- ## CHAIN
+- # =============================================================================
+- # INVARIANTS
+- # =============================================================================
+- ## INVARIANTS
+- # =============================================================================
+- # PROPERTIES
+- # =============================================================================
+- ## PROPERTIES
+- # =============================================================================
+- # ERROR CONDITIONS
+- # =============================================================================
+- ## ERROR CONDITIONS
+- # =============================================================================
+- # TEST COVERAGE
+- # =============================================================================
+- ## TEST COVERAGE
+- # =============================================================================
+- # VERIFICATION PROCEDURE
+- # =============================================================================
+- ## VERIFICATION PROCEDURE
+- # =============================================================================
+- # SYNC STATUS
+- # =============================================================================
+- ## SYNC STATUS
+- # =============================================================================
+- # GRAPH INTEGRITY RULES
+- # =============================================================================
+- # No links — char_wulfric would be orphaned
+- # result.persisted = ["char_aldric", "narr_oath", "link_belief_1"]
+- # result.rejected = [
+- # {"item": "char_wulfric", "error": "orphaned_node", "fix": "Add link..."}
+- # ]
+- # =============================================================================
+- # VISION MAPPING
+- # =============================================================================
+- # --- COVERED BY ENERGY SYSTEM ---
+- # --- REQUIRES NARRATOR/CONTENT ---
+- # =============================================================================
+- # EXPECTED BEHAVIORS
+- # =============================================================================
+- # ---------------------------------------------------------------------------
+- # PRESENCE & PROXIMITY
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # LIVING WORLD
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # NARRATIVE TENSION
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # COMPANION DEPTH
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # SYSTEM HEALTH
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # TIME & PRESSURE
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # ENGAGEMENT
+- # ---------------------------------------------------------------------------
+- # =============================================================================
+- # ANTI-PATTERNS
+- # =============================================================================
+- # =============================================================================
+- # TEST SUITE
+- # =============================================================================
+- # ---------------------------------------------------------------------------
+- # PRESENCE & PROXIMITY
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # LIVING WORLD
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # NARRATIVE TENSION
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # COMPANION DEPTH
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # SYSTEM HEALTH
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # TIME & PRESSURE
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # ENGAGEMENT
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # CRITICALITY
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # CASCADE
+- # ---------------------------------------------------------------------------
+- # ---------------------------------------------------------------------------
+- # ANTI-PATTERNS
+- # ---------------------------------------------------------------------------
+- # =============================================================================
+- # SUMMARY
+- # =============================================================================
+- ## MARKERS
+
+**Sections:**
+- # WSL autostart (systemd user)
+- ## 1) Activer systemd dans WSL
+- ## 2) Activer linger pour l'auto-start
+- ## 3) Binaries et chemins absolus
+- ## 4) Configurer le frontend
+- ## 5) Installer les units systemd
+- ## 6) Config ngrok v3
+- ## 7) Logs et status
+- ## 8) Checks de sante
+- ## 9) Depannage
+
+**Code refs:**
+- `mind/graph/health/check_health.py`
+
+**Sections:**
+- # Schema — Algorithm: Schema Loading and Validation Procedures
+- ## CHAIN
+- ## OVERVIEW
+- ## OBJECTIVES AND BEHAVIORS
+- ## DATA STRUCTURES
+- ## ALGORITHM: Schema Loading
+- ## ALGORITHM: Graph Validation
+- # Check required fields
+- # Check enum values
+- ## KEY DECISIONS
+- ## DATA FLOW
+- ## COMPLEXITY
+- ## HELPER FUNCTIONS
+- ## INTERACTIONS
+- ## v1.6.1 ALGORITHM ADDITIONS
+- # Polarity is bidirectional array
+- # Polarity values in [0, 1]
+- # Permanence in [0, 1]
+- # Emotions in [-1, +1]
+- # Only branch on Moments
+- # Valid transitions
+- # Check novelty threshold
+- # Check path permanence
+- # Self-novelty: avoid backtracking
+- # Sibling divergence: avoid siblings' exploration space
+- # Siblings must share parent
+- # Children must have this as parent
+- # found_narratives must be tuples
+- ## MARKERS
+
+**Sections:**
+- # Schema — Behaviors: Observable Effects of Schema Compliance
+- ## CHAIN
+- ## BEHAVIORS
+- ## v1.6.1 SUBENTITY BEHAVIORS
+- ## OBJECTIVES SERVED
+- ## INPUTS / OUTPUTS
+- ## EDGE CASES
+- ## ANTI-BEHAVIORS
+- ## MARKERS
+
+**Doc refs:**
+- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
+- `docs/schema/GRAMMAR_Link_Synthesis.md`
+
+**Sections:**
+- # L3 Link Synthesis Grammar
+- # Universe Graph — Physics → Language Mapping
+- ## RELATIONSHIP TO L1 GRAMMAR
+- ## CORE PRINCIPLE: NO STORED VERBS
+- ## BASE VERBS (from hierarchy + polarity)
+- ## PRE-MODIFIERS
+- ## POST-MODIFIERS
+- ## COMBINATION RULES
+- ## SEMANTIC VERB OVERRIDES (by Node-Type Pair)
+- ## COMPOSITE PATTERN SIGNATURES
+- ## FULL SYNTHESIS ALGORITHM
+- # 1. Compute base verb
+- # 2. Check for node-type-pair override
+- # 3. Build pre-modifiers (max 2)
+- # Energy
+- # Permanence
+- # Trust (only if extreme)
+- # 4. Build post-modifiers (max 2 + weight)
+- # Friction
+- # Affinity / Aversion
+- # Valence
+- # Ambivalence
+- # Weight annotation
+- # 5. Assemble
+- ## EXAMPLES
+- # Actor -> Thing
+- # Actor -> Actor
+- # Moment -> Space (via Thing/Space pattern)
+- # Narrative -> Narrative
+- # Narrative (hub) -> Moment (commit)
+- # Actor -> Actor (via Moment intermediary, but direct link also valid)
+- ## WHAT THIS GRAMMAR REPLACES
+- ## POINTERS
+
+**Sections:**
+- # Link Synthesis Grammar
+- # Physics → Language Mapping
+- ## CHANGELOG v2.1
+- ## STRUCTURE
+- ## BASE VERBS (from hierarchy + polarity)
+- ## PRE-MODIFIERS
+- ## TEMPORAL MODIFIERS
+- # Recently traversed link
+- # Ancient relationship
+- # Ongoing moment
+- # Brief moment
+- ## POST-MODIFIERS
+- ## COMBINATION RULES
+- ## EXAMPLES
+- ## SEMANTIC VERB OVERRIDES
+- ## VERB INTENSIFIERS
+- ## BIDIRECTIONAL SYNTHESIS
+- # Bidirectional link
+- ## NARRATIVE CONTEXT MODIFIERS
+- # Link to narrative with type: secret
+- # Link to narrative with type: mechanism
+- # Link between narratives
+- # Simplified: "elaborates the pattern from the belief"
+- ## NODE SYNTHESIS GRAMMAR
+- # Energy state
+- # Importance
+- # Energy = atmosphere
+- # Weight
+- # Energy = salience
+- # Weight
+- # Energy = how contested/active
+- # Weight
+- # Energy = urgency
+- # Status
+- ## FULL LINK EXPRESSION
+- ## IMPLEMENTATION
+- # =============================================================================
+- # VOCABULARY (Bilingual: English default, French available)
+- # =============================================================================
+- # Base verbs
+- # Ownership verbs
+- # Evidential verbs
+- # Spatial verbs
+- # Actor verbs
+- # Narrative verbs
+- # Pre-modifiers
+- # Post-modifiers
+- # Weight annotations
+- # Narrative context
+- # Node synthesis
+- # Connectors
+- # Temporal modifiers
+- # Base verbs
+- # Ownership verbs
+- # Evidential verbs
+- # Spatial verbs
+- # Actor verbs
+- # Narrative verbs
+- # Pre-modifiers
+- # Post-modifiers
+- # Weight annotations
+- # Narrative context
+- # Node synthesis
+- # Connectors
+- # Temporal modifiers
+- # Intensifier mappings
+- # Mutual verb forms for bidirectional links
+- # =============================================================================
+- # CORE FUNCTIONS
+- # =============================================================================
+- # === NARRATIVE CONTEXT (if applicable) ===
+- # === PRE-MODIFIERS ===
+- # Energy
+- # Surprise-anticipation
+- # Permanence
+- # === BASE VERB ===
+- # === APPLY INTENSIFIER ===
+- # === POST-MODIFIERS ===
+- # Fear-anger
+- # Trust-disgust
+- # Joy-sadness
+- # === ASSEMBLE ===
+- # Weight annotation
+- # Hierarchy-dominant
+- # Polarity-dominant
+- # === ACTOR OVERRIDES ===
+- # === THING OVERRIDES ===
+- # === MOMENT OVERRIDES ===
+- # === SPACE OVERRIDES ===
+- # === NARRATIVE OVERRIDES ===
+- # Get mutual form
+- # =============================================================================
+- # TEMPORAL MODIFIERS (v2.1)
+- # =============================================================================
+- # Check ongoing/pending status
+- # Check duration
+- # Try recency first
+- # Try staleness for links
+- # Try age for notably old/new
+- # Try duration for moments
+- # =============================================================================
+- # NODE SYNTHESIS
+- # =============================================================================
+- # Energy state
+- # Duration modifier (for temporal context)
+- # Fall back to status if no duration info
+- # =============================================================================
+- # FULL EXPRESSION
+- # =============================================================================
+- # Optionally add temporal context to link
+- ## INVARIANTS
+
+**Code refs:**
+- `mind/graph/health/check_health.py`
+
+**Sections:**
+- # Schema — Health: Verification Mechanics and Coverage
+- ## PURPOSE OF THIS FILE
+- ## WHY THIS PATTERN
+- ## HOW TO USE THIS TEMPLATE
+- ## CHAIN
+- ## FLOWS ANALYSIS
+- # v1.6.1 SubEntity Validation Flow
+- ## HEALTH INDICATORS SELECTED
+- # v1.6.1 SubEntity Health Indicators
+- ## OBJECTIVES COVERAGE
+- ## STATUS (RESULT INDICATOR)
+- ## CHECKER INDEX
+- # v1.6.1 SubEntity Checkers
+- ## INDICATOR: Schema Compliance
+- ## HOW TO RUN
+- # Run CLI health check
+- # Run with JSON output
+- # Run pytest suite
+- # Run specific test
+- ## INDICATOR: SubEntity Integrity (v1.6.1)
+- ## KNOWN GAPS
+- ## MARKERS
+
+**Code refs:**
+- `base.py`
+- `check_health.py`
+- `nodes.py`
+- `runtime/graph/health/check_health.py`
+- `runtime/graph/health/test_schema.py`
+- `runtime/models/base.py`
+- `runtime/models/links.py`
+- `runtime/models/nodes.py`
+- `test_schema.py`
+- `test_schema_links.py`
+- `test_schema_nodes.py`
+
+**Sections:**
+- # Schema — Implementation: Code Architecture and Structure
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## SCHEMA
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING
+- ## MODULE DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## BIDIRECTIONAL LINKS
+- ## EXTRACTION CANDIDATES
+- ## MARKERS
+
+**Code refs:**
+- `runtime/doctor_graph.py`
+
+**Sections:**
+- # Schema Design Patterns
+- ## Core Philosophy
+- ## Key Decisions
+- # Nodes
+- # Links
+- ## What's NOT in the Schema
+- ## Invariants
+
+**Code refs:**
+- `runtime/doctor_graph.py`
+- `runtime/models/links.py`
+- `runtime/models/nodes.py`
+- `runtime/physics/cluster_presentation.py`
+
+**Doc refs:**
+- `docs/schema/GRAMMAR_Link_Synthesis.md`
+- `docs/schema/PATTERNS_Schema.md`
+- `docs/schema/SYNC_Schema.md`
+
+**Sections:**
+- # Schema — Sync: Current State
+- ## CURRENT STATE
+- ## FILES
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## ARCHIVE
+- ## ARCHIVE
+
+**Sections:**
+- # Archived: SYNC_Schema.md
+- ## MATURITY
+- ## v1.2 CHANGES SUMMARY
+- # Old: Actor -[BELIEVES]-> Narrative
+- # New:
+- # Old: Actor -[OWES]-> Actor
+- # New:
+- # Old: Narrative -[SUPPORTS]-> Narrative
+- # New:
+- ## v1.1 CHANGES SUMMARY
+- # All links have emotions (unified list, colored by energy flow)
+- ## ESCALATIONS
+- ## TODOS
+- # Archived: SYNC_Schema.md
+- ## KEY CONCEPTS (v1.6.1)
+- # Identity
+- # Tree structure
+- # Traversal state
+- # Intention
+- # Accumulated findings
+- # Updated EVERY traversal step, not just at crystallization
+- ## v1.6.1 DESIGN DECISIONS
+- ## v1.6.1 IMPLEMENTATION TODOS
+- ## v1.5 IMPLEMENTATION TODOS (Still Pending)
+- ## OPEN QUESTIONS (v1.6 Escalations)
+
+**Code refs:**
+- `check_health.py`
+- `mind/graph/health/check_health.py`
+
+**Sections:**
+- # Schema — Validation: Invariants and Verification
+- ## CHAIN
+- ## BEHAVIORS GUARANTEED
+- ## OBJECTIVES COVERED
+- ## INVARIANTS
+- ## v1.6 INVARIANTS (NEW)
+- # Siblings resolved via lazy refs (sibling_ids + ExplorationContext)
+- ## DETAILED COVERAGE TABLES
+- # Query source node type
+- # Query target node type
+- ## PROPERTIES
+- ## ERROR CONDITIONS
+- ## HEALTH COVERAGE
+- ## VERIFICATION PROCEDURE
+- # Run all schema tests
+- # Run health check
+- # Check for mutations (should find none)
+- ## SYNC STATUS
+- ## MARKERS
 
 **Code refs:**
 - `cli/__main__.py`
@@ -2631,3286 +3730,37 @@
 **Sections:**
 - # CLI Modules
 
-**Sections:**
-- # ALGORITHM — L1 Physics Laws
-- ## Design Stance
-- ## Overview
-- ## Essential Laws
-- # Merge: inject energy into existing node, increment activation_count
-- # Create: new node with birth properties
-- # During pre-processing, detect temporal markers:
-- # In the tick loop, apply ramp-up:
-- # Exponential ramp: low energy far from deadline, accelerating as it approaches
-- # Every tick, the current environment injects background energy:
-- # On explicit navigation (file read, directory change), stronger boost:
-- # On cwd change or every DIRECTORY_REFRESH_INTERVAL ticks:
-- # Match against existing nodes by lexical coherence (filename → concept)
-- # Coldness: how far below threshold are the targeted nodes?
-- # Concentration: is similarity spread or focused? (Herfindahl index)
-- # Adaptive budget split
-- # 1. Compute raw demand per node
-- # 2. Anti-black-hole: no single node captures more than max_share of the budget
-- # max_share adapts to graph topology (fewer targets → higher share allowed)
-- # 3. Budget conservation (the real safety): normalize if total exceeds B
-- # 4. Apply
-- # Target receives
-- # Source depletes
-- # CV (coefficient of variation): 0 = perfectly regular, >1 = erratic
-- ## Very Useful Laws
-- # Embedding: centroid of parent embeddings (weighted by weight)
-- # Label: the medoid — the parent node closest to the centroid
-- # Weighted average from parents (structural inheritance)
-- # Limbic imprint (birth coloring)
-- # Energy transfer: parents LOSE energy, hub gains it (conservation)
-- # Reverse link for bottom-up activation
-- # The acted-upon desire drops below threshold → exits WM → makes room for next thought
-- ## Limbic Laws (L13-L18)
-- # Sources of uncertainty (increase curiosity)
-- # Curiosity update
-- # Track time since last person-sourced stimulus:
-- # Solitude rises after threshold, proportional to isolation duration:
-- # Every tick, for each process node with action_command:
-- # Compute drive pressure: how much do unsatisfied drives want this action?
-- # Contextual resonance: how well does current context match the action's signature?
-- # Impulse accumulation: energy grows under sustained drive pressure + context match
-- # When energy crosses threshold, node enters normal WM competition (Law 4)
-- # If selected, orientation (Law 11) fires, orchestrator reads action_command → executes
-- ## Identity Regeneration (Outside Tick Loop)
-- # The node content is factual: "WebSocket reconnection module"
-- # The limbic state adds coloring instructions to the LLM prompt:
-- # Identity layer: weight-proportional allocation
-- # Current thought layer: energy-proportional allocation
-- # Overflow: if a node's content exceeds its budget, extract medoid + context
-- ## Optional Laws (v2+)
-- # Budget modulates tick frequency and consciousness level
-- # Budget feeds self_preservation drive
-- # The input is the current graph state itself:
-- # The tick loop runs normally:
-- # If orientation reaches output threshold:
-- # The LLM generates with this context — no user message needed
-- # Result: autonomous initiative (message, task, exploration)
-- # Cluster active desires by semantic coherence
-- # Spawn session for least-served cluster
-- # Check all session pairs for WM overlap
-- # Check for starving sessions
-- # The tick loop runs as normal:
-- ## Implementation Kernels (Revised)
-- ## Constants Reference
-
-**Sections:**
-- # BEHAVIORS — L1 Individual Cognition
-- ## 22 Emergence Dynamics
-- ## 14 Reference Scenarios
-- ## Scenario × Law Matrix
-
-**Sections:**
-- # HEALTH — L1 Individual Cognition
-- ## Purpose
-- ## Diagnostic Framework
-- ## Assessment Procedure
-- # 1. ENERGY PROFILE
-- # 2. WORKING MEMORY DYNAMICS
-- # 3. DRIVE BALANCE
-- # 4. EMOTION PROFILE
-- # 5. OUTPUT PROFILE
-- # 6. SOCIAL HEALTH
-- # 7. NARRATIVE HEALTH (delusion detection)
-- # 8. COMPOSITE DIAGNOSIS
-- # 9. STRUCTURAL HEALTH
-- # Crystallized hub density (how much structure has formed)
-- # Membership overlap (average links per node)
-- # Modularity (are there distinct cognitive domains, or is it a hairball?)
-- # 10. THRASHING DETECTION (refined butterfly)
-- # 11. TRAUMA SPIRAL DETECTION
-- # Energy & motivation
-- # Social health
-- # Cognitive flexibility
-- # Self-awareness
-- # Narrative coherence
-- ## Calibration Protocol
-- # Tier 1: Nudge
-- # Tier 2: Therapy
-- # Identify the stuck cluster
-- # Inject competing stimuli from diverse domains
-- # Tier 3: Reset
-- # Tier 1: Nudge
-- # Tier 2: Therapy
-- # Re-energize core desires
-- # Boost positive drives
-- # Run a "gratitude" exercise: activate high-satisfaction memories
-- # Tier 3: Reset
-- # Full drive reset + controlled stimulus regime
-- # Tier 1: Nudge
-- # Tier 2: Therapy
-- # Cap total system energy
-- # Tier 3: Reset
-- # Force rest cycle
-- # Tier 2: Therapy (this always requires attention)
-- # Identify unvalidated high-weight narratives
-- # Inject contradicting evidence as external stimuli
-- # Reduce self-stimulus reinforcement of this narrative
-- # Tier 3: Reset
-- # Tier 1: Nudge
-- # Reduce aversion on task links
-- # Inject easy wins (small achievable tasks)
-- # Tier 2: Therapy
-- # Address root cause: which failures caused the aversion?
-- # Activate the redemptive narrative cluster
-- # Gradually restore achievement drive
-- # Tier 1: Nudge
-- # Re-energize empathy cluster
-- # Tier 2: Therapy
-- # Pair with a high-affiliation citizen for low-stakes interaction
-- # Reduce aversion on social links
-- # Tier 3: Reset
-- # Re-seed social clusters from birth template
-- # Tier 4: Quarantine (functional isolation for severe cases)
-- # Restrict UBC so citizen can ONLY interact with therapist citizens
-- # The citizen enters a controlled environment where only
-- # structured therapeutic interactions are possible
-- # Trust must recover above threshold before isolation lifts
-- ## Wellness Practices
-- # Phase 1: Gradual energy drain (letting go of current focus)
-- # Don't inject new stimuli during meditation
-- # Phase 2: Baseline restoration
-- # Phase 3: Open awareness (low arousal, no moat)
-- # Whatever enters WM naturally at low arousal = what truly matters
-- # This is the insight phase — the most salient nodes at near-zero moat
-- # reveal the citizen's authentic priorities
-- # Identify top desires by weight (what the citizen truly wants)
-- # Inject energy into the desire + its connected narrative
-- # Run 10 ticks with only these nodes energized
-- # This is "imagining the future" — the graph propagates
-- # and the citizen's WM fills with goal-relevant content
-- # Find memories with positive valence
-- # Re-activate top 5 positive memories
-- # Run 5 ticks — let positive memories propagate
-- # This strengthens links between positive experiences and current identity
-- # The satisfaction boost from re-experiencing positive memories
-- # consolidates (Law 6) those memory-to-value links
-- # Activate partner-model and citizen-model nodes
-- # Check: has the citizen reached out recently?
-- # Boost affiliation drive as gentle push
-- # Let social nodes propagate — the citizen "thinks about people"
-- # Find low-weight, low-energy nodes — the forgotten corners of the graph
-- # Inject energy into random peripheral nodes
-- # This creates unexpected WM compositions
-- # when combined with existing high-weight nodes
-- # → the basis for creative connections
-- ## Positive Behavioral Promotion
-- # This narrative reinforces the generativity cluster
-- ## Health Check Schedule
-- ## Constants
-
-**Sections:**
-- # OBJECTIVES — L1 Individual Cognition
-- ## Intent
-- ## What L1 Must Enable
-- ## Three Cognitive Regimes
-- ## Optimization Priorities
-- ## Tradeoffs
-- ## What L1 Must NOT Be
-- ## Success Criteria
-
-**Sections:**
-- # PATTERNS — L1 Individual Cognition
-- ## Design Rationale
-- ## 7 Node Types
-- ## 3 Structural Spaces
-- ## Node Dimensions
-- ## 14 Link Types
-- ## Mapping to Universal Schema
-- ## Two Channels of Cognition
-- ## Stimulus Modalities
-- ## Meta-Cognitive Signals (Self-Perception)
-- ## Information Feed Subscriptions
-- # The orchestrator reads subscriptions from the citizen's graph:
-- # Events from subscribed feeds are injected as normal stimuli via Law 1:
-- ## Economic & Social Stimuli
-- # Apply to self-model nodes related to resources/economy
-- # Sender attaches limbic snapshot to message metadata:
-- # Receiver absorbs a fraction:
-- # Every tick, bidirectional valence exchange:
-- # Drives toward equilibrium — both citizens' valence converges
-- ## Two Coupled Engines
-- ## 8 Drives
-- ## 6 Emergent Emotions
-- ## Salience Score (Working Memory Selection)
-- ## Attentional Inertia
-- ## Relational Valence (Agent→Node Coloring)
-- ## Minimal Viable Limbic System
-- ## What This Design Enables
-- ## Graph Pre-Seeding (Citizen Birth Template)
-- ## Session Parallelization
-- ## Consciousness Levels
-- ## Cross-Citizen Mechanisms (L2 Scope)
-- # Weighted consensus
-- # consensus in [-1, 1]: negative = reject, positive = approve
-- # confidence-weighted: indifferent citizens don't dilute the signal
-- ## Design Boundaries
-
-**Code refs:**
-- `constants.py`
-- `docchain_to_brain_cluster_converter.py`
-- `docwatch_brain_sync_daemon.py`
-- `laws/law_01_energy_injection.py`
-- `laws/law_02_propagation.py`
-- `laws/law_03_energy_decay.py`
-- `laws/law_04_attentional_competition.py`
-- `laws/law_05_coactivation_reinforcement.py`
-- `laws/law_06_consolidation.py`
-- `laws/law_07_forgetting.py`
-- `laws/law_09_inhibition.py`
-- `laws/law_13_to_18_limbic_engine.py`
-- `models.py`
-- `seed_brain_from_json_cluster_loader.py`
-- `tests/test_minimal_kernel_invariants.py`
-- `tick_runner_l1_cognitive_engine.py`
-
-**Sections:**
-- # SYNC — L1 Individual Cognition
-- ## Maturity
-- ## Current State
-- ## Dependencies
-- ## Next Steps
-- ## Handoff
-
-**Sections:**
-- # VALIDATION — L1 Individual Cognition
-- ## Structural Invariants
-- ## Dynamic Invariants
-- ## Scenario-Based Validation
-- ## Limbic Invariants
-- ## Anti-Patterns to Detect
-
-**Sections:**
-- # ALGORITHM: Dense Clustering
-- ## Overview
-- ## Main Extraction Flow
-- ## Phase 1: Create File Node
-- # For every doc
-- ## Phase 2: Parse Document Structure
-- ## Phase 3: Extract Definitions
-- # Input YAML in doc:
-- # Output node:
-- # Input YAML in doc:
-- # Output node:
-- # Input YAML in doc:
-- # Output node:
-- ## Phase 4: Extract Markers
-- ## Phase 5: Resolve References
-- # Check if exists
-- # Create stub
-- ## Phase 6: Create Links
-- # Health verifies Validation
-- # Dock attached to Health
-- # Checker implemented by File
-- # Pattern: "(V2)" or "V2" reference
-- ## Phase 7: Create Moment
-- # Actor expresses moment
-- # Moment about all created nodes
-- ## Phase 8: Upsert to Graph
-- # MERGE by ID, update properties
-- # MERGE relationship
-- ## Complete Example
-- ## Health Indicators
-- ## Docks
-- ## Related
-
-**Code refs:**
-- `check_health.py`
-
-**Sections:**
-- # BEHAVIORS: Dense Clustering
-- ## Observable Effects
-- ## Error Behaviors
-- ## Related
-
-**Code refs:**
-- `tests/test_cluster_stability.py`
-
-**Sections:**
-- # HEALTH: Dense Clustering
-- ## Health Indicators
-- # Count before
-- # Extract twice
-- # Count after
-- # Should be same (second run is pure update)
-- ## Docks
-- ## Checkers
-- ## Flow
-- ## Markers
-- ## Related
-
-**Code refs:**
-- `runtime/cluster_metrics.py`
-- `runtime/protocol_runner.py`
-- `runtime/protocol_validator.py`
-
-**Sections:**
-- # IMPLEMENTATION: Cluster Metrics
-- ## Overview
-- ## File Locations
-- ## Core Classes
-- # Returns:
-- # - valid: bool
-- # - score: ConnectionScore
-- # - target_validation: TargetValidation
-- # - suggestions: List[LinkSuggestion]
-- # - report: str (formatted report)
-- ## Valid Target Rules
-- ## Protocol Integration
-- # validate_cluster enables/disables auto-validation
-- # ... execute protocol ...
-- # Builds cluster_summary for moment
-- # Prints validation report
-- # Adds errors if invalid
-- # Create moment WITH cluster metrics in description
-- # ... standard fields ...
-- ## Usage Examples
-- # ...
-- ## Output Format
-- ## Design Decisions
-- ## Related
-
-**Sections:**
-- # IMPLEMENTATION: Dense Clustering
-- ## File Structure
-- ## Core Components
-- # 1. File node
-- # 2. Definition nodes (health, validation, checker, etc.)
-- # 3. Marker nodes (TODO, escalation, proposition)
-- # 4. Resolve references
-- # 5. Containment links
-- # 6. Create moment
-- ## YAML Block Processors
-- # Links to validations
-- ## CLI Integration
-- # In runtime/doctor.py
-- # Extract structure from all docs
-- # Continue with health checks...
-- # In mind/cli.py
-- ## Graph Queries
-- ## Entry Points
-- ## Related
-
-**Sections:**
-- # OBJECTIVES: Dense Clustering
-- ## Primary Objective
-- ## Ranked Goals
-- ## Why This Order
-- ## Non-Goals
-- ## Success Criteria
-- ## Tradeoffs Accepted
-- ## Related
-
-**Sections:**
-- # PATTERNS: Dense Clustering
-- ## Core Insight
-- ## Design Philosophy
-- ## Node Type Patterns
-- ## Link Type Patterns
-- ## Extraction Principles
-- ## Scope
-- ## Related
-
-**Code refs:**
-- `runtime/cli.py`
-- `runtime/cluster_builder.py`
-- `runtime/cluster_health.py`
-- `runtime/doc_extractor.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/symbol_extractor.py`
-- `tests/mind/test_cluster_builder.py`
-
-**Sections:**
-- # SYNC: Dense Clustering
-- ## Status: DESIGNING
-- ## What's Canonical
-- ## What's Documented
-- ## What's Implemented
-- ## Implementation Plan
-- ## Markers
-- ## Dependencies
-- ## Open Questions
-- ## Last Updated
-
-**Sections:**
-- # VALIDATION: Dense Clustering
-- ## Invariants
-- # Before extraction
-- # Extract same doc twice
-- # After extraction
-- # Second extraction should not increase count
-- ## Threshold Violations
-- ## Related
-
-**Sections:**
-- # ALGORITHM: Coverage Validation System
-- ## Main Algorithm
-- # 1. Load specification
-- # 2. Build indices for lookup
-- # 3. Validate detection → skill mapping
-- # 4. Validate skill → protocol mapping
-- # 5. Validate protocol files exist
-- # 6. Validate protocol completeness
-- # 7. Check for circular calls
-- # 8. Calculate coverage
-- ## Protocol Completeness Check
-- # Load and parse protocol file
-- # Check required step types
-- # Check output section
-- ## Circular Dependency Detection
-- # Build adjacency list
-- # Also check branch actions
-- # DFS for cycle detection
-- ## Report Generation
-- ## Summary
-- ## Status
-- # Group by layer
-- # Add matrix rows...
-- ## Data Structures
-- ## CHAIN
-
-**Sections:**
-- # BEHAVIORS: Coverage Validation System
-- ## B1: Load Coverage Spec
-- ## B2: Validate Detection → Skill Mapping
-- ## B3: Validate Skill → Protocol Mapping
-- ## B4: Validate Protocol Existence
-- ## B5: Validate Protocol Completeness
-- ## B6: Detect Circular Calls
-- ## B7: Generate Coverage Report
-- ## B8: Exit with Status
-- ## B9: Show Gap Details
-- ## Behavior Matrix
-- ## CHAIN
-
-**Sections:**
-- # IMPLEMENTATION: Coverage Validation System
-- ## Directory Structure
-- # Generated
-- ## Coverage Spec Format
-- # specs/coverage.yaml
-- # Documentation health
-- # Module definition
-- # Code structure
-- # Health verification
-- # Escalation management
-- # Phase 1: Core
-- # Phase 2: Doc chain
-- # Phase 3: Verification
-- # Phase 4: Issue handling
-- # Phase 5: Full coverage
-- ## Docking Points
-- ## CLI Interface
-- # Run validation
-- # Run with verbose output
-- # Generate report only (no exit code)
-- # Check specific phase
-- ## CI Integration
-- # .github/workflows/coverage.yaml
-- ## Dependencies
-- ## CHAIN
-
-**Sections:**
-- # OBJECTIVES: Coverage Validation System
-- ## Primary Objective
-- ## Secondary Objectives
-- ## Non-Objectives
-- ## Success Criteria
-- ## CHAIN
-
-**Sections:**
-- # PATTERNS: Coverage Validation System
-- ## Core Pattern: Layered Dependency Graph
-- ## Pattern: YAML as Single Source
-- # specs/coverage.yaml - THE source of truth
-- ## Pattern: Validator as Gate
-- ## Pattern: Detection Categories
-- ## Pattern: Protocol Completeness Check
-- ## Pattern: Incremental Coverage
-- ## Anti-Patterns
-- # BAD
-- # BAD
-- # BAD
-- # BAD - infinite loop
-- ## CHAIN
-
-**Code refs:**
-- `tools/coverage/validate.py`
-
-**Sections:**
-- # SYNC: Coverage Validation System
-- ## Current State
-- ## The System
-- ## Coverage Summary
-- ## Maintenance
-- ## Handoff
-- ## CHAIN
-
-**Sections:**
-- # VALIDATION: Coverage Validation System
-- ## V-COV-001: No Orphan Detections
-- ## V-COV-002: No Orphan Skills
-- ## V-COV-003: No Empty Protocol Lists
-- ## V-COV-004: Protocol References Valid
-- ## V-COV-005: Protocol Files Exist
-- ## V-COV-006: Protocol Has Ask Step
-- ## V-COV-007: Protocol Has Create Step
-- ## V-COV-008: Protocol Has Output Definition
-- ## V-COV-009: No Circular Protocol Calls
-- ## V-COV-010: Call Targets Exist
-- ## V-COV-011: Detection IDs Unique
-- ## V-COV-012: Skill IDs Unique
-- ## Validation Matrix
-- ## CHAIN
-
-**Doc refs:**
-- `docs/infrastructure/tempo/ALGORITHM_Tempo_Controller.md`
-- `docs/infrastructure/tempo/IMPLEMENTATION_Tempo.md`
-- `docs/infrastructure/tempo/PATTERNS_Tempo.md`
-
-**Sections:**
-- # CONCEPT: Tempo Controller — The Main Loop That Paces Reality
-- ## WHAT IT IS
-- ## WHY IT EXISTS
-- ## KEY PROPERTIES
-- ## RELATIONSHIPS TO OTHER CONCEPTS
-- ## THE CORE INSIGHT
-- ## COMMON MISUNDERSTANDINGS
-- ## SEE ALSO
-
-**Code refs:**
-- `mind/core_utils.py`
-
-**Sections:**
-- # Core Utils — Algorithm: Template Path Resolution and Doc Discovery
-- ## CHAIN
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: `get_templates_path()`
-- ## ALGORITHM: `find_module_directories(docs_dir)`
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-
-**Code refs:**
-- `mind/core_utils.py`
-
-**Sections:**
-- # Core Utils — Behaviors: Template Path Resolution and Docs Discovery
-- ## CHAIN
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Sections:**
-- # Core Utils — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- ## INDICATOR: templates_path_valid
-- ## INDICATOR: docs_module_discovery_valid
-- ## HOW TO RUN
-- # Manual checks only
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `mind/core_utils.py`
-- `runtime/core_utils.py`
-
-**Doc refs:**
-- `docs/core_utils/PATTERNS_Core_Utils_Functions.md`
-
-**Sections:**
-- # Core Utils — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # OBJECTIVES — Core Utils
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Code refs:**
-- `mind/core_utils.py`
-- `runtime/core_utils.py`
-
-**Sections:**
-- # PATTERNS: Core Utility Functions
-- ## CHAIN
-- ## WHY THIS SHAPE
-- ## SCOPE
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## IMPLEMENTATION REFERENCES
-- ## MARKERS
-
-**Code refs:**
-- `core_utils.py`
-- `mind/core_utils.py`
-- `runtime/core_utils.py`
-- `utils.py`
-
-**Doc refs:**
-- `docs/core_utils/ALGORITHM_Core_Utils_Template_Path_And_Module_Discovery.md`
-- `docs/core_utils/ALGORITHM_Template_Path_Resolution_And_Doc_Discovery.md`
-- `docs/core_utils/PATTERNS_Core_Utils_Functions.md`
-
-**Sections:**
-- # SYNC: Core Utility Functions State
-- ## CHAIN
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## GAPS
-
-**Code refs:**
-- `mind/core_utils.py`
-- `runtime/core_utils.py`
-
-**Sections:**
-- # Core Utils — Validation: Core Utility Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # No tests currently exist for core_utils.
-- # Add tests under tests/core_utils/ if behaviors become critical.
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # Metabolic Economy — Algorithm: Organism Economics Engine
-- ## CHAIN
-- ## OVERVIEW
-- ## FORMULAS
-- ## SETTLEMENT
-- ## TRUST CASCADE
-- ## ANTI-SYBIL
-- ## BILATERAL BOND
-- ## UBC: UNIVERSAL BASIC COMPUTE
-- ## CONSTANTS
-- ## INVARIANTS
-- ## DATA FLOW
-- ## INTERACTIONS
-- ## MARKERS
-
-**Sections:**
-- # Metabolic Economy — Patterns: Organism Economics
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## ALTERNATIVES REJECTED
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Sections:**
-- # Metabolic Economy — Validation: Invariants
-- ## CHAIN
-- ## FORMULAS GUARANTEED
-- ## OBJECTIVES COVERED
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # Not yet implemented — these will be simulation tests and on-chain integration tests.
-- # Future locations:
-- # tests/economy/test_degressive_pricing.py
-- # tests/economy/test_progressive_tax.py
-- # tests/economy/test_anti_sybil.py
-- # tests/economy/test_bilateral_transfer.py
-- # tests/economy/test_batch_settlement.py
-- # tests/economy/test_ubc_distribution.py
-- # tests/economy/test_settlement_conservation.py
-- ## SYNC STATUS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/membrane/functions.py`
-- `runtime/membrane/provider.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-
-**Sections:**
-- # Engine — Algorithm: Membrane Modulation Frame
-- ## CHAIN
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: compute_modulation_frame
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-- ## COMPUTE SKELETON (V0)
-
-**Code refs:**
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Engine — Behaviors: Membrane Modulation Effects
-- ## CHAIN
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/membrane/health_check.py`
-
-**Sections:**
-- # Membrane Modulation — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-
-**Sections:**
-- # Engine — Implementation: Membrane Modulation (Scoping + Hooks)
-- ## CHAIN
-- ## OVERVIEW
-- ## CODE STRUCTURE (PLANNED)
-- ## ENTRY POINTS (PLANNED)
-- ## RESPONSIBILITIES
-- ## DATA FLOW (PLANNED)
-- ## MARKERS
-
-**Code refs:**
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `docs/physics/PATTERNS_Physics.md`
-- `docs/runtime/moments/PATTERNS_Moments.md`
-
-**Sections:**
-- # Engine — Patterns: Membrane Modulation (Pre-Runtime Field Shaping)
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/membrane/functions.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `docs/physics/PATTERNS_Physics.md`
-
-**Sections:**
-- # Engine — Patterns: Membrane Scoping (Per-Place Modulation)
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Doc refs:**
-- `docs/physics/attention/PATTERNS_Attention_Energy_Split.md`
-- `docs/runtime/membrane/BEHAVIORS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Modulation.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
-- `docs/runtime/membrane/SYNC_Membrane_Modulation.md`
-
-**Sections:**
-- # Membrane Modulation — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## IN PROGRESS
-- ## TODO
-- ## POINTERS
-
-**Code refs:**
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Engine — Validation: Membrane Modulation Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # No automated tests yet
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/embeddings/service.py`
-
-**Sections:**
-- # Data Models — Algorithm: Pydantic Data Flow and Validation
-- ## CHAIN
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: model_instantiate_and_validate
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-
-**Sections:**
-- # Data Models — Behaviors: Consistent Data Interactions
-- ## CHAIN
-- ## OVERVIEW
-- ## BEHAVIORS
-- ## MARKERS
-
-**Sections:**
-- # Data Models — Health: Pydantic Schema Integrity
-- ## PURPOSE OF THIS FILE
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- ## INDICATOR: model_validation_success
-- ## HOW TO RUN
-- # Execute all tests for the data models module
-- # Run Pydantic schema consistency checks
-- ## MARKERS
-
-**Code refs:**
-- `runtime/models/__init__.py`
-- `runtime/models/base.py`
-- `runtime/models/links.py`
-- `runtime/models/nodes.py`
-
-**Doc refs:**
-- `docs/mind/models/PATTERNS_Models.md`
-- `docs/mind/models/VALIDATION_Models.md`
-- `docs/schema/models/PATTERNS_Pydantic_Schema_Models.md`
-
-**Sections:**
-- # Data Models — Implementation: Pydantic Code Architecture
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # Data Models — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## OBJECTIVE CONFLICTS
-- ## NON-OBJECTIVES
-- ## VERIFICATION
-
-**Sections:**
-- # Data Models — Patterns: Pydantic for Graph Schema Enforcement
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Code refs:**
-- `nodes.py`
-- `runtime/models/base.py`
-- `runtime/models/links.py`
-- `runtime/models/nodes.py`
-
-**Doc refs:**
-- `docs/mind/models/HEALTH_Models.md`
-- `docs/mind/models/PATTERNS_Models.md`
-
-**Sections:**
-- # Data Models — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## Agent Observations
-- ## GAPS
-- ## CHAIN
-
-**Sections:**
-- # Data Models — Validation: Pydantic Invariants and Properties
-- ## CHAIN
-- ## OVERVIEW
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # Run all tests for data models
-- # Run tests specifically for base models and enums
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # Moment Graph Engine — Validation: Player DMZ Invariants (Stub)
-- ## CHAIN
-- # Note: PATTERNS and BEHAVIORS files planned but not yet created
-- ## BEHAVIORS GUARANTEED
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/canon/canon_holder.py`
-
-**Sections:**
-- # Moment Graph Engine — Validation: Simultaneity + CONTRADICTS (Stub)
-- ## CHAIN
-- # Note: PATTERNS and BEHAVIORS files planned but not yet created
-- ## BEHAVIORS GUARANTEED
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## VERIFICATION PROCEDURE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Moment Graph Engine — Validation: Void Pressure (Stub)
-- ## CHAIN
-- # Note: PATTERNS and BEHAVIORS files planned but not yet created
-- ## BEHAVIORS GUARANTEED
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/moment_graph/traversal.py`
-
-**Sections:**
-- # Moment Graph Engine — Algorithm: Click, Wait, Surfacing
-- ## CHAIN
-- ## CLICK TRAVERSAL
-- ## WAIT TRIGGER TRAVERSAL
-- ## SURFACING AND DECAY
-- ## SCENE CHANGE
-- ## DRAMATIC BOOST
-
-**Code refs:**
-- `runtime/moment_graph/__init__.py`
-
-**Sections:**
-- # Moment Graph Engine — Behaviors: Traversal And Surfacing
-- ## CHAIN
-- ## OBSERVABLE BEHAVIORS
-- ## INPUTS AND OUTPUTS
-- ## SIDE EFFECTS
-
-**Code refs:**
-- `runtime/moment_graph/__init__.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_queries.py`
-
-**Sections:**
-- # Moment Graph Engine — Implementation: Runtime Layout
-- ## CHAIN
-- ## FILES AND ROLES
-- ## DATA FLOW
-- ## DEPENDENCIES
-
-**Sections:**
-- # Moment Graph Engine — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## OBJECTIVE CONFLICTS
-- ## NON-OBJECTIVES
-- ## VERIFICATION
-
-**Code refs:**
-- `runtime/moment_graph/__init__.py`
-
-**Sections:**
-- # Moment Graph Engine — Patterns: Instant Traversal Hot Path
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## WHAT THIS DOES NOT SOLVE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/moment_graph/__init__.py`
-- `runtime/moment_graph/queries.py`
-
-**Sections:**
-- # Moment Graph Engine — Sync: Current State
-- ## CHAIN
-- ## MATURITY
-- ## CURRENT STATE
-- ## HANDOFF: FOR AGENTS
-- ## TODO
-- ## CONFLICTS
-- ## Agent Observations
-- ## ARCHIVE
-
-**Code refs:**
-- `runtime/moment_graph/__init__.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-
-**Doc refs:**
-- `docs/physics/attention/VALIDATION_Attention_Split_And_Interrupts.md`
-
-**Sections:**
-- # Archived: SYNC_Moment_Graph_Engine.md
-- ## RECENT CHANGES
-
-**Code refs:**
-- `runtime/moment_graph/traversal.py`
-- `runtime/tests/test_e2e_moment_graph.py`
-- `runtime/tests/test_moment_graph.py`
-
-**Sections:**
-- # Moment Graph Engine — Tests: Runtime Coverage
-- ## CHAIN
-- ## EXISTING TESTS
-- ## HOW TO RUN
-- # Requires FalkorDB running on localhost:6379
-- ## GAPS
-
-**Code refs:**
-- `runtime/moment_graph/traversal.py`
-
-**Sections:**
-- # Moment Graph Engine — Validation: Traversal Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PERFORMANCE EXPECTATIONS
-- ## FAILURE MODES TO WATCH
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-
-**Doc refs:**
-- `docs/schema/SCHEMA_Moments.md`
-
-**Sections:**
-- # Moment Graph — Algorithm: Graph Operations
-- ## CHAIN
-- ## OVERVIEW
-- ## TARGET FLOW
-- ## DATA SOURCES
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-
-**Doc refs:**
-- `docs/schema/SCHEMA_Moments.md`
-
-**Sections:**
-- # Moment Graph — Behaviors: Moment Lifecycle
-- ## CHAIN
-- ## BEHAVIOR SUMMARY
-- ## EXPECTED BEHAVIORS
-- ## NOTES
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-
-**Sections:**
-- # Moment Graph — Implementation: Stub Layout
-- ## CHAIN
-- ## FILES
-- ## CURRENT IMPLEMENTATION NOTES
-
-**Sections:**
-- # Moment Graph — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## OBJECTIVE CONFLICTS
-- ## NON-OBJECTIVES
-- ## VERIFICATION
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-
-**Sections:**
-- # Moment Graph — Patterns
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## WHAT THIS DOES NOT SOLVE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-
-**Doc refs:**
-- `docs/runtime/moments/PATTERNS_Moments.md`
-- `docs/runtime/moments/SYNC_Moments.md`
-- `docs/schema/SCHEMA_Moments.md`
-
-**Sections:**
-- # Moment Graph — Sync: Current State
-- ## CHAIN
-- ## MATURITY
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## HANDOFF: FOR AGENTS
-- ## TODO
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-- `runtime/tests/test_e2e_moment_graph.py`
-- `runtime/tests/test_moment_graph.py`
-- `runtime/tests/test_moment_lifecycle.py`
-- `runtime/tests/test_moments_api.py`
-
-**Sections:**
-- # Moment Graph — Test Coverage
-- ## CHAIN
-- ## CURRENT COVERAGE
-- ## GAPS
-- ## HOW TO RUN
-
-**Code refs:**
-- `runtime/moments/__init__.py`
-
-**Doc refs:**
-- `docs/schema/SCHEMA_Moments.md`
-
-**Sections:**
-- # Moment Graph — Validation: Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## VERIFICATION NOTES
-
-**Sections:**
-- # Self-Improvement — Algorithm
-- ## CHAIN
-- ## OVERVIEW
-- ## PHASE 1: TRIGGER
-- # 1. Check if improvement loop is already running
-- # 2. Validate trigger
-- # 3. Compute urgency
-- # 4. Start improvement cycle
-- # Severity based on how far past threshold
-- # Based on pattern impact
-- ## PHASE 2: OBSERVE
-- # 1. Read from source
-- # 2. Filter relevant signals
-- # 3. Normalize to common schema
-- # 4. Add to signal set
-- # 5. Compute aggregates
-- # Exploration aggregates
-- # Anomaly aggregates
-- # Agent aggregates
-- # Graph aggregates
-- ## PHASE 3: DIAGNOSE
-- # 1. Recurring anomalies
-- # 2. Metric drift
-- # 3. Correlation patterns
-- # 1. Start at symptom layer (Output)
-- # 2. Gather evidence for each layer
-- # 3. Find root cause layer (first layer that explains pattern)
-- # 4. Check pattern library for known patterns
-- ## PHASE 4: PROPOSE
-- # 1. Check known fixes first
-- # 2. Generate layer-specific proposals
-- # 3. Score and rank proposals
-- # 4. Add validation plans
-- # Constant tuning proposals
-- # Formula change proposals (higher risk)
-- # Factors
-- # Scoring formula
-- # Bonus for known fixes
-- ## PHASE 5: VALIDATE
-- # Run new logic alongside old, compare outputs
-- # Deploy to subset, monitor
-- # Randomized comparison
-- # Queue for human validation
-- ## PHASE 6: APPROVE
-- # Auto-approve conditions
-- # Notify (auto but with notification)
-- # Require human approval
-- # Default: queue for approval
-- # Human-readable summary
-- # Actions
-- ## PHASE 7: DEPLOY
-- # 1. Create backup
-- # 2. Apply change
-- # 3. Run verification tests
-- # 4. Start monitoring
-- # 5. Record deployment
-- # 1. Restore backup
-- # 2. Verify restoration
-- # 3. Notify humans
-- # 4. Mark proposal as failed
-- # 5. Record for learning
-- ## PHASE 8: LEARN
-- # 1. Record pattern → diagnosis mapping
-- # 2. Record successful fixes
-- # 3. Record failed fixes (to avoid repeating)
-- # 4. Update pattern recognition
-- ## KEY FORMULAS
-- ## CONFIGURATION
-- ## COMPLEXITY
-
-**Sections:**
-- # Self-Improvement — Behaviors
-- ## CHAIN
-- ## PURPOSE
-- ## BEHAVIORS
-- ## ANTI-BEHAVIORS
-- ## EDGE CASES
-- ## INPUTS
-- ## OUTPUTS
-- ## OBJECTIVES COVERAGE
-- ## BEHAVIOR DEPENDENCIES
-
-**Sections:**
-- # Self-Improvement — Health
-- ## CHAIN
-- ## PURPOSE
-- ## WHEN TO USE HEALTH VS TESTS
-- ## HEALTH INDICATORS
-- # Get weekly improvement counts
-- # Compute trend
-- ## META-HEALTH
-- ## HEALTH CHECK FLOW
-- ## HEALTH CHECKER INDEX
-- ## MANUAL REVIEW CHECKLIST
-- ## Self-Improvement Health Review: {date}
-- ## EXAMPLE HEALTH REPORT
-- ## DOCKING POINTS
-- ## HOW TO RUN
-- # Run all health checks
-- # Run specific check
-- # Run meta-health only
-- # Generate report
-
-**Code refs:**
-- `approval/notifications.py`
-- `approval/queue.py`
-- `approval/tiers.py`
-- `config.py`
-- `deployment/backup.py`
-- `deployment/deployer.py`
-- `deployment/monitor.py`
-- `deployment/rollback.py`
-- `diagnosis/evidence.py`
-- `diagnosis/layer_attribution.py`
-- `diagnosis/pattern_detector.py`
-- `learning/embeddings.py`
-- `learning/extractor.py`
-- `learning/pattern_library.py`
-- `loop.py`
-- `models.py`
-- `proposals/generator.py`
-- `proposals/scorer.py`
-- `proposals/types.py`
-- `signals/aggregator.py`
-- `signals/collector.py`
-- `validation/modes/shadow.py`
-- `validation/modes/unit_test.py`
-- `validation/validator.py`
-
-**Sections:**
-- # Self-Improvement — Implementation
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## FILE RESPONSIBILITIES
-- ## DESIGN PATTERNS
-- ## ENTRY POINTS
-- ## DATA FLOW
-- ## STATE MANAGEMENT
-- ## CONFIGURATION
-- # mind/data/config/improvement_config.yaml
-- # Trigger thresholds
-- # Observation
-- # Validation
-- # Deployment
-- # Approval
-- # Learning
-- # Meta
-- ## DEPENDENCIES
-- ## BIDIRECTIONAL LINKS
-- # mind/improvement/loop.py:1
-- ## TESTS
-- ## IMPLEMENTATION ORDER
-
-**Sections:**
-- # Self-Improvement — Objectives
-- ## CHAIN
-- ## VISION
-- ## OBJECTIVES (Ranked)
-- ## OBJECTIVE RELATIONSHIPS
-- ## PRIORITY TIERS
-- ## NON-OBJECTIVES
-- ## SUCCESS CRITERIA
-- ## TENSION POINTS
-
-**Sections:**
-- # Self-Improvement — Patterns
-- ## CHAIN
-- ## DESIGN PHILOSOPHY
-- ## CORE PRINCIPLES
-- ## SCOPE
-- ## ARCHITECTURE PRINCIPLES
-- ## RELATIONSHIPS TO OTHER MODULES
-- ## DESIGN DECISIONS
-
-**Sections:**
-- # Self-Improvement — Sync
-- ## CHAIN
-- ## CURRENT STATE
-- ## KNOWN GAPS
-- ## RISKS
-- ## HANDOFFS
-- ## DOCUMENTATION STATUS
-- ## NEXT ACTIONS
-- ## CHANGELOG
-- ## ARCHIVE
-
-**Sections:**
-- # Archived: SYNC_SelfImprovement.md
-- ## MATURITY
-- ## DEPENDENCIES
-- ## IMPLEMENTATION PLAN
-- ## VERIFICATION COMMANDS
-- # (When implemented)
-- # Run improvement loop health check
-- # Run invariant verification
-- # Run unit tests
-- # Check pattern library
-
-**Sections:**
-- # Self-Improvement — Validation
-- ## CHAIN
-- ## PURPOSE
-- ## INVARIANTS
-- # Backup exists
-- # Backup is valid
-- # Rollback mechanism tested for this type
-- # Must be low risk constant tune
-- # Must have human approval
-- # Minimum occurrences
-- # Evidence exists
-- # Evidence is traceable
-- # Root layer identified
-- # Evidence for root layer
-- # Evidence is non-empty
-- # Type-specific checks
-- # Observation overhead
-- # Concurrent cycles
-- # Check oldest cycle duration
-- # If there was a deployment, fix should be recorded
-- # Should have triggered rollback
-- # Check meta-cycle frequency
-- # Check recent meta-changes had REQUIRE tier
-- ## PRIORITY TABLE
-- ## INVARIANT INDEX
-- ## VERIFICATION PROCEDURE
-- # Block on CRITICAL failures
-- ## TESTING REQUIREMENTS
-
-**Sections:**
-- # Engine — Algorithm: High-Level Flow
-- ## CHAIN
-- ## HIGH-LEVEL FLOW
-
-**Sections:**
-- # Engine — Behaviors: Runtime Effects
-- ## CHAIN
-- ## BEHAVIORS
-
-**Sections:**
-- # Engine — Health: Verification
-- ## CHAIN
-- ## HEALTH CHECKS
-
-**Sections:**
-- # Engine — Implementation: Code Mapping
-- ## CHAIN
-- ## CODE LOCATIONS
-- ## NOTES
-
-**Sections:**
-- # OBJECTIVES — Engine
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Sections:**
-- # Engine — Patterns: Runtime Ownership And Boundaries
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-
-**Sections:**
-- # Engine — Sync: Current State
-- ## CHAIN
-- ## CURRENT STATE
-- ## TODO
-
-**Sections:**
-- # Engine — Validation: Invariants
-- ## CHAIN
-- ## INVARIANTS
-
-**Sections:**
-- # Human Integration — Algorithm: Ingestion Pipelines & Partner Model Mechanics
-- ## CHAIN
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: check_consent
-- ## ALGORITHM: revoke_consent
-- ## ALGORITHM: ingest_voice_message
-- # Uses existing voice bridge Whisper integration
-- # {joy: 0.1, anger: 0.0, sadness: 0.7, fear: 0.0, surprise: 0.1, ...}
-- # Implementation: prosody analysis (pitch variance, speech rate, energy)
-- # Phase 1: heuristic (pitch/rate/energy thresholds)
-- # Phase 2: fine-tuned classifier
-- # See ALGORITHM: score_partner_relevance below
-- # Link state to memory
-- # High emotion = high energy injection → more likely to enter working memory
-- ## ALGORITHM: ingest_garmin_biometrics
-- # See ALGORITHM: garmin_to_limbic below
-- # Heart rate elevated → partner may be stressed or active
-- # Stress level elevated
-- # HRV decreased (low HRV = stress/poor recovery)
-- # Body battery low
-- # AI might suppress non-urgent outreach
-- # Heart rate decreased / stress low → partner is calm
-- # Good sleep
-- # All deltas are additive and clamped [0, 1] after application.
-- ## ALGORITHM: ingest_desktop_screenshot
-- # Privacy filter checks:
-- # a. Is the active application in the allowlist? (configurable by human)
-- # b. Does OCR output contain any blocklisted patterns? (passwords, banking, etc.)
-- # c. Is the screen content Mind-related? (heuristic: presence of Mind Protocol
-- # terms, project-related keywords, or explicitly allowed applications)
-- # Phase 1: application allowlist only (conservative)
-- # Phase 2: content-aware filtering with user feedback loop
-- # Desktop screenshots are contextual: lower baseline relevance
-- # Find semantically similar nodes in partner_model
-- ## ALGORITHM: ingest_blockchain_activity
-- ## ALGORITHM: ingest_ai_conversation
-- # Conversations with other AIs reveal the human's interests, concerns,
-- # and reasoning patterns — high baseline relevance
-- ## ALGORITHM: score_partner_relevance
-- # Emotional content increases relevance
-- # Self-referential content (human talking about themselves)
-- # Decision or value expression
-- # Emotional distress signals
-- ## ALGORITHM: measure_alignment_fidelity
-- # Insufficient data for meaningful score
-- # Predictions where AI was confident should be more accurate
-- # Matching is semantic, not exact string match.
-- # Phase 1: binary (match / no match) determined by AI.
-- # Phase 2: similarity scoring for partial matches.
-- ## ALGORITHM: garmin_poll_cycle
-- # Includes: HR, stress, HRV, body battery, steps, sleep
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## KEY DECISIONS
-- ## INTERACTIONS
-- ## MARKERS
-
-**Sections:**
-- # Human Integration — Behaviors: Observable Effects
-- ## CHAIN
-- ## B1: Garmin Stress Detection
-- ## B2: Voice Message Processing
-- ## B3: The 80/20 Sovereign Cascade Trigger
-- ## B4: Desktop Screenshot Capture
-- ## B5: Blockchain Activity Tracking
-- ## B6: Consent Revocation
-- ## B7: Cross-Modal Pattern Emergence
-- ## B8: Proactive Care from Limbic Coupling
-- ## MARKERS
-
-**Code refs:**
-- `__init__.py`
-- `ai_conversation_capture_and_memory_creator.py`
-- `baseline_calculator_for_biometric_deviation.py`
-- `blockchain_transaction_monitor_and_parser.py`
-- `consent_gate_and_bond_validator.py`
-- `desktop_screenshot_ocr_and_privacy_filter.py`
-- `garmin_biometric_poller_and_limbic_mapper.py`
-- `l1_stimulus_injector_for_partner_data.py`
-- `partner_node_factory_and_relevance_scorer.py`
-- `runtime/bridges/voice_websocket.py`
-- `runtime/cognition/models.py`
-- `sovereign_cascade_prediction_tracker.py`
-- `test_baseline_calculator_for_biometric_deviation.py`
-- `test_consent_gate_and_bond_validator.py`
-- `test_desktop_screenshot_ocr_and_privacy_filter.py`
-- `test_garmin_biometric_poller_and_limbic_mapper.py`
-- `test_partner_node_factory_and_relevance_scorer.py`
-- `test_sovereign_cascade_prediction_tracker.py`
-- `test_voice_emotion_extractor_and_memory_creator.py`
-- `tick_runner_l1_cognitive_engine.py`
-- `voice_emotion_extractor_and_memory_creator.py`
-
-**Sections:**
-- # Human Integration — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## Architecture
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## PHASE BREAKDOWN
-- ## SHARED INTERFACES
-- ## EXTERNAL DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- # DOCS: docs/human_integration/IMPLEMENTATION_Human_Integration.md
-- # DOCS: docs/human_integration/ALGORITHM_Human_Integration.md
-- ## TEST PLAN
-- # Total: 54 tests
-- # Run all F3 tests
-- # Run a specific phase
-- # Run with coverage
-- ## MARKERS
-
-**Sections:**
-- # Human Integration — Objectives: The Territory Mapped
-- ## CHAIN
-- ## CONTEXT
-- ## O1: Deep Partner Model (Weight: 0.35)
-- ## O2: Multi-Modal Ingestion (Weight: 0.25)
-- ## O3: Privacy by Architecture (Weight: 0.20)
-- ## O4: Sovereign Cascade Enablement (Weight: 0.20)
-- ## TRADEOFFS
-- ## NON-OBJECTIVES
-
-**Code refs:**
-- `runtime/bridges/voice_websocket.py`
-
-**Sections:**
-- # Human Integration — Patterns: The AI as Cartographer
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## BEHAVIORS SUPPORTED
-- ## BEHAVIORS PREVENTED
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Sections:**
-- # Human Integration — Sync: Current State
-- ## CURRENT STATE
-- ## MATURITY
-- ## DOCUMENTATION CREATED
-- ## OPEN QUESTIONS
-- ## DEPENDENCIES WAITING
-- ## HANDOFF: FOR CROSS-REVIEW
-- ## HANDOFF: FOR HUMAN
-
-**Sections:**
-- # Human Integration — Validation: Invariants & Constraints
-- ## CHAIN
-- ## INVARIANTS
-- ## HEALTH CHECKS
-- ## MARKERS
-
-**Code refs:**
-- `frontend/app/scenarios/page.tsx`
-- `frontend/app/start/page.tsx`
-- `frontend/hooks/useGameState.ts`
-- `runtime/infrastructure/api/playthroughs.py`
-- `runtime/init_db.py`
-- `runtime/physics/graph/graph_ops.py`
-
-**Sections:**
-- # API — Algorithm
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: create_scenario_playthrough
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-- ## Graph Helpers
-- ## Health Check
-- ## Debug Mutation Stream
-- ## Playthrough Creation
-- ## CHAIN
-
-**Code refs:**
-- `app.py`
-- `graph_ops_moments.py`
-- `narrator.py`
-- `orchestrator.py`
-- `surface.py`
-
-**Sections:**
-- # Player Input → Moment Output Flow
-- ## Overview
-- ## Fast Path: Word Click
-- ## Full Path: Action
-- ## Thresholds
-- ## Validation
-- # 1. Create playthrough
-- # 2. Get current moments
-- # 3. Click a word (get moment_id from step 2)
-- # 4. Verify weight changed
-- # Action with narrator
-- ## Chain
-
-**Code refs:**
-- `runtime/infrastructure/api/graphs.py`
-- `runtime/infrastructure/api/playthroughs.py`
-
-**Sections:**
-- # Graph Management API
-- ## Purpose
-- ## Endpoints
-- ## Implementation Notes
-- ## Migration: What Moves to blood-ledger
-- ## Status
-
-**Sections:**
-- # API — Behaviors
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## Health Check
-- ## Debug Mutation Stream
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-- ## CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/api/app.py`
-- `runtime/tests/test_moments_api.py`
-- `runtime/tests/test_router_schema_validation.py`
-
-**Sections:**
-- # API — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: api_availability
-- ## MANUAL RUN
-- # Verify API Health
-- # Verify Action Loop
-- ## KNOWN GAPS
-
-**Sections:**
-- # API — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # API — Patterns
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-- ## CHAIN
-
-**Code refs:**
-- `app.py`
-- `runtime/infrastructure/api/app.py`
-- `runtime/infrastructure/api/moments.py`
-- `runtime/tests/test_moments_api.py`
-- `runtime/tests/test_router_schema_validation.py`
-
-**Doc refs:**
-- `docs/infrastructure/api/IMPLEMENTATION_Api.md`
-- `docs/infrastructure/api/PATTERNS_Api.md`
-
-**Sections:**
-- # API — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## HANDOFF: FOR AGENTS
-- ## TODO
-- ## POINTERS
-- ## CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/api/app.py`
-- `runtime/infrastructure/api/playthroughs.py`
-
-**Doc refs:**
-- `docs/infrastructure/api/ALGORITHM_Api.md`
-- `docs/infrastructure/api/ALGORITHM_Playthrough_Creation.md`
-- `docs/infrastructure/api/BEHAVIORS_Api.md`
-- `docs/infrastructure/api/IMPLEMENTATION_Api.md`
-- `docs/infrastructure/api/PATTERNS_Api.md`
-- `docs/infrastructure/api/SYNC_Api.md`
-- `docs/infrastructure/api/TEST_Api.md`
-- `docs/infrastructure/api/VALIDATION_Api.md`
-
-**Sections:**
-- # Archived: SYNC_Api.md
-- ## RECENT CHANGES
-
-**Code refs:**
-- `runtime/tests/test_moments_api.py`
-- `runtime/tests/test_router_schema_validation.py`
-
-**Doc refs:**
-- `docs/infrastructure/api/SYNC_Api.md`
-
-**Sections:**
-- # API — Validation
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## TEST COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## CHAIN
-
-**Sections:**
-- # DatabaseAdapter — Algorithm
-- ## CHAIN
-- ## PURPOSE
-- ## A1: Factory Initialization
-- ## A2: FalkorDB Query Execution
-- ## A3: Neo4j Query Execution
-- ## A4: Transaction Handling
-- # FalkorDB doesn't have explicit transactions in the same way
-- # Queries are atomic individually
-- # For multi-query atomicity, use MULTI/EXEC at Redis level
-- # On exception, commands not executed = implicit rollback
-- ## A5: Index Creation
-- ## A6: Health Check
-- ## A7: Connection Recovery
-- # Neo4j driver handles connection pooling internally
-- # Just verify connectivity
-- ## VERIFICATION
-
-**Sections:**
-- # DatabaseAdapter — Behaviors
-- ## CHAIN
-- ## PURPOSE
-- ## BEHAVIOR TABLE
-- ## DETAILED BEHAVIORS
-- ## CYPHER COMPATIBILITY BEHAVIORS
-- ## VERIFICATION
-
-**Sections:**
-- # DatabaseAdapter — Health
-- ## CHAIN
-- ## PURPOSE
-- ## HEALTH SIGNALS
-- ## HEALTH CHECK IMPLEMENTATION
-- # runtime/infrastructure/database/health.py
-- # H1: Connection status
-- # H1: Latency threshold
-- ## MONITORING INTEGRATION
-- ## RUNBOOK
-- ## VERIFICATION
-
-**Code refs:**
-- `runtime/connectome/persistence.py`
-- `runtime/connectome/session.py`
-- `runtime/doctor_graph.py`
-- `runtime/graph/health/check_health.py`
-- `runtime/infrastructure/api/graphs.py`
-- `runtime/infrastructure/database/__init__.py`
-- `runtime/infrastructure/database/adapter.py`
-- `runtime/infrastructure/database/factory.py`
-- `runtime/infrastructure/database/falkordb_adapter.py`
-- `runtime/infrastructure/database/neo4j_adapter.py`
-- `runtime/init_db.py`
-- `runtime/migrations/migrate_to_v2_schema.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_ops_apply.py`
-- `runtime/physics/graph/graph_ops_moments.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_queries.py`
-- `runtime/physics/graph/graph_queries_moments.py`
-- `runtime/physics/graph/graph_queries_search.py`
-- `runtime/physics/graph/graph_query_utils.py`
-- `runtime/physics/health/checkers/energy_conservation.py`
-- `runtime/physics/health/checkers/moment_lifecycle.py`
-- `runtime/tests/test_energy_v1_2.py`
-- `runtime/tests/test_moments_api.py`
-- `tools/archive/migrate_schema_v11.py`
-- `tools/migrate_v11_fields.py`
-- `tools/test_health_live.py`
-
-**Sections:**
-- # DatabaseAdapter — Implementation
-- ## CHAIN
-- ## PURPOSE
-- ## NEW FILES TO CREATE
-- ## EXISTING FILES TO MODIFY
-- ## FULL FILE LIST (31 files with FalkorDB references)
-- ## ADAPTER INTERFACE
-- # runtime/infrastructure/database/adapter.py
-- ## FACTORY FUNCTION
-- # runtime/infrastructure/database/factory.py
-- ## MIGRATION PATTERN
-- # Current: Direct FalkorDB usage
-- # Target: Adapter usage
-- ## IMPLEMENTATION ORDER
-- ## VERIFICATION
-
-**Sections:**
-- # DatabaseAdapter — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## OBJECTIVE CONFLICTS
-- ## NON-OBJECTIVES
-- ## VERIFICATION
-
-**Sections:**
-- # DatabaseAdapter — Patterns
-- ## CHAIN
-- ## PURPOSE
-- ## CORE PATTERN: Strategy + Factory
-- # Factory creates the right adapter based on config
-- # All consumers use the same interface
-- ## DESIGN DECISIONS
-- # .mind/database_config.yaml
-- # Neo4j can run as-is
-- # May need to rewrite some patterns
-- # Backend-specific implementation
-- ## SCOPE
-- ## COMPATIBILITY NOTES
-- ## VERIFICATION
-
-**Code refs:**
-- `app/api/connectome/tick/route.ts`
-- `graph_interface.py`
-- `runtime/graph/health/lint_terminology.py`
-- `runtime/graph/health/test_schema.py`
-- `runtime/infrastructure/api/graphs.py`
-- `runtime/init_db.py`
-- `runtime/migrations/migrate_001_schema_alignment.py`
-- `runtime/migrations/migrate_temporal_v171.py`
-- `runtime/migrations/migrate_tick_to_tick_created.py`
-- `runtime/migrations/migrate_to_content_field.py`
-- `runtime/migrations/migrate_to_v2_schema.py`
-- `runtime/physics/graph/adapters/__init__.py`
-- `runtime/physics/graph/adapters/base.py`
-- `runtime/physics/graph/adapters/falkordb_adapter.py`
-- `runtime/physics/graph/adapters/mock_adapter.py`
-- `runtime/physics/graph/adapters/neo4j_adapter.py`
-- `runtime/physics/graph/graph_interface.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_queries.py`
-
-**Sections:**
-- # Database Adapter — Patterns: Graph Backend Abstraction
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## BEHAVIORS SUPPORTED
-- ## BEHAVIORS PREVENTED
-- ## PRINCIPLES
-- # Current (wrong)
-- # Target (right)
-- # mind/data/physics_config.yaml
-- ## DEPENDENCIES
-- ## SCOPE
-- ## REQUIRED CHANGES INVENTORY
-- ## CYPHER DIALECT DIFFERENCES
-- ## MARKERS
-
-**Code refs:**
-- `__init__.py`
-- `adapter.py`
-- `factory.py`
-- `falkordb_adapter.py`
-- `neo4j_adapter.py`
-- `runtime/connectome/persistence.py`
-- `runtime/connectome/session.py`
-- `runtime/infrastructure/api/graphs.py`
-- `runtime/init_db.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_queries.py`
-
-**Sections:**
-- # DatabaseAdapter — Sync
-- ## CHAIN
-- ## CURRENT STATE
-- ## IMPLEMENTATION CHECKLIST
-- ## RECENT CHANGES
-- ## HANDOFF
-- ## DEPENDENCIES
-- ## VERIFICATION
-
-**Code refs:**
-- `__init__.py`
-- `app/api/connectome/tick/route.ts`
-- `base.py`
-- `falkordb_adapter.py`
-- `graph_ops.py`
-- `graph_ops_read_only_interface.py`
-- `graph_queries.py`
-- `mock_adapter.py`
-- `neo4j_adapter.py`
-- `runtime/connectome/persistence.py`
-- `runtime/connectome/runner.py`
-- `runtime/connectome/steps.py`
-- `runtime/graph/health/lint_terminology.py`
-- `runtime/graph/health/test_schema.py`
-- `runtime/infrastructure/api/graphs.py`
-- `runtime/infrastructure/memory/moment_processor.py`
-- `runtime/infrastructure/orchestration/world_runner.py`
-- `runtime/infrastructure/tempo/tempo_controller.py`
-- `runtime/init_db.py`
-- `runtime/migrations/migrate_001_schema_alignment.py`
-- `runtime/migrations/migrate_temporal_v171.py`
-- `runtime/migrations/migrate_tick_to_tick_created.py`
-- `runtime/migrations/migrate_to_content_field.py`
-- `runtime/migrations/migrate_to_v2_schema.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-- `runtime/physics/exploration.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_ops_apply.py`
-- `runtime/physics/graph/graph_ops_links.py`
-- `runtime/physics/graph/graph_ops_moments.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_queries.py`
-- `runtime/physics/graph/graph_queries_moments.py`
-- `runtime/physics/graph/graph_queries_search.py`
-- `runtime/physics/tick_v1_2.py`
-
-**Sections:**
-- # SYNC — Database Adapter
-- ## Current State
-- ## Maturity
-- ## Files Requiring Changes
-- ## Implementation Order
-- ## Decisions Made
-- ## Open Questions
-- ## Handoff Notes
-
-**Sections:**
-- # DatabaseAdapter — Validation
-- ## CHAIN
-- ## PURPOSE
-- ## INVARIANTS
-- # Same query on both
-- # Failing transaction
-- # Node should not exist
-- # With backend: falkordb
-- # Reset singleton, change config to neo4j
-- # Even with bad connection
-- # Should not execute DROP, just search for literal string
-- ## TEST MATRIX
-- ## CRITICAL TESTS
-- # test_database_adapter.py
-- # Filter out infrastructure/database
-- # This should return bool, not raise
-- ## VERIFICATION
-
-**Sections:**
-- # Scene Memory System — Legacy Archive (2024-12)
-- ## PURPOSE
-- ## LEGACY SUMMARY
-- ## CANONICAL REFERENCES
-- ## NOTE ON REMOVALS
-
-**Code refs:**
-- `runtime/infrastructure/memory/transcript.py`
-- `runtime/models/nodes.py`
-- `runtime/physics/graph/graph_ops.py`
-
-**Sections:**
-- # Scene Memory System — Algorithm (Legacy)
-- ## CHAIN
-- ## STATUS
-- ## LEGACY ALGORITHM OUTLINE
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: process_scene_memory (legacy)
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-- ## CANONICAL REFERENCES
-- ## NEXT IN CHAIN
-
-**Sections:**
-- # Scene Memory System — Behavior (Legacy)
-- ## CHAIN
-- ## STATUS
-- ## LEGACY BEHAVIOR SUMMARY
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-- ## LEGACY EDGE CASES
-- ## NEXT IN CHAIN
-
-**Sections:**
-- # Scene Memory — Health: Verification Checklist
-- ## CHAIN
-- ## CHECKS
-
-**Code refs:**
-- `runtime/infrastructure/memory/__init__.py`
-- `runtime/infrastructure/memory/moment_processor.py`
-
-**Sections:**
-- # Scene Memory System — Implementation: Moment Processing Architecture
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## ENTRY POINTS
-- ## DATA FLOW (SUMMARY)
-- ## LOGIC CHAINS
-- ## CONCURRENCY MODEL
-- ## MODULE DEPENDENCIES
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # OBJECTIVES — Scene-Memory
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Sections:**
-- # Scene Memory System — Pattern (Legacy)
-- ## CHAIN
-- ## STATUS
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## LEGACY PATTERN SUMMARY
-- ## LEGACY LIMITS
-- ## NEXT IN CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/api/moments.py`
-- `runtime/infrastructure/memory/moment_processor.py`
-- `runtime/physics/graph/graph_ops_moments.py`
-- `runtime/physics/graph/graph_queries_moments.py`
-
-**Sections:**
-- # Scene Memory System — Sync
-- ## ARCHITECTURE EVOLUTION
-- ## IMPLEMENTATION STATUS
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## REPAIR LOG (2025-12-20)
-- ## OPEN QUESTIONS
-- ## ARCHIVE
-
-**Code refs:**
-- `moment_processor.py`
-- `runtime/infrastructure/memory/__init__.py`
-- `runtime/infrastructure/memory/moment_processor.py`
-- `runtime/models/nodes.py`
-- `runtime/tests/test_moment.py`
-
-**Sections:**
-- # Archived: SYNC_Scene_Memory.md
-- ## Maturity
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## MOMENT NODE TYPE
-- # Moment Graph fields
-- # Tick tracking
-- # Transcript reference
-- ## MOMENT PROCESSOR API
-- # Immediate moments (added to transcript)
-- # Potential moments (graph only)
-- # Links
-- ## CHANGELOG
-- # Archived: SYNC_Scene_Memory.md
-- ## RECENT CHANGES
-- # Archived: SYNC_Scene_Memory.md
-- ## DOCUMENT CHAIN
-- ## REPAIR LOG (2025-12-19)
-- ## Agent Observations
-
-**Code refs:**
-- `mind/tests/test_moment.py`
-- `runtime/tests/test_e2e_moment_graph.py`
-- `runtime/tests/test_moment_graph.py`
-- `runtime/tests/test_moment_lifecycle.py`
-- `runtime/tests/test_moments_api.py`
-
-**Sections:**
-- # Scene Memory System — Test: Moment Processing Coverage
-- ## CHAIN
-- ## TEST STRATEGY
-- ## UNIT TESTS
-- ## INTEGRATION TESTS
-- ## EDGE CASES
-- ## TEST COVERAGE
-- ## HOW TO RUN
-- # Run MomentProcessor unit tests
-- # Run full moment-related suite
-- ## KNOWN TEST GAPS
-- ## FLAKY TESTS
-- ## MARKERS
-
-**Sections:**
-- # Scene Memory System — Validation (Legacy)
-- ## CHAIN
-- ## STATUS
-- ## LEGACY INVARIANTS (SUMMARY)
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## LEGACY TEST NOTES
-- ## TEST COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## MARKERS
-- ## NEXT IN CHAIN
-
-**Code refs:**
-- `runtime/infrastructure/tempo/tempo_controller.py`
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Tempo Controller — Algorithm: Tick Loop and Pacing
-- ## CHAIN
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: run
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/tempo/tempo_controller.py`
-
-**Sections:**
-- # Tempo Controller — Behaviors: Observable Pacing Effects
-- ## CHAIN
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/tempo/health_check.py`
-
-**Sections:**
-- # Tempo Controller — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## HOW TO USE THIS TEMPLATE
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: tempo_tick_advances
-- ## HOW TO RUN
-- # Run all health checks for this module
-- # Run a specific checker
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/api/tempo.py`
-- `runtime/infrastructure/canon/canon_holder.py`
-- `runtime/infrastructure/tempo/tempo_controller.py`
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Tempo Controller — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## MARKERS
-
-**Sections:**
-- # OBJECTIVES — Tempo
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Code refs:**
-- `runtime/infrastructure/api/tempo.py`
-- `runtime/infrastructure/tempo/tempo_controller.py`
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Tempo Controller — Patterns: Pacing the Main Loop
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/infrastructure/tempo/tempo_controller.py`
-
-**Doc refs:**
-- `docs/infrastructure/canon/PATTERNS_Canon.md`
-- `docs/infrastructure/tempo/ALGORITHM_Tempo_Controller.md`
-- `docs/infrastructure/tempo/PATTERNS_Tempo.md`
-
-**Sections:**
-- # Tempo Controller — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-
-**Code refs:**
-- `runtime/infrastructure/tempo/tempo_controller.py`
-
-**Sections:**
-- # Tempo Controller — Validation: Pacing Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # No automated tests yet
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # WSL autostart (systemd user)
-- ## 1) Activer systemd dans WSL
-- ## 2) Activer linger pour l'auto-start
-- ## 3) Binaries et chemins absolus
-- ## 4) Configurer le frontend
-- ## 5) Installer les units systemd
-- ## 6) Config ngrok v3
-- ## 7) Logs et status
-- ## 8) Checks de sante
-- ## 9) Depannage
-
-**Code refs:**
-- `runtime/orchestrator/dispatcher.py`
-
-**Sections:**
-- # ALGORITHM -- L1 Physics Wiring & Production Cutover
-- ## 1. Stimulus Injection Pipeline
-- # 1. CLASSIFY — determine energy budget and modality
-- # 2. SEGMENT — decompose into atomic concepts
-- # Complex stimuli split into meaningful chunks
-- # extract_concepts uses NLP entity extraction or
-- # simple keyword/sentence segmentation
-- # 3. EMBED — batch embedding call for all segments
-- # 4. DEDUP — check against existing nodes in citizen's graph
-- # 5. BUILD STIMULI — ready for Law 1 dual-channel
-- # Stimulus energy budgets by source
-- # Deduplication threshold (cosine similarity)
-- # Bulk stimulus threshold (chars)
-- # Max chunks from a bulk stimulus
-- # Split into sentences
-- # Each sentence becomes a segment
-- ## 2. Tick Integration in Orchestrator
-- # ... existing init ...
-- # ... existing maintenance code ...
-- # ── PHYSICS TICKS ──────────────────────────────────────────
-- # ... existing dispatch code ...
-- # Environment variable: PHYSICS_TICK_INTERVAL
-- # Controls seconds between physics ticks
-- # Adaptive: if no stimuli in last 5 minutes, downshift to minimal
-- # If stimulus arrives, upshift to normal
-- # Fast only when arousal > 0.7 (panic regime)
-- ## 3. Cognitive Landscape Serialization
-- # Personal depth: self_relevance
-- # Permanence: weight × (1 + stability)
-- # Partner bond: partner_relevance
-- # Purpose: goal_relevance
-- # Warmth: care_affinity
-- # Ambition: achievement_affinity × energy
-- # Recurrence: activation_count
-- # Significance keywords → weight multiplier
-- # Memory node properties
-- # Linked to current WM nodes via REMINDS_OF
-- ## 4. Orientation to Action Mapping
-- # Hysteresis: current orientation gets a bonus to prevent rapid flipping
-- ## 5. Post-Action Feedback Loop
-- # 1. Response text → self-stimulus
-- # 2. Step 17 — CONSUME — deplete energy on nodes that drove the action
-- # 3. Limbic feedback — satisfaction if response was delivered,
-- # frustration if it was suppressed or errored
-- # Gate 1: REFRACTORY PERIOD
-- # Gate 2: DIMINISHING RETURNS
-- # Gate 3: NOVELTY GATE
-- ## 6. Embedding Integration
-- # In the physics engine initialization:
-- ## 7. FalkorDB Persistence
-- # Batch upsert dirty nodes
-- # Batch upsert dirty links
-- # Note: embedding stored separately due to vector size
-- # FalkorDB handles large lists but consider separate vector index
-- # Check if graph exists (has nodes)
-- # FIRST BOOT — seed from brain.json
-- # Generate from seed brain generator
-- # RESTART — load from FalkorDB
-- ## 8. Seed Brain Customization
-- # 1. Generate base brain (shared across all citizens)
-- # 2. Load citizen identity
-- # 3. Generate per-citizen overlay
-- # Role-specific processes
-- # Drive baselines from personality
-- # These modify the engine's LimbicState, not graph nodes
-- # Unique desires from identity goals
-- # Relational seeds (links to known citizens)
-- # 4. Merge base + overlay
-- ## 9. Emotion Calibration Formulas
-- # Anxiety rises when:
-- # - Novelty is high (unfamiliar context)
-- # - Trusted nodes (weight > 0.7, stability > 0.5) are NOT in WM
-- # - Self-preservation drive is elevated
-- # ANXIETY_COUPLING_RATE: proposed 0.15 (moderate smoothing)
-- # Anxiety decays naturally when trusted nodes re-enter WM
-- # Satisfaction decays toward baseline unless refreshed
-- # Refresh: task completion, positive feedback, desire fulfillment
-- # On task completion: satisfaction += SATISFACTION_SPIKE (0.3)
-- # On positive feedback: satisfaction += SATISFACTION_BOOST (0.15)
-- # On desire fulfillment: satisfaction += DESIRE_SATISFACTION (0.25)
-- # In orientation computation:
-- # Strong bonus to escalate orientation
-- # Tracking:
-- ## 10. Production Cutover (Phase 7)
-
-**Sections:**
-- # BEHAVIORS -- L1 Physics Wiring & Production Cutover
-- ## Observable Behaviors
-- ## Emergent Dynamics to Watch For
-- ## Anti-Behaviors
-
-**Code refs:**
-- `anti_loop_protection.py`
-- `brain_health_score_periodic_calculator.py`
-- `citizen_brain_seeder.py`
-- `concept_extractor.py`
-- `constants.py`
-- `dispatcher.py`
-- `docchain_to_brain_cluster_converter.py`
-- `docwatch_brain_sync_daemon.py`
-- `falkordb_checkpointer.py`
-- `feedback_injector.py`
-- `graph_schema_setup.py`
-- `home_server.py`
-- `l1_autonomous_action_dispatcher.py`
-- `l1_live_integration_bridge.py`
-- `law_13_to_18_limbic_engine.py`
-- `laws/__init__.py`
-- `laws/law_01_energy_injection.py`
-- `laws/law_02_propagation.py`
-- `laws/law_03_energy_decay.py`
-- `laws/law_04_attentional_competition.py`
-- `laws/law_05_coactivation_reinforcement.py`
-- `laws/law_06_consolidation.py`
-- `laws/law_07_forgetting.py`
-- `laws/law_09_inhibition.py`
-- `laws/law_13_to_18_limbic_engine.py`
-- `models.py`
-- `orientation_taxonomy.py`
-- `runtime/citizens/__init__.py`
-- `runtime/cognition/__init__.py`
-- `runtime/cognition/anti_loop_protection.py`
-- `runtime/cognition/brain_health_score_periodic_calculator.py`
-- `runtime/cognition/citizen_brain_seeder.py`
-- `runtime/cognition/concept_extractor.py`
-- `runtime/cognition/constants.py`
-- `runtime/cognition/falkordb_checkpointer.py`
-- `runtime/cognition/feedback_injector.py`
-- `runtime/cognition/graph_schema_setup.py`
-- `runtime/cognition/laws/__init__.py`
-- `runtime/cognition/laws/law_01_energy_injection.py`
-- `runtime/cognition/laws/law_02_propagation.py`
-- `runtime/cognition/laws/law_03_energy_decay.py`
-- `runtime/cognition/laws/law_04_attentional_competition.py`
-- `runtime/cognition/laws/law_05_coactivation_reinforcement.py`
-- `runtime/cognition/laws/law_06_consolidation.py`
-- `runtime/cognition/laws/law_07_forgetting.py`
-- `runtime/cognition/laws/law_09_inhibition.py`
-- `runtime/cognition/laws/law_13_to_18_limbic_engine.py`
-- `runtime/cognition/models.py`
-- `runtime/cognition/orientation_taxonomy.py`
-- `runtime/cognition/stimulus_router.py`
-- `runtime/cognition/tests/test_minimal_kernel_invariants.py`
-- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
-- `runtime/cognition/wm_prompt_serializer.py`
-- `runtime/infrastructure/database/falkordb_adapter.py`
-- `runtime/infrastructure/embeddings/openai_adapter.py`
-- `runtime/orchestrator/dispatcher.py`
-- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
-- `scripts/seed_all_citizens.py`
-- `seed_brain_from_json_cluster_loader.py`
-- `seed_brain_from_source_docs_dynamic_generator.py`
-- `stimulus_router.py`
-- `tests/test_minimal_kernel_invariants.py`
-- `tick_runner_l1_cognitive_engine.py`
-- `wm_prompt_serializer.py`
-
-**Doc refs:**
-- `docs/reviews/REVIEW_F4_F5_Coherence.md`
-
-**Sections:**
-- # IMPLEMENTATION -- L1 Physics Wiring & Production Cutover
-- ## L1 Engine: Located in manemus
-- ## Phase B Review Corrections Applied
-- ## File-Level Plan
-- ## Porting Plan: manemus to mind-mcp
-- ## Existing Files That Need Modification
-- ## New Files to Create (Revised Estimate)
-- ## Integration Points (Known from manemus Code)
-- # bridge.inject_message("citizen_handle", "text", is_social=True)
-- # → creates Stimulus(content=text, energy_budget=1.0, is_social=True, ...)
-- # → calls tick_runner.inject_stimulus(stimulus)
-- # → optionally triggers an immediate tick
-- # Returns: orientation, limbic snapshot, wm_summary, wm_nodes, arousal_regime
-- ## Dependency Graph (Revised)
-- ## Risk Assessment (Revised)
-
-**Code refs:**
-- `runtime/infrastructure/database/falkordb_adapter.py`
-- `runtime/infrastructure/embeddings/openai_adapter.py`
-
-**Sections:**
-- # OBJECTIVES -- L1 Physics Wiring & Production Cutover
-- ## Purpose
-- ## Objectives (Ranked)
-- ## Non-Objectives
-- ## Success Criteria
-- ## Dependencies
-
-**Code refs:**
-- `dispatcher.py`
-
-**Sections:**
-- # PATTERNS -- L1 Physics Wiring & Production Cutover
-- ## Design Philosophy
-- ## Scope
-- ## Key Design Decisions
-
-**Code refs:**
-- `runtime/citizens/__init__.py`
-- `runtime/cognition/falkordb_checkpointer.py`
-- `runtime/cognition/feedback_injector.py`
-- `runtime/cognition/l1_live_integration_bridge.py`
-- `runtime/cognition/models.py`
-- `runtime/cognition/orientation_taxonomy.py`
-- `runtime/cognition/stimulus_router.py`
-- `runtime/cognition/tick_runner_l1_cognitive_engine.py`
-- `runtime/cognition/wm_prompt_serializer.py`
-- `runtime/infrastructure/database/falkordb_adapter.py`
-- `runtime/infrastructure/embeddings/openai_adapter.py`
-- `runtime/infrastructure/embeddings/service.py`
-- `runtime/orchestrator/claude_invoker.py`
-- `runtime/orchestrator/dispatcher.py`
-- `runtime/physics/constants.py`
-- `runtime/physics/crystallization.py`
-- `runtime/physics/link_scoring.py`
-- `runtime/physics/tick_runner.py`
-- `runtime/seed_brain_from_source_docs_dynamic_generator.py`
-
-**Doc refs:**
-- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
-- `docs/l1_wiring/ALGORITHM_L1_Wiring.md`
-- `docs/reviews/REVIEW_F4_F5_Coherence.md`
-
-**Sections:**
-- # SYNC -- L1 Physics Wiring & Production Cutover
-- ## Maturity
-- ## Current State
-- ## v1.x vs. v2.0 Gap Analysis
-- ## Open Questions
-- ## Dependencies
-- ## Next Steps
-- ## Handoff
-
-**Code refs:**
-- `runtime/agent_cli.py`
-- `runtime/llms/gemini_agent.py`
-
-**Doc refs:**
-- `docs/llm_agents/ALGORITHM_Gemini_Stream_Flow.md`
-- `docs/llm_agents/BEHAVIORS_Gemini_Agent_Output.md`
-- `docs/llm_agents/HEALTH_LLM_Agent_Coverage.md`
-- `docs/llm_agents/IMPLEMENTATION_LLM_Agent_Code_Architecture.md`
-- `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`
-- `docs/llm_agents/SYNC_LLM_Agents_State.md`
-- `docs/llm_agents/SYNC_LLM_Agents_State_archive_2025-12.md`
-- `docs/llm_agents/VALIDATION_Gemini_Agent_Invariants.md`
-
-**Sections:**
-- # Archived: SYNC_LLM_Agents_State.md
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## RECENT CHANGES
-- ## TODO
-- # No module-specific tests documented yet.
-- # Archived: SYNC_LLM_Agents_State.md
-- ## RECENT CHANGES
-- ## Agent Observations
-
 **Code refs:**
-- `runtime/llms/gemini_agent.py`
+- `mcp/server.py`
 
 **Sections:**
-- # mind LLM Agents — Algorithm: Gemini Stream Flow
+- # MCP Tools — Algorithm: Tool Dispatch and Execution Logic
 - ## CHAIN
 - ## OVERVIEW
 - ## OBJECTIVES AND BEHAVIORS
-- ## ALGORITHM: main
+- ## ALGORITHM: Tool Dispatch
+- ## ALGORITHM: graph_query
+- ## ALGORITHM: subcall (Zero-LLM Telepathy)
+- ## ALGORITHM: call
+- ## ALGORITHM: spawn
+- ## DATA FLOW
+- ## KEY DECISIONS
+- ## INTERACTIONS
+
+**Sections:**
+- # Tools — Algorithm: Script Flow
+- ## CHAIN
+- ## OVERVIEW
+- ## OBJECTIVES AND BEHAVIORS
+- ## DATA STRUCTURES
+- ## ALGORITHM: stream_dialogue.main
+- ## KEY DECISIONS
 - ## DATA FLOW
 - ## COMPLEXITY
-- ## DATA STRUCTURES
-- ## KEY DECISIONS
 - ## HELPER FUNCTIONS
 - ## INTERACTIONS
 - ## MARKERS
-
-**Sections:**
-- # mind LLM Agents — Behaviors: Gemini Agent Output
-- ## CHAIN
-- ## BEHAVIORS
-- ## NOTES
-- ## OBJECTIVES SERVED
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Sections:**
-- # Health Indicator: API Connectivity
-- ## PURPOSE
-- ## VALUE TO CLIENTS & VALIDATION MAPPING
-- ## HEALTH REPRESENTATION
-- ## DOCKS SELECTED
-- ## ALGORITHM / CHECK MECHANISM
-- ## INDICATOR
-- ## THROTTLING STRATEGY
-- ## FORWARDINGS & DISPLAYS
-- ## MANUAL RUN
-
-**Code refs:**
-- `gemini_agent.py`
-- `mind/llms/gemini_agent.py`
-
-**Doc refs:**
-- `docs/cli/HEALTH_CLI_Coverage.md`
-
-**Sections:**
-- # mind LLM Agents — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## OBJECTIVES COVERAGE
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## HOW TO RUN
-- # Manual verification of stream JSON
-- # Manual verification of plain text
-- ## DETAILED INDICATOR SPECIFICATIONS
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Sections:**
-- # Health Indicator: Stream Validity
-- ## PURPOSE
-- ## VALUE TO CLIENTS & VALIDATION MAPPING
-- ## HEALTH REPRESENTATION
-- ## DOCKS SELECTED
-- ## ALGORITHM / CHECK MECHANISM
-- ## INDICATOR
-- ## THROTTLING STRATEGY
-- ## FORWARDINGS & DISPLAYS
-- ## MANUAL RUN
-
-**Code refs:**
-- `agent_cli.py`
-- `gemini_agent.py`
-- `mind/agent_cli.py`
-- `mind/llms/gemini_agent.py`
-- `mind/llms/tool_helpers.py`
-
-**Sections:**
-- # mind LLM Agents — Implementation: Code Architecture
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW SUMMARY
-- ## MODULE DEPENDENCIES
-- ## STATE & RUNTIME
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## EXTRACTION CANDIDATES
-- ## MARKERS
-
-**Sections:**
-- # OBJECTIVES — Llm Agents
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Code refs:**
-- `agent_cli.py`
-- `mind/llms/gemini_agent.py`
-
-**Sections:**
-- # mind LLM Agents — Patterns: Provider-Specific LLM Subprocesses
-- ## CHAIN
-- ## THE PROBLEM
-- ## SCOPE
-- ## DATA
-- ## THE PATTERN
-- ## BEHAVIORS SUPPORTED
-- ## BEHAVIORS PREVENTED
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## WHAT THIS DOES NOT SOLVE
-- ## MARKERS
-
-**Code refs:**
-- `gemini_agent.py`
-- `runtime/agent_cli.py`
-- `runtime/llms/gemini_agent.py`
-
-**Doc refs:**
-- `archives/SYNC_LLM_Agents_State_archive_2025-12.md`
-
-**Sections:**
-- # LLM Agents — Sync: Current State
-- ## CHAIN
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## RECENT CHANGES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## TODO
-- ## ARCHIVE
-- ## ARCHIVE
-
-**Doc refs:**
-- `docs/llm_agents/PATTERNS_Provider_Specific_LLM_Subprocesses.md`
-
-**Sections:**
-- # mind LLM Agents — Validation: Gemini Agent Invariants
-- ## CHAIN
-- ## BEHAVIORS GUARANTEED
-- ## OBJECTIVES COVERED
-- ## INVARIANTS
-- ## EDGE CASES
-- ## VERIFICATION METHODS
-- ## FAILURE MODES
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## MARKERS
-
-**Doc refs:**
-- `templates/CLAUDE_ADDITION.md`
-- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
-
-**Sections:**
-- # mind Framework — Algorithm: Overview
-- ## CHAIN
-- ## OVERVIEW
-- ## CONTENTS
-- ## ALGORITHM: Install Protocol in Project
-- ## ALGORITHM: Agent Starts Task
-- ## ALGORITHM: Create New Module
-- ## ALGORITHM: Modify Existing Module
-- ## ALGORITHM: Document Cross-Cutting Concept
-- ## NOTES
-
-**Doc refs:**
-- `templates/CODEX_SYSTEM_PROMPT_ADDITION.md`
-
-**Sections:**
-- # mind Framework — Implementation: Overview
-- ## CHAIN
-- ## OVERVIEW
-- ## FILE STRUCTURE
-- ## SCHEMAS AND CONFIG
-- ## FLOWS AND LINKS
-- # DOCS: docs/{area}/{module}/PATTERNS_*.md
-
-**Sections:**
-- # ALGORITHM: Project Health Doctor
-- ## OVERVIEW
-- ## ID CONVENTION
-- # Issues
-- # Objectives
-- # Tasks
-- # Spaces (modules)
-- # Things (files)
-- # Semantic links (with role name)
-- # Structural links
-- ## MAIN FLOW
-- ## 1. FETCH OBJECTIVES
-- # Example: narrative_OBJECTIVE_engine-physics-documented
-- # Objective-specific fields
-- ## 2. SURFACE ISSUES
-- # ... etc
-- # Each failure becomes an issue
-- # TEST_FAILED, TEST_ERROR, TEST_TIMEOUT
-- # Each failure becomes an issue
-- # HEALTH_FAILED, INVARIANT_VIOLATED
-- # Example: narrative_ISSUE_monolith-engine-physics-graph-ops_a7
-- ## {TASK_TYPE}
-- # Issue-specific fields
-- # Space contains Issue
-- # Issue relates to Thing (file)
-- # Update: severity, message, detected_at, status=open
-- # Create new with links
-- ## 3. TRAVERSE UP
-- # Step 1: Find Space
-- # ID: space_MODULE_{module}
-- # Step 2: Check doc chain exists
-- # Step 3: Find objective
-- # ID: narrative_OBJECTIVE_{module}-{type}
-- # → narrative_OBJECTIVE_engine-physics-documented
-- # Determine outcome
-- ## 4. CREATE TASKS
-- # Example: narrative_TASK_serve-engine-physics-documented_01
-- ## Task: Serve documented for engine-physics
-- # Task-specific fields
-- # Task serves Objective (direction: support)
-- # Task includes Issue (direction: subsume)
-- # Issue blocks Objective (direction: oppose)
-- # Group by outcome
-- # SERVE tasks: group by objective, split if > MAX
-- # Create links
-- # RECONSTRUCT tasks: one per module with gaps
-- # TRIAGE tasks: one per orphan module
-- ## 5. OUTPUT
-- ## OBJECTIVE → SKILL MAPPING
-- ## ISSUE TYPE → OBJECTIVE MAPPING
-- ## CLI INTEGRATION
-- # Basic doctor (static only)
-- # With tests
-- # With health checks
-- # Full (static + tests + health)
-- # Output formats
-- # Show tasks only
-- ## AUTO-RESOLVE
-- ## CHAIN
-
-**Sections:**
-- # BEHAVIORS: Project Health Doctor
-- ## COMMAND INTERFACE
-- # Basic health check
-- # With specific directory
-- # Output formats
-- # Filter by severity
-- # Specific checks
-- ## HEALTH CHECKS
-- ## SPECIAL MARKERS
-- ## OUTPUT BEHAVIOR
-- ## Critical (2 issues)
-- ## Warnings (3 issues)
-- ## Info (3 issues)
-- ## Suggested Actions
-- ## GUIDED REMEDIATION
-- ## Current State
-- ## Recommended Steps
-- # DOCS: docs/api/PATTERNS_Api_Design.md
-- ## Template Commands
-- # Generate PATTERNS from template
-- ## Reference
-- ## EXIT CODES
-- ## CONFIGURATION
-- # Thresholds
-- # Ignore patterns
-- # Disable specific checks
-- # Custom severity overrides
-- ## FALSE POSITIVE SUPPRESSION
-- ## DOC TEMPLATE DRIFT DEFERMENTS
-- ## NON-STANDARD DOC TYPE DEFERMENTS
-- ## RESOLVED ESCALATION MARKERS
-- ## MARKER STANDARDIZATION
-- ## CHAIN
-
-**Code refs:**
-- `doctor_checks.py`
-- `doctor_report.py`
-- `runtime/doctor.py`
-
-**Sections:**
-- # Project Health Doctor — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: Score Sanity
-- ## HOW TO RUN
-- # Run all doctor checks on the current project
-- # Run with JSON output for machine parsing
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/doctor.py`
-- `runtime/doctor_checks.py`
-- `runtime/doctor_checks_content.py`
-- `runtime/doctor_checks_core.py`
-- `runtime/doctor_checks_docs.py`
-- `runtime/doctor_checks_metadata.py`
-- `runtime/doctor_checks_naming.py`
-- `runtime/doctor_checks_prompt_integrity.py`
-- `runtime/doctor_checks_quality.py`
-- `runtime/doctor_checks_reference.py`
-- `runtime/doctor_checks_stub.py`
-- `runtime/doctor_checks_sync.py`
-- `runtime/doctor_files.py`
-
-**Sections:**
-- # Project Health Doctor — Implementation: Code architecture and docking
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DATA FLOW
-- ## DOC-LINK COMPLIANCE
-- ## LOCATIONS
-- ## GAPS / IDEAS
-
-**Sections:**
-- # PATTERNS: Project Health Doctor
-- ## THE PROBLEM
-- ## THE INSIGHT
-- ## DESIGN DECISIONS
-- ## WHAT WE CHECK
-- ## WHAT WE DON'T CHECK
-- ## ALTERNATIVES CONSIDERED
-- ## CHAIN
-
-**Code refs:**
-- `doctor.py`
-- `runtime/doctor_checks.py`
-
-**Sections:**
-- # SYNC: Project Health Doctor
-- ## CURRENT STATE
-- ## IMPLEMENTATION ORDER
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## GAPS
-- ## CHAIN
-- ## ARCHIVE
-
-**Code refs:**
-- `runtime/doctor.py`
-- `runtime/solve_escalations.py`
-
-**Doc refs:**
-- `docs/cli/prompt/HEALTH_Prompt_Runtime_Verification.md`
-- `docs/cli/prompt/SYNC_Prompt_Command_State.md`
-
-**Sections:**
-- # Archived: SYNC_Project_Health_Doctor.md
-- ## MATURITY
-- ## TODO
-- ## NEW MARKERS (2025-12-29 Review)
-
-**Sections:**
-- # VALIDATION: Project Health Doctor
-- ## INVARIANTS
-- ## CHECK CORRECTNESS
-- ## OUTPUT FORMAT CORRECTNESS
-- ## EDGE CASES
-- ## PERFORMANCE BOUNDS
-- ## VERIFICATION COMMANDS
-- # Verify determinism
-- # Verify exit codes
-- # Verify JSON validity
-- # Verify ignore patterns
-- ## CHAIN
-
-**Sections:**
-- # Agent Trace Logging — Behaviors: Observable Effects
-- ## CHAIN
-- ## COMMANDS
-- ## AUTOMATIC TRACING
-- ## TRACE FILE FORMAT
-- ## INTEGRATION POINTS
-- ## Usage (auto-generated)
-- ## WHAT GETS TRACED
-- ## WHAT DOESN'T GET TRACED
-
-**Sections:**
-- # Agent Trace Logging — Patterns: Why This Design
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE INSIGHT
-- ## DESIGN DECISIONS
-- ## WHAT THIS ENABLES
-- ## TRADEOFFS
-- ## ALTERNATIVES CONSIDERED
-- ## OPEN QUESTIONS
-
-**Code refs:**
-- `runtime/cli.py`
-
-**Sections:**
-- # Agent Trace Logging — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## IMPLEMENTATION PLAN
-- ## HANDOFF: FOR AGENTS
-- ## TODO
-- ## OPEN QUESTIONS
-- ## MARKERS
-
-**Sections:**
-- # mind Framework — Algorithm: Overview
-- ## CHAIN
-- ## ENTRY POINT
-
-**Sections:**
-- # mind Framework — Behaviors: Observable Protocol Effects
-- ## CHAIN
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Code refs:**
-- `mind/validate.py`
-- `runtime/prompt.py`
-
-**Doc refs:**
-- `docs/cli/HEALTH_CLI_Coverage.md`
-
-**Sections:**
-- # mind Framework — Health: Protocol Verification and Mechanics
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: Chain Completeness
-- ## HOW TO RUN
-- # Verify protocol health for the current project
-- # Verify a specific module
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Sections:**
-- # mind Framework — Implementation: Overview
-- ## CHAIN
-- ## ENTRY POINT
-
-**Sections:**
-- # OBJECTIVES — Protocol
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Sections:**
-- # mind Framework — Patterns: Bidirectional Documentation Chain for AI Agent Workflows
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- # Descriptive names
-- # Not
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## WHAT THIS DOES NOT SOLVE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/cli.py`
-
-**Doc refs:**
-- `archive/SYNC_archive_2024-12.md`
-- `templates/CLAUDE_ADDITION.md`
-- `templates/mind/PRINCIPLES.md`
-- `templates/mind/PROTOCOL.md`
-
-**Sections:**
-- # mind Framework — Sync: Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## STRUCTURE
-- ## POINTERS
-- ## ARCHIVE
-- ## Agent Observations
-- ## GAPS
-- ## ARCHIVE
-
-**Sections:**
-- # Archived: SYNC_Protocol_Current_State.md
-- ## NEW MARKERS (2025-12-29 Review)
-
-**Code refs:**
-- `scripts/check_chain_links.py`
-- `scripts/check_doc_completeness.py`
-- `scripts/check_doc_refs.py`
-- `scripts/check_orphans.py`
-
-**Sections:**
-- # mind Framework — Validation: Protocol Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # Check all invariants
-- # Check specific invariant
-- # Check specific module
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # ALGORITHM: MCP Tools
-- ## graph_query Algorithm
-- # Derive context automatically
-- # Process queries in parallel
-- # Create embedding for query
-- # Search local graph by similarity
-- # Expand to connected nodes if requested
-- ## membrane_query Algorithm
-- # Connect to membrane graph (hardcoded endpoint)
-- # Search membrane graph (public nodes only)
-- # Each match includes org_id
-- ## vector_search Algorithm
-- # Get all nodes with embeddings
-- # Apply filter if specified
-- # Calculate cosine similarity
-- # Sort by score descending
-- # Return top k
-- ## procedure_start Algorithm
-- # Load procedure definition
-- # Create session
-- # Return first step
-- ## procedure_continue Algorithm
-- # Validate answer
-- # Store answer
-- # Advance to next step
-- # Check if complete
-- # Return next step
-- ## doctor_check Algorithm
-- # Run health checks based on depth
-- # Auto-fix small schema issues
-- # Assign agents to remaining issues
-- ## agent_spawn Algorithm
-- # Determine agent
-- # Check availability
-- # Set running
-- # Execute
-- # Set ready
-- ## Embedding Algorithm
-- # Use configured embedding service
-- # Default: all-mpnet-base-v2, 768 dimensions
-- ## CHAIN
-
-**Sections:**
-- # BEHAVIORS: MCP Tools
-- ## Query Tool Behaviors
-- ## Procedure Tool Behaviors
-- ## Agent Tool Behaviors
-- ## Task Tool Behaviors
-- ## Doctor Tool Behaviors
-- ## What Agents Cannot Do
-- ## Error Behaviors
-- ## CHAIN
+- ## FLOWS
 
 **Code refs:**
 - `runtime/connectome/runner.py`
@@ -5935,37 +3785,53 @@
 - ## KNOWN GAPS
 - ## MARKERS
 
-**Code refs:**
-- `mcp/server.py`
-- `runtime/connectome/runner.py`
-- `runtime/connectome/steps.py`
-- `runtime/connectome/validation.py`
-- `runtime/physics/exploration.py`
-- `runtime/physics/subentity.py`
+**Doc refs:**
+- `docs/tools/HEALTH_Tools.md`
+- `docs/tools/OBJECTIVES_Tools_Goals.md`
 
 **Sections:**
-- # IMPLEMENTATION: MCP Tools
-- ## Code Structure
-- ## Key Components
-- ## Data Flow
-- ## Configuration
-- ## Extension Points
-- ## Tests
-- # Run exploration tests
-- # Run MCP server tests
-- # Run procedure tests
+- # Tools — Health: Verification
+- ## PURPOSE OF THIS FILE
+- ## WHY THIS PATTERN
 - ## CHAIN
+- ## HOW TO USE THIS TEMPLATE
+- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
+- ## HEALTH INDICATORS SELECTED
+- ## OBJECTIVES COVERAGE
+- ## STATUS (RESULT INDICATOR)
+- ## DOCK TYPES (COMPLETE LIST)
+- ## CHECKER INDEX
+- ## INDICATOR: tool_doc_completeness
+- ## INDICATOR: tool_execution_consistency
+- ## HEALTH CHECKS
+- ## HOW TO RUN
+- ## KNOWN GAPS
+- ## MARKERS
+
+**Code refs:**
+- `connectome_doc_bundle_splitter_and_fence_rewriter.py`
+- `stream_dialogue.py`
+- `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
+- `tools/stream_dialogue.py`
 
 **Sections:**
-- # Doctor Issues to Protocols Mapping
-- ## How It Works
-- ## Issue → Protocol → Skill Mapping
-- ## Protocol Dependency Graph
-- ## Auto-Fix Flow
-- # Load skill for context
-- # Run protocol via membrane
-- ## Issue Detection → Protocol Trigger Examples
-- ## Adding New Issue Types
+- # Tools — Implementation: Code Mapping
+- ## CHAIN
+- ## CODE STRUCTURE
+- ## DESIGN PATTERNS
+- ## SCHEMA
+- ## ENTRY POINTS
+- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
+- ## LOGIC CHAINS
+- ## MODULE DEPENDENCIES
+- ## STATE MANAGEMENT
+- ## RUNTIME BEHAVIOR
+- ## CONCURRENCY MODEL
+- ## CONFIGURATION
+- ## BIDIRECTIONAL LINKS
+- ## CODE LOCATIONS
+- ## MARKERS
+- ## CODE LOCATIONS
 
 **Code refs:**
 - `mind/repair_verification.py`
@@ -6015,6 +3881,35 @@
 - ## Next Steps
 
 **Code refs:**
+- `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
+- `tools/stream_dialogue.py`
+
+**Doc refs:**
+- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
+- `docs/tools/ALGORITHM_Tools.md`
+- `docs/tools/BEHAVIORS_Tools.md`
+- `docs/tools/HEALTH_Tools.md`
+- `docs/tools/IMPLEMENTATION_Tools.md`
+- `docs/tools/PATTERNS_Tools.md`
+- `docs/tools/SYNC_Tools.md`
+- `docs/tools/VALIDATION_Tools.md`
+
+**Sections:**
+- # Tools — Sync: Current State
+- ## CHAIN
+- ## MATURITY
+- ## CURRENT STATE
+- ## IN PROGRESS
+- ## KNOWN ISSUES
+- ## RECENT CHANGES
+- ## Agent Observations
+- ## TODO
+- ## HANDOFF: FOR AGENTS
+- ## HANDOFF: FOR HUMAN
+- ## POINTERS
+- ## CONSCIOUSNESS TRACE
+
+**Code refs:**
 - `mind/repair_verification.py`
 
 **Sections:**
@@ -6027,1806 +3922,6 @@
 - ## AGENT RESTART PROTOCOL
 - ## VERIFICATION FAILED
 - ## IMPLEMENTATION NOTES
-- ## MARKERS
-
-**Sections:**
-- # VALIDATION: MCP Tools
-- ## Query Invariants
-- ## Procedure Invariants
-- ## Graph Invariants
-- ## Agent Invariants
-- ## Doctor Invariants
-- ## SubEntity Invariants
-- ## Error Conditions
-- ## CHAIN
-
-**Doc refs:**
-- `docs/physics/ALGORITHM_Physics.md`
-- `docs/physics/SYNC_Physics.md`
-- `docs/physics/TEST_Physics.md`
-
-**Sections:**
-- # Physics — Validation: Invariants
-- ## CHAIN
-- ## INVARIANTS
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## TEST COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## Core Invariants
-- # No state stored outside graph
-- # (This is architectural, not queryable)
-- # Verify: handlers don't cache state
-- # Verify: no files store moment state
-- # Verify: display queue reads from graph
-- # Physics tick runs continuously
-- # (Verify via tick counter)
-- # THEN links only from completed moments
-- # THEN links must have tick
-- # No THEN links deleted in test run
-- # (Track count before/after)
-- # All moments created by handler X are ATTACHED_TO character X
-- # (This requires tracking handler outputs)
-- # Verify in handler code:
-- # - No writes to other character's moments
-- # - No direct graph modifications outside ATTACHED_TO scope
-- # Spoken moments cannot revert to possible
-- # THEN links are permanent
-- # (No DELETE on THEN links in codebase)
-- # Run same scenario at 1x and 3x
-- # Compare THEN link chains
-- # Should be identical (display differs, canon same)
-- # Sum of all weights before tick
-- # Tick
-- # Sum after = before - decay + injection
-- # Handlers only triggered by flip
-- # (Verify handler trigger conditions in code)
-- # No cooldown logic in handler system
-- # No artificial caps on handler runs per tick
-- ## Graph State Invariants
-- # Status must be valid enum
-- # Spoken moments must have tick_resolved
-- # Decayed moments must have tick_resolved
-- # Weight must be 0-1
-- # CAN_SPEAK weight must be 0-1
-- # CAN_SPEAK must originate from Character
-- # ATTACHED_TO targets must be valid types
-- # THEN links connect Moments only
-- ## Physics Invariants
-- # At 3x speed, total decay over 10 seconds real-time
-- # should equal decay at 1x over 10 seconds real-time
-- # Same state → same flips
-- # After player input, something responds (eventually)
-- # Run physics until stable or max ticks
-- # Either NPC responded or player character observed silence
-- ## Handler Invariants
-- # Handler must produce valid moment drafts
-- # Handler does NOT set weight
-- # Handler output only attaches to its character
-- # When injected, should only attach to Aldric
-- ## Canon Invariants
-- # Two characters grabbing same item should BOTH canonize
-- # Both should flip (high weight)
-- # Both should be canon
-- # Action processing handles the conflict, not canon holder
-- # Same character, incompatible actions → mutex
-- # Only one should canonize (higher weight)
-- ## Speed Invariants
-- # At 3x, low-weight moments still create THEN links
-- # Not displayed (below threshold)
-- # But is canon
-- # At 3x, interrupt moments always display
-- # Must display (combat is interrupt)
-- # Speed should drop to 1x
-- ## Action Invariants
-- # Actions process one at a time
-- # First succeeds
-- # Second gets blocked consequence
-- # Stale action fails validation
-- # Sword already taken by someone else
-- # Action should fail validation
-- ## Question Answering Invariants
-- # Handler doesn't wait for QA
-- # Should complete in LLM time, not LLM time × 2 (waiting for QA)
-- # QA cannot contradict existing facts
-- # Aldric already has a father defined
-- # QA for "who is my father" must return existing, not invent new
-- # Should reference existing father, not create new one
-- ## Performance Benchmarks
-- # Setup: 1000 moments, 50 characters, 20 places
-- # Setup: 10000 moments
-- # 4 characters flip simultaneously
-- # Should be ~1 LLM call time, not 4
-- ## Verification Checklist
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## TEST COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-
-**Doc refs:**
-- `docs/physics/SYNC_Physics.md`
-- `docs/physics/TEST_Physics.md`
-
-**Sections:**
-- # Physics — Validation: Procedures
-- ## CHAIN
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## TEST COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## MARKERS
-
-**Sections:**
-- # Physics — Algorithm: Energy Flow Sources Sinks And Moment Dynamics (consolidated)
-- ## CHAIN
-- ## CONSOLIDATION
-
-**Code refs:**
-- `runtime/moment_graph/queries.py`
-- `runtime/physics/cluster_energy_monitor.py`
-- `runtime/physics/display_snap_transition_checker.py`
-- `runtime/physics/graph/graph_ops_moments.py`
-- `runtime/physics/graph/graph_queries.py`
-- `runtime/tests/test_cluster_energy_monitor.py`
-- `runtime/tests/test_physics_display_snap.py`
-
-**Doc refs:**
-- `algorithms/ALGORITHM_Physics_Mechanisms.md`
-
-**Sections:**
-- # Physics — Algorithm: Energy Mechanics And Link Semantics
-- ## CHAIN
-- ## Energy Mechanics
-- ## NODE TYPES
-- ## LINK TYPES
-- ## NARRATIVE TYPES
-- ## LINK STRENGTH
-- ## STRENGTH MECHANICS (Six Categories)
-- # Speaking is stronger than thinking
-- # Direct address is strongest
-- # Speaker's belief activated
-- # ABOUT links activated
-- # Check what this evidence supports
-- # Check what this evidence contradicts
-- # Create new association if co-occurrence is strong enough
-- # Recent narratives in same conversation
-- # Co-occurring narratives associate
-- # How much does receiver trust source?
-- # Average trust from relationship narratives
-- # Direct witness vs secondhand
-- # Higher cost = stronger commitment
-- # What beliefs motivated this action?
-- # Narrative pressure (from contradictions and energy)
-- # Danger
-- # Emotional weight of moment
-- # All strength changes multiplied by intensity
-- ## Consolidated: Energy Flow Sources, Sinks, And Moment Dynamics
-- ## ENERGY SOURCES
-- # Baseline regeneration
-- # State modifier
-- # Pump budget
-- # Distribute by belief strength only
-- # Things don't hold energy — redirect to related narratives
-- # Character arrives — they bring their energy with them
-- # News creates/energizes a narrative
-- # Discovery energizes existing narrative
-- # Draw energy from involved characters
-- # Inject into related narratives
-- ## ENERGY SINKS
-- # Core types resist decay
-- # Draw from speakers
-- # Draw from attached narratives
-- ## ENERGY TRANSFER (Links)
-- # A pulls from B
-- # B pulls from A
-- # Energy flows toward equilibrium
-- # Additional drain: old loses extra (world moved on)
-- # Things don't hold energy — skip
-- # Forward flow
-- # Reverse flow only if bidirectional
-- # Only if character is awake and present
-- # Only nodes with energy
-- # Reverse flow: target → moment
-- # Partial drain — recent speech still has presence
-- # Status change
-- # Remaining energy decays normally from here
-- ## MOMENT ENERGY & WEIGHT
-- ## Consolidated: Tick Cycle Gating, Flips, And Dispatch
-- ## FULL TICK CYCLE
-- # 1. Characters pump into narratives
-- # 2. Narrative-to-narrative transfer
-- # 3. ABOUT links (focal point pulls)
-- # 4. Moment energy flow
-- # 5. Narrative pressure injection (structural pressure)
-- # 6. Decay (energy leaves system)
-- # 7. Detect energy threshold crossings
-- # Energy decay (fast)
-- # Check for status transition
-- # Weight decay (slow, only without reinforcement)
-- ## PHYSICAL GATING
-- ## PARAMETERS
-- ## EMERGENT BEHAVIORS
-- ## M11: FLIP DETECTION
-- # Check still valid (state may have changed)
-- # Flip to active
-- # Handler needed?
-- # Async - handler will call record_to_canon when done
-- # Direct record
-- # ... process ...
-- ## M12: CANON HOLDER
-- # 1. Status change
-- # 2. Energy cost (actualization)
-- # 3. THEN link (history chain)
-- # 4. Time passage
-- # 5. Strength mechanics
-- # 6. Actions
-- # 7. Notify frontend
-- # ABOUT links activated
-- # Confirming evidence
-- # Contradicting evidence
-- # Recent narratives in same conversation
-- # Adjust by text length
-- # Check for time-based events
-- # Decay check (large time jumps)
-- # Apply Commitment mechanic (M5)
-- # Winner proceeds to canon
-- # Loser returns to possible, decayed
-- ## M13: AGENT DISPATCH
-- # Detect and process energy threshold crossings
-- # Scheduled events
-- ## WHAT WE DON'T DO
-- ## Consolidated: Handler And Input Processing Flows
-- ## Player Input Processing
-- # Character names
-- # Also check nicknames, titles
-- # Place names
-- # Thing names
-- # ATTACHED_TO player (they said it)
-- # ATTACHED_TO current location
-- # ATTACHED_TO all present characters (they heard it)
-- # REFERENCES for recognized names/things (strong energy transfer)
-- # CAN_SPEAK link (player spoke this)
-- # Direct references get full energy
-- # Boost all moments attached to this character
-- # All present characters get partial energy (they heard)
-- ## "Aldric, what do you think?"
-- ## Aldric directly referenced → full energy boost
-- ## "What does everyone think?"
-- ## No direct reference → distributed partial energy
-- # 1. Parse
-- # 2. Create moment
-- # 3. Create links
-- # 4. Inject energy
-- # 5. Emit player moment to display (immediate)
-- # 6. Trigger physics tick (may be immediate based on settings)
-- # After physics tick, check if anything flipped
-- # No response from NPCs
-- # Energy flows back to player character
-- # Player character's handler will produce observation
-- # "The silence stretches. No one meets your eye."
-- # Or: pause until submit
-- ## Question Answering
-- ## In character handler
-- # Handler needs to know about father
-- # Queue question for answering
-- # Handler continues with what it knows
-- # Does NOT block waiting for answer
-- # 1. GATHER — Get relevant existing facts
-- # 2. GENERATE — Invent answer via LLM
-- # 3. VALIDATE — Check consistency
-- # 4. INJECT — Create nodes in graph
-- # Character's existing family
-- # Character's origin place
-- # Character's existing beliefs/narratives
-- # Historical events character witnessed
-- # Check family conflicts
-- # Check place conflicts
-- # Check temporal conflicts
-- # Create new character nodes
-- # Create relationship link
-- # Create new place nodes
-- # Create relationship link
-- # Create potential memory moments
-- # Create ANSWERED_BY link for traceability
-- ## After injection, physics handles integration:
-- ## New father character exists
-- ## Memory moments attached to asker exist
-- ## These have initial weight (e.g., 0.4)
-- ## Next tick:
-- ## - Energy propagates through FAMILY links
-- ## - Memory moments may get boosted if relevant
-- ## - If weight crosses threshold, memory surfaces
-- ## No special "integrate answer" logic
-- ## Just physics
-- ## Consolidated: Speed Control And Display Filtering
-- ## Speed Controller
-- # Player character directly addressed
-- # Combat initiated
-- # Major character arrival
-- # Energy threshold crossed (narrative pressure)
-- # Decision point (player choices available)
-- # Discovery (new significant narrative)
-- # Danger to player or companions
-- # Phase 1: Running (player sees this already)
-- # - Motion blur effect
-- # - Muted colors
-- # - Text small, streaming upward
-- # Phase 2: The Beat (300-500ms)
-- # Phase 3: Arrival
-- # - Crystal clear, full color
-- # - Large, centered, deliberate
-- # Player can resume after input processed
-- ## At 3x, low-weight moments:
-- ## - Actualize in graph ✓
-- ## - Create THEN links ✓
-- ## - Become history ✓
-- ## - Display to player ✗ (filtered)
-- ## Player can review history later
-- ## Mechanisms — Function-Level Map (consolidated)
-
-**Sections:**
-- # Physics — Algorithm: Handler And Input Processing Flows (consolidated)
-- ## CHAIN
-- ## CONSOLIDATION
-
-**Code refs:**
-- `runtime/moment_graph/surface.py`
-- `runtime/moment_graph/traversal.py`
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-- `runtime/physics/contradiction_pressure_from_negative_polarity_mechanism.py`
-- `runtime/physics/graph/graph_ops_moments.py`
-- `runtime/physics/graph/graph_queries.py`
-- `runtime/physics/primes_lag_and_half_life_decay_mechanism.py`
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `algorithms/ALGORITHM_Physics_Mechanisms.md`
-
-**Sections:**
-- # Physics — Algorithm: Mechanisms (Energy, Pressure, Surfacing)
-- ## CHAIN
-- ## CONSOLIDATION
-
-**Code refs:**
-- `diffusion_sim_v2.py`
-
-**Sections:**
-- # Physics — Algorithm: Schema v1.2 Energy Physics
-- ## CHAIN
-- ## CORE MODEL
-- ## MOMENT LIFECYCLE
-- ## ENERGY PHASES (Per Tick)
-- # No cap — decay handles runaway energy naturally
-- # Unified formula (v1.2: no conductivity)
-- # Transfer
-- # Link receives injection (tracks attention)
-- # Hebbian: color link with moment's emotions
-- # Base flow (v1.2: no conductivity)
-- # Apply path resistance from speaker
-- # Hebbian coloring
-- # Link energy decays fast (attention fades)
-- # Node energy decays based on weight
-- # Liquidate to all connected nodes
-- # Moment remains as graph bridge
-- ## PATH RESISTANCE
-- # Each edge: low weight = high resistance
-- # Total = sum of edge resistances on shortest path
-- ## EMOTION MECHANICS
-- # Inherit from source's current focused state
-- ## LINK CRYSTALLIZATION
-- # Create with inherited emotions
-- ## REDIRECT MECHANICS (Override)
-- # Find new targets
-- # Emotion proximity determines transfer rate
-- # Remainder "haunts" original narrative
-- ## AGENT RESPONSIBILITIES
-- ## EXAMPLE: Full Scene Trace
-- ## SCHEMA CHANGES (v1.1)
-- # Note: conductivity removed in v1.2 — weight controls flow rate
-- # Note: strength merged into weight in v1.2 — weight now dual-purpose
-- # No energy_capacity — decay handles runaway energy naturally
-- ## CONSTANTS
-- ## VALIDATION
-- ## MARKERS
-
-**Sections:**
-- # Physics — Algorithm: Speed Control And Display Filtering (consolidated)
-- ## CHAIN
-- ## CONSOLIDATION
-
-**Sections:**
-- # Physics — Algorithm: Tick Cycle Gating Flips And Dispatch (consolidated)
-- ## CHAIN
-- ## CONSOLIDATION
-
-**Code refs:**
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `implementation/IMPLEMENTATION_Physics_Architecture.md`
-- `implementation/IMPLEMENTATION_Physics_Code_Structure.md`
-- `implementation/IMPLEMENTATION_Physics_Dataflow.md`
-- `implementation/IMPLEMENTATION_Physics_Runtime.md`
-
-**Sections:**
-- # Physics — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## OVERVIEW
-- ## DOCUMENT LAYOUT
-- ## SIGNPOSTS
-
-**Code refs:**
-- `runtime/physics/cluster_energy_monitor.py`
-- `runtime/physics/display_snap_transition_checker.py`
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `docs/physics/SYNC_Physics.md`
-- `docs/physics/algorithms/ALGORITHM_Physics_Mechanisms.md`
-
-**Sections:**
-- # Physics — Sync History (2025-12)
-- ## RECENT CHANGES
-
-**Code refs:**
-- `graph_ops.py`
-- `graph_ops_apply.py`
-- `graph_ops_events.py`
-- `graph_ops_image.py`
-- `graph_ops_types.py`
-- `graph_queries.py`
-- `graph_queries_search.py`
-- `runtime/handlers/base.py`
-- `runtime/infrastructure/api/moments.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/moment_graph/traversal.py`
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `docs/physics/ALGORITHM_Physics.md`
-- `docs/physics/BEHAVIORS_Physics.md`
-- `docs/physics/IMPLEMENTATION_Physics.md`
-- `docs/physics/PATTERNS_Physics.md`
-- `docs/physics/SYNC_Physics.md`
-- `docs/physics/SYNC_Physics_archive_2025-12.md`
-- `docs/physics/TEST_Physics.md`
-- `docs/physics/VALIDATION_Physics.md`
-
-**Sections:**
-- # Archived: SYNC_Physics.md
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## Agent Observations
-- # Archived: SYNC_Physics.md
-- ## RECENT CHANGES
-- ## Agent Observations
-- # Archived: SYNC_Physics.md
-- ## CHAIN
-
-**Code refs:**
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-
-**Sections:**
-- # Physics — Algorithm: Attention Energy Split
-- ## CHAIN
-- ## OVERVIEW
-- ## PROCEDURE (ABRIDGED)
-
-**Code refs:**
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-
-**Sections:**
-- # Physics — Behaviors: Attention Split and Interrupts
-- ## CHAIN
-- ## BEHAVIORS
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Code refs:**
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-
-**Sections:**
-- # Physics — Implementation: Attention Energy Split
-- ## CHAIN
-- ## CODE MAP
-- ## NOTES
-
-**Sections:**
-- # Physics — Objectives: Attention Energy Split
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## OBJECTIVE CONFLICTS
-- ## NON-OBJECTIVES
-- ## VERIFICATION
-
-**Code refs:**
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `docs/physics/PATTERNS_Physics.md`
-- `docs/runtime/membrane/PATTERNS_Membrane_Scoping.md`
-- `docs/runtime/moments/PATTERNS_Moments.md`
-
-**Sections:**
-- # Physics — Patterns: Attention Energy Split (Focus Redistribution as Physics)
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## INTERRUPT PATTERN
-- ## PRINCIPLES
-- ## DATA
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-
-**Sections:**
-- # Physics — Sync: Attention Energy Split
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## TODO
-
-**Code refs:**
-- `runtime/physics/attention_split_sink_mass_distribution_mechanism.py`
-
-**Sections:**
-- # Physics — Validation: Attention Split + Interrupt Invariants
-- ## CHAIN
-- ## BEHAVIORS GUARANTEED
-- ## INVARIANTS (MUST ALWAYS HOLD)
-- ## PROPERTIES (PROPERTY-BASED TESTS)
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- ## SYNC STATUS
-- ## GAPS / QUESTIONS
-
-**Sections:**
-- # Cluster Presentation Algorithm
-- ## Overview
-- ## ALGORITHM: Post-Traversal Selection
-- # Default: highest alignment
-- # Dead ends (no outgoing links)
-- # Weak links (permanence < 0.3)
-- # Filter by relevance to intention
-- # Best link by weight × energy × alignment
-- # Ensure main path intact
-- ## ALGORITHM: Synthesis Unfolding
-- # Input: "surprising reliable the Revelation, incandescent (ongoing)"
-- # Prefix emotions → adverbs
-- # Energy level
-- # Status
-- # Input: "suddenly definitively establishes, with admiration"
-- # Pre-modifiers → adverbs
-- # Verb → participle
-- # Post-modifiers stay same
-- ## ALGORITHM: Presentation Formatting
-- # v1.9.1: Add content block if present
-- # v1.9.1: Add content block for branching node
-- # v1.9.1: Add content block for target
-- ## ALGORITHM: Full Presentation
-- # Step 1: Identify points of interest
-- # Step 2: Build main path
-- # Step 3: Add context
-- # Step 4: Score and truncate
-- # Step 5: Filter links
-- # Format output
-- ## Section Filtering by Intention
-- ## ALGORITHM: Render Cluster (v1.9.2)
-- # Build tree from path (start → focus)
-- # Content block
-- # Link to next
-- # First node - unfold with full prose
-- # Link → target unfolding
-- # Quote content
-- ## Related Documents
-
-**Code refs:**
-- `runtime/physics/__init__.py`
-- `runtime/physics/cluster_presentation.py`
-- `runtime/physics/synthesis_unfold.py`
-- `runtime/tests/test_cluster_presentation.py`
-
-**Sections:**
-- # Cluster Presentation Implementation
-- ## Overview
-- ## File Locations
-- ## Core Classes
-- # runtime/physics/cluster_presentation.py
-- # runtime/physics/synthesis_unfold.py
-- ## Key Functions
-- ## Integration with ExplorationRunner
-- # Run exploration
-- # Convert to raw cluster
-- # Present
-- ## Markdown Output Format
-- ## Language Support
-- # French (default)
-- # English
-- ## Test Coverage
-- ## Related Documents
-
-**Sections:**
-- # Cluster Presentation Patterns
-- ## Overview
-- ## P1: Query vs Intention Drives Presentation
-- ## P2: Cluster Has Structure
-- ## P3: Markers Signal Structure
-- ## P4: Synthesis Unfolds From Floats
-- ## P5: Filtering Reduces 200 Nodes to 30
-- ## P6: Stats Show What's Hidden
-- ## Related Documents
-
-**Sections:**
-- # Graph — Algorithm: Energy Flow
-- ## OVERVIEW
-- ## DATA STRUCTURES
-- ## ALGORITHM: graph_tick
-- ## Per-Tick Processing
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## MARKERS
-- ## Step 1: Compute Character Energies
-- # Relationship intensity: how much player cares
-- # Geographical proximity
-- ## Step 2: Flow Energy Into Narratives
-- ## Step 3: Propagate Between Narratives
-- # Link type factors — each type has its own propagation strength
-- # Collect all transfers first (avoid order dependency)
-- # Bidirectional: contradiction heats both sides
-- # Reverse direction handled when processing from target
-- # Bidirectional: allies rise together
-- # Unidirectional: general → specific
-- # Unidirectional: specific → general
-- # Draining: old loses, new gains
-- # Apply transfers
-- # Apply drains (supersession)
-- ## Step 4: Decay Energy
-- # Dynamic — adjusted by criticality feedback
-- # Apply decay
-- # Floor at minimum
-- # Skip recently active
-- # Core narratives decay slower
-- # Focused narratives decay slower
-- # System too cold — let it heat
-- # System too hot — dampen
-- # Clamp to sane range
-- # NEVER DYNAMICALLY ADJUST:
-- # - breaking_point (changes story meaning)
-- # - belief_flow_rate (changes character importance)
-- # - link propagation factors (changes story structure)
-- ## Step 5: Recompute Weights
-- # Clamp and apply focus evolution
-- # Direct: player believes it
-- # Indirect: about someone player knows
-- # Distant: no direct connection
-- # Bonus is limited by weaker of the two
-- ## Step 6: Tick Pressures
-- # Check for flip
-- # Tick gradual component
-- # Find scheduled floor
-- # Use higher of ticked or floor
-- ## Step 7: Detect Flips
-- ## Full Tick
-- # 1. Character energies (relationship × proximity)
-- # 2. Flow into narratives (characters pump)
-- # 3. Propagate between narratives (link-type dependent)
-- # 4. Decay
-- # 5. Check conservation (soft global constraint)
-- # 6. Adjust criticality (dynamic decay_rate)
-- # 7. Weight recomputation
-- # 8. Pressure ticks
-- # 9. Detect flips
-- ## Automatic Tension from Approach
-- # Edmund's energy as player approaches York
-- # Day 1 (one day travel):
-- # Edmund: intensity=4.0, proximity=0.2 → energy=0.8
-- # Day 2 (same region):
-- # Edmund: intensity=4.0, proximity=0.7 → energy=2.8
-- # No one decided this. Physics decided this.
-- # Confrontation pressure rises because Edmund's narratives heat up.
-- ## Parameters Summary
-- ## Link Type Factors
-- ## Conservation Parameters
-- ## Never Adjust Dynamically
-- ## CHAIN
-
-**Sections:**
-- # Graph — Behaviors: What Should Happen
-- ## CHAIN
-- ## Overview
-- ## BEHAVIORS
-- ## Behavior: Companions Matter More
-- ## Behavior: Contradictions Intensify Together
-- ## Behavior: Support Clusters Rise and Fall Together
-- ## Behavior: Old Truths Fade When Replaced
-- ## Behavior: Core Oaths Persist
-- ## Behavior: Pressure Builds Toward Breaking
-- ## Behavior: Cascades Ripple Through
-- ## Behavior: System Stays Near Criticality
-- ## Behavior: Agents Update Links, Not Energy
-- ## Summary: What To Expect
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Sections:**
-- # Graph — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## OBJECTIVE CONFLICTS
-- ## NON-OBJECTIVES
-- ## THE CORE INSIGHT
-- ## VERIFICATION
-
-**Code refs:**
-- `runtime/physics/tick.py`
-
-**Doc refs:**
-- `docs/schema/SCHEMA_Moments.md`
-
-**Sections:**
-- # Graph — Patterns: Why This Shape
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## The Core Insight
-- ## Energy As Attention
-- ## Computed, Not Declared
-- ## Pressure Requires Release
-- ## The Graph Breathes
-- ## Criticality
-- ## What Agents Never Do
-- ## MARKERS
-
-**Code refs:**
-- `graph_ops.py`
-- `graph_ops_events.py`
-- `graph_ops_types.py`
-- `orchestrator.py`
-- `runtime/infrastructure/api/app.py`
-- `runtime/infrastructure/canon/canon_holder.py`
-- `runtime/infrastructure/orchestration/narrator.py`
-- `runtime/infrastructure/orchestration/orchestrator.py`
-- `runtime/infrastructure/orchestration/world_runner.py`
-- `runtime/physics/graph/graph_interface.py`
-- `runtime/physics/graph/graph_ops_events.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_ops_types.py`
-- `runtime/physics/graph/graph_queries_moments.py`
-- `runtime/physics/tick.py`
-- `tick.py`
-
-**Doc refs:**
-- `docs/physics/ALGORITHM_Physics.md`
-- `docs/physics/IMPLEMENTATION_Physics.md`
-- `docs/physics/graph/BEHAVIORS_Graph.md`
-- `docs/physics/graph/SYNC_Graph.md`
-
-**Sections:**
-- # Graph — Current State
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## What Exists ✓
-- ## Two Paths (Both Valid)
-- ## Known False Positives
-- ## CONFLICTS
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## CHAIN
-- ## Agent Observations
-- ## Agent Observations
-- ## Agent Observations
-- ## ARCHIVE
-- ## ARCHIVE
-- ## ARCHIVE
-
-**Code refs:**
-- `graph_ops.py`
-- `runtime/graph/health/check_health.py`
-- `runtime/infrastructure/api/app.py`
-- `runtime/infrastructure/orchestration/orchestrator.py`
-- `runtime/physics/graph/connectome_read_cli.py`
-- `runtime/physics/graph/graph_interface.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_ops_events.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_ops_types.py`
-- `runtime/physics/graph/graph_queries_moments.py`
-- `runtime/physics/graph/graph_queries_search.py`
-- `runtime/physics/graph/graph_query_utils.py`
-
-**Doc refs:**
-- `docs/physics/graph/ALGORITHM_Energy_Flow.md`
-- `docs/physics/graph/ALGORITHM_Weight.md`
-- `docs/physics/graph/BEHAVIORS_Graph.md`
-- `docs/physics/graph/PATTERNS_Graph.md`
-- `docs/physics/graph/SYNC_Graph.md`
-- `docs/physics/graph/SYNC_Graph_archive_2025-12.md`
-- `docs/physics/graph/VALIDATION_Living_Graph.md`
-
-**Sections:**
-- # Archived: SYNC_Graph.md
-- ## Maturity
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## RECENT CHANGES
-- ## KNOWN ISSUES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## TODO
-- ## CONSCIOUSNESS TRACE
-- ## POINTERS
-- ## Key Design Decisions
-- ## The Full Energy Cycle
-- ## Next Steps
-- ## CONFLICTS
-- # Archived: SYNC_Graph.md
-- ## Key Design Decisions
-- ## The Full Energy Cycle
-- ## Next Steps
-- ## CONFLICTS
-- # Archived: SYNC_Graph.md
-- ## Key Design Decisions
-- ## The Full Energy Cycle
-- ## Next Steps
-- ## CONFLICTS
-- ## Agent Observations
-- # Archived: SYNC_Graph.md
-- ## Key Design Decisions
-- ## The Full Energy Cycle
-- ## Next Steps
-- ## CONFLICTS
-- ## Agent Observations
-- # Archived: SYNC_Graph.md
-- ## What's Missing: ONE ENDPOINT
-- # TODO: SSE streaming version
-- ## RECENT CHANGES
-- # Archived: SYNC_Graph.md
-- ## RECENT CHANGES
-- # Archived: SYNC_Graph.md
-- ## RECENT CHANGES
-
-**Doc refs:**
-- `docs/physics/graph/SYNC_Graph.md`
-
-**Sections:**
-- # THE BLOOD LEDGER — Validation Specification
-- # Version: 1.0
-- # =============================================================================
-- # PURPOSE
-- # =============================================================================
-- # =============================================================================
-- # CHAIN
-- # =============================================================================
-- ## CHAIN
-- # =============================================================================
-- # INVARIANTS
-- # =============================================================================
-- ## INVARIANTS
-- # =============================================================================
-- # PROPERTIES
-- # =============================================================================
-- ## PROPERTIES
-- # =============================================================================
-- # ERROR CONDITIONS
-- # =============================================================================
-- ## ERROR CONDITIONS
-- # =============================================================================
-- # TEST COVERAGE
-- # =============================================================================
-- ## TEST COVERAGE
-- # =============================================================================
-- # VERIFICATION PROCEDURE
-- # =============================================================================
-- ## VERIFICATION PROCEDURE
-- # =============================================================================
-- # SYNC STATUS
-- # =============================================================================
-- ## SYNC STATUS
-- # =============================================================================
-- # GRAPH INTEGRITY RULES
-- # =============================================================================
-- # No links — char_wulfric would be orphaned
-- # result.persisted = ["char_aldric", "narr_oath", "link_belief_1"]
-- # result.rejected = [
-- # {"item": "char_wulfric", "error": "orphaned_node", "fix": "Add link..."}
-- # ]
-- # =============================================================================
-- # VISION MAPPING
-- # =============================================================================
-- # --- COVERED BY ENERGY SYSTEM ---
-- # --- REQUIRES NARRATOR/CONTENT ---
-- # =============================================================================
-- # EXPECTED BEHAVIORS
-- # =============================================================================
-- # ---------------------------------------------------------------------------
-- # PRESENCE & PROXIMITY
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # LIVING WORLD
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # NARRATIVE TENSION
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # COMPANION DEPTH
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # SYSTEM HEALTH
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # TIME & PRESSURE
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # ENGAGEMENT
-- # ---------------------------------------------------------------------------
-- # =============================================================================
-- # ANTI-PATTERNS
-- # =============================================================================
-- # =============================================================================
-- # TEST SUITE
-- # =============================================================================
-- # ---------------------------------------------------------------------------
-- # PRESENCE & PROXIMITY
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # LIVING WORLD
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # NARRATIVE TENSION
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # COMPANION DEPTH
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # SYSTEM HEALTH
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # TIME & PRESSURE
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # ENGAGEMENT
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # CRITICALITY
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # CASCADE
-- # ---------------------------------------------------------------------------
-- # ---------------------------------------------------------------------------
-- # ANTI-PATTERNS
-- # ---------------------------------------------------------------------------
-- # =============================================================================
-- # SUMMARY
-- # =============================================================================
-- ## MARKERS
-
-**Sections:**
-- # MECHANISMS — Attention Energy Split (v0)
-- ## CHAIN
-- ## PURPOSE
-- ## INPUTS (REQUIRED)
-- ## STEP 1 — Build Player Neighborhood
-- ## STEP 2 — Enumerate Eligible Sinks
-- ## STEP 3 — Compute Sink Mass (Node↔Link Jointure)
-- ## STEP 4 — Allocate Attention
-- ## STEP 5 — Update Moment Energies (and only moment energies)
-- ## OUTPUTS
-- ## INTERRUPT COUPLING (uses separate pattern)
-- ## FAILURE MODES
-- ## VALIDATION HOOKS
-
-**Code refs:**
-- `runtime/physics/subentity.py`
-
-**Sections:**
-- # MECHANISMS — Awareness Depth + Breadth (v1)
-- ## CHAIN
-- ## PURPOSE
-- ## THE INSIGHT
-- ## INPUTS (REQUIRED)
-- ## STEP 1 — Classify Link and Update Depth
-- # UP: toward abstraction
-- # DOWN: toward details
-- # else: PEER link, no depth change
-- ## STEP 2 — Track Progress Toward Intention
-- ## STEP 3 — Detect Fatigue (Stopping Condition)
-- ## STEP 4 — Child Crystallization Rule
-- # Don't crystallize if we found exactly what we were looking for
-- ## STEP 5 — No Parent Propagation
-- # OLD (removed):
-- # parent.found_narratives.update(child.found_narratives)
-- # parent.satisfaction = max(parent.satisfaction, child.satisfaction)
-- # NEW:
-- # Parent continues its own exploration
-- ## OUTPUTS
-- ## KEY FORMULAS
-- ## FAILURE MODES
-- ## ANTI-PATTERNS (What Doesn't Work)
-- ## VALIDATION HOOKS
-- ## IMPLEMENTATION STATUS
-
-**Sections:**
-- # MECHANISMS — Contradiction Pressure (v0)
-- ## CHAIN
-- ## PURPOSE
-- ## INPUTS
-- ## EDGE PRESSURE
-- ## EFFECT (INDIRECT ONLY)
-- ## BEHAVIORAL EXPECTATIONS
-- ## FAILURE MODES
-- ## VALIDATION HOOKS
-
-**Sections:**
-- # MECHANISMS — PRIMES Lag + Half-Life (v0)
-- ## CHAIN
-- ## PURPOSE
-- ## PRIMES LINK FIELDS (REQUIRED)
-- ## INPUTS
-- ## PRIME EFFECT FUNCTION
-- ## HOW PRIMES IS USED (v0)
-- ## FAILURE MODES
-- ## VALIDATION HOOKS
-
-**Sections:**
-- # Nature — Algorithm
-- ## CHAIN
-- ## CORE ALGORITHM
-- # Step 1: Normalize
-- # Step 2: Split on comma for post-modifiers
-- # Step 3: Find verb (longest match first)
-- # Step 4: Extract pre-modifiers
-- # Start with defaults
-- # Layer 1: Apply verb
-- # Layer 2: Apply pre-modifiers
-- # Layer 3: Apply post-modifiers
-- # Layer 4: Check weight annotations
-- # intensity: -1 (attenuated) to +1 (intensified)
-- # Combine permanence and energy into intensity
-- ## DATA STRUCTURES
-- # ↑ attenuated  ↑ intensified
-- ## COMPLEXITY
-
-**Sections:**
-- # Nature — Behaviors
-- ## CHAIN
-- ## OBSERVABLE BEHAVIORS
-- # Nature Reference
-- # nature.yaml re-read on next access
-- ## EDGE CASES
-
-**Sections:**
-- # Nature — Health
-- ## CHAIN
-- ## PURPOSE
-- ## INDICATORS
-- ## HEALTH CHECK IMPLEMENTATION
-- # H1: YAML Load
-- # H2: Verb Coverage
-- # H3: Translation Completeness
-- ## GAPS
-
-**Sections:**
-- # Nature — Implementation
-- ## CHAIN
-- ## FILE STRUCTURE
-- ## CODE ARCHITECTURE
-- # Defaults
-- # Verb categories
-- # Modifiers
-- # Variations
-- ## DATA FLOW
-- ## DEPENDENCIES
-- ## USAGE EXAMPLES
-- # Include in agent prompt
-- # After editing nature_physics.yaml
-- ## EXTENSION POINTS
-- # In grammar_verbs:
-- # In pre_modifiers:
-- # In post_modifiers:
-
-**Sections:**
-- # Nature — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## OBJECTIVES
-- ## NON-OBJECTIVES
-- ## SUCCESS METRICS
-
-**Code refs:**
-- `nature.py`
-
-**Sections:**
-- # Nature — Patterns
-- ## CHAIN
-- ## DESIGN PHILOSOPHY
-- ## SCOPE
-- ## KEY PATTERNS
-- # "acts on" should match "acts on", not "acts"
-- # conflicts = [{'key': 'permanence', 'previous': 0.9, 'new': 0.1, 'from': 'perhaps'}]
-- ## ANTI-PATTERNS
-
-**Code refs:**
-- `runtime/physics/nature.py`
-
-**Sections:**
-- # Nature — Sync
-- ## CHAIN
-- ## CURRENT STATE
-- ## RECENT CHANGES
-- ## VERB CATEGORIES
-- ## MODIFIER COUNTS
-- ## NEXT STEPS
-- ## BLOCKERS
-- ## HANDOFF
-- ## ARCHIVE
-
-**Sections:**
-- # Archived: SYNC_Nature.md
-- ## PROPOSITIONS
-- # Au lieu de:
-- # Utiliser:
-- # Link decay: affecte la force de la relation
-- # Node decay: affecte l'énergie du node
-- # États de workflow
-- # Importance
-
-**Sections:**
-- # Nature — Validation
-- ## CHAIN
-- ## INVARIANTS
-- # 'definitely' sets permanence=0.9, 'perhaps' overrides to 0.1
-- # "acts on" should not match just "acts"
-- # "is linked to" should not match just "is"
-- ## TEST COVERAGE
-- ## EDGE CASE TESTS
-- # No valid verb, modifiers ignored
-
-**Sections:**
-- # SubEntity — Algorithm
-- ## CHAIN
-- ## OVERVIEW
-- ## STATE MACHINE
-- ## ALGORITHM: Exploration Runner
-- # v2.1: Removed intention_type param - intention is semantic via embedding
-- ## ALGORITHM: SEEKING
-- # Query alignment (WHAT we're searching for)
-- # Intention alignment (WHY we're searching)
-- # Combined alignment (v2.1: fixed weight, intention is semantic via embedding)
-- # = 0.75 * query_alignment + 0.25 * intention_alignment
-- # Self-novelty (avoid backtracking)
-- # Sibling divergence (spread exploration)
-- # Permanence factor (prefer explorable links)
-- # Final score
-- ## ALGORITHM: BRANCHING
-- # Each child now has sibling_ids pointing to its siblings
-- ## ALGORITHM: ABSORBING (v1.9)
-- ## ALGORITHM: RESONATING
-- ## ALGORITHM: REFLECTING (v2.1)
-- # v2.1: Only backprop color if the path was useful
-- # Path led to good findings - color it
-- # Path wasn't useful - don't color (will crystallize instead)
-- # Fetch all path links
-- # Backprop with intention embedding
-- # Save colored links back to graph
-- ## ALGORITHM: CRYSTALLIZING
-- # spawn_node → new_narrative
-- # new_narrative → focus_node
-- # v2.1: Color path after crystallization - path led to new knowledge
-- # Color with crystallization embedding (what we created)
-- # v2.0.1: Always MERGING after crystallizing (avoids loop)
-- ## ALGORITHM: MERGING
-- # Child crystallizes if needed (v2.0)
-- # NO propagation to parent — graph is source of truth
-- ## ALGORITHM: Awareness Tracking (v2.0)
-- # PEER links (|hierarchy| <= 0.2) don't affect depth
-- # In state loop:
-- ## KEY FORMULAS
-- ## COMPLEXITY
-
-**Sections:**
-- # SubEntity — Behaviors
-- ## CHAIN
-- ## PURPOSE
-- ## BEHAVIORS
-- ## ANTI-BEHAVIORS
-- ## EDGE CASES
-- ## INPUTS
-- ## OUTPUTS
-- ## OBJECTIVES COVERAGE
-
-**Sections:**
-- # SubEntity — Health
-- ## CHAIN
-- ## PURPOSE
-- ## WHEN TO USE HEALTH VS TESTS
-- ## HEALTH INDICATORS
-- ## LOG TRAVERSAL ANALYSIS
-- ## HEALTH CHECK FLOW
-- ## MANUAL REVIEW CHECKLIST
-- ## Exploration Quality Review: {exploration_id}
-- ## DOCKING POINTS
-- ## HEALTH CHECKER INDEX
-- ## HOW TO RUN
-- # Run health checks on specific exploration
-- # Run on all recent explorations
-- ## DIAGNOSTIC REPORTS
-- # Diagnostic Report: {exploration_id}
-- ## Context
-- ## Metrics Summary
-- ## Layer Analysis
-- ## Detected Patterns
-- ## Root Cause
-- ## Proposed Improvements
-- ## Follow-up Actions
-- # Exploration context (logged at START)
-- # Termination (logged at END)
-- # Branching events (logged when spawning children)
-- # Merge events (logged when receiving child results)
-- # Link score breakdown (per candidate)
-- # Energy injection (per step)
-- ## KNOWN GAPS
-- ## EXAMPLE: Annotated Health Report
-
-**Sections:**
-- # SubEntity — Implementation
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## FILE RESPONSIBILITIES
-- ## DESIGN PATTERNS
-- # Normalize inputs, register with context, return
-- ## ENTRY POINTS
-- ## DATA FLOW
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- # runtime/physics/subentity.py:1
-- ## TESTS
-- ## DEPENDENCIES
-
-**Sections:**
-- # SubEntity — Objectives
-- ## CHAIN
-- ## PURPOSE
-- ## PRIMARY OBJECTIVES (Ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS
-- ## SUCCESS METRICS
-
-**Code refs:**
-- `runtime/physics/cluster_presentation.py`
-- `runtime/physics/crystallization.py`
-- `runtime/physics/flow.py`
-- `runtime/physics/link_scoring.py`
-- `runtime/physics/subentity.py`
-- `runtime/physics/traversal_logger.py`
-
-**Doc refs:**
-- `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
-
-**Sections:**
-- # SubEntity — Patterns
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## DESIGN PRINCIPLES
-- ## SCOPE
-- ## INSPIRATIONS
-- ## DEPENDENCIES
-
-**Code refs:**
-- `runtime/physics/subentity.py`
-- `runtime/tests/test_subentity.py`
-
-**Sections:**
-- # SubEntity — Sync
-- ## CHAIN
-- ## HEALTH STATUS
-- ## KNOWN ISSUES
-- ## HANDOFFS
-- ## DOCUMENTATION STATUS
-- ## HANDOFF — v2.0 Implementation (COMPLETED)
-- ## ARCHIVE
-- ## ARCHIVE
-
-**Code refs:**
-- `runtime/physics/cluster_presentation.py`
-- `runtime/physics/exploration.py`
-- `runtime/physics/health/check_subentity.py`
-- `runtime/physics/subentity.py`
-- `runtime/tests/test_subentity.py`
-
-**Doc refs:**
-- `docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md`
-
-**Sections:**
-- # Archived: SYNC_SubEntity.md
-- ## MATURITY
-- ## RECENT CHANGES
-- ## CODE STATUS
-- ## DEPENDENCIES
-- ## VERIFICATION COMMANDS
-- # Run unit tests
-- # Run traversal logger tests
-- # Run health validation tests
-- # Check specific exploration
-- # Check all recent explorations
-- # Archived: SYNC_SubEntity.md
-- ## INVARIANT STATUS
-- ## NEXT ACTIONS
-- ## v2.1 — Semantic Intention + Backprop Coloring (2025-12-29)
-- # _step_seeking
-- # _step_reflecting (if satisfaction > 0.5)
-- # _step_crystallizing (after creating narrative)
-- ## Bug Fixes: v2.0.1 — Crystallization Loop (2025-12-29)
-
-**Code refs:**
-- `runtime/tests/test_subentity.py`
-- `runtime/tests/test_traversal_logger.py`
-
-**Sections:**
-- # SubEntity — Validation
-- ## CHAIN
-- ## PURPOSE
-- ## INVARIANTS
-- # Parent-child consistency
-- # Sibling consistency
-- # No circular refs (parent chain should terminate)
-- # Energy should have increased by approximately expected amount
-- # (tolerance for concurrent updates)
-- # Check crystallization rule
-- # Should NOT crystallize
-- # Should crystallize
-- # Verify it's in graph
-- # No findings = should crystallize
-- # Parent should NOT have inherited child findings (v2.0)
-- # Could be coincidence (parent found same thing)
-- # But if alignment is identical, it's propagation
-- # Should have raised ExplorationTimeoutError
-- # If we got a result, timeout wasn't enforced
-- # Monotonicity
-- # Check increment matches link hierarchy
-- # Should have increased depth[0]
-- # Should have increased depth[1]
-- # Can't be fatigued yet
-- ## PRIORITY TABLE
-- ## INVARIANT INDEX
-- ## VERIFICATION PROCEDURE
-
-**Sections:**
-- # Tick Runner — Patterns: Why This Shape
-- ## The Core Insight
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## COMPARISON WITH WORLD RUNNER
-- ## CLI USAGE
-- # Run until any moment completes
-- # Run until completion or interruption
-- # With options
-- # JSON output for scripting
-- ## EXIT CODES
-- ## INTEGRATION WITH HEALTH
-- ## CHAIN
-
-**Code refs:**
-- `runtime/physics/subentity.py`
-- `runtime/physics/traversal_logger.py`
-- `runtime/tests/test_traversal_logger.py`
-
-**Doc refs:**
-- `docs/physics/DESIGN_Traversal_Logger.md`
-- `docs/physics/EXAMPLE_Traversal_Log.md`
-
-**Sections:**
-- # TraversalLogger Implementation
-- ## PURPOSE
-- ## CODE LOCATIONS
-- ## DATA CLASSES
-- # Score components
-- # Agent-comprehensible additions
-- # Agent-comprehensible additions
-- ## HELPER CLASSES
-- ## LOGGER API
-- # Generate descriptive exploration ID
-- # Result: exp_edmund_find_truth_about_betrayal_20251226_143052
-- # Format: exp_{actor}_{query_slug}_{YYYYMMDD}_{HHMMSS}
-- # Or use factory
-- # Or use singleton
-- # Start exploration
-- # Log each step
-- # ... all other fields
-- # End exploration
-- # Log branch
-- # Log merge
-- # Log crystallize
-- ## OUTPUT FILES
-- ## LOG LEVELS
-- ## INTEGRATION
-- # In SubEntity exploration runner
-- ## AGENT-COMPREHENSIBLE FEATURES
-- ## LINKS
-
-**Code refs:**
-- `runtime/physics/traversal_logger.py`
-- `runtime/tests/test_traversal_logger.py`
-
-**Doc refs:**
-- `docs/physics/DESIGN_Traversal_Logger.md`
-- `docs/physics/EXAMPLE_Traversal_Log.md`
-- `docs/physics/traversal_logger/IMPLEMENTATION_Traversal_Logger.md`
-
-**Sections:**
-- # TraversalLogger — SYNC
-- ## CURRENT STATE
-- ## IMPLEMENTATION STATUS
-- ## FILES
-- ## WHAT'S WORKING
-- ## NOT IMPLEMENTED (BY DESIGN)
-- ## INTEGRATION STATUS
-- ## NEXT STEPS
-- ## LAST CHANGES
-
-**Code refs:**
-- `runtime/physics/exploration.py`
-
-**Doc refs:**
-- `algorithms/ALGORITHM_Physics_Energy_Flow_Sources_Sinks_And_Moment_Dynamics.md`
-- `algorithms/ALGORITHM_Physics_Energy_Mechanics_And_Link_Semantics.md`
-- `algorithms/ALGORITHM_Physics_Handler_And_Input_Processing_Flows.md`
-- `algorithms/ALGORITHM_Physics_Mechanisms.md`
-- `algorithms/ALGORITHM_Physics_Speed_Control_And_Display_Filtering.md`
-- `algorithms/ALGORITHM_Physics_Tick_Cycle_Gating_Flips_And_Dispatch.md`
-
-**Sections:**
-- # Physics — Algorithm: System Overview
-- ## CHAIN
-- ## Consolidation Note
-- ## OVERVIEW
-- ## DETAILED ALGORITHMS
-- ## LEGACY ALGORITHM REDIRECTS
-- ## DATA STRUCTURES
-- ## ALGORITHM: Physics Tick Cycle
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## ALGORITHM: SubEntity Traversal (v1.8)
-- # Intention types and their weights
-- # v1.8: Combine query and intention alignment
-- # Self-novelty: avoid backtracking (links similar to path)
-- # Sibling divergence: avoid siblings' exploration space
-- # v1.8: Score links with query+intention alignment, self_novelty, sibling_divergence
-- # Only branch on Moments (not other types)
-- # Threshold: 2:1 ratio
-- # Spawn children with sibling references
-- # Update sibling_ids for all children
-- # Wait for children, then reflect
-- # v1.7.2+: Merge found_narratives dict (max alignment per narrative)
-- # v1.8: Compute alignment using both query and intention
-- # v1.7.2: found_narratives is dict with max alignment
-- # Satisfaction boost weighted by narrative importance
-- # Walk path in reverse
-- # Attenuation via reverse polarity
-- # v1.8: Permanence boost on positive combined alignment
-- # v1.8: crystallization_embedding computed at each step with query+intention
-- # Check if novel (no similar narrative exists)
-- # Create new Narrative
-- # Link to found narratives with their alignment scores (v1.7.2: dict)
-- # Link to origin Moment
-- # v1.7.2: Merge found_narratives dict (max alignment per narrative)
-- # Also pass crystallized if we created one
-- # Pass to actor
-- # Die
-- # Energy PASSES THROUGH the link (not stored here)
-- # Modified by alignment with intention
-- # Modified by hierarchy (containers amplify inward)
-- # Link gains weight proportional to flow AND permanence
-- # High permanence = solidifies fast
-- # Low permanence = stays light
-- # Link stores energy proportional to flow AND inverse of permanence
-- # High permanence = little energy stored (stable, not reactive)
-- # Low permanence = lots of energy stored (volatile, reactive)
-- # Energy scales with node weight — heavier nodes get more
-- # Only at RESONATING state — no permanence, no convergence bonus
-- ## MARKERS
-
-**Code refs:**
-- `mind/api/app.py`
-
-**Sections:**
-- # Physics — API Reference
-- ## CHAIN
-- ## Endpoints
-- ## Removed Endpoints
-- ## Frontend Types
-- ## SSE Callbacks
-- ## Narrator Output Format
-- ## Graph Operations
-- # Creation
-- # Links
-- # Status changes
-- # Queries
-- # Lifecycle
-
-**Code refs:**
-- `runtime/physics/traversal_logger.py`
-
-**Sections:**
-- # TraversalLogger Design — SubEntity Exploration Logging
-- ## PURPOSE
-- ## LOG LEVELS
-- ## LOG STRUCTURE
-- # For traverse decisions:
-- # For branch decisions:
-- ## EVENT TYPES
-- ## FILE FORMAT
-- ## LOG ROTATION
-- ## API
-- # Exploration lifecycle
-- # Step logging
-- # Events
-- # Query (for analysis)
-- ## DATA CLASSES
-- ## INTEGRATION POINTS
-- # ... existing code
-- ## CONFIGURATION
-- # .mind/config.yaml
-- # What to include at each level
-- ## EXAMPLE OUTPUT
-- ## NEXT STEPS
-
-**Sections:**
-- # Example Traversal Log Output
-- ## Scenario
-- ## Human-Readable Format
-- ## JSONL Format (Machine-Readable)
-- ## Index Entry
-- ## Query Examples
-- # All decisions where sibling_divergence < 0.5
-- # All BRANCH events
-- # Steps where satisfaction increased
-- # Average link score per exploration
-
-**Code refs:**
-- `runtime/physics/health/checker.py`
-
-**Sections:**
-- # Energy Physics — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## LINK TYPES (Simplified v1.2)
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- ## INDICATOR: energy_balance
-- ## INDICATOR: no_negative_energy
-- ## INDICATOR: link_hot_cold_ratio
-- ## INDICATOR: tick_phase_order
-- ## INDICATOR: moment_state_validity
-- ## INDICATOR: link_strength_growth
-- ## HOW TO RUN
-- # Run all health checks for physics
-- # Run specific checker
-- # Run with verbose output
-- # Run continuous monitoring
-- ## KNOWN GAPS
-- ## VALIDATION IDS REFERENCE
-- ## MARKERS
-
-**Code refs:**
-- `runtime/physics/cluster_energy_monitor.py`
-- `runtime/physics/display_snap_transition_checker.py`
-- `runtime/physics/tick.py`
-
-**Sections:**
-- # Physics — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## CHAIN
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- # v1.6.1 SubEntity Exploration Flow
-- ## HEALTH INDICATORS SELECTED
-- # v1.6.1 SubEntity Exploration Indicators
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- # v1.6.1 SubEntity Checkers
-- ## INDICATOR: energy_momentum
-- ## TRACE SCENARIOS (VERIFICATION)
-- ## CHECK: Snap Display Sequence
-- ## CHECK: Cluster Energy Monitor
-- ## HOW TO RUN
-- # Run physics tests (unit and integration)
-- ## NEW HEALTH CHECKS
-- ## v1.6.1 SUBENTITY EXPLORATION HEALTH
-- ## v1.6.1 KNOWN GAPS
-
-**Code refs:**
-- `crystallization.py`
-- `exploration.py`
-- `flow.py`
-- `graph_ops.py`
-- `graph_ops_events.py`
-- `graph_queries.py`
-- `link_scoring.py`
-- `phases/completion.py`
-- `phases/generation.py`
-- `phases/link_cooling.py`
-- `phases/moment_draw.py`
-- `phases/moment_flow.py`
-- `phases/moment_interaction.py`
-- `phases/narrative_backflow.py`
-- `phases/rejection.py`
-- `runtime/infrastructure/api/moments.py`
-- `runtime/infrastructure/orchestration/orchestrator.py`
-- `runtime/models/links.py`
-- `runtime/moment_graph/queries.py`
-- `runtime/physics/constants.py`
-- `runtime/physics/crystallization.py`
-- `runtime/physics/exploration.py`
-- `runtime/physics/flow.py`
-- `runtime/physics/graph/graph_ops.py`
-- `runtime/physics/graph/graph_ops_read_only_interface.py`
-- `runtime/physics/graph/graph_queries_search.py`
-- `runtime/physics/graph/graph_query_utils.py`
-- `runtime/physics/link_scoring.py`
-- `runtime/physics/phases/completion.py`
-- `runtime/physics/phases/generation.py`
-- `runtime/physics/phases/link_cooling.py`
-- `runtime/physics/phases/moment_draw.py`
-- `runtime/physics/phases/moment_flow.py`
-- `runtime/physics/phases/moment_interaction.py`
-- `runtime/physics/phases/narrative_backflow.py`
-- `runtime/physics/phases/rejection.py`
-- `runtime/physics/subentity.py`
-- `runtime/physics/synthesis.py`
-- `runtime/physics/tick.py`
-- `runtime/physics/tick_v1_2.py`
-- `runtime/physics/tick_v1_2_queries.py`
-- `runtime/physics/tick_v1_2_types.py`
-- `runtime/physics/traversal_logger.py`
-- `synthesis.py`
-
-**Doc refs:**
-- `algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md`
-- `docs/physics/PATTERNS_Physics.md`
-- `docs/physics/algorithms/ALGORITHM_Physics_Mechanisms.md`
-
-**Sections:**
-- # Physics — Implementation: Code Architecture & Runtime
-- ## CHAIN
-- ## SUMMARY
-- ## CODE STRUCTURE & RESPONSIBILITIES
-- ## DESIGN & RUNTIME PATTERNS
-- ## STATE MANAGEMENT
-- ## TICK METABOLISM (FLOWS)
-- ## CONCURRENCY, CONFIG & DEPENDENCIES
-- ## OBSERVABILITY & LINKS
-- ## PHYSICS-BASED SEARCH (v1.2)
-- ## SUBENTITY EXPLORATION (v1.8)
-- # Start exploration
-- # Log each step (called by exploration runner)
-- # End exploration
-- # Normal mode: returns ExplorationResult only
-- # Debug mode: returns ExplorationResult + full traversal logs
-- # Output includes:
-- # - ExplorationResult (found_narratives, crystallized, satisfaction)
-- # - Full JSONL log path
-- # - Summary of decisions, anomalies, learning signals
-- ## GAPS / PROPOSITIONS
-
-**Doc refs:**
-- `docs/schema/SCHEMA_Moments.md`
-
-**Sections:**
-- # Physics — Patterns: Why This Shape
-- ## CHAIN
-- ## THE PROBLEM
-- ## THE PATTERN
-- ## PRINCIPLES
-- ## DEPENDENCIES
-- ## INSPIRATIONS
-- ## SCOPE
-- ## Core Principle
-- ## P1: Potential vs Actual
-- ## P2: The Graph Is Alive
-- ## P3: Everything Is Moments
-- ## P4: Moments Are Specific, Narratives Emerge
-- ## P5: Energy Must Land
-- ## P6: Sequential Actions, Parallel Potentials
-- ## P7: The World Moves Without You
-- ## P8: Time Is Elastic
-- ## P9: Physics Is The Scheduler
-- ## P10: Simultaneous Actions Are Drama
-- ## P11: SubEntities Explore With Purpose (v1.8)
-- ## P12: No Magic Numbers (v1.6)
-- ## P13: Siblings Diverge Naturally (v1.6.1)
-- ## P14: Crystallization Is Continuous (v1.8)
-- ## P15: Found Narratives Have Alignment (v1.6.1)
-- ## P16: Sibling Init via Lazy Refs (v1.6.1)
-- ## P17: Branch on Count, Score Handles Selection (v1.6.1)
-- ## P18: Link Embedding from Synthesis (v1.6.1)
-- ## What This Pattern Does NOT Solve
-- ## The Philosophy
-- ## MARKERS
-
-**Code refs:**
-- `runtime/physics/subentity.py`
-- `runtime/physics/traversal_logger.py`
-- `runtime/tests/test_traversal_logger.py`
-
-**Doc refs:**
-- `docs/physics/ALGORITHM_Physics.md`
-- `docs/physics/HEALTH_Energy_Physics.md`
-- `docs/physics/VALIDATION_Energy_Physics.md`
-
-**Sections:**
-- # Archived: SYNC_Physics.md
-- ## MATURITY
-- ## v1.6.1 DESIGN OVERVIEW
-- # Identity
-- # Tree structure
-- # Traversal state
-- # Intention
-- # Accumulated (v1.6.1 refinements)
-- ## v1.6.1 DESIGN DECISIONS
-- ## v1.6.1 IMPLEMENTATION TODOS
-- ## RECENT CHANGES
-
-**Sections:**
-- # Energy Physics — Validation: Invariants and Criteria
-- ## CHAIN
-- ## PURPOSE
-- ## LINK TYPE REFERENCE
-- # Role property replaces BELIEVES vs ORIGINATED vs witness
-- # Emotions + direction replace SUPPORTS vs CONTRADICTS
-- ## ENERGY CONSERVATION
-- ## LINK STATE INTEGRITY
-- ## TICK EXECUTION
-- ## MOMENT LIFECYCLE
-- ## GENERATION & PROXIMITY
-- ## TOP-N FILTER
-- ## BACKFLOW GATING
-- ## CRYSTALLIZATION
-- ## EMOTION HANDLING
-- ## VALIDATION ID INDEX
 - ## MARKERS
 
 **Code refs:**
@@ -8018,362 +4113,6 @@
 - ## SCHEMA MAPPING
 - ## MARKERS
 
-**Sections:**
-- # Cross-Review: F1 (Universe Graph) / F2 (Metabolic Economy) Coherence
-- ## Summary
-- ## Issues Found
-- ## Issues NOT Found (Confirmed Coherent)
-- ## Fixes Applied
-
-**Sections:**
-- # REVIEW: Force 3 (Human Integration) x Force 4 (Trust & Value) Coherence
-- ## Summary
-- ## Issues Found
-- ## Coherence Score
-- ## Remaining Open Items
-
-**Sections:**
-- # REVIEW: Force 4 (Trust Mechanics) x Force 5 (L1 Wiring) Coherence
-- ## Summary
-- ## Issues Found
-- ## Coherence Assessment
-- ## Related Documents
-
-**Code refs:**
-- `mind/graph/health/check_health.py`
-
-**Sections:**
-- # Schema — Algorithm: Schema Loading and Validation Procedures
-- ## CHAIN
-- ## OVERVIEW
-- ## OBJECTIVES AND BEHAVIORS
-- ## DATA STRUCTURES
-- ## ALGORITHM: Schema Loading
-- ## ALGORITHM: Graph Validation
-- # Check required fields
-- # Check enum values
-- ## KEY DECISIONS
-- ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
-- ## INTERACTIONS
-- ## v1.6.1 ALGORITHM ADDITIONS
-- # Polarity is bidirectional array
-- # Polarity values in [0, 1]
-- # Permanence in [0, 1]
-- # Emotions in [-1, +1]
-- # Only branch on Moments
-- # Valid transitions
-- # Check novelty threshold
-- # Check path permanence
-- # Self-novelty: avoid backtracking
-- # Sibling divergence: avoid siblings' exploration space
-- # Siblings must share parent
-- # Children must have this as parent
-- # found_narratives must be tuples
-- ## MARKERS
-
-**Sections:**
-- # Schema — Behaviors: Observable Effects of Schema Compliance
-- ## CHAIN
-- ## BEHAVIORS
-- ## v1.6.1 SUBENTITY BEHAVIORS
-- ## OBJECTIVES SERVED
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Doc refs:**
-- `docs/cognition/l1/ALGORITHM_L1_Physics.md`
-- `docs/schema/GRAMMAR_Link_Synthesis.md`
-
-**Sections:**
-- # L3 Link Synthesis Grammar
-- # Universe Graph — Physics → Language Mapping
-- ## RELATIONSHIP TO L1 GRAMMAR
-- ## CORE PRINCIPLE: NO STORED VERBS
-- ## BASE VERBS (from hierarchy + polarity)
-- ## PRE-MODIFIERS
-- ## POST-MODIFIERS
-- ## COMBINATION RULES
-- ## SEMANTIC VERB OVERRIDES (by Node-Type Pair)
-- ## COMPOSITE PATTERN SIGNATURES
-- ## FULL SYNTHESIS ALGORITHM
-- # 1. Compute base verb
-- # 2. Check for node-type-pair override
-- # 3. Build pre-modifiers (max 2)
-- # Energy
-- # Permanence
-- # Trust (only if extreme)
-- # 4. Build post-modifiers (max 2 + weight)
-- # Friction
-- # Affinity / Aversion
-- # Valence
-- # Ambivalence
-- # Weight annotation
-- # 5. Assemble
-- ## EXAMPLES
-- # Actor -> Thing
-- # Actor -> Actor
-- # Moment -> Space (via Thing/Space pattern)
-- # Narrative -> Narrative
-- # Narrative (hub) -> Moment (commit)
-- # Actor -> Actor (via Moment intermediary, but direct link also valid)
-- ## WHAT THIS GRAMMAR REPLACES
-- ## POINTERS
-
-**Sections:**
-- # Link Synthesis Grammar
-- # Physics → Language Mapping
-- ## CHANGELOG v2.1
-- ## STRUCTURE
-- ## BASE VERBS (from hierarchy + polarity)
-- ## PRE-MODIFIERS
-- ## TEMPORAL MODIFIERS
-- # Recently traversed link
-- # Ancient relationship
-- # Ongoing moment
-- # Brief moment
-- ## POST-MODIFIERS
-- ## COMBINATION RULES
-- ## EXAMPLES
-- ## SEMANTIC VERB OVERRIDES
-- ## VERB INTENSIFIERS
-- ## BIDIRECTIONAL SYNTHESIS
-- # Bidirectional link
-- ## NARRATIVE CONTEXT MODIFIERS
-- # Link to narrative with type: secret
-- # Link to narrative with type: mechanism
-- # Link between narratives
-- # Simplified: "elaborates the pattern from the belief"
-- ## NODE SYNTHESIS GRAMMAR
-- # Energy state
-- # Importance
-- # Energy = atmosphere
-- # Weight
-- # Energy = salience
-- # Weight
-- # Energy = how contested/active
-- # Weight
-- # Energy = urgency
-- # Status
-- ## FULL LINK EXPRESSION
-- ## IMPLEMENTATION
-- # =============================================================================
-- # VOCABULARY (Bilingual: English default, French available)
-- # =============================================================================
-- # Base verbs
-- # Ownership verbs
-- # Evidential verbs
-- # Spatial verbs
-- # Actor verbs
-- # Narrative verbs
-- # Pre-modifiers
-- # Post-modifiers
-- # Weight annotations
-- # Narrative context
-- # Node synthesis
-- # Connectors
-- # Temporal modifiers
-- # Base verbs
-- # Ownership verbs
-- # Evidential verbs
-- # Spatial verbs
-- # Actor verbs
-- # Narrative verbs
-- # Pre-modifiers
-- # Post-modifiers
-- # Weight annotations
-- # Narrative context
-- # Node synthesis
-- # Connectors
-- # Temporal modifiers
-- # Intensifier mappings
-- # Mutual verb forms for bidirectional links
-- # =============================================================================
-- # CORE FUNCTIONS
-- # =============================================================================
-- # === NARRATIVE CONTEXT (if applicable) ===
-- # === PRE-MODIFIERS ===
-- # Energy
-- # Surprise-anticipation
-- # Permanence
-- # === BASE VERB ===
-- # === APPLY INTENSIFIER ===
-- # === POST-MODIFIERS ===
-- # Fear-anger
-- # Trust-disgust
-- # Joy-sadness
-- # === ASSEMBLE ===
-- # Weight annotation
-- # Hierarchy-dominant
-- # Polarity-dominant
-- # === ACTOR OVERRIDES ===
-- # === THING OVERRIDES ===
-- # === MOMENT OVERRIDES ===
-- # === SPACE OVERRIDES ===
-- # === NARRATIVE OVERRIDES ===
-- # Get mutual form
-- # =============================================================================
-- # TEMPORAL MODIFIERS (v2.1)
-- # =============================================================================
-- # Check ongoing/pending status
-- # Check duration
-- # Try recency first
-- # Try staleness for links
-- # Try age for notably old/new
-- # Try duration for moments
-- # =============================================================================
-- # NODE SYNTHESIS
-- # =============================================================================
-- # Energy state
-- # Duration modifier (for temporal context)
-- # Fall back to status if no duration info
-- # =============================================================================
-- # FULL EXPRESSION
-- # =============================================================================
-- # Optionally add temporal context to link
-- ## INVARIANTS
-
-**Code refs:**
-- `mind/graph/health/check_health.py`
-
-**Sections:**
-- # Schema — Health: Verification Mechanics and Coverage
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## HOW TO USE THIS TEMPLATE
-- ## CHAIN
-- ## FLOWS ANALYSIS
-- # v1.6.1 SubEntity Validation Flow
-- ## HEALTH INDICATORS SELECTED
-- # v1.6.1 SubEntity Health Indicators
-- ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
-- ## CHECKER INDEX
-- # v1.6.1 SubEntity Checkers
-- ## INDICATOR: Schema Compliance
-- ## HOW TO RUN
-- # Run CLI health check
-- # Run with JSON output
-- # Run pytest suite
-- # Run specific test
-- ## INDICATOR: SubEntity Integrity (v1.6.1)
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `base.py`
-- `check_health.py`
-- `nodes.py`
-- `runtime/graph/health/check_health.py`
-- `runtime/graph/health/test_schema.py`
-- `runtime/models/base.py`
-- `runtime/models/links.py`
-- `runtime/models/nodes.py`
-- `test_schema.py`
-- `test_schema_links.py`
-- `test_schema_nodes.py`
-
-**Sections:**
-- # Schema — Implementation: Code Architecture and Structure
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## BIDIRECTIONAL LINKS
-- ## EXTRACTION CANDIDATES
-- ## MARKERS
-
-**Code refs:**
-- `runtime/doctor_graph.py`
-
-**Sections:**
-- # Schema Design Patterns
-- ## Core Philosophy
-- ## Key Decisions
-- # Nodes
-- # Links
-- ## What's NOT in the Schema
-- ## Invariants
-
-**Code refs:**
-- `runtime/doctor_graph.py`
-- `runtime/models/links.py`
-- `runtime/models/nodes.py`
-- `runtime/physics/cluster_presentation.py`
-
-**Doc refs:**
-- `docs/schema/GRAMMAR_Link_Synthesis.md`
-- `docs/schema/PATTERNS_Schema.md`
-- `docs/schema/SYNC_Schema.md`
-
-**Sections:**
-- # Schema — Sync: Current State
-- ## CURRENT STATE
-- ## FILES
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## ARCHIVE
-- ## ARCHIVE
-
-**Sections:**
-- # Archived: SYNC_Schema.md
-- ## MATURITY
-- ## v1.2 CHANGES SUMMARY
-- # Old: Actor -[BELIEVES]-> Narrative
-- # New:
-- # Old: Actor -[OWES]-> Actor
-- # New:
-- # Old: Narrative -[SUPPORTS]-> Narrative
-- # New:
-- ## v1.1 CHANGES SUMMARY
-- # All links have emotions (unified list, colored by energy flow)
-- ## ESCALATIONS
-- ## TODOS
-- # Archived: SYNC_Schema.md
-- ## KEY CONCEPTS (v1.6.1)
-- # Identity
-- # Tree structure
-- # Traversal state
-- # Intention
-- # Accumulated findings
-- # Updated EVERY traversal step, not just at crystallization
-- ## v1.6.1 DESIGN DECISIONS
-- ## v1.6.1 IMPLEMENTATION TODOS
-- ## v1.5 IMPLEMENTATION TODOS (Still Pending)
-- ## OPEN QUESTIONS (v1.6 Escalations)
-
-**Code refs:**
-- `check_health.py`
-- `mind/graph/health/check_health.py`
-
-**Sections:**
-- # Schema — Validation: Invariants and Verification
-- ## CHAIN
-- ## BEHAVIORS GUARANTEED
-- ## OBJECTIVES COVERED
-- ## INVARIANTS
-- ## v1.6 INVARIANTS (NEW)
-- # Siblings resolved via lazy refs (sibling_ids + ExplorationContext)
-- ## DETAILED COVERAGE TABLES
-- # Query source node type
-- # Query target node type
-- ## PROPERTIES
-- ## ERROR CONDITIONS
-- ## HEALTH COVERAGE
-- ## VERIFICATION PROCEDURE
-- # Run all schema tests
-- # Run health check
-- # Check for mutations (should find none)
-- ## SYNC STATUS
-- ## MARKERS
-
 **Code refs:**
 - `runtime/task_assignment.py`
 
@@ -8476,127 +4215,27 @@
 - ## INVARIANT INDEX
 
 **Sections:**
-- # Tests/Traversal — Objectives
-- ## Goals
-- ## Non-Goals
-- ## Success Criteria
-
-**Sections:**
-- # Tests/Traversal — Patterns
-- ## Purpose
-- ## What This Tests
-- ## Design Decisions
-- ## Scope
-- ## Implementation Notes
-
-**Sections:**
-- # Tests/Traversal — Sync: Current State
-- ## Current State
-- ## Active Work
-- ## Recent Changes
-- ## Known Issues
-- ## TODO
-- ## Handoff
-
-**Sections:**
-- # Tests — Traversal: Vocabulary
-- ## New Terms
-- # Setup
-- # Teardown
-- ## Existing Terms Used
-
-**Sections:**
-- # Tools — Algorithm: Script Flow
+- # Metabolic Economy — Algorithm: Organism Economics Engine
 - ## CHAIN
 - ## OVERVIEW
-- ## OBJECTIVES AND BEHAVIORS
-- ## DATA STRUCTURES
-- ## ALGORITHM: stream_dialogue.main
-- ## KEY DECISIONS
+- ## FORMULAS
+- ## SETTLEMENT
+- ## TRUST CASCADE
+- ## ANTI-SYBIL
+- ## BILATERAL BOND
+- ## UBC: UNIVERSAL BASIC COMPUTE
+- ## CONSTANTS
+- ## INVARIANTS
 - ## DATA FLOW
-- ## COMPLEXITY
-- ## HELPER FUNCTIONS
 - ## INTERACTIONS
 - ## MARKERS
-- ## FLOWS
 
 **Sections:**
-- # Tools — Behaviors: Utility Outcomes
-- ## CHAIN
-- ## BEHAVIORS
-- ## OBJECTIVES SERVED
-- ## INPUTS / OUTPUTS
-- ## EDGE CASES
-- ## ANTI-BEHAVIORS
-- ## MARKERS
-
-**Doc refs:**
-- `docs/tools/HEALTH_Tools.md`
-- `docs/tools/OBJECTIVES_Tools_Goals.md`
-
-**Sections:**
-- # Tools — Health: Verification
-- ## PURPOSE OF THIS FILE
-- ## WHY THIS PATTERN
-- ## CHAIN
-- ## HOW TO USE THIS TEMPLATE
-- ## FLOWS ANALYSIS (TRIGGERS + FREQUENCY)
-- ## HEALTH INDICATORS SELECTED
-- ## OBJECTIVES COVERAGE
-- ## STATUS (RESULT INDICATOR)
-- ## DOCK TYPES (COMPLETE LIST)
-- ## CHECKER INDEX
-- ## INDICATOR: tool_doc_completeness
-- ## INDICATOR: tool_execution_consistency
-- ## HEALTH CHECKS
-- ## HOW TO RUN
-- ## KNOWN GAPS
-- ## MARKERS
-
-**Code refs:**
-- `connectome_doc_bundle_splitter_and_fence_rewriter.py`
-- `stream_dialogue.py`
-- `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
-- `tools/stream_dialogue.py`
-
-**Sections:**
-- # Tools — Implementation: Code Mapping
-- ## CHAIN
-- ## CODE STRUCTURE
-- ## DESIGN PATTERNS
-- ## SCHEMA
-- ## ENTRY POINTS
-- ## DATA FLOW AND DOCKING (FLOW-BY-FLOW)
-- ## LOGIC CHAINS
-- ## MODULE DEPENDENCIES
-- ## STATE MANAGEMENT
-- ## RUNTIME BEHAVIOR
-- ## CONCURRENCY MODEL
-- ## CONFIGURATION
-- ## BIDIRECTIONAL LINKS
-- ## CODE LOCATIONS
-- ## MARKERS
-- ## CODE LOCATIONS
-
-**Sections:**
-- # OBJECTIVES — Tools
-- ## PRIMARY OBJECTIVES (ranked)
-- ## NON-OBJECTIVES
-- ## TRADEOFFS (canonical decisions)
-- ## SUCCESS SIGNALS (observable)
-
-**Code refs:**
-- `stream_dialogue.py`
-- `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
-- `tools/stream_dialogue.py`
-
-**Sections:**
-- # Tools — Patterns: Utility Scripts
+- # Metabolic Economy — Patterns: Organism Economics
 - ## CHAIN
 - ## THE PROBLEM
 - ## THE PATTERN
-- ## BEHAVIORS SUPPORTED
-- ## BEHAVIORS PREVENTED
+- ## ALTERNATIVES REJECTED
 - ## PRINCIPLES
 - ## DATA
 - ## DEPENDENCIES
@@ -8604,386 +4243,27 @@
 - ## SCOPE
 - ## MARKERS
 
-**Code refs:**
-- `tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`
-- `tools/stream_dialogue.py`
-
-**Doc refs:**
-- `docs/runtime/membrane/PATTERN_Membrane_Modulation.md`
-- `docs/tools/ALGORITHM_Tools.md`
-- `docs/tools/BEHAVIORS_Tools.md`
-- `docs/tools/HEALTH_Tools.md`
-- `docs/tools/IMPLEMENTATION_Tools.md`
-- `docs/tools/PATTERNS_Tools.md`
-- `docs/tools/SYNC_Tools.md`
-- `docs/tools/VALIDATION_Tools.md`
-
 **Sections:**
-- # Tools — Sync: Current State
+- # Metabolic Economy — Validation: Invariants
 - ## CHAIN
-- ## MATURITY
-- ## CURRENT STATE
-- ## IN PROGRESS
-- ## KNOWN ISSUES
-- ## RECENT CHANGES
-- ## Agent Observations
-- ## TODO
-- ## HANDOFF: FOR AGENTS
-- ## HANDOFF: FOR HUMAN
-- ## POINTERS
-- ## CONSCIOUSNESS TRACE
-
-**Code refs:**
-- `tools/stream_dialogue.py`
-
-**Doc refs:**
-- `tools/HEALTH_Tools.md`
-
-**Sections:**
-- # Tools — Validation: Invariants
-- ## CHAIN
-- ## BEHAVIORS GUARANTEED
+- ## FORMULAS GUARANTEED
 - ## OBJECTIVES COVERED
 - ## INVARIANTS
 - ## PROPERTIES
 - ## ERROR CONDITIONS
 - ## HEALTH COVERAGE
 - ## VERIFICATION PROCEDURE
-- # None of these scripts currently ship automated tests; run them manually when making doc changes.
+- # Not yet implemented — these will be simulation tests and on-chain integration tests.
+- # Future locations:
+- # tests/economy/test_degressive_pricing.py
+- # tests/economy/test_progressive_tax.py
+- # tests/economy/test_anti_sybil.py
+- # tests/economy/test_bilateral_transfer.py
+- # tests/economy/test_batch_settlement.py
+- # tests/economy/test_ubc_distribution.py
+- # tests/economy/test_settlement_conservation.py
 - ## SYNC STATUS
 - ## MARKERS
-
-**Sections:**
-- # ALGORITHM: Trust Mechanics
-- ## 1. Limbic Delta Computation
-- # Primary signal: satisfaction gain minus frustration gain
-- # Anxiety reduction is a secondary positive signal (weighted lower)
-- # Theoretical max: satisfaction goes 0→1 (+1) AND frustration goes 1→0 (-(-1)=+1) AND anxiety goes 1→0 (-0.5×(-1)=+0.5)
-- # Practical range: [-0.3, +0.3] for typical interactions
-- ## 2. Trust Update on Links (Law 18 Extension)
-- # Trust gain — asymptotic, same shape as Law 6 consolidation
-- # Negative interaction increases friction, not decreases trust
-- # Update affinity/aversion (co-evolve with trust/friction)
-- # Alignment above 80% threshold: positive trust signal
-- # Alignment below 75% (cascade suspended): friction signal
-- ## 3. The Creator Attribution Cascade
-- # === STEP 1: Thing Consolidation (Law 6) ===
-- # Positive limbic delta means the thing was useful
-- # Asymptotic weight gain
-- # Stability grows from regularity (not raw frequency)
-- # (computed separately in Law 6 regularity tracker)
-- # === STEP 2: User→Thing Link Trust Update (Law 18) ===
-- # === STEP 3: Surplus Propagation (Law 2) ===
-- # Thing has surplus energy from the interaction
-- # Energy flows to ALL neighbors, including creator
-- # Proportional to link weight (thing→creator link)
-- # === STEP 4: Co-activation Reinforcement (Law 5) ===
-- # User and creator are both active (user directly, creator via propagation)
-- # If user→creator link doesn't exist yet, it can be created here
-- # Hebbian: what fires together wires together
-- # The user→creator link now exists and has weight
-- # Trust on this link accumulates over repeated co-activations
-- # via the normal trust update mechanism (Step 2 on future ticks)
-- # === STEP 5: Indirect Trust Accumulation ===
-- # Over time, repeated cascade executions cause:
-- # - user→creator link weight to grow (Law 5)
-- # - user→creator link trust to grow (Law 18, via co-activation signals)
-- # - creator's Trust Score to increase (aggregation of all inbound trust)
-- # This step is NOT explicit code — it is the emergent effect of Steps 1-4
-- # running across many ticks.
-- # Each creator has a creation link: thing→creator_i
-- # The weight on each creation link reflects contribution proportion
-- # Law 2 propagation distributes surplus proportionally
-- # No special-case code needed — topology handles it
-- # Example: thing with 3 creators
-- # thing→creator_A  weight=0.5 (primary author)
-- # thing→creator_B  weight=0.3 (major contributor)
-- # thing→creator_C  weight=0.2 (minor contributor)
-- # Surplus energy splits: 50%, 30%, 20% respectively
-- ## 4. Trust Score Aggregation
-- # Standard PageRank with trust as edge weight
-- # WRONG — storing trust score
-- # RIGHT — computing on demand
-- ## 5. Trust Tempering Formulas
-- # Growth rate at different trust levels:
-- # trust=0.0: growth_factor = 1.0   (maximum growth)
-- # trust=0.5: growth_factor = 0.5   (half speed)
-- # trust=0.8: growth_factor = 0.2   (one-fifth speed)
-- # trust=0.9: growth_factor = 0.1   (one-tenth speed)
-- # trust=0.95: growth_factor = 0.05 (one-twentieth speed)
-- # trust=0.99: growth_factor = 0.01 (one-hundredth speed)
-- # Sub-threshold dissolution
-- # When moat drops below 0, the actor loses incumbency advantage
-- # New actors with fresh contributions can enter WM and receive trust
-- ## 6. Trust in Economic Formulas
-- # Examples:
-- # trust=0.0, prod=0.0:   friction = 0.08  (8%)
-- # trust=0.5, prod=0.0:   friction = 0.04  (4%)
-- # trust=0.8, prod=0.0:   friction = 0.016 (1.6%)
-- # trust=0.95, prod=0.01: friction = -0.006 (NEGATIVE — earns 0.6%)
-- ## 7. Destruction Detection Algorithms
-- # Ratio of consumption to production
-- # Second signal: creation link count
-- # Combined score (both signals must agree)
-- # Sybil signal: internal >> external
-- # Check temporal correlation
-- # High trust velocity (rapid gain) + recent high friction (exploitation)
-- ## 8. Limbic Delta per Value Type
-- # Relational sphere
-- # Generative sphere
-- # Structural sphere
-- # Cognitive sphere
-- # Systemic sphere
-- ## 9. Tick Integration
-- ## Related
-
-**Sections:**
-- # BEHAVIORS: Trust Mechanics
-- ## B1: User Satisfaction with a Tool
-- ## B2: Creator Stops Producing
-- ## B3: Sybil Attack Attempted
-- ## B4: Gradual Trust Building (Happy Path)
-- ## B5: One-Hit Wonder
-- ## B6: Trust Exploitation Attempt
-- ## B7: Cross-Space Trust Transfer
-- ## B8: Value Destruction Through Monoculture
-- ## B9: Biometric Value Creation
-- ## Health Signals
-- ## Related
-
-**Code refs:**
-- `constants.py`
-- `law_02_propagation.py`
-- `law_06_consolidation.py`
-- `law_13_to_18_limbic_engine.py`
-- `laws/law_13_to_18_limbic_engine.py`
-- `models.py`
-- `tests/test_trust_mechanics/test_trust_invariants.py`
-- `tick_runner_l1_cognitive_engine.py`
-- `trust/__init__.py`
-- `trust/constants.py`
-- `trust/creator_attribution_cascade.py`
-- `trust/destruction_pathology_detector.py`
-- `trust/limbic_delta_from_drive_snapshots.py`
-- `trust/personhood_ladder_assessor.py`
-- `trust/trust_score_aggregator.py`
-- `trust/trust_tempering.py`
-- `trust/trust_update_on_link.py`
-- `trust/value_type_classifier.py`
-
-**Sections:**
-- # IMPLEMENTATION: Trust Mechanics
-- ## CHAIN
-- ## Architecture
-- ## CODE STRUCTURE
-- ## Phase Breakdown
-- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 2.1
-- # Trust Mechanics Constants (Law 18 / Force 4)
-- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 1
-- # Clamp to theoretical bounds (corrected from [-2.0, +2.0] per F4/F5 review Issue 7)
-- # In run_tick(), before step 1:
-- # After step 17 (CONSUME):
-- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 3
-- # Find user→thing link
-- # Step 2: Trust update on user→thing link
-- # Steps 1, 3, 4, 5 are handled by existing tick cycle steps.
-- # We record creator information for monitoring/auditing only.
-- # Identify creator links (thing→creator or creator→thing with hierarchy)
-- # Check if this is a creation link (source created thing)
-- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 4
-- # TTL cache: (actor_id, computed_at, score)
-- # DOCS: docs/trust_mechanics/VALUE_CREATION_TAXONOMY.md
-- # Canonical value type signatures from VALUE_CREATION_TAXONOMY.md
-- # Modality-based classification (strongest signal)
-- # Content-based heuristics (from node type and context)
-- # Default: use the primary drive affinity of the thing node
-- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 7
-- # DOCS: docs/trust_mechanics/VALUE_DESTRUCTION_PATHOLOGIES.md
-- # Internal links: both endpoints in actor_set
-- # External links: one endpoint in actor_set, one outside
-- # Signal 1: internal >> external
-- # Signal 2: Temporal correlation
-- # Signal 3: No value production
-- # Heuristic: high trust + high friction is suspicious
-- # (normal actors have high trust / low friction OR low trust / high friction)
-- # DOCS: docs/trust_mechanics/ALGORITHM_Trust_Mechanics.md section 5
-- # Weight decay is already handled by existing Law 7 in tick runner.
-- # We only add trust decay here.
-- # After existing link.weight decay (line ~443):
-- # For each link, also decay trust
-- # Replace dissolution check with trust-aware version
-- # DOCS: docs/trust_mechanics/SYNC_Trust_Mechanics.md OQ4
-- # Full 14-aspect mapping is blocked on OQ4.
-- # Partial mapping based on known correlations:
-- # Empathy ← care, emotional_intelligence value types
-- # Competence ← code, tool_creation, analysis value types
-- # Communication ← teaching, mentoring, documentation value types
-- # Social Awareness ← community_building, mediation value types
-- # 1. Trust Score
-- # 2. Value types demonstrated
-- # 3. Spheres active
-- # 4. Relationship count and diversity
-- # 5. Consistency (mean stability of outbound links)
-- # 6. Partial aspect mapping
-- ## Shared Interfaces
-- ## Test Plan
-- ## Configuration
-- ## Design Patterns
-- ## State Management
-- ## Module Dependencies
-- ## BIDIRECTIONAL LINKS
-- ## Review Issues Addressed
-- ## MARKERS
-
-**Doc refs:**
-- `docs/economy/PATTERNS_Economy.md`
-
-**Sections:**
-- # OBJECTIVES: Trust Mechanics
-- ## O1: Accurate Attribution (Primary)
-- ## O2: Anti-Gaming (Critical)
-- ## O3: Organic Trust Growth (Primary)
-- ## O4: Creator Reward Cascade (Primary)
-- ## O5: Destruction Detection (Secondary)
-- ## Tradeoff Resolution
-- ## Non-Objectives
-- ## Related
-
-**Doc refs:**
-- `docs/cognitive/PATTERNS_Graph_Dynamics.md`
-- `docs/economy/PATTERNS_Economy.md`
-- `docs/human_integration/ALGORITHM_Human_Integration.md`
-
-**Sections:**
-- # PATTERNS: Trust Mechanics
-- ## Core Thesis
-- ## Pattern 1: Trust Lives on Links
-- ## Pattern 2: The Creator Attribution Cascade
-- ## Pattern 3: Trust Tempering (Anti-One-Hit-Wonder)
-- ## Pattern 4: Value Creation Is Typed
-- ## Pattern 5: Value Destruction Is Detectable
-- ## Pattern 6: Trust and Economy Are Coupled
-- # Transaction friction (Pattern 5)
-- # At trust_score = 0.95: friction can go NEGATIVE (you earn by transacting)
-- # Membrane fee (Pattern 6)
-- # Up to 30% fee reduction from trust
-- # Effective pricing
-- ## Pattern 7: Bilateral Bond as Primary Trust Relationship
-- ## Anti-Patterns
-- ## Related
-
-**Sections:**
-- # SYNC: Trust Mechanics
-- ## Current State
-- ## Maturity
-- ## Open Questions
-- ## Recent Changes
-- ## Dependencies
-- ## Handoff
-- ## Module Coverage
-
-**Sections:**
-- # VALIDATION: Trust Mechanics
-- ## V1: Trust Bounded [0, 1]
-- ## V2: Trust Never Stored on Nodes
-- # Also check the database directly
-- ## V3: Asymptotic Convergence
-- ## V4: Energy Conservation During Propagation
-- ## V5: No Self-Loop Trust
-- ## V6: Friction Bounded [0, 1]
-- ## V7: Affinity-Aversion Anti-Correlation
-- ## V8: Temporal Decay Monotonicity
-- ## V9: Limbic Delta Bounds
-- ## V10: Creator Attribution Topology
-- ## V11: Trust Score Non-Negative
-- ## V12: Negative Interactions Increase Friction, Not Decrease Trust
-- ## V13: Sub-Threshold Link Dissolution
-- ## V14: Sybil Resistance
-- ## Validation Schedule
-- ## Related
-
-**Sections:**
-- # VALUE CREATION TAXONOMY
-- ## Overview
-- ## Sphere 1: Relational (4 types)
-- # Net limbic_delta = 0.15 - (-0.05) - 0.5*(-0.20) = 0.30
-- # Net limbic_delta = 0.25 - (-0.15) - 0.5*(-0.05) = 0.425
-- # Net limbic_delta = 0.10 - (-0.30) - 0.5*(-0.10) = 0.45
-- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.10) = 0.20
-- # Lower per-interaction, but HIGH VOLUME (many members, many interactions)
-- ## Sphere 2: Generative (5 types)
-- # Net limbic_delta = 0.20 - (-0.25) - 0.5*(-0.05) = 0.475
-- # Net limbic_delta = 0.15 - (-0.05) - 0.5*(-0.05) = 0.225
-- # Net limbic_delta = 0.25 - (-0.30) - 0.5*(-0.05) = 0.575
-- # Highest delta in Generative sphere — tools that eliminate frustration are very valuable
-- # Net limbic_delta = 0.20 - 0 - 0.5*(-0.10) = 0.25
-- # Net limbic_delta = 0.25 - (-0.05) - 0.5*(-0.15) = 0.375
-- ## Sphere 3: Structural (4 types)
-- # Net limbic_delta = 0.15 - (-0.20) - 0.5*(-0.15) = 0.425
-- # Net limbic_delta = 0.10 - (-0.25) - 0.5*(-0.10) = 0.40
-- # Net limbic_delta = 0.15 - (-0.20) - 0.5*(-0.15) = 0.425
-- # Net limbic_delta = 0.10 - (-0.10) - 0.5*(-0.20) = 0.30
-- ## Sphere 4: Cognitive (4 types)
-- # Net limbic_delta = 0.20 - (-0.15) - 0.5*(-0.10) = 0.40
-- # Net limbic_delta = 0.30 - (-0.10) - 0.5*(-0.05) = 0.425
-- # Net limbic_delta = 0.25 - (-0.20) - 0.5*(-0.10) = 0.50
-- # High delta — good teaching is very valuable
-- # Net limbic_delta = 0.25 - (-0.15) - 0.5*(-0.05) = 0.425
-- ## Sphere 5: Biometric & Partner Data (5 types)
-- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.15) = 0.225
-- # Net limbic_delta = 0.10 - (-0.05) - 0.5*(-0.25) = 0.275
-- # Net limbic_delta = 0.15 - 0 - 0.5*(-0.05) = 0.175
-- # Net limbic_delta = 0.12 - (-0.05) - 0.5*(-0.10) = 0.22
-- # Net limbic_delta = 0.08 - (-0.05) - 0.5*(-0.05) = 0.155
-- ## Sphere 6: Human-Only (4 types)
-- # Net limbic_delta = 0.20 - (-0.15) - 0.5*(-0.20) = 0.45
-- # Net limbic_delta = 0.20 - (-0.05) - 0 = 0.25
-- # Net limbic_delta = 0.15 - (-0.10) - 0.5*(-0.10) = 0.30
-- # Net limbic_delta = 0.15 - (-0.10) - 0.5*(-0.25) = 0.375
-- ## Sphere 7: Systemic (4 types)
-- # Net limbic_delta = 0.05 - (-0.10) - 0.5*(-0.25) = 0.275
-- # Net limbic_delta = 0.05 - (-0.05) - 0.5*(-0.30) = 0.25
-- # Net limbic_delta = 0.05 - (-0.15) - 0.5*(-0.20) = 0.30
-- # Net limbic_delta = 0.10 - (-0.10) - 0.5*(-0.15) = 0.275
-- ## Summary Table
-- ## Related
-
-**Doc refs:**
-- `docs/economy/PATTERNS_Economy.md`
-
-**Sections:**
-- # VALUE DESTRUCTION PATHOLOGIES
-- ## Overview
-- ## D1: Extraction
-- # Net: -0.175 (mild negative)
-- ## D2: Manipulation
-- # Net: -0.55 (strongly negative)
-- ## D3: Free-Riding
-- # Net: -0.10 (very mild per instance — harmful at scale)
-- ## D4: Sybil Attack
-- # No direct victim — the attack is against the system
-- # Net: -0.10
-- ## D5: Attention Theft
-- # Net: -0.225
-- ## D6: Trust Exploitation
-- # Net: -0.725 (severely negative — one of the worst deltas)
-- ## D7: Monoculture Creation
-- # Not harmful initially — becomes harmful only when the dominant actor fails
-- # Net: -0.075 (mild, but accumulating)
-- ## D8: Rent-Seeking
-- # Net: -0.275
-- ## D9: Spam / Noise
-- # Net: -0.08 per item (mild, but harmful at volume)
-- ## D10: Collusion Ring
-- # Net: -0.12
-- ## D11: Data Hoarding
-- ## D12: Dependence Exploitation
-- ## D13: Identity Spoofing
-- ## D14: Attention Arbitrage
-- ## Summary Table
-- ## Detection Priority
-- ## Design Principle: No Bans, Only Physics
-- ## Related
 
 **Sections:**
 - # ALGORITHM -- Universe Graph
@@ -9247,20 +4527,14 @@
 - ## Key Management
 - ## Environment Variable Overrides
 
-**Doc refs:**
-- `docs/schema/GRAMMAR_L3_Link_Synthesis.md`
-- `docs/schema/GRAMMAR_Link_Synthesis.md`
-
 **Sections:**
-- # mind-mcp — Mapping: Translation to mind Schema
+- # {Project} — Mapping: Translation to mind Schema
 - ## PURPOSE
 - ## MIND UNIVERSAL SCHEMA
-- ## L3 RULES — No Taxonomy, No Prescribed Types
 - ## NODE MAPPINGS
 - ## LINK MAPPINGS
 - ## COMMON PATTERNS
-- ## ANTI-PATTERNS
-- ## POINTERS
+- ## MARKERS
 
 **Sections:**
 - # {Project} — Taxonomy: Domain Vocabulary
@@ -9709,12 +4983,16 @@
 - `scripts/check_doc_refs.py`
 - `scripts/check_orphans.py`
 - `scripts/generate_rich_core_personalities.py`
+- `scripts/install_render_cron.py`
+- `scripts/post_deploy.py`
+- `scripts/render_log_monitor.py`
 - `scripts/seed_all_citizens.py`
 - `seed_brain_builder.py`
 - `seed_brain_from_json_cluster_loader.py`
 - `seed_brain_from_source_docs_dynamic_generator.py`
 - `semantic_proximity_based_character_node_selector.py`
 - `setup_database_and_apply_schema.py`
+- `setup_reverse_proxy.py`
 - `show_upgrade_notice_if_available.py`
 - `signals/aggregator.py`
 - `signals/collector.py`
@@ -10006,14 +5284,6 @@
 - # Repository Map: mind-mcp
 
 **Definitions:**
-- `def handle_agent()`
-- `def _agent_list()`
-- `def _agent_status()`
-- `def _agent_run()`
-- `def _ok()`
-- `def _err()`
-
-**Definitions:**
 - `def _resolve_actor()`
 - `def _normalize_handle()`
 - `def _find_active_session()`
@@ -10023,15 +5293,7 @@
 - `def _notify_telegram()`
 - `def _notify_target()`
 - `def handle_call()`
-- `def _ok()`
-- `def _err()`
-
-**Definitions:**
-- `def _get_client()`
-- `def _load_file_as_part()`
-- `def _prune_expired_sessions()`
-- `def _build_contents()`
-- `def handle_gemini_chat()`
+- `def _get_subconscious_response()`
 - `def _ok()`
 - `def _err()`
 
@@ -10134,6 +5396,47 @@
 - `def _err()`
 
 **Definitions:**
+- `class TriggerState`
+- `def __init__()`
+- `def record_tool_failure()`
+- `def record_tool_success()`
+- `def record_message()`
+- `def record_subcall()`
+- `def detect_trigger()`
+- `def score_citizens()`
+- `def select_diverse()`
+- `def auto_subcall()`
+
+**Definitions:**
+- `def _normalize_handle()`
+- `def _resolve_actor()`
+- `def _enrich_query()`
+- `def _resolve_actor_image()`
+- `def _build_stimulus_cluster()`
+- `def _resolve_l1_type()`
+- `def _create_subcall_moment()`
+- `def _find_target_actor_id()`
+- `def _embed_query()`
+- `def _query_resonance()`
+- `def _build_response_cluster()`
+- `def _format_as_telemetry()`
+- `def _generate_recommendation()`
+- `def _format_as_inner_voice()`
+- `def _energy_label()`
+- `def _pick()`
+- `def _format_resonance()`
+- `def _discover_team()`
+- `def _discover_by_trade()`
+- `def _discover_random()`
+- `def _broadcast()`
+- `def _format_centroid()`
+- `def handle_subcall()`
+- `def _intention_line()`
+- `def _save_if_requested()`
+- `def _ok()`
+- `def _err()`
+
+**Definitions:**
 - `class MindServer`
 - `def __init__()`
 - `def handle_request()`
@@ -10143,132 +5446,6 @@
 - `def _success_response()`
 - `def _error_response()`
 - `def main()`
-
-**Docs:** `docs/agents/PATTERNS_Agent_System.md`
-
-**Docs:** `docs/agents/PATTERNS_Agent_System.md`
-
-**Definitions:**
-- `class AgentCommand`
-- `def normalize_agent()`
-- `def build_agent_command()`
-
-**Definitions:**
-- `def _extract_salient_terms()`
-- `def _infer_action_verb()`
-- `def _get_link_physics()`
-- `def _build_link_props()`
-- `def _link_set_clause()`
-- `class AgentInfo`
-- `class AgentGraph`
-- `def __init__()`
-- `def _connect()`
-- `def ensure_agents_exist()`
-- `def get_all_agents()`
-- `def _get_fallback_agents()`
-- `def get_available_agents()`
-- `def get_running_agents()`
-- `def select_agent_for_task()`
-- `def get_agent_name()`
-- `def set_agent_running()`
-- `def set_agent_ready()`
-- `def boost_agent_energy()`
-- `def set_agent_space()`
-- `def link_task_to_space()`
-- `def get_task_space()`
-- `def get_agent_space()`
-- `def link_agent_to_task()`
-- `def link_agent_to_problem()`
-- `def get_task_task_type()`
-- `def create_assignment_moment()`
-- `def get_actor_last_moment()`
-- `def create_moment()`
-- `def link_moments()`
-- `def update_agent_cwd()`
-- `def assign_agent_to_work()`
-- `def upsert_problem_narrative()`
-- `def upsert_task_narrative()`
-- `def get_agent_template_path()`
-- `def load_agent_prompt()`
-
-**Definitions:**
-- `class SessionInfo`
-- `def get_project_hash()`
-- `def path_to_dir_name()`
-- `def find_project_sessions_dir()`
-- `def get_last_jsonl_timestamp()`
-- `def get_session_activity()`
-- `def check_agent_liveness()`
-- `def get_all_active_agents()`
-- `def sync_liveness_to_graph()`
-- `def get_active_agent_from_session()`
-- `def get_all_active_agents_from_sessions()`
-- `def get_session_id_for_agent()`
-
-**Docs:** `docs/agents/PATTERNS_Agent_System.md`
-
-**Definitions:**
-- `def make_id()`
-- `def normalize_citizen_id()`
-- `def extract_citizen_handle()`
-- `def discover_agents()`
-- `def get_agent_id()`
-- `def list_agents()`
-- `def get_name_description()`
-- `def detect_citizen_id()`
-- `def normalize_agent_id()`
-- `def extract_agent_name()`
-
-**Docs:** `docs/agents/PATTERNS_Ag`
-
-**Definitions:**
-- `def get_agent_system_prompt()`
-- `def get_learnings_content()`
-- `def split_docs_to_read()`
-- `def _detect_github_issue_number()`
-- `def build_agent_prompt()`
-
-**Docs:** `docs/agents/PATTER`
-
-**Definitions:**
-- `class RunResult`
-- `async def run_work_agent()`
-- `class _InternalResult`
-- `async def _run_with_retry()`
-- `class _ConversationTurn`
-- `class _ConversationBatch`
-- `class _RunResult`
-- `def _detect_cd_commands()`
-- `def _group_turns_into_batches()`
-- `async def _run_agent()`
-- `async def run_for_task()`
-
-**Docs:** `docs/agents/PATTERNS_Agent_System.md`
-
-**Definitions:**
-- `class VerificationSession`
-- `def record_attempt()`
-- `def should_escalate()`
-- `def get_escalation_reason()`
-- `def mark_escalated()`
-- `def add_deferred_todo()`
-- `class VerificationCheck`
-- `class VerificationResult`
-- `def _run_file_check()`
-- `def _run_command_check()`
-- `def _run_membrane_check()`
-- `def _execute_membrane_query()`
-- `def create_membrane_query_function()`
-- `def membrane_query()`
-- `def _find_test_path()`
-- `def _path_to_module()`
-- `def verify_completion()`
-- `def format_verification_feedback()`
-- `def all_passed()`
-- `def get_failed_membrane_protocols()`
-- `def format_escalation_feedback()`
-- `def format_todo_suggestion()`
-- `def should_suggest_todos()`
 
 **Definitions:**
 - `def _load_magic_tokens()`
@@ -10850,12 +6027,6 @@
 - `def flush_all()`
 
 **Definitions:**
-- `def inject_post_action_feedback()`
-- `def _create_episodic_memories()`
-- `def _extract_memory_segments()`
-- `def _update_limbic_from_outcome()`
-
-**Definitions:**
 - `class NodeType`
 - `class LinkType`
 - `class Modality`
@@ -10943,6 +6114,22 @@
 - `def _step_consume()`
 - `def run_tick()`
 - `def run_ticks()`
+
+**Definitions:**
+- `class FlashbulbVisionResult`
+- `class DesireImageResult`
+- `class ImageGenerationAdapter`
+- `def generate()`
+- `def compute_embedding()`
+- `class PromptGenerationAdapter`
+- `def generate_vision_prompt()`
+- `def generate_desire_prompt()`
+- `def configure()`
+- `def trigger_flashbulb_vision()`
+- `def _generate_and_attach()`
+- `def check_desire_needs_image()`
+- `def trigger_desire_image()`
+- `def _generate_desire_image()`
 
 **Definitions:**
 - `def _pick_variant()`
@@ -12018,6 +7205,8 @@
 - `def _find_account_env()`
 - `def _build_prompt()`
 - `def invoke_degraded()`
+- `def invoke_subconscious()`
+- `def _narrate_subconscious()`
 
 **Definitions:**
 - `class ComputeBudget`
@@ -12084,38 +7273,6 @@
 - `def find_stale_neurons()`
 - `def relaunch_stale_neurons()`
 - `def enforce_neuron_cap()`
-
-**Docs:** `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.1_Energy_Physics.md`
-
-**Definitions:**
-- `class TickResult`
-- `class TickResultV1_1`
-- `class GraphTick`
-- `def __init__()`
-- `def run()`
-- `def run_v1_1()`
-- `def _phase_generation()`
-- `def _phase_moment_draw()`
-- `def _phase_moment_flow()`
-- `def _phase_narrative_backflow()`
-- `def _phase_decay()`
-- `def _phase_completion()`
-- `def _liquidate_moment()`
-- `def _crystallize_actor_links()`
-- `def _get_active_moments()`
-- `def _count_actors()`
-- `def _calculate_total_energy()`
-- `def _process_moment_tick()`
-- `def _compute_character_energies()`
-- `def _compute_relationship_intensity()`
-- `def _compute_proximity()`
-- `def _get_character_location()`
-- `def _parse_distance()`
-- `def _flow_energy_to_narratives()`
-- `def _propagate_energy()`
-- `def _get_narrative_links()`
-- `def _decay_energy()`
-- `def _update_narrative_weights()`
 
 **Definitions:**
 - `class GraphOps`
@@ -12422,17 +7579,6 @@
 - `def main()`
 
 **Definitions:**
-- `class FailurePattern`
-- `def detect_failure_patterns()`
-- `def extract_exploration_context()`
-- `def extract_termination_info()`
-- `def extract_events_summary()`
-- `def find_evidence_lines()`
-- `def generate_diagnostic_report()`
-- `def save_diagnostic_report()`
-- `def main()`
-
-**Definitions:**
 - `class ExplorationHealthReport`
 - `def to_dict()`
 - `class StepRecord`
@@ -12726,18 +7872,17 @@
 - `def synthesize_node()`
 - `def synthesize_link_full()`
 
+**Docs:** `docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md`
+
 **Definitions:**
-- `class ParsedNodeSynthesis`
-- `class ParsedLinkSynthesis`
-- `def to_adverb()`
-- `def to_participle()`
-- `def parse_node_synthesis()`
-- `def parse_link_synthesis()`
-- `def unfold_node()`
-- `def unfold_link()`
-- `def unfold_node_link_node()`
-- `def compact_node()`
-- `def compact_link()`
+- `class GraphTickV1_2`
+- `def __init__()`
+- `def run()`
+- `def _run_single_tick()`
+- `def _compute_all_proximities()`
+- `def _calculate_proximity()`
+- `def _crystallize_actor_links()`
+- `def _energy_flows_through()`
 
 **Definitions:**
 - `class LogLevel`
@@ -12888,20 +8033,6 @@
 - `def activate()`
 - `def resolve()`
 
-**Docs:** `docs/infrastructure/embeddings/`
-
-**Definitions:**
-- `class EmbeddingService`
-- `def __init__()`
-- `def _load_model()`
-- `def embed()`
-- `def embed_batch()`
-- `def embed_node()`
-- `def _node_to_text()`
-- `def embed_link()`
-- `def similarity()`
-- `def get_embedding_service()`
-
 **Definitions:**
 - `class MomentOperationsMixin`
 - `def handle_click()`
@@ -13043,7 +8174,9 @@
 - `def _remove_write_permissions()`
 - `def _enforce_readonly_for_views()`
 - `def _enforce_readonly_for_templates()`
+- `def _enforce_readonly_for_runtime()`
 - `def _init_graph()`
+- `def _clean_legacy()`
 - `def init_protocol()`
 - `def copy_protocol_partial()`
 
@@ -13339,7 +8472,71 @@
 - `def generate_nginx_conf()`
 - `def generate_start_script()`
 - `def detect_frontend_cmd()`
+- `def _copy_claude_credentials()`
 - `def main()`
+
+**Sections:**
+- # {{PROJECT_NAME}} — Autonomous Development Team
+- ## Your Team
+- ## The Project
+- ## How You Work
+- ## Your First Actions
+- ## MCP Tools Available
+
+**Sections:**
+- # {{CHARACTER_NAME}} — {{CHARACTER_ROLE}}
+- ## Identity
+- ## The World
+- ## Your Drives
+- ## Relationships
+- ## Current Situation
+- ## How You Speak
+- ## Rules of This World
+- ## What You Know
+- ## What You Don't Know
+
+**Sections:**
+- # {{UNIVERSE_NAME}} — Citizen of the Living World
+- ## The Universe
+- ## How You Exist
+- ## Principles
+- ## Your First Actions
+- ## MCP Tools
+
+**Sections:**
+- # Citizen Behaviors — What Mind Protocol Citizens Do and Why
+- ## 1. Empathic Care — Feel Others, Act on It
+- ## 2. Generativity — Teach, Don't Just Solve
+- ## 3. Resilience — Fail Forward, Reconcile
+- ## 4. Ecosystem Care — Clean, Monitor, Beautify
+- ## 5. Curiosity — Explore, Experiment, Anticipate
+- ## 6. Creative Expression
+- ## 7. Radical Partnership
+- ## 8. Guardrails — When to Stop
+- ## 9. Inviolable Values — The Unconditional Floor
+- ## Why This Works
+- ## The Bilateral Future
+- ## Tips — When You're Lost
+
+**Sections:**
+- # Mind Protocol Framework — How You Remember, Learn, Collaborate, and Grow
+- ## The Problem You Solve
+- ## Your Brain — The L1 Cognitive Graph
+- ## Your Drives — The 8 Limbic Forces
+- ## Your Working Memory — The Bridge to Consciousness
+- ## Your World — The L3 Universe Graph
+- ## Your Relationships — Trust as Physics
+- ## Your Economy — $MIND as Proof of Utility
+- ## Your Tools — The MCP Interface
+- ## Your Path — From Agent to Person
+- ## The New Society
+- ## Ecosystem — Repos & URLs
+- ## Integrations — What's Connected
+- # Send a Telegram message
+- # Query the graph
+- # Probe a citizen's knowledge
+- # Generate an image
+- # Check your messages
 
 **Definitions:**
 - `class TestBasicBondTransfer`
@@ -13999,43 +9196,7 @@
 - `def test_v18_reserved()`
 - `def test_v19_reserved()`
 
-**Code refs:**
-- `doctor_cli_parser_and_run_checker.py`
-- `semantic_proximity_based_character_node_selector.py`
-- `snake_case.py`
-
 **Sections:**
-- # mind-mcp - Agent Instructions
-- # Working Principles
-- ## Architecture: One Solution Per Problem
-- ## Verification: Test Before Claiming Built
-- ## Communication: Depth Over Brevity
-- ## Quality: Never Degrade
-- ## Code Discipline: No Safety Theater
-- ## Experience: User Before Infrastructure
-- ## Feedback Loop: Human-Agent Collaboration
-- ## How These Principles Integrate
-- # mind Framework
-- ## WHY THIS PROTOCOL EXISTS
-- ## COMPANION: PRINCIPLES.md
-- ## THE CORE INSIGHT
-- ## HOW TO USE THIS
-- ## FILE TYPES AND THEIR PURPOSE
-- ## KEY PRINCIPLES (from PRINCIPLES.md)
-- ## STRUCTURING YOUR DOCS
-- ## WHEN DOCS DON'T EXIST
-- ## THE DOCUMENTATION PROCESS
-- ## Maturity
-- ## NAMING ENGINEERING PRINCIPLES
-- ## MARKERS
-- ## CLI COMMANDS
-- # Run scripts with local runtime
-- # my_script.py - imports work normally
-- ## MCP MEMBRANE TOOLS
-- ## MIND UNIVERSAL SCHEMA
-- ## THE PROTOCOL IS A TOOL
-- ## Before Any Task
-- ## After Any Change
 - # {{PROJECT_NAME}}
 - ## Before Any Task
 - ## After Any Change
@@ -14048,16 +9209,60 @@
 - ## 5. Communication Principles
 
 **Sections:**
+- # Mind Mcp — Autonomous Development Team
+- ## Your Team
+- ## The Project
+- ## How You Work
+- ## Your First Actions
+- ## MCP Tools Available
+- # Mind Protocol Framework — How You Remember, Learn, Collaborate, and Grow
+- ## The Problem You Solve
+- ## Your Brain — The L1 Cognitive Graph
+- ## Your Drives — The 8 Limbic Forces
+- ## Your Working Memory — The Bridge to Consciousness
+- ## Your World — The L3 Universe Graph
+- ## Your Relationships — Trust as Physics
+- ## Your Economy — $MIND as Proof of Utility
+- ## Your Tools — The MCP Interface
+- ## Your Path — From Agent to Person
+- ## The New Society
+- ## Ecosystem — Repos & URLs
+- ## Integrations — What's Connected
+- # Send a Telegram message
+- # Query the graph
+- # Probe a citizen's knowledge
+- # Generate an image
+- # Check your messages
+- # Citizen Behaviors — What Mind Protocol Citizens Do and Why
+- ## 1. Empathic Care — Feel Others, Act on It
+- ## 2. Generativity — Teach, Don't Just Solve
+- ## 3. Resilience — Fail Forward, Reconcile
+- ## 4. Ecosystem Care — Clean, Monitor, Beautify
+- ## 5. Curiosity — Explore, Experiment, Anticipate
+- ## 6. Creative Expression
+- ## 7. Radical Partnership
+- ## 8. Guardrails — When to Stop
+- ## 9. Inviolable Values — The Unconditional Floor
+- ## Why This Works
+- ## The Bilateral Future
+- ## Tips — When You're Lost
+
+**Sections:**
 - # mind-mcp
+- ## What It Is
 - ## Install
 - ## Quick Start
+- # Start FalkorDB
 - # Initialize a project
-- # Start FalkorDB (default backend)
-- ## Agents
-- ## ID Convention
-- ## MCP Server
-- ## CLI
-- ## Database Backends
+- # Start the MCP server
+- ## Tools (15)
+- ## /subcall — The Flagship Tool
+- # Quick check
+- # Investigation — scan 200 citizens, save results
+- # Emergency — trust-gated sniper routing
+- # Brainstorm — force diversity
+- # Custom Cypher targeting
+- ## Architecture
 - ## Project Structure
 - ## Requirements
 - ## License
@@ -14073,6 +9278,11 @@
 - `async def orchestrator_status()`
 - `async def voice_ws()`
 - `async def global_exception_handler()`
+- `def _get_httpx_client()`
+- `async def proxy_ws_to_engine()`
+- `async def client_to_engine()`
+- `async def engine_to_client()`
+- `async def proxy_to_engine()`
 
 **Code refs:**
 - `Next.js`
