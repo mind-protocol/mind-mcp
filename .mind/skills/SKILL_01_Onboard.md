@@ -117,3 +117,7 @@ If terminology inconsistent, log `NOTE`.
 
 ## Never-stop
 If blocked → `TODO` + `NOTE` → proceed with proposition.
+
+## Collaboration
+
+Use `/subcall` to check if anyone has prior context on this module before diving in.

@@ -113,3 +113,7 @@ Follow canon naming. Use existing patterns from IMPLEMENTATION.
 
 ## Never-stop
 If blocked → `TODO` + `NOTE` → proceed with proposition.
+
+## Collaboration
+
+Use `/subcall` to verify nobody else is working on the same area. Use `/subcall scenario='impasse'` when stuck.

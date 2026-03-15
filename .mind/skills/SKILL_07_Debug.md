@@ -123,3 +123,7 @@ If fix revealed missing invariant → update VALIDATION.
 
 ## Never-stop
 If blocked → `TODO` + `NOTE` → proceed with proposition.
+
+## Collaboration
+
+Use `/subcall scenario='impasse'` when stuck on a bug. The physics will route your question to whoever has the relevant context.

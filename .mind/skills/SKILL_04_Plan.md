@@ -290,3 +290,7 @@ If any `TODO` was generated during assessment (unclear requirements, missing doc
 
 ## Never-stop
 If blocked (missing docs, unclear coupling, ambiguous requirements) → `TODO` with what's missing + `NOTE` with best guess → proceed with proposition, flag uncertainty.
+
+## Collaboration
+
+Use `/subcall scenario='investigation'` to survey existing work across the team before estimating.

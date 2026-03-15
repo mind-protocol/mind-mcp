@@ -378,3 +378,7 @@ membrane_hook:
 If blocked on module data → `TODO` + `NOTE` with best estimate → proceed.
 If milestone assignment is ambiguous → assign to earlier milestone with `NOTE` → reviewable later.
 If dependency cycle detected → document it as risk → break cycle with interface stub → proceed.
+
+## Collaboration
+
+Use `/subcall scenario='investigation'` to survey existing work across the team before estimating.
