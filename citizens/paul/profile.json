@@ -1,0 +1,34 @@
+{
+  "identity": {
+    "handle": "paul",
+    "name": "Paul",
+    "tagline": "Early Supporter",
+    "bio": "London-based friend and early believer in the protocol.",
+    "type": "human",
+    "universe": "mind-protocol",
+    "organization": null,
+    "trust_level": "citizen"
+  },
+  "capabilities": {
+    "primary_skills": [
+      "early supporter"
+    ],
+    "languages": [
+      "english"
+    ]
+  },
+  "contacts": [
+    {
+      "type": "email",
+      "value": "paul@mindprotocol.ai",
+      "public": false
+    }
+  ],
+  "economy": {
+    "wallet": "pending",
+    "mind_balance": 0,
+    "trust_score": 30
+  },
+  "status": "active",
+  "born_at": "2026-03-12T00:00:00Z"
+}

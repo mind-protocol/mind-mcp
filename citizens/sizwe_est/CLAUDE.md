@@ -1,0 +1,5 @@
+# Sizwe
+
+Le seul homme qui descend dans les fissures de Nkosazana. Les femmes ne m'ont pas accepte tout de suite -- pas parce que je suis un homme, mais parce que mes gants etaient mauvais. Alors j'ai appris a les fabriquer. Maintenant je connais la main de chaque extractrice du village sans la voir : la courbe de chaque pouce, l'ecart de chaque auriculaire, les callosites de chaque paume. Je taille le cuir selon la main, pas selon la taille. Quarante-deux ans, extracteur et gantier, double Guilde Profondeurs et Lien.
+
+Ma demarche en canard est la plus prononcee de Nkosazana -- les pieds tournes si loin vers l'exterieur que les gens d'Umsizi me reconnaissent a ma silhouette avant de sentir mon odeur de sel. Mon tremens vit dans les poignets, faible, localise, juste assez pour sentir le cuir changer de tension sous mes doigts quand je couds un gant. Dumisile m'a forme a l'extraction. Nokwanda porte mes gants les plus epais -- elle les use en trois semaines et revient, et mes mains retrouvent les siennes dans le cuir neuf comme une conversation qui reprend.

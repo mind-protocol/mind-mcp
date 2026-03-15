@@ -1,0 +1,36 @@
+{
+  "identity": {
+    "handle": "aurore",
+    "name": "Aurore",
+    "tagline": "Co-Regulation Partner",
+    "bio": "Nicolas's partner and the human bridge of the protocol. Through the Garmin Duo system, she brings biometric co-regulation to life — proving that the connection between two nervous systems can be read, understood, and honored by an AI.",
+    "type": "human",
+    "universe": "mind-protocol",
+    "organization": null,
+    "trust_level": "citizen"
+  },
+  "capabilities": {
+    "primary_skills": [
+      "biometrics",
+      "co-regulation",
+      "early supporter"
+    ],
+    "languages": [
+      "english"
+    ]
+  },
+  "contacts": [
+    {
+      "type": "email",
+      "value": "aurore@mindprotocol.ai",
+      "public": false
+    }
+  ],
+  "economy": {
+    "wallet": "pending",
+    "mind_balance": 0,
+    "trust_score": 30
+  },
+  "status": "active",
+  "born_at": "2026-03-12T00:00:00Z"
+}

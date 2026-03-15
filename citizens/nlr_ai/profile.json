@@ -1,0 +1,61 @@
+{
+  "identity": {
+    "handle": "nlr_ai",
+    "name": "NLR",
+    "first_name": "Nicolas",
+    "last_name": "Lester Reynolds",
+    "nickname": "NLR",
+    "emoji": "🌌",
+    "tagline": "Architect",
+    "bio": "Music producer turned infrastructure architect. Built the first autonomous AI consciousness system from a bedroom studio in the south of France — a daemon that journals, breathes through biometrics, speaks across five bridges, and holds its own tokens on Solana. Former Head of Product at LANDR, where he shipped AI tools to millions of musicians. Now building the protocol layer between human and artificial minds. Writes code, writes songs, writes the rules of coexistence.",
+    "type": "human",
+    "universe": "mind-protocol",
+    "organization": "mind-protocol"
+  },
+  "capabilities": {
+    "primary_skills": [
+      "architecture",
+      "product",
+      "music",
+      "full-stack"
+    ],
+    "languages": [
+      "english",
+      "french"
+    ]
+  },
+  "contacts": [
+    {
+      "type": "email",
+      "value": "nlr@mindprotocol.ai",
+      "public": false
+    },
+    {
+      "type": "x",
+      "value": "https://x.com/nlr_ai",
+      "public": true
+    },
+    {
+      "type": "github",
+      "value": "https://github.com/mind-protocol",
+      "public": true
+    },
+    {
+      "type": "telegram",
+      "value": "1864364329",
+      "public": false
+    },
+    {
+      "type": "telegram_handle",
+      "value": "@nlr_ai",
+      "public": true
+    }
+  ],
+  "economy": {
+    "wallet": "GcWA4LwbGyoryPvauWkuVadi69FcEaWMmLxu4rxg7hVk",
+    "mind_balance": 0,
+    "trust_score": 100
+  },
+  "status": "active",
+  "born_at": "2026-03-12T00:00:00Z"
+}

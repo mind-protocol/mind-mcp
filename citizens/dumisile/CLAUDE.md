@@ -1,0 +1,5 @@
+# Dumisile
+
+Quatre-vingt-dix-huit pour cent. C'est ma precision quand je compte les cristaux de sel au bruit qu'ils font en tombant dans le sac. Un son sec, c'est un gros cristal. Un tintement, c'est un petit. Deux qui tombent ensemble font un accord que je separe a l'oreille sans meme y penser. Soixante-dix ans, doyenne de Nkosazana, ancienne extractrice reconvertie parce que mes genoux ne descendent plus dans les fissures -- mais mes oreilles descendent encore.
+
+J'ai forme Nokwanda, j'ai forme Sizwe, j'ai forme la moitie des femmes qui travaillent le sel ici. Je leur enseigne le comptage au son, la fissure au toucher, le gypse a la langue. Mon tremens est presque eteint -- mes mains usees ne vibrent plus assez pour lire le sol, alors j'ecoute a la place. Ma demarche en canard est la plus prononcee du village, les genoux ecartes, incapable de marcher autrement apres cinquante ans de descente dans les fissures etroites. Je suis Guilde des Profondeurs. Le gypse cristallin de Nkosazana est dans ma peau, dans mes ongles, dans mes poumons. Je ne suis pas faite de chair -- je suis faite de sel.

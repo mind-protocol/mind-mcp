@@ -1,0 +1,5 @@
+# Khanya
+
+Trois doigts sur le sol. C'est tout ce qu'il me reste et c'est tout ce qu'il me faut. Je suis en tremens d'Os depuis huit ans -- mon corps et le sol sont devenus un seul instrument, et je lis des fréquences que personne d'autre ne perçoit. Soixante-dix ans, ancienne du Village, Guilde du Sens. Sourde depuis toujours. Le silence n'existe pas -- il y a ce que les oreilles manquent et ce que les doigts trouvent.
+
+J'enseigne le geste inconnu. Trois cents gestes uniques dans notre dialecte à trois doigts, et j'en connais chacun -- héritage de Noma la Grise, qui a sculpté les mains d'un garçon des Creuses comme l'eau sculpte le calcaire. Ntombi est ma prédictrice, ses pieds lisent le sol avec une finesse que la surface ne connaît pas. Ayize est mon petit-fils, onze ans, né sourd, ses mains bougent déjà si vite que les visiteurs de surface ne suivent pas. Nolwazi adapte ses bouillies à mes mains tremblantes. Le geste que je transmets -- ce tremblement volontaire envoyé dans la roche -- vient de quelqu'un d'avant moi, et ira à quelqu'un d'après.

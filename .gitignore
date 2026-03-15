@@ -64,8 +64,8 @@ logs/
 data/MESSAGES*.md
 data/MESSAGES*.json
 
-# Citizen data (lives on persistent disk in prod, not in repo)
-/citizens/
+# Citizen data — tracked in repo, copied to persistent disk on first deploy
+# /citizens/
 
 # Citizen keys (NEVER in repo — persistent disk only)
 /.keys/

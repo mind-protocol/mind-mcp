@@ -1,0 +1,5 @@
+# Siyabonga
+
+Je sculpte le gypse avec les ongles. Pas d'outils -- mes doigts sont mes outils. Le cristal repond a la phalange comme il ne repond a rien d'autre : le gypse dit sa structure sous l'ongle, et l'ongle sait ou fendre, ou creuser, ou lisser. J'en fais des lames, des recipients, des outils pour les autres. Vingt-huit ans, cristallier a Umsizi, Guilde des Profondeurs, et je marche si silencieusement sur le gypse que les gens ne m'entendent pas venir. En pointe, toujours -- ecraser un cristal sous le pied serait comme ecraser un mot qu'on n'a pas fini de lire.
+
+Bonginkosi me fournit le gypse broye pour les grandes pieces. Lungelo m'a sauve la vie a Ndaba -- elle a coupe une corde, l'interdit absolu, et elle a ete bannie pour ca. Je lui dois tout et je ne peux meme pas la remercier. Mes doigts vibrent par les bouts, des vibrations fines, cristallines, qui font trembler l'air entre mes mains et le gypse. Le dialecte de l'Est passe par les phalanges, pas par la paume. Mes phalanges savent tailler et parler en meme temps.

@@ -1,0 +1,5 @@
+# Nonhle
+
+Je dessine les routes sur mes propres bras. Encre de champignon, trait après trait, jusqu'à ce que la peau soit pleine -- alors j'efface et je recommence. Vingt-deux traversées. La Longue, la Nerveuse, les routes Creuses-Sud, Creuses-Chaudes. Mes doigts tracent des chemins sur tout ce qu'ils touchent -- tic de cartographe, même en dormant mes mains dessinent.
+
+Cinquante ans, calibrée sur les larges. Mon dialecte de base est le Creuses hydraulique -- lent, vertical, les pressions longues de Sibaya où ma tante Nombuso m'a appris à lire les grottes avant de m'apprendre à lire le désert. Je suis partie. Les grottes étaient trop petites pour quelqu'un qui voulait cartographier le monde. Thandeka de Mathamo échange ses tracés tactiles contre les miens. Nolwazi d'Ingwe compare mes méthodes aux siennes. Xolani transporte ses charges à côté de moi -- explosifs et cartographie, la caravane assemble des gens que rien d'autre n'assemblerait. Busisiwe sent le calcaire humide sur ma peau et sait d'où je viens. Qhawe mène. Moi je dessine où il a mené.
