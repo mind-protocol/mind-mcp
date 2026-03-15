@@ -5,9 +5,9 @@ database:
     port: 6379
     graph_name: mind_platform
 embedding:
-  provider: local
-  model: all-mpnet-base-v2
-  dimension: 768
+  provider: openai
+  model: text-embedding-3-small
+  dimension: 1536
 
 # Script to run at deploy for graph seeding/upsert.
 # Default: runtime.l4.citizen_l1_ensure.bulk_ensure_citizens

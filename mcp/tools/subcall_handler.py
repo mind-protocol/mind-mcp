@@ -44,6 +44,7 @@ Schema: docs/schema/schema.yaml v2.2
 """
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -1863,8 +1864,10 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     scenario = args.get("scenario", "manual")
     limbic_profile = SCENARIO_PROFILES.get(scenario, SCENARIO_PROFILES["manual"])
 
-    # Resolve universe — use a different graph if specified
-    universe = args.get("universe", "lumina_prime")
+    # Resolve universe — derive from HOME_ID or config, don't hardcode
+    universe = args.get("universe", None)
+    if not universe:
+        universe = os.environ.get("HOME_ID") or os.environ.get("FALKORDB_GRAPH") or "lumina_prime"
     graph = ctx.graph_ops
     if universe and graph:
         try:

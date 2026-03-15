@@ -8,7 +8,7 @@ DOCS: docs/infrastructure/embeddings/
 Usage:
     from runtime.infrastructure.embeddings import get_embedding_service
 
-    # Uses EMBEDDING_PROVIDER env var (default: local)
+    # Uses EMBEDDING_PROVIDER env var (default: openai)
     embeddings = get_embedding_service()
 
     # Or specify provider
@@ -86,18 +86,18 @@ def get_embedding_service(provider: str = None, check_config: bool = True) -> Em
 
     Args:
         provider: Provider name ("local", "openai").
-                  Defaults to EMBEDDING_PROVIDER env var or "local".
+                  Defaults to EMBEDDING_PROVIDER env var or "openai".
         check_config: If True, warn if dimension doesn't match stored config.
 
     Returns:
         Embedding service instance
 
     Environment variables:
-        EMBEDDING_PROVIDER: "local" or "openai" (default: local)
+        EMBEDDING_PROVIDER: "local" or "openai" (default: openai)
         OPENAI_API_KEY: Required if provider is "openai"
-        OPENAI_EMBEDDING_MODEL: OpenAI model (default: text-embedding-3-large)
+        OPENAI_EMBEDDING_MODEL: OpenAI model (default: text-embedding-3-small)
     """
-    provider = provider or os.getenv("EMBEDDING_PROVIDER", "local")
+    provider = provider or os.getenv("EMBEDDING_PROVIDER", "openai")
 
     # Return cached instance
     if provider in _instances:
