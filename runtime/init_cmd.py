@@ -818,7 +818,11 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         print(f"○ {mapping_dest} already exists")
 
     # Copy skills into .claude/skills and Codex skills directory
-    skills_src = protocol_dest / "skills"
+    # Primary source: mind-mcp/.claude/skills/ (renamed skill directories: 01-onboard, etc.)
+    # Fallback: .mind/skills/ (SKILL_*.md reference files)
+    mind_mcp_root = Path(__file__).parent.parent
+    claude_skills_src = mind_mcp_root / ".claude" / "skills"
+    skills_src = claude_skills_src if claude_skills_src.exists() else protocol_dest / "skills"
     claude_skills_dest = target_dir / ".claude" / "skills"
     codex_home = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
     codex_skills_dest = codex_home / "skills"
