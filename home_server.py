@@ -460,6 +460,49 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 
+# ── Engine Proxy ──────────────────────────────────────────────────────────────
+# Forward unmatched requests to the Node.js engine running on ENGINE_PORT.
+# This makes the home_server the single exposed port on Render.
+# The engine handles: WebSocket, 3D client, static assets, world manifest.
+
+ENGINE_PORT = int(os.environ.get("ENGINE_PORT", 10001))
+
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"])
+async def proxy_to_engine(request: Request, path: str):
+    """Reverse proxy: forward unmatched routes to Node.js engine."""
+    try:
+        import httpx
+    except ImportError:
+        return JSONResponse(status_code=503, content={"error": "httpx not installed for engine proxy"})
+
+    target = f"http://localhost:{ENGINE_PORT}/{path}"
+    query = str(request.url.query)
+    if query:
+        target += f"?{query}"
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.request(
+                method=request.method,
+                url=target,
+                headers={k: v for k, v in request.headers.items()
+                         if k.lower() not in ("host", "content-length")},
+                content=await request.body(),
+            )
+            return Response(
+                content=response.content,
+                status_code=response.status_code,
+                headers=dict(response.headers),
+            )
+    except httpx.ConnectError:
+        return JSONResponse(
+            status_code=502,
+            content={"error": "engine_not_running", "message": f"Node.js engine not available on port {ENGINE_PORT}"},
+        )
+    except Exception as e:
+        return JSONResponse(status_code=502, content={"error": str(e)})
+
+
 # ── Entry point ─────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
