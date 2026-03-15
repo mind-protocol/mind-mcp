@@ -95,6 +95,7 @@ class Dispatcher:
 
         self._running = False
         self._thread: Optional[threading.Thread] = None
+        self._wake_event = threading.Event()  # Signal immediate dispatch
         self._last_cleanup = 0.0
         self._last_relaunch = 0.0
         self._last_health_check = 0.0
@@ -145,14 +146,11 @@ class Dispatcher:
             except Exception as e:
                 logger.exception(f"Tick error: {e}")
 
-            # Sleep for budget-driven interval
+            # Wait for budget-driven interval OR immediate wake-up signal
             interval = self.budget.get_tick_interval_seconds()
-            # But check for completed futures more frequently
-            _slept = 0.0
-            while _slept < interval and self._running:
-                self._collect_completed_futures()
-                time.sleep(min(1.0, interval - _slept))
-                _slept += 1.0
+            self._wake_event.wait(timeout=interval)
+            self._wake_event.clear()
+            self._collect_completed_futures()
 
     def _tick(self):
         """Single dispatch tick."""
@@ -434,6 +432,7 @@ class Dispatcher:
         if "timestamp" not in request:
             request["timestamp"] = datetime.now().isoformat()
         enqueue(request)
+        self._wake_event.set()  # Dispatch immediately, don't wait for tick
 
     def get_status(self) -> dict:
         """Return orchestrator status for the /health endpoint."""
