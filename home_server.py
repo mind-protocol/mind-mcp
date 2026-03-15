@@ -119,7 +119,11 @@ async def lifespan(app: FastAPI):
             _state["dispatcher"] = _dispatcher
             logger.info(f"Orchestrator started (mode={budget.mode})")
         except Exception as e:
-            logger.warning(f"Orchestrator failed to start: {e}")
+            import traceback
+            logger.error(f"ORCHESTRATOR FAILED TO START: {e}")
+            logger.error(traceback.format_exc())
+            print(f"[FATAL] Orchestrator failed to start: {e}", flush=True)
+            print(traceback.format_exc(), flush=True)
 
     # Phase 2b: Upsert citizen brains at startup (configurable, togglable)
     if _dispatcher:
