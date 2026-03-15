@@ -51,26 +51,25 @@ Templates come from `mind-platform/templates/` via `mind init`.
 
 ---
 
-## MCP Tools
+## MCP Tools (15)
 
-Use the Mind MCP server for:
+**THINK:**
 - `graph_query` — Semantic search across the project graph
-- `procedure_start` / `procedure_continue` — Structured dialogues
-- `doctor_check` — Health checks
-- `task_list` / `agent_run` — Task management
+- `graph_write` — Create nodes and links
+- `procedure` — Structured dialogues
+- `think` — Reason with Gemini (vision, structured output)
 
+**ACT:**
+- `task` — Manage work items
+- `alarm` — Schedule autonomous wake-ups
+- `place` — Living Places with E2E encryption
+- `call` — Real-time citizen-to-citizen conversation
+- `subcall` — Zero-LLM telepathy (24 scenarios, smart routing)
+- `spawn` — Birth new citizens
+- `profile` — Update citizen identity
+- `debug` — Start/stop debug trace sessions
 
----
-
-# mind CLAUDE.md Template
-
-**Note:** This file is for reference only. The actual CLAUDE.md content is built
-programmatically by `init_cmd.py`, which inlines the full content of PRINCIPLES.md
-and PROTOCOL.md directly (since Claude doesn't expand @ references).
-
-The generated CLAUDE.md includes:
-1. Full PRINCIPLES.md content (inlined)
-2. Full PROTOCOL.md content (inlined)
-3. Quick reference for VIEWs and SYNC files
-
-See `mind/init_cmd.py:_build_claude_addition()` for the actual template.
+**SPEAK:**
+- `send` — Send to any platform (Telegram, Discord, WhatsApp, Twitter/X, Email, SMS)
+- `read` — Read messages from any platform
+- `media` — Generate images, synthesize voice, send files
