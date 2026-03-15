@@ -1,4 +1,4 @@
-# MIND Graph Schema v2.2 — L1 Cognitive Substrate
+# MIND Graph Schema v2.3 — L1 Cognitive Substrate
 # The brain: 7 cognitive types, 21 physics laws, 8 drives, Working Memory, Visual Memory
 #
 # This file defines: nodes, links, cognitive types, drives, WM, tick cycle, kernels, invariants.
@@ -95,14 +95,14 @@ cognitive_types:
 
   value:
     universal_type: narrative
-    type_field: "value"
+    subtype_value: "value"
     description: "Deep preference, principle, style, right way of doing things"
     examples: ["truth", "loyalty", "initiative", "elegance", "emotional support"]
     covers: "structuring identity, arbitrating decisions, stable direction"
 
   process:
     universal_type: narrative
-    type_field: "process"
+    subtype_value: "process"
     description: "Routine, habit, preferred procedure, recurring approach"
     examples: ["In the morning, I check X first", "After 5 failed attempts, I ask for help"]
     covers: "habits, stabilizing ways of working, transforming learning into durable behavior"
@@ -120,7 +120,7 @@ cognitive_types:
 
   desire:
     universal_type: narrative
-    type_field: "desire"
+    subtype_value: "desire"
     description: "Internal attractor, want, tension toward a future or desired state"
     examples: ["help my partner", "become more autonomous", "launch a microbusiness"]
     covers: "producing initiative, orienting inner activity, supporting projection"
@@ -149,9 +149,10 @@ NodeBase:
       type: enum
       values: [actor, moment, narrative, space, thing]
       required: true
-    type:  # Free-form subtype (carries L1 cognitive type: "value", "process", "desire", etc.)
+    subtype:  # Renamed from "type" in v2.3. Carries L1 cognitive type or L3 structural tag.
       type: string
       nullable: true
+      description: "L1: 'value', 'process', 'desire', 'vision'. L3: 'CITIZEN', 'district', 'call'. Free text."
 
     # === Physics (Core) ===
     weight:

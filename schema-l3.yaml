@@ -1,9 +1,9 @@
-# MIND Graph Schema v2.2 — L3 Universe & L4 Protocol
+# MIND Graph Schema v2.3 — L3 Universe & L4 Protocol
 # The shared world: 5 node types at ecosystem scale, macro-crystallization, trust model.
 #
 # For the L1 Cognitive Substrate (brain, drives, WM), see schema-l1.yaml.
 
-version: "2.2"
+version: "2.3"
 updated: "2026-03-14"
 status: "CANONICAL"
 
@@ -37,10 +37,10 @@ status: "CANONICAL"
 #    At L3, all link semantics emerge from mathematical properties.
 #    See: docs/schema/GRAMMAR_L3_Link_Synthesis.md
 #
-# 4. space_type IS FREE TEXT, OPTIONAL, NEVER FILTERED.
+# 4. space_hint IS FREE TEXT, OPTIONAL, NEVER FILTERED.
 #    A Space can carry a type hint ("discord_channel", "vr_room", "github_repo",
 #    "medieval_tavern", "solar_system") but this is purely descriptive metadata.
-#    No algorithm, formula, or physics law reads space_type for branching.
+#    No algorithm, formula, or physics law reads space_hint for branching.
 #    No taxonomy. No prescribed values. Free text or null.
 #
 # 5. NO EMOTIONS AT L3.
@@ -80,7 +80,7 @@ l3_universe:
     l3_meaning: "Any context container — channels, rooms, worlds, repos, addresses, dimensions"
     examples: ["discord_general", "vr_tavern_ironhold", "github_mind_mcp", "paris_france"]
     fields:
-      space_type:
+      space_hint:
         type: string
         nullable: true
         description: "Free text hint. No taxonomy. Never used for algorithmic branching."
@@ -90,10 +90,36 @@ l3_universe:
     l3_meaning: "Any entity, object, or abstraction — tools, tokens, documents, artifacts, currencies"
     examples: ["$MIND_token", "excalibur_sword", "pull_request_1234", "openai_api_key"]
 
+  # --- Visual Assets at L3 (v2.2) ---
+  #
+  # All L3 nodes inherit image_uri and image_embedding from NodeBase (schema-l1.yaml).
+  # These are ACTIVE at L3 — shared visual assets that multiple L1 brains synchronize on.
+  #
+  # Examples:
+  #   Space(vr_room).image_uri    → panoramic screenshot of the room
+  #   Thing(artifact).image_uri   → generated image of the artifact
+  #   Actor(citizen).image_uri    → profile pic (used in subcall responses)
+  #   Moment(event).image_uri     → POV screenshot at the time of the event
+  #
+  # image_embedding enables visual similarity search across the universe:
+  #   CALL db.idx.vector.queryNodes("Thing", "embedding", 5, vecf32($qvec))
+  #   → finds visually similar objects across all spaces
+
   # --- Link Behavior at L3 ---
 
   link_at_l3:
-    relation_kind: null  # ALWAYS null at L3
+    relation_kind: null  # ALWAYS null at L3 for cognitive/social links
+    #
+    # STRUCTURAL TAGS (v2.3): Administrative links may carry r.type as a
+    # string tag for deterministic structural facts. This is NOT a relation_kind
+    # (which carries cognitive semantics). It's a hard label for provenance:
+    #   r.type = "CREATED"      — A created B (cryptographic proof)
+    #   r.type = "CONTRIBUTED"  — A contributed to B (subcall topology)
+    #   r.type = "HAS_ACCESS"   — A has access to Space B (permission)
+    #   r.type = "OWNS"         — A owns Thing B (economic fact)
+    # These tags are optional. Most links have no r.type — their meaning
+    # emerges from the mathematical dimensions below.
+    #
     # Plutchik axes removed in v2.1 — emotions handled by limbic system at L1
     active_dimensions:
       # These carry structural meaning at L3:
@@ -272,7 +298,7 @@ l3_invariants:
   - "5 universal node types only — no L3-specific types"
   - "relation_kind is always null at L3"
   - "Emotions handled by limbic system at L1 only — no emotion fields on L3 links"
-  - "space_type is free text, optional, never used in algorithmic branching"
+  - "space_hint is free text, optional, never used in algorithmic branching"
   - "Trust lives on links only — no node-level trust field"
   - "Actor reputation is always computed, never stored"
   - "Link semantics are computed from dimensions, never stored as verbs"
