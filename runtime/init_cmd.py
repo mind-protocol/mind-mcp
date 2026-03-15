@@ -175,16 +175,34 @@ def _update_or_add_section(file_path: Path, section_content: str, section_marker
 
 
 def _update_root_claude_md(target_dir: Path) -> None:
-    """Update or create root CLAUDE.md from system prompt template.
+    """Generate root CLAUDE.md from system prompt template + FRAMEWORK + BEHAVIORS.
 
     Reads mode from database_config.yaml (system_prompt_mode):
       project-team (default), universe, roleplay
     Populates with project structure, git URL, team roster.
+    Appends FRAMEWORK.md and BEHAVIORS.md as @ references.
     """
     root_claude = target_dir / "CLAUDE.md"
     content = _build_root_claude_section(target_dir)
+
+    # Append FRAMEWORK and BEHAVIORS as @ references
+    content += "\n\n---\n\n@.mind/FRAMEWORK.md\n\n---\n\n@.mind/BEHAVIORS.md\n"
+
     root_claude.write_text(content, encoding="utf-8")
     print(f"✓ Generated: {root_claude}")
+
+    # Copy FRAMEWORK.md and BEHAVIORS.md to .mind/ for @ reference resolution
+    templates_dir = Path(__file__).parent.parent / "templates"
+    mind_dir = target_dir / ".mind"
+    mind_dir.mkdir(parents=True, exist_ok=True)
+
+    for doc in ["FRAMEWORK.md", "BEHAVIORS.md"]:
+        src = templates_dir / doc
+        dst = mind_dir / doc
+        if src.exists():
+            import shutil
+            shutil.copy2(src, dst)
+            print(f"✓ Copied: {dst}")
 
 
 def _build_root_claude_section(target_dir: Path = None) -> str:
