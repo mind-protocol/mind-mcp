@@ -37,6 +37,9 @@ from dataclasses import dataclass, field
 from runtime.anamnesis.corpus_parser import parse_corpus, ConversationTurn
 from runtime.anamnesis.node_extractor import extract_nodes, ConversationCluster
 from runtime.anamnesis.brain_integrator import integrate_clusters, IntegrationResult
+from runtime.anamnesis.quality_gate import (
+    snapshot_brain_health, compare_snapshots, BrainHealthSnapshot, QualityVerdict,
+)
 
 logger = logging.getLogger("mind.anamnesis")
 
@@ -64,6 +67,11 @@ class AnamnesisResult:
     cross_conv_links: int = 0
     space_continuity_links: int = 0
     dedup_removed: int = 0
+
+    # Quality gate
+    health_before: BrainHealthSnapshot | None = None
+    health_after: BrainHealthSnapshot | None = None
+    quality_verdict: QualityVerdict | None = None
 
     # Details
     persisted_ids: list[str] = field(default_factory=list)
@@ -111,8 +119,15 @@ def run_anamnesis(
         formats = [None] * len(corpus_paths)
 
     try:
+        # ── Step 0: Snapshot brain health BEFORE ─────────────
+        logger.info("Step 0: Snapshotting brain health (BEFORE)...")
+        health_before = snapshot_brain_health(citizen_handle, graph_ops)
+        result.health_before = health_before
+        logger.info(f"  Before: {health_before.total_nodes} nodes, {health_before.total_links} links")
+        logger.info(f"  Metrics: {health_before.to_dict()}")
+
         # ── Step 1: Parse all corpora ────────────────────────
-        logger.info("Step 1/3: Parsing corpora...")
+        logger.info("Step 1/4: Parsing corpora...")
         all_turns: list[ConversationTurn] = []
 
         for path, fmt in zip(corpus_paths, formats):
@@ -134,7 +149,7 @@ def run_anamnesis(
             return result
 
         # ── Step 2: Extract meaningful nodes (grouped by conversation) ───
-        logger.info("Step 2/3: Extracting memories (LLM)...")
+        logger.info("Step 2/4: Extracting memories (LLM)...")
         clusters: list[ConversationCluster] = extract_nodes(
             all_turns, citizen_handle, llm_fn
         )
@@ -153,7 +168,7 @@ def run_anamnesis(
             return result
 
         # ── Step 3: Integrate (embed, spaces, chains, dedup, persist) ────
-        logger.info("Step 3/3: Integrating into brain...")
+        logger.info("Step 3/4: Integrating into brain...")
         integration = integrate_clusters(
             clusters=clusters,
             citizen_handle=citizen_handle,
@@ -170,7 +185,35 @@ def run_anamnesis(
         result.space_continuity_links = integration.space_continuity_links_created
         result.dedup_removed = integration.dedup_removed
         result.persisted_ids = integration.persisted_ids
-        result.success = True
+
+        # ── Step 4: Quality gate — compare before/after ──────
+        logger.info("Step 4/4: Quality gate (AFTER snapshot + comparison)...")
+        health_after = snapshot_brain_health(citizen_handle, graph_ops)
+        result.health_after = health_after
+        logger.info(f"  After: {health_after.total_nodes} nodes, {health_after.total_links} links")
+        logger.info(f"  Metrics: {health_after.to_dict()}")
+
+        verdict = compare_snapshots(health_before, health_after)
+        result.quality_verdict = verdict
+
+        if verdict.approved:
+            logger.info(f"  QUALITY GATE: APPROVED — {verdict.reason}")
+            for imp in verdict.improvements:
+                logger.info(f"    ↑ {imp}")
+            for unch in verdict.unchanged:
+                logger.info(f"    = {unch}")
+            for deg in verdict.degradations:
+                logger.warning(f"    ↓ {deg}")
+            result.success = True
+        else:
+            logger.warning(f"  QUALITY GATE: REJECTED — {verdict.reason}")
+            for deg in verdict.degradations:
+                logger.warning(f"    ↓ {deg}")
+            # Rollback: delete the session's nodes
+            logger.warning("  Rolling back anamnesis session...")
+            _rollback_session(citizen_handle, session_id, graph_ops)
+            result.success = False
+            result.errors.append(f"Quality gate rejected: {verdict.reason}")
 
     except Exception as e:
         error = f"Anamnesis failed: {e}"
@@ -178,6 +221,16 @@ def run_anamnesis(
         result.errors.append(error)
 
     result.duration_seconds = time.time() - start_time
+
+    verdict_str = ""
+    if result.quality_verdict:
+        v = result.quality_verdict
+        verdict_str = (
+            f"\n  Quality gate:   {'APPROVED' if v.approved else 'REJECTED'}"
+            f"\n  Reason:         {v.reason}"
+            f"\n  Improvements:   {len(v.improvements)}"
+            f"\n  Degradations:   {len(v.degradations)}"
+        )
 
     logger.info(
         f"=== ANAMNESIS COMPLETE ===\n"
@@ -196,6 +249,46 @@ def run_anamnesis(
         f"  Deduped:        {result.dedup_removed}\n"
         f"  Duration:       {result.duration_seconds:.1f}s\n"
         f"  Success:        {result.success}"
+        f"{verdict_str}"
     )
 
     return result
+
+
+def _rollback_session(
+    citizen_handle: str,
+    session_id: str,
+    graph_ops,
+):
+    """Delete all nodes and links created by this anamnesis session.
+
+    Uses the anamnesis_session property to identify rollback targets.
+    """
+    if graph_ops is None:
+        return
+
+    graph_name = f"brain_{citizen_handle}"
+
+    try:
+        # Delete all nodes tagged with this session
+        # Links connected to deleted nodes are auto-removed by FalkorDB
+        deleted = graph_ops.delete_nodes_by_property(
+            graph_name=graph_name,
+            property_name="anamnesis_session",
+            property_value=session_id,
+        )
+        logger.info(f"  Rollback complete: deleted {deleted} nodes from session {session_id}")
+    except AttributeError:
+        # graph_ops doesn't have delete_nodes_by_property — manual fallback
+        try:
+            from falkordb import FalkorDB
+            db = FalkorDB(host="localhost", port=6379)
+            g = db.select_graph(graph_name)
+            result = g.query(
+                f"MATCH (n {{anamnesis_session: '{session_id}'}}) "
+                f"DETACH DELETE n RETURN count(n) as deleted"
+            )
+            count = result.result_set[0][0] if result.result_set else 0
+            logger.info(f"  Rollback complete: deleted {count} nodes from session {session_id}")
+        except Exception as e:
+            logger.error(f"  Rollback failed: {e}")
