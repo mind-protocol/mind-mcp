@@ -470,20 +470,28 @@ class ExplorationRunner:
 
         # v1.9: Inject energy into target node
         # injection = criticality × state_mult × node.weight
-        if self.graph.get_node and target_node:
-            inject_node_energy(target_node, se.criticality, state_mult)
+        from runtime.physics.flow import inject_node_energy, regenerate_node_synthesis_if_drifted
+        state_mult = STATE_MULTIPLIER.get(se.state, 1.0)
+        if self.graph.get_node:
+            target_node = await self.graph.get_node(target_id)
+            if target_node:
+                inject_node_energy(target_node, se.criticality, state_mult)
 
-            # Determine node type from labels or properties
-            node_type = target_node.get('type', target_node.get('labels', ['Node'])[0] if isinstance(target_node.get('labels'), list) else 'Node')
+                # Determine node type from labels or properties
+                node_type = target_node.get('type', target_node.get('labels', ['Node'])[0] if isinstance(target_node.get('labels'), list) else 'Node')
 
-            # Regenerate synthesis if embedding drifted (ticks deprecated)
-            was_regenerated, new_synthesis = regenerate_node_synthesis_if_drifted(
-                target_node,
-                node_type,
-                target_node.get('embedding'),
-            )
-            if was_regenerated and self.graph.update_node:
-                await self.graph.update_node(target_id, {'synthesis': new_synthesis})
+                # Regenerate synthesis if embedding drifted
+                was_regenerated, new_synthesis = regenerate_node_synthesis_if_drifted(
+                    target_node,
+                    node_type,
+                    target_node.get('embedding'),
+                )
+                if was_regenerated and self.graph.update_node:
+                    await self.graph.update_node(target_id, {'synthesis': new_synthesis})
+
+                # Persist energy change
+                if self.graph.update_node:
+                    await self.graph.update_node(target_id, {'energy': target_node['energy']})
 
         # Update crystallization embedding
         await self._update_crystallization_embedding(se)
