@@ -117,6 +117,14 @@ async def lifespan(app: FastAPI):
             _dispatcher.start()
             _state["dispatcher"] = _dispatcher
             logger.info(f"Orchestrator started (mode={budget.mode})")
+
+            # Register dispatcher in citizen_wake for fast L1 stimulus injection
+            try:
+                from scripts.citizen_wake import set_dispatcher
+                set_dispatcher(_dispatcher)
+                logger.info("citizen_wake: dispatcher registered (fast stimulus path)")
+            except Exception as e:
+                logger.warning(f"citizen_wake dispatcher registration failed: {e}")
         except Exception as e:
             import traceback
             logger.error(f"ORCHESTRATOR FAILED TO START: {e}")
@@ -130,12 +138,13 @@ async def lifespan(app: FastAPI):
             import importlib
             import yaml
 
-            # Scan all universe citizen directories, not just mind-mcp/citizens
-            _universes = [
-                Path(__file__).parent / "citizens",                    # mind-mcp local
-                Path("/home/mind-protocol/lumina-prime/citizens"),     # Lumina Prime
-            ]
+            # Citizens live in universe repos (canonical), mind-mcp is fallback
             citizens_dir = Path(__file__).parent / "citizens"
+            _universe_dirs = [
+                Path("/home/mind-protocol/lumina-prime/citizens"),
+                Path("/home/mind-protocol/venezia/citizens"),
+                Path("/home/mind-protocol/contre-terre/citizens"),
+            ]
             config_path = Path(__file__).parent / ".mind" / "database_config.yaml"
 
             # Load config
@@ -154,24 +163,22 @@ async def lifespan(app: FastAPI):
                 module_path, fn_name = seed_fn_path.rsplit(".", 1)
                 mod = importlib.import_module(module_path)
                 seed_fn = getattr(mod, fn_name)
-                results = seed_fn(str(citizens_dir))
-                logger.info(f"L1 boot: {len(results)} citizens ensured (seed: {seed_fn_path})")
 
-                # Pre-load L1 engines into dispatcher for auto-stimulation
+                # 1. Seed mind-mcp/citizens first (fallback identities)
+                results = seed_fn(str(citizens_dir))
+                logger.info(f"L1 boot: {len(results)} citizens from mind-mcp")
+
+                # 2. Seed universe repos — canonical, overwrites mind-mcp for overlapping handles
+                for universe_dir in _universe_dirs:
+                    if universe_dir.is_dir():
+                        universe_results = seed_fn(str(universe_dir))
+                        results.update(universe_results)
+                        logger.info(f"L1 boot: +{len(universe_results)} from {universe_dir.parent.name} (canonical)")
+
+                # 3. Load all engines
                 if results:
                     _dispatcher.bulk_load_citizen_engines(list(results.keys()))
-
-                # Also load Lumina Prime citizens (may not be in mind-mcp/citizens)
-                for universe_dir in _universes:
-                    if universe_dir.is_dir() and universe_dir != citizens_dir:
-                        extra = [
-                            d.name for d in sorted(universe_dir.iterdir())
-                            if d.is_dir() and not d.name.startswith(".")
-                            and d.name not in (results or {})
-                        ]
-                        if extra:
-                            _dispatcher.bulk_load_citizen_engines(extra)
-                            logger.info(f"L1 boot: +{len(extra)} from {universe_dir.name}")
+                    logger.info(f"L1 boot: {len(results)} total engines loaded")
             else:
                 logger.info("L1 boot: citizen_seed disabled in database_config.yaml")
         except Exception as e:
@@ -180,6 +187,7 @@ async def lifespan(app: FastAPI):
     # Phase 3: Start bridges
     _telegram_bridge = None
     _whatsapp_bridge = None
+    _twitter_bridge = None
     if os.environ.get("ENABLE_TELEGRAM", "true").lower() == "true":
         try:
             from runtime.bridges.telegram_bridge import start as tg_start
@@ -206,6 +214,16 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"WhatsApp bridge failed to initialize: {e}")
 
+    if os.environ.get("ENABLE_TWITTER", "true").lower() == "true":
+        try:
+            from runtime.bridges.twitter_bridge import start as x_start
+            from runtime.orchestrator.message_queue import enqueue
+            x_start(enqueue_fn=enqueue)
+            _twitter_bridge = True
+            logger.info("X/Twitter bridge started")
+        except Exception as e:
+            logger.warning(f"X/Twitter bridge failed to start: {e}")
+
     # Phase 4: Start alarm watcher
     _alarm_watcher = None
     if _dispatcher and os.environ.get("ENABLE_ALARMS", "true").lower() == "true":
@@ -227,6 +245,12 @@ async def lifespan(app: FastAPI):
         try:
             from runtime.bridges.telegram_bridge import stop as tg_stop
             tg_stop()
+        except Exception:
+            pass
+    if _twitter_bridge:
+        try:
+            from runtime.bridges.twitter_bridge import stop as x_stop
+            x_stop()
         except Exception:
             pass
     if _dispatcher:
