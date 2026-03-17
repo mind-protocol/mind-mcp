@@ -102,6 +102,7 @@ from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_prof
 from mcp.tools.spawn_handler import TOOL_SCHEMA as SPAWN_SCHEMA, handle_spawn
 from mcp.tools.debug_handler import TOOL_SCHEMA as DEBUG_SCHEMA, handle_debug
 from mcp.tools.bond_handler import TOOL_SCHEMA as BOND_SCHEMA, handle_bond
+from mcp.tools.anamnesis_handler import TOOL_SCHEMA as ANAMNESIS_SCHEMA, handle as handle_anamnesis
 
 logging.basicConfig(
     level=logging.INFO,
@@ -136,6 +137,8 @@ TOOL_SCHEMAS = [
     DEBUG_SCHEMA,
     # ACT (relationships)
     BOND_SCHEMA,
+    # ACT (memory)
+    ANAMNESIS_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -157,6 +160,7 @@ TOOL_DISPATCH = {
     "spawn":       (handle_spawn,       True),
     "debug":       (handle_debug,       True),
     "bond":        (handle_bond,        True),
+    "anamnesis":   (handle_anamnesis,   True),
 }
 
 
