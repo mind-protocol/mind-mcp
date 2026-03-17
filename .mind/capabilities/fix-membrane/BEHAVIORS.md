@@ -46,7 +46,7 @@ AND:    If no files found -> create task_run for MEMBRANE_NO_PROTOCOLS
 
 ```
 GIVEN:  .yaml file exists in .mind/procedures/
-WHEN:   Health check runs or procedure_list called
+WHEN:   Health check runs or procedure(action='list') called
 THEN:   Attempt yaml.safe_load() on file
 AND:    If exception raised -> create task_run for MEMBRANE_PARSE_ERROR
 AND:    task_run includes line number and error message

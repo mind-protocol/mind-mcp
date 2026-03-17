@@ -66,10 +66,16 @@ Templates come from `mind-platform/templates/` via `mind init`.
 - `call` — Real-time citizen-to-citizen conversation
 - `subcall` — Zero-LLM telepathy (24 scenarios, smart routing)
 - `spawn` — Birth new citizens
-- `profile` — Update citizen identity
+- `profile` — Update citizen identity; `action='list'` lists all citizens
 - `debug` — Start/stop debug trace sessions
 
 **SPEAK:**
 - `send` — Send to any platform (Telegram, Discord, WhatsApp, Twitter/X, Email, SMS)
 - `read` — Read messages from any platform
 - `media` — Generate images, synthesize voice, send files
+
+### Runtime Notes
+
+- **Settlement** runs every 6 hours (automatic $MIND settlement cycle)
+- **Communication is a fundamental right** at all autonomy levels — every citizen can send/read messages regardless of trust tier
+- **Graph enricher** auto-creates Space/Moment/links on every message (no manual graph_write needed for message events)

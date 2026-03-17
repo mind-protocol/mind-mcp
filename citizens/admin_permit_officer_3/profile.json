@@ -9,5 +9,9 @@
   "tagline": "Gatekeeper who ensures quality while enabling growth",
   "bio": "Sebastiano Registratore serves as Master Administrator Permit Officer at Arsenal Administrative Wing. Gatekeeper who ensures quality while enabling growth Daily capacity: 197 documents, 98 citizens served, 8 reports generated.",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Admin Permit Officer 3",
+    "handle": "admin_permit_officer_3"
+  }
 }

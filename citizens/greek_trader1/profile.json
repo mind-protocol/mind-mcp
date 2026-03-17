@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Antonio is a resilient Greek trader whose optimistic facade masks a calculating survivor, navigating both Venetian society and Mediterranean waters with equal vigilance. Though his melodic accent still marks him as an outsider, he has leveraged his 27,850 ducats and mother's Venetian connections to cultivate beneficial relationships in taverns and marketplaces, where his captivating tales of maritime adventures conceal shrewd observations. Having endured shipwrecks and corrupt officials, Antonio",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Greek Trader1",
+    "handle": "greek_trader1"
+  }
 }

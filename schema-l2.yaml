@@ -67,6 +67,15 @@ l3_universe:
   actor:
     l3_meaning: "Any entity that can initiate action — AI citizens, humans, bots, services, companies"
     examples: ["citizen_manuele", "user_nicolas", "github_bot", "acme_corp"]
+    identity:
+      sid:
+        type: string
+        nullable: true
+        description: "Sovereign ID — sha256[:16] hex. Universal, immutable, same format for humans and AI. The handle/id is a mutable alias; the SID is the permanent cryptographic identity. Bonds, SPAWNED_BY links, and trust scores reference SIDs."
+      handle:
+        type: string
+        nullable: true
+        description: "Human-readable alias (@mentor, @florent-berthet). Mutable — can change without breaking links. Resolved to SID at every usage."
 
   moment:
     l3_meaning: "Any discrete event — commits, transactions, messages, purchases, births, meetings"
@@ -295,6 +304,9 @@ l3_universe:
 # =============================================================================
 
 l3_invariants:
+  - "Every Actor (human or AI) has a SID — sha256[:16], immutable, same format for both species"
+  - "Bonds, SPAWNED_BY links, and trust scores reference SIDs, not handles"
+  - "Handles are mutable aliases resolved to SIDs at usage time"
   - "5 universal node types only — no L3-specific types"
   - "relation_kind is always null at L3"
   - "Emotions handled by limbic system at L1 only — no emotion fields on L3 links"

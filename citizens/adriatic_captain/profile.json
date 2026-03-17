@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Meticulous and calculating, Stefano approaches each venture with the precision of a navigator plotting a course through treacherous waters. His years commanding ships instilled a disciplined patience that serves him well in his current enterprises—whether measuring ingredients for the perfect loaf or analyzing property investments in Cannaregio. This methodical nature extends to his personal habits, as he rises before dawn like clockwork, maintains immaculate ledgers of all transactions, and car",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Adriatic Captain",
+    "handle": "adriatic_captain"
+  }
 }

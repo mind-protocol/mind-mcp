@@ -79,4 +79,4 @@ Procedures must have all required metadata (name, steps, etc.).
 
 - `mind doctor` reports no MEMBRANE_* problems
 - All procedure files load without error
-- `procedure_list` MCP tool returns valid procedures
+- `procedure(action='list')` MCP tool returns valid procedures

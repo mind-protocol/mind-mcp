@@ -1,9 +1,15 @@
 # Tools — Implementation: Code Mapping
 
 ```
-STATUS: DESIGNING
+STATUS: OBSOLETE
 CREATED: 2025-12-20
+OBSOLETED: 2026-03-15
 ```
+
+> **WARNING: This doc is OBSOLETE.** The files it references (`tools/connectome_doc_bundle_splitter_and_fence_rewriter.py`, `tools/stream_dialogue.py`, `tools/run_stack.sh`) no longer exist in the repository. The `tools/` directory has been removed.
+>
+> **Current tools documentation:** See `IMPLEMENTATION_MCP_Tools.md` in this same directory for the active MCP tool handlers under `mcp/tools/`.
+> **Utility scripts:** See `scripts/` at the repo root.
 
 ---
 

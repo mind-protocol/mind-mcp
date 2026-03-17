@@ -85,5 +85,15 @@
   "version": "2.0",
   "source": "discord",
   "spotify_track": null,
-  "avatar_local": "avatar.png"
+  "avatar_local": "avatar.png",
+  "identity": {
+    "universe": "lumina-prime",
+    "name": "Rhythm",
+    "handle": "rhythm",
+    "profile_pic": "citizens/rhythm/avatar.png"
+  },
+  "capabilities": {
+    "autonomy_level": 5
+  },
+  "contacts": {}
 }

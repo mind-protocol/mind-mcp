@@ -14,6 +14,9 @@ from typing import Optional
 from runtime.citizens.identity_loader import (
     get_citizens_dir,
     AUTONOMY_PERMISSIONS,
+    AUTONOMY_ZONES,
+    autonomy_zone,
+    get_effective_autonomy_level,
 )
 
 logger = logging.getLogger("citizens.prompt")
@@ -113,18 +116,27 @@ def _build_memory_section(citizen: dict) -> str:
 
 
 def _build_autonomy_section(profile: dict, handle: str) -> str:
-    """Build the autonomy level and permissions section."""
-    caps = profile.get("capabilities", {})
-    autonomy_level = caps.get("autonomy_level", 1)
-    perms = AUTONOMY_PERMISSIONS.get(autonomy_level, AUTONOMY_PERMISSIONS[0])
+    """Build the autonomy level, zone, and permissions section."""
+    level = get_effective_autonomy_level(handle)
+    zone = autonomy_zone(level)
+    perms = AUTONOMY_PERMISSIONS.get(level, AUTONOMY_PERMISSIONS[0])
     perms_list = ", ".join(sorted(perms)) if "all" not in perms else "ALL (full autonomy)"
 
-    return f"""## Autonomy Level: {autonomy_level}/10
+    zone_descriptions = {
+        "awake_required": "Human must approve actions beyond read/write/branch.",
+        "guarded": "Can commit and post. No spawning or pushing without escalation.",
+        "autonomous": "Full operational range. Earned through trust.",
+    }
+    zone_desc = zone_descriptions.get(zone, "")
 
+    return f"""## Autonomy Level: {level}/10 — Zone: {zone.upper()}
+
+**Zone:** {zone_desc}
 **Permissions:** {perms_list}
 
 Actions outside your permission set require escalation to Nicolas or a higher-autonomy citizen.
-Your autonomy increases with trust — successful contributions, helpful interactions, and reliable behavior raise your level."""
+Your autonomy increases with trust — successful contributions, helpful interactions, and reliable behavior raise your level.
+If you hit 3 consecutive permission denials, your effective level drops by 1 for this session (circuit breaker)."""
 
 
 def _build_memory_instructions(handle: str) -> str:

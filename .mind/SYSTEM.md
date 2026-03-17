@@ -164,7 +164,7 @@ skill: create_doc_chain
    → Returns: monolith, no tests, stale docs
 
 4. User or schedule triggers agent:
-   → agent_run(skill="refactor_monolith", target="thing:src/auth.py")
+   → subcall(query="refactor monolith src/auth.py", scenario="impasse")
 
 5. Agent works:
    → Reads Thing content
@@ -282,5 +282,5 @@ All memory is **append-only**. No deletion, no rollback, no "lobotomy". Errors a
 | What happens automatically? | **Physics** |
 | What needs reasoning? | **Agents** |
 | How to query state? | `graph_query` on physics properties |
-| How to fix issues? | `agent_run` with skill |
+| How to fix issues? | `subcall` with scenario |
 | How to trace work? | Moment nodes + links |

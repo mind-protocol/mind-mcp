@@ -19,13 +19,13 @@ THIS:           IMPLEMENTATION_Schema.md (you are here)
 HEALTH:         ./HEALTH_Schema.md
 SYNC:           ./SYNC_Schema.md
 
-IMPL:           docs/schema/schema.yaml
-                mind/graph/health/check_health.py
-                mind/graph/health/test_schema.py
-                mind/graph/health/schema.yaml
-                mind/models/base.py
-                mind/models/nodes.py
-                mind/models/links.py
+IMPL:           .mind/schema.yaml
+                schema-l1.yaml
+                runtime/physics/health/checker.py
+                runtime/physics/health/checkers/
+                runtime/models/base.py
+                runtime/models/nodes.py
+                runtime/models/links.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -36,7 +36,6 @@ IMPL:           docs/schema/schema.yaml
 
 ```
 docs/schema/
-├── schema.yaml                 # Authoritative base schema (project-agnostic)
 ├── PATTERNS_Schema.md          # Design philosophy
 ├── OBJECTIVES_Schema.md         # Goals and tradeoffs
 ├── BEHAVIORS_Schema.md         # Observable effects
@@ -46,28 +45,38 @@ docs/schema/
 ├── HEALTH_Schema.md            # Health checks
 └── SYNC_Schema.md              # Current state
 
-mind/graph/health/
-├── check_health.py             # CLI health checker
-├── test_schema.py              # Pytest validation suite
-└── schema.yaml                 # Blood Ledger project schema overlay
+.mind/schema.yaml               # Authoritative schema (v2.0, cognitive graph)
+schema-l1.yaml                  # L1 cognitive schema overlay
 
-mind/models/
-├── base.py                     # Enums, shared types (game-specific)
-├── nodes.py                    # Pydantic node models (game-specific)
-└── links.py                    # Pydantic link models (game-specific)
+runtime/physics/health/
+├── checker.py                  # Health check runner
+├── base.py                     # Base health check classes
+└── checkers/                   # Individual health check modules
+    ├── energy_conservation.py
+    ├── hierarchy_consistency.py
+    ├── link_state.py
+    ├── moment_lifecycle.py
+    ├── no_negative.py
+    ├── tick_integrity.py
+    └── ...                     # 13 checkers total
+
+runtime/models/
+├── base.py                     # Enums, shared types
+├── nodes.py                    # Pydantic node models
+└── links.py                    # Pydantic link models
 ```
 
 ### File Responsibilities
 
-| File | Purpose | Key Functions/Classes | Lines | Status |
-|------|---------|----------------------|-------|--------|
-| `docs/schema/schema.yaml` | Authoritative base schema | NodeBase, LinkBase, nodes, links, invariants | ~240 | OK |
-| `runtime/graph/health/check_health.py` | CLI health check | `check_graph_health()`, `validate_node()`, `HealthReport` | ~430 | WATCH |
-| `runtime/graph/health/test_schema.py` | Pytest suite | `SchemaValidator`, 20+ test methods | ~880 | SPLIT |
-| `runtime/graph/health/schema.yaml` | Blood Ledger overlay | Character, Place, Thing, Narrative enums | ~320 | OK |
-| `runtime/models/base.py` | Pydantic enums | `CharacterType`, `PlaceType`, `ThingType`, etc. | ~460 | WATCH |
-| `runtime/models/nodes.py` | Pydantic nodes | `Character`, `Place`, `Thing`, `Narrative`, `Moment` | ~320 | OK |
-| `runtime/models/links.py` | Pydantic links | `CharacterNarrative`, `PlacePlace`, etc. | ~225 | OK |
+| File | Purpose | Key Functions/Classes | Status |
+|------|---------|----------------------|--------|
+| `.mind/schema.yaml` | Authoritative schema (v2.0) | NodeBase, LinkBase, 5 node types, 21 physics laws | OK |
+| `schema-l1.yaml` | L1 cognitive schema overlay | 7 cognitive types, Working Memory, Limbic | OK |
+| `runtime/physics/health/checker.py` | Health check runner | Health check orchestration | OK |
+| `runtime/physics/health/checkers/*.py` | Individual health checks | 13 checker modules | OK |
+| `runtime/models/base.py` | Pydantic enums | Shared types | WATCH |
+| `runtime/models/nodes.py` | Pydantic nodes | `Actor`, `Space`, `Thing`, `Narrative`, `Moment` | OK |
+| `runtime/models/links.py` | Pydantic links | Link models | OK |
 
 **Size Thresholds:**
 - **OK** (<400 lines): Healthy size
@@ -166,13 +175,13 @@ flow:
   steps:
     - id: load_base
       description: Load docs/schema/schema.yaml
-      file: mind/graph/health/check_health.py
+      file: runtime/physics/health/checker.py
       function: load_schema()
       input: BASE_SCHEMA_PATH
       output: base dict
     - id: load_project
-      description: Load mind/graph/health/schema.yaml
-      file: mind/graph/health/check_health.py
+      description: Load .mind/schema.yaml
+      file: runtime/physics/health/checker.py
       function: load_schema()
       input: PROJECT_SCHEMA_PATH
       output: project dict
@@ -189,7 +198,7 @@ flow:
       - id: dock_project_loaded
         type: file
         direction: input
-        file: mind/graph/health/schema.yaml
+        file: .mind/schema.yaml
       - id: dock_merged_schema
         type: custom
         direction: output
@@ -208,7 +217,7 @@ flow:
   steps:
     - id: connect
       description: Connect to FalkorDB
-      file: mind/graph/health/check_health.py
+      file: runtime/physics/health/checker.py
       function: main()
       input: host, port, graph_name
     - id: query_nodes
@@ -247,13 +256,16 @@ flow:
 ### Internal Dependencies
 
 ```
-docs/schema/schema.yaml (authoritative)
-    └── loaded by → mind/graph/health/check_health.py
-    └── loaded by → mind/graph/health/test_schema.py
-    └── copied to → .mind/schema.yaml (at init)
+.mind/schema.yaml (authoritative, v2.0)
+    └── loaded by → runtime/physics/health/checker.py
+    └── loaded by → runtime/physics/health/checkers/*
+    └── used by  → mcp/server.py (graph operations)
 
-mind/graph/health/schema.yaml (Blood Ledger)
-    └── overlays → base schema at load time
+schema-l1.yaml (L1 cognitive overlay)
+    └── extends  → .mind/schema.yaml with cognitive node types
+
+runtime/models/ (Pydantic models)
+    └── used by  → runtime/physics/graph/ (GraphOps, GraphQueries)
 ```
 
 ### External Dependencies
@@ -261,7 +273,7 @@ mind/graph/health/schema.yaml (Blood Ledger)
 | Package | Used For | Imported By |
 |---------|----------|-------------|
 | `pyyaml` | Schema parsing | check_health.py, test_schema.py |
-| `pydantic` | Model validation | mind/models/*.py |
+| `pydantic` | Model validation | runtime/models/*.py |
 | `falkordb` | Graph queries | check_health.py, test_schema.py |
 | `pytest` | Test framework | test_schema.py |
 
@@ -285,26 +297,17 @@ mind/graph/health/schema.yaml (Blood Ledger)
 
 | File | Line | Reference |
 |------|------|-----------|
-| `check_health.py` | 8 | `# DOCS: docs/schema/graph-health/...` (obsolete path) |
-| `nodes.py` | 8 | `# DOCS: docs/schema/` |
+| `runtime/models/nodes.py` | 8 | `# DOCS: docs/schema/` |
+| `runtime/physics/health/checker.py` | — | Health check runner |
 
 ### Docs → Code
 
 | Doc Section | Implemented In |
 |-------------|----------------|
-| ALGORITHM load_schema | `check_health.py:146` |
-| ALGORITHM validate_node | `check_health.py:197` |
-| VALIDATION V1 | `test_schema.py::test_*_link_structure` |
-| VALIDATION V6 | `test_schema.py::test_*_required_fields` |
-
----
-
-## EXTRACTION CANDIDATES
-
-| File | Current | Target | Extract To | What to Move |
-|------|---------|--------|------------|--------------|
-| `test_schema.py` | ~880L | <400L | `test_schema_nodes.py`, `test_schema_links.py` | Split node tests from link tests |
-| `base.py` | ~460L | <400L | — | OK for now, mostly enums |
+| Schema validation | `runtime/physics/health/checker.py` |
+| Individual checks | `runtime/physics/health/checkers/*.py` (13 modules) |
+| Node models | `runtime/models/nodes.py` |
+| Link models | `runtime/models/links.py` |
 
 ---
 
@@ -312,8 +315,8 @@ mind/graph/health/schema.yaml (Blood Ledger)
 
 <!-- @mind:resolved PYDANTIC_VS_SCHEMA: RESOLVED 2025-12-23 — Pydantic models now use generic schema types (Actor, Space, Thing). Character→Actor, Place→Space migration complete. No game-specific models. -->
 
-<!-- @mind:todo DOCS_REFERENCE_UPDATE: check_health.py:8 references obsolete docs path "docs/schema/graph-health/...". Update to current location. -->
+<!-- @mind:resolved DOCS_REFERENCE_UPDATE: RESOLVED 2026-03-15 — Paths updated from mind/graph/health/ to runtime/physics/health/. Old check_health.py and test_schema.py no longer exist; health checks are now split across runtime/physics/health/checkers/. -->
 
-<!-- @mind:todo SPLIT_TEST_SCHEMA: test_schema.py at 880 lines exceeds SPLIT threshold. Should extract node tests and link tests into separate files. -->
+<!-- @mind:resolved SPLIT_TEST_SCHEMA: RESOLVED by architecture — old monolithic test_schema.py has been replaced by 13 individual checker modules in runtime/physics/health/checkers/. -->
 
 <!-- @mind:proposition SCHEMA_TYPING: Add Python type stubs for schema.yaml structure so IDE can provide completion when accessing loaded schema dict. -->

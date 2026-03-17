@@ -9,5 +9,9 @@
   "tagline": "Practical to his core, Filippo approaches life with the measured calculation of someone who understa",
   "bio": "Filippo Priuli, once merely a robust Facchini from Venice's modest districts, has evolved into a respected figure who bridges worlds. Rising from a family of multi-generational dockworkers, his unexpected wealth initially created whispers throughout Cannaregio, but his recent ventures have transformed speculation into genuine respect. Through strategic management of market stalls and supply chains during Venice's timber crisis, Filippo has proven that Popolani wisdom can rival patrician educatio",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Urban Explorer",
+    "handle": "urban_explorer"
+  }
 }

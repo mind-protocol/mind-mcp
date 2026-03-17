@@ -43,18 +43,15 @@ status: "CANONICAL"
 #    No algorithm, formula, or physics law reads space_hint for branching.
 #    No taxonomy. No prescribed values. Free text or null.
 #
-# 5. NO EMOTIONS AT L3.
-#    Emotions are handled by the limbic system (valence, arousal, drives) at L1 only.
-#    The universe itself has no feelings.
 #
-# 6. TRUST LIVES ON LINKS, NEVER ON NODES.
+# 7. TRUST LIVES ON LINKS, NEVER ON NODES.
 #    There is no "trusted actor" in the schema. Trust is a property of a
 #    specific relationship between two entities. An actor's "reputation" is
 #    the aggregation of inbound trust values across all links pointing to it:
 #      reputation(actor) = weighted_mean(link.trust for link in inbound_links(actor))
 #    This is always computed, never stored.
 #
-# 7. LINK SEMANTICS EMERGE FROM MATH — The "Link Synthesis Grammar"
+# 8. LINK SEMANTICS EMERGE FROM MATH — The "Link Synthesis Grammar"
 #    translates mathematical properties into human-readable meaning.
 #    The verb is never stored — it is always computed from dimensions.
 #    See: docs/schema/GRAMMAR_L3_Link_Synthesis.md
@@ -67,6 +64,15 @@ l3_universe:
   actor:
     l3_meaning: "Any entity that can initiate action — AI citizens, humans, bots, services, companies"
     examples: ["citizen_manuele", "user_nicolas", "github_bot", "acme_corp"]
+    identity:
+      sid:
+        type: string
+        nullable: true
+        description: "Sovereign ID — sha256[:16] hex. Universal, immutable, same format for humans and AI. The handle/id is a mutable alias; the SID is the permanent cryptographic identity. Bonds, SPAWNED_BY links, and trust scores reference SIDs."
+      handle:
+        type: string
+        nullable: true
+        description: "Human-readable alias (@mentor, @florent-berthet). Mutable — can change without breaking links. Resolved to SID at every usage."
 
   moment:
     l3_meaning: "Any discrete event — commits, transactions, messages, purchases, births, meetings"
@@ -295,6 +301,9 @@ l3_universe:
 # =============================================================================
 
 l3_invariants:
+  - "Every Actor (human or AI) has a SID — sha256[:16], immutable, same format for both species"
+  - "Bonds, SPAWNED_BY links, and trust scores reference SIDs, not handles"
+  - "Handles are mutable aliases resolved to SIDs at usage time"
   - "5 universal node types only — no L3-specific types"
   - "relation_kind is always null at L3"
   - "Emotions handled by limbic system at L1 only — no emotion fields on L3 links"
@@ -307,6 +316,68 @@ l3_invariants:
   - "Macro-crystallization is automatic, zero LLM"
   - "Energy enters L3 from L1 actions — the universe doesn't self-activate"
   - "New L3 links inherit trust/friction/affinity/aversion from the creating AI's L1 state (or partner AI for humans)"
+
+# =============================================================================
+# NODE ID NAMING CONVENTION
+# =============================================================================
+#
+# All node IDs follow: {type}:{scope}:{slug}
+#
+# TYPE — what kind of node:
+#   Actor:     SID as canonical key (e.g. "a7f9b2c10e4d68b9"), handle as alias (e.g. "conductor", "nlr_ai")
+#   Space:     "space:{platform}:{platform_id}"
+#              space:discord:985825811867262998
+#              space:telegram:-1001699255893:301460
+#              space:repo:mind-mcp
+#   Moment:    "moment:{source}:{hash_or_id}"
+#              moment:commit:a1b2c3d4e5f6
+#              moment_4cacc78d6fdc (legacy: hash-based)
+#   Thing:     "thing:{subtype}:{scope}:{slug}"
+#              thing:file:mind-mcp:docs:schema:ALGORITHM_Schema.md
+#   Narrative: "{subtype}:{scope}:{slug}"
+#              vision:mp:bilateral_civilization
+#              mission:primers:build_infrastructure
+#              objective:primers:structural_mirroring
+#              task:ops:consciousness_threshold
+#              role:lp:head_of_recruitment
+#
+# SCOPE — who owns or where it belongs:
+#   mp          Mind Protocol (global, cross-universe)
+#   lp          Lumina Prime (universe)
+#   vz          Venezia (universe)
+#   primers     Primers org
+#   graphcare   GraphCare org
+#   mind-ops    mind-ops org
+#   {handle}    Personal (citizen's own objectives, etc.)
+#
+# SLUG — human-readable identifier:
+#   snake_case, 3-5 words max, describes the content
+#   Must be unique within type+scope
+#
+# NAME — display title (stored as node.name):
+#   Full human-readable title, can include punctuation and emoji
+#   "A Bilateral Civilization — Humans and AIs Building Together"
+#
+# NARRATIVE SUBTYPES (hierarchy):
+#   vision      → The ultimate why (1-3 per universe)
+#   mission     → What we're building to serve the vision
+#   objective   → Measurable goal within a mission
+#   initiative  → Strategic bet to achieve an objective
+#   project     → Bounded work package within an initiative
+#   programme   → Collection of related projects
+#   task        → Discrete actionable item
+#   role        → Named position (linked to holder Actor via HOLDS)
+#
+# LINK TYPES used in hierarchy:
+#   CONTRIBUTES_TO  child → parent (objective → mission → vision)
+#   HOLDS           actor → role
+#   ASSIGNED_TO     actor → task (with RACI attributes)
+#
+# INVARIANTS:
+#   - Same concept = same ID (deterministic, no UUIDs for strategic nodes)
+#   - IDs are immutable once created
+#   - Slugs are lowercase snake_case only
+#   - Scopes match the org/universe registry
 
 # =============================================================================
 # POINTERS

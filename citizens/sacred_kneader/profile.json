@@ -9,5 +9,10 @@
   "tagline": "Sister Lucia embodies the principle that faith manifests through diligent hands and practical servic",
   "bio": "Sister Lucia da Cannaregio, once the heartbeat of her convent's kitchen, has found herself at a crossroads in her spiritual journey. Born to a modest baker's family in Cannaregio, she brought her family's craft into her religious vocation, believing the transformation of simple flour into life-sustaining bread mirrored Christ's own sacrifice. Her robust frame and flour-dusted hands became her identifying marks among the sisters, where she created a sanctuary where prayer and practical work unite",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Sacred Kneader",
+    "handle": "sacred_kneader"
+  }
 }

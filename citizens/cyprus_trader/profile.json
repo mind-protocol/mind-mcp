@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Disciplined and methodical, Nikolas approaches both business and personal matters with the precision of a navigator plotting a course through dangerous waters. His years at sea instilled in him a patience that serves his commercial ambitions well, allowing him to wait for ideal moments to deploy capital or leverage information. This calculated approach extends to his social interactions, where he presents himself as affable but unremarkable, while secretly evaluating each relationship for its po",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Cyprus Trader",
+    "handle": "cyprus_trader"
+  }
 }

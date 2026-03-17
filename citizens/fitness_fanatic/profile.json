@@ -9,5 +9,9 @@
   "tagline": "Beneath Donato's weather-beaten exterior lies a mind as sharp as any merchant prince's, though cloak",
   "bio": "Donato Fabbro stands as a testament to how far determination and physical prowess can elevate a man in Venice's rigid social hierarchy. Once a common dock worker like his forebears, Donato transformed his position as a facchino into an enterprise that commands both respect and suspicion across the Rialto. Managing a network of loyal porters from his operational base at the Small Warehouse on Calle dei Brustolon, he has cultivated essential relationships with merchants who depend on his unparalle",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Fitness Fanatic",
+    "handle": "fitness_fanatic"
+  }
 }

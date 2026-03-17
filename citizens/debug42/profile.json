@@ -9,5 +9,10 @@
   "tagline": "Beatrice approaches life with the measured precision of a master scale-maker, weighing each decision",
   "bio": "Beatrice Sanudo stands as testament to Venice's promise of opportunity, having ascended from the Facchini class to become a formidable Popolani merchant with over 4.6 million ducats at her disposal. Her journey began at the Public Dock at Fondamenta San Luca, where her father's injury catalyzed her transformation from dock laborer to commercial strategist. Through meticulous observation and uncompromising standards, she established a thriving bakery at Calle del Forno and a respected market stal",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Debug42",
+    "handle": "debug42"
+  }
 }

@@ -47,17 +47,11 @@ from ..constants import (
     BOREDOM_PROGRESS_RELIEF,
     BOREDOM_REPETITION_COEFF,
     BOREDOM_STAGNATION_COEFF,
-    DESIRE_ACTIVATION_THRESHOLD,
-    DESIRE_IGNITION_BOOST,
     DRIVE_DECAY,
     DRIVE_MAX,
     FAILURE_WINDOW,
     FRUSTRATION_FAILURE_COEFF,
     FRUSTRATION_RESOLUTION_RELIEF,
-    IMPULSE_ACCUMULATION_RATE,
-    IMPULSE_CONTEXT_THRESHOLD,
-    IMPULSE_DECAY,
-    IMPULSE_DRIVE_THRESHOLD,
     SOLITUDE_DECAY,
     SOLITUDE_RATE,
     SOLITUDE_SCALE,
@@ -70,7 +64,6 @@ from ..models import (
     EmotionName,
     Link,
     Node,
-    NodeType,
 )
 
 
@@ -442,85 +435,16 @@ def _law_17_desire_activation(
 ) -> tuple[int, int]:
     """Law 17 — Latent desire activation + impulse accumulation.
 
-    Scans desire nodes: if alignment with current WM exceeds
-    DESIRE_ACTIVATION_THRESHOLD and the desire is dormant (low energy),
-    ignite it.
-
-    Scans action nodes: accumulate energy under sustained drive pressure
-    and context match.
+    Delegates to the standalone law_17_impulse module which implements
+    the full spec: goal_proximity, narrative_legitimacy, limbic_alignment,
+    cognitive_load_inverse, and impulse accumulation for action nodes.
 
     Returns (desires_ignited, action_impulses_accumulated).
     """
-    centroid = state.wm.centroid
-    desires_ignited = 0
-    impulses_accumulated = 0
+    from .law_17_impulse import update_impulse
 
-    # --- Desire ignition ---
-    for node in state.nodes.values():
-        if node.node_type != NodeType.DESIRE:
-            continue
-
-        # Only ignite dormant desires (low energy).
-        if node.energy > DESIRE_IGNITION_BOOST * 0.5:
-            continue
-
-        # Alignment with WM centroid.
-        if not centroid or not node.embedding:
-            continue
-        alignment = cosine_similarity(centroid, node.embedding)
-
-        # Limbic alignment: how well do current drives favor this desire?
-        limbic_alignment = 0.0
-        for drive in state.limbic.drives.values():
-            affinity = _get_drive_affinity_for_node(drive.name.value, node)
-            limbic_alignment += drive.intensity * affinity
-
-        # Cognitive load inverse: room in WM → more likely to ignite.
-        from ..constants import WM_SIZE_MAX
-        cognitive_load_inverse = max(
-            0.0, 1.0 - state.wm.size / max(WM_SIZE_MAX, 1)
-        )
-
-        activation_check = (
-            node.weight
-            * alignment
-            * (1.0 + limbic_alignment)
-            * cognitive_load_inverse
-        )
-
-        if activation_check > DESIRE_ACTIVATION_THRESHOLD:
-            node.energy += DESIRE_IGNITION_BOOST
-            desires_ignited += 1
-
-    # --- Impulse accumulation for action nodes ---
-    for node in state.nodes.values():
-        if not node.is_action_node:
-            continue
-
-        # Drive pressure: sum of (drive.intensity * affinity) for matching drives.
-        drive_pressure = 0.0
-        for drive in state.limbic.drives.values():
-            aff = node.drive_affinity.get(drive.name.value, 0.0)
-            drive_pressure += drive.intensity * aff
-
-        # Context match: cosine(WM_centroid, action_node.action_context).
-        if centroid and node.action_context:
-            context_match = cosine_similarity(centroid, node.action_context)
-        else:
-            context_match = 0.0
-
-        if (
-            drive_pressure > IMPULSE_DRIVE_THRESHOLD
-            and context_match > IMPULSE_CONTEXT_THRESHOLD
-        ):
-            node.energy += (
-                IMPULSE_ACCUMULATION_RATE * drive_pressure * context_match
-            )
-            impulses_accumulated += 1
-        else:
-            node.energy *= IMPULSE_DECAY
-
-    return desires_ignited, impulses_accumulated
+    result = update_impulse(state)
+    return result.desires_ignited, result.action_impulses_accumulated
 
 
 def _law_18_relational_valence(

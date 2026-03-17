@@ -4,9 +4,8 @@ SubEntity — Temporary Consciousness Traversal (v2.1)
 A SubEntity is a temporary consciousness fragment that traverses the graph
 with query (what to find) and intention (why finding it).
 
+DOCS: docs/schema/ALGORITHM_Schema.md
 Schema: docs/schema/schema.yaml v2.0
-Patterns: docs/physics/subentity/PATTERNS_SubEntity.md (P1-P11)
-Algorithm: docs/physics/subentity/ALGORITHM_SubEntity.md
 
 v2.1 CHANGES (Semantic Intention):
 - Removed IntentionType enum (SUMMARIZE, VERIFY, etc.) - was rigid and keyword-based
@@ -20,7 +19,7 @@ v2.0 CHANGES (Awareness Depth + Breadth):
 - Fatigue-based stopping: stop when progress stagnates for 5 steps
 - Children crystallize systematically (unless 90%+ match found)
 - NO propagation from children to parent — graph is source of truth
-- See: docs/physics/mechanisms/MECHANISMS_Awareness_Depth_Breadth.md
+- See: docs/schema/ALGORITHM_Schema.md
 
 v1.9 CHANGES (Energy Injection):
 - SubEntity injects energy at EACH traversal step (no decay)

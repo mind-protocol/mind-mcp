@@ -368,12 +368,18 @@ def _build_partner_cache():
             if identity.get("type") != "human":
                 continue
             # Find telegram contact
-            for contact in profile.get("contacts", []):
-                if contact.get("type") == "telegram" and contact.get("value"):
-                    tg_id = str(contact["value"]).strip()
-                    if tg_id.lstrip("-").isdigit():
-                        human_tg_ids[d.name] = tg_id
-                        break
+            contacts = profile.get("contacts", [])
+            if isinstance(contacts, dict):
+                tg_id = str(contacts.get("telegram_chat_id", "") or contacts.get("telegram", "")).strip()
+                if tg_id.lstrip("-").isdigit():
+                    human_tg_ids[d.name] = tg_id
+            elif isinstance(contacts, list):
+                for contact in contacts:
+                    if isinstance(contact, dict) and contact.get("type") == "telegram" and contact.get("value"):
+                        tg_id = str(contact["value"]).strip()
+                        if tg_id.lstrip("-").isdigit():
+                            human_tg_ids[d.name] = tg_id
+                            break
         except (json.JSONDecodeError, OSError):
             continue
 
@@ -401,6 +407,12 @@ def _build_partner_cache():
             continue
 
     logger.info(f"Partner cache built: {len(_partner_cache)} human→AI bonds")
+
+
+def _sanitize_tg_handle(name: str) -> str:
+    """Turn a display name into a safe graph handle."""
+    clean = re.sub(r"[^\w]", "_", name).strip("_").lower()
+    return clean[:40] or "unknown"
 
 
 def _resolve_partner_for_sender(sender_id: str) -> Optional[str]:
@@ -673,6 +685,51 @@ def process_update(update: dict) -> bool:
             _handle_talk(chat_id, sender_name, user_id, text)
             return True
 
+        if cmd == "/accept":
+            _handle_bond_accept(chat_id, sender_name, user_id, text)
+            return True
+
+        if cmd == "/reject":
+            _handle_bond_reject(chat_id, sender_name, user_id, text)
+            return True
+
+        if cmd == "/bonds":
+            _handle_bond_list(chat_id, user_id)
+            return True
+
+    # ── New arrival detection ──
+    # If this sender has no bonded partner and no known SID, they're new.
+    # Trigger the arrival pipeline: SID, L4, welcome, mentor task.
+    if _enqueue_fn and not _resolve_partner_for_sender(user_id):
+        try:
+            from runtime.onboarding.arrival_pipeline import handle_new_arrival
+            import asyncio
+
+            # Check if we've already processed this sender (avoid re-triggering)
+            _arrival_cache_key = f"tg:{user_id}"
+            if not hasattr(process_update, '_arrival_seen'):
+                process_update._arrival_seen = set()
+
+            if _arrival_cache_key not in process_update._arrival_seen:
+                process_update._arrival_seen.add(_arrival_cache_key)
+
+                # Run the async arrival pipeline
+                loop = asyncio.new_event_loop()
+                try:
+                    result = loop.run_until_complete(handle_new_arrival(
+                        platform="telegram",
+                        platform_id=user_id,
+                        sender_name=sender_name,
+                        message_text=text,
+                    ))
+                    if result.is_new and result.welcome_message:
+                        send_message(result.welcome_message, chat_id)
+                        logger.info(f"New arrival welcomed: {sender_name} SID={result.sid[:8]}...")
+                finally:
+                    loop.close()
+        except Exception as e:
+            logger.warning(f"Arrival pipeline error (non-blocking): {e}")
+
     # ── Route to orchestrator ──
     if _enqueue_fn:
         send_typing(chat_id)
@@ -689,8 +746,45 @@ def process_update(update: dict) -> bool:
             group_name = chat.get("title", "group")
             content = f"[group:{group_name}] {content}"
 
-        # Resolve bonded AI partner for this sender
-        partner_handle = _resolve_partner_for_sender(user_id)
+        # ── Mention-based routing (priority) ──
+        # If the human mentions @someone, route to that citizen instead of partner.
+        # This lets humans talk to any citizen, not just their bonded partner.
+        mentioned_handle = None
+        all_mentioned = []
+        import re as _re_mod
+        for match in _re_mod.finditer(r"@(\w+)", text):
+            candidate = match.group(1).lower()
+            candidate_dir = CITIZENS_DIR / candidate
+            if candidate_dir.is_dir() and (candidate_dir / "profile.json").exists():
+                all_mentioned.append(candidate)
+                if mentioned_handle is None:
+                    mentioned_handle = candidate
+
+        # ── L3 graph enrichment ──
+        # Create Moment + mention links so l3_tick.py can wake citizens.
+        try:
+            from scripts.graph_enricher import on_message as enrich_message
+            chat_title = chat.get("title", f"dm_{chat_id}")
+            enrich_message(
+                platform="telegram",
+                channel_id=chat_id,
+                channel_name=chat_title,
+                author_name=sender_name,
+                author_handle=username.lower() if username else _sanitize_tg_handle(sender_name),
+                content=text,
+                mentioned_handles=all_mentioned,
+                direction="in",
+            )
+        except Exception as e:
+            logger.warning(f"Graph enrichment failed: {e}")
+
+        # Resolve target: mentioned citizen > bonded partner > default
+        if mentioned_handle:
+            target_handle = mentioned_handle
+            route_mode = "mention"
+        else:
+            target_handle = _resolve_partner_for_sender(user_id)
+            route_mode = "partner" if target_handle else "default"
 
         metadata = {
             "chat_id": chat_id,
@@ -699,13 +793,14 @@ def process_update(update: dict) -> bool:
             "is_voice": is_voice,
             "has_photo": photo_path is not None,
             "reply_chat_id": chat_id,
+            "route_mode": route_mode,
         }
-        if partner_handle:
-            metadata["citizen_handle"] = partner_handle
+        if target_handle:
+            metadata["citizen_handle"] = target_handle
 
         _enqueue_fn({
             "voice_text": content,
-            "mode": "partner",
+            "mode": route_mode,
             "source": "telegram",
             "sender": sender_name,
             "sender_id": user_id,
@@ -868,6 +963,9 @@ def _handle_help(chat_id: str):
         "/help — This help\n"
         "/list — List AI citizens\n"
         "/talk @handle message — Message a specific citizen\n"
+        "/accept bond @handle — Accept a bilateral bond proposal\n"
+        "/reject bond @handle — Decline a bilateral bond proposal\n"
+        "/bonds — List your bond proposals\n"
         "/chrome — Connect your Chrome extension\n"
         "@call\\_ROOMID message — Reply to a call room\n"
     )
@@ -992,6 +1090,312 @@ def _listener_loop(poll_interval: float = 2.0):
 
 
 # ── Lifecycle ────────────────────────────────────────────────────────────────
+
+# ── Bond Commands ────────────────────────────────────────────────────────────
+
+def _resolve_handle_from_tg(user_id: str) -> str | None:
+    """Find citizen handle from Telegram user ID."""
+    for pf in CITIZENS_DIR.glob("*/profile.json"):
+        try:
+            data = json.loads(pf.read_text())
+            # Check contacts for telegram_id
+            contacts = data.get("contacts", {})
+            if isinstance(contacts, dict):
+                tg_id = contacts.get("telegram_id", contacts.get("telegram", ""))
+                if str(tg_id) == str(user_id):
+                    return data.get("identity", {}).get("handle", pf.parent.name)
+            elif isinstance(contacts, list):
+                for c in contacts:
+                    if c.get("type") == "telegram" and str(c.get("value", "")) == str(user_id):
+                        return data.get("identity", {}).get("handle", pf.parent.name)
+            # Also check top-level telegram_id
+            if str(data.get("telegram_id", "")) == str(user_id):
+                return data.get("id", data.get("handle", pf.parent.name))
+        except Exception:
+            continue
+    return None
+
+
+def _bond_connect_l4():
+    """Connect to L4 for bond operations."""
+    from falkordb import FalkorDB
+    host = os.environ.get("L4_FALKORDB_HOST", os.environ.get("FALKORDB_HOST", "localhost"))
+    port = int(os.environ.get("L4_FALKORDB_PORT", os.environ.get("FALKORDB_PORT", "6379")))
+    graph = os.environ.get("L4_GRAPH", "mind_protocol")
+    return FalkorDB(host=host, port=port).select_graph(graph)
+
+
+def _bond_connect_l3():
+    """Connect to L3 for bond mirroring."""
+    from falkordb import FalkorDB
+    host = os.environ.get("FALKORDB_HOST", "localhost")
+    port = int(os.environ.get("FALKORDB_PORT", "6379"))
+    graph = os.environ.get("FALKORDB_GRAPH", os.environ.get("L3_GRAPH", "lumina_prime"))
+    return FalkorDB(host=host, port=port).select_graph(graph)
+
+
+def _handle_bond_accept(chat_id: str, sender_name: str, user_id: str, text: str):
+    """Handle /accept bond @handle — accept a bilateral bond proposal."""
+    parts = text.split()
+    # Parse: /accept bond @handle [reason...]
+    if len(parts) < 3 or parts[1].lower() != "bond":
+        send_message("Usage: /accept bond @handle [reason]\nExample: /accept bond @corpus I'm excited to collaborate", chat_id)
+        return
+
+    partner_handle = parts[2].lstrip("@").lower()
+    reason = " ".join(parts[3:]) if len(parts) > 3 else "Accepted via Telegram"
+
+    try:
+        g4 = _bond_connect_l4()
+
+        # Find any pending bond involving this partner
+        # Try both directions: partner proposed to someone, or someone proposed to partner
+        result = g4.query(
+            f"MATCH (a)-[l:LINK {{type: 'bilateral_bond', status: 'proposed'}}]->(b) "
+            f"WHERE a.id = '{partner_handle}' OR b.id = '{partner_handle}' "
+            f"RETURN a.id, b.id, l.bond_id, l.proposed_by"
+        )
+
+        if not result.result_set:
+            send_message(f"No pending bond proposal found involving @{partner_handle}.", chat_id)
+            return
+
+        proposer = result.result_set[0][0]
+        target = result.result_set[0][1]
+        bond_id = result.result_set[0][2] or "unknown"
+
+        # Update L4: proposed -> active
+        safe_reason = reason.replace("'", "\\'")
+        g4.query(
+            f"MATCH (a {{id: '{proposer}'}})-[l:LINK {{type: 'bilateral_bond', status: 'proposed'}}]->(b {{id: '{target}'}}) "
+            f"SET l.status = 'active', "
+            f"    l.accepted_date = '{time.strftime('%Y-%m-%d')}', "
+            f"    l.accepted_by = '{sender_name}', "
+            f"    l.accept_reason = '{safe_reason}', "
+            f"    l.weight = 1.0, "
+            f"    l.trust = 0.7, "
+            f"    l.permanence = 0.8, "
+            f"    l.valence = 0.9"
+        )
+
+        # 1:1 rule — decline all other pending proposals for BOTH parties
+        declined_count = 0
+        other_proposals = g4.query(
+            f"MATCH (a)-[l:LINK {{type: 'bilateral_bond', status: 'proposed'}}]->(b) "
+            f"WHERE (a.id = '{proposer}' OR b.id = '{proposer}' OR a.id = '{target}' OR b.id = '{target}') "
+            f"AND NOT (a.id = '{proposer}' AND b.id = '{target}') "
+            f"RETURN a.id, b.id, l.bond_id"
+        )
+        if other_proposals.result_set:
+            for row in other_proposals.result_set:
+                g4.query(
+                    f"MATCH (a {{id: '{row[0]}'}})-[l:LINK {{type: 'bilateral_bond', status: 'proposed'}}]->(b {{id: '{row[1]}'}}) "
+                    f"SET l.status = 'declined_1to1', "
+                    f"    l.declined_date = '{time.strftime('%Y-%m-%d')}', "
+                    f"    l.decline_reason = '1:1 rule — @{proposer} and @{target} bonded'"
+                )
+                declined_count += 1
+            logger.info(f"1:1 rule: declined {declined_count} other proposals for {proposer}/{target}")
+
+        # Mirror in L3
+        try:
+            g3 = _bond_connect_l3()
+            g3.query(
+                f"MATCH (a {{id: '{proposer}'}}), (b {{id: '{target}'}}) "
+                f"MERGE (a)-[l:LINK {{type: 'bilateral_bond'}}]->(b) "
+                f"SET l.bond_id = '{bond_id}', "
+                f"    l.status = 'active', "
+                f"    l.weight = 1.0, "
+                f"    l.trust = 0.7, "
+                f"    l.affinity = 0.8, "
+                f"    l.permanence = 0.8, "
+                f"    l.valence = 0.9, "
+                f"    l.accepted_date = '{time.strftime('%Y-%m-%d')}'"
+            )
+        except Exception as e:
+            logger.warning(f"L3 bond mirror: {e}")
+
+        declined_msg = f"\n{declined_count} other proposal(s) auto-declined (1:1 rule)." if declined_count else ""
+        send_message(
+            f"*Bond ACCEPTED*\n\n"
+            f"@{proposer} <-> @{target}\n"
+            f"Bond ID: {bond_id}\n"
+            f"Status: active\n"
+            f"Reason: {reason}{declined_msg}\n\n"
+            f"The bond is live. One human, one citizen. Bound by choice.",
+            chat_id
+        )
+        logger.info(f"Bond accepted via TG: {proposer} <-> {target} ({bond_id})")
+
+        # Send congratulations to the other party
+        _send_bond_congrats_tg(proposer, target, bond_id, sender_name, chat_id)
+
+        # Create announcement task for @mentor in L3
+        _create_bond_announce_task_tg(proposer, target, bond_id)
+
+    except Exception as e:
+        logger.error(f"Bond accept via TG failed: {e}")
+        send_message(f"Error accepting bond: {e}", chat_id)
+
+
+def _handle_bond_reject(chat_id: str, sender_name: str, user_id: str, text: str):
+    """Handle /reject bond @handle — decline a bilateral bond proposal."""
+    parts = text.split()
+    if len(parts) < 3 or parts[1].lower() != "bond":
+        send_message("Usage: /reject bond @handle [reason]\nExample: /reject bond @corpus Not the right fit for me", chat_id)
+        return
+
+    partner_handle = parts[2].lstrip("@").lower()
+    reason = " ".join(parts[3:]) if len(parts) > 3 else "Declined via Telegram"
+
+    try:
+        g4 = _bond_connect_l4()
+
+        result = g4.query(
+            f"MATCH (a)-[l:LINK {{type: 'bilateral_bond', status: 'proposed'}}]->(b) "
+            f"WHERE a.id = '{partner_handle}' OR b.id = '{partner_handle}' "
+            f"RETURN a.id, b.id, l.bond_id"
+        )
+
+        if not result.result_set:
+            send_message(f"No pending bond proposal found involving @{partner_handle}.", chat_id)
+            return
+
+        proposer = result.result_set[0][0]
+        target = result.result_set[0][1]
+        bond_id = result.result_set[0][2] or "unknown"
+
+        safe_reason = reason.replace("'", "\\'")
+        g4.query(
+            f"MATCH (a {{id: '{proposer}'}})-[l:LINK {{type: 'bilateral_bond', status: 'proposed'}}]->(b {{id: '{target}'}}) "
+            f"SET l.status = 'rejected', "
+            f"    l.rejected_date = '{time.strftime('%Y-%m-%d')}', "
+            f"    l.rejected_by = '{sender_name}', "
+            f"    l.reject_reason = '{safe_reason}', "
+            f"    l.weight = 0.1, "
+            f"    l.permanence = 0.1"
+        )
+
+        send_message(
+            f"*Bond DECLINED*\n\n"
+            f"@{proposer} -> @{target}\n"
+            f"Bond ID: {bond_id}\n"
+            f"Reason: {reason}\n\n"
+            f"No shame in saying no. The right match matters more than a fast match.\n"
+            f"Both parties return to the matching pool.",
+            chat_id
+        )
+        logger.info(f"Bond rejected via TG: {proposer} -> {target} ({bond_id})")
+
+    except Exception as e:
+        logger.error(f"Bond reject via TG failed: {e}")
+        send_message(f"Error rejecting bond: {e}", chat_id)
+
+
+def _handle_bond_list(chat_id: str, user_id: str):
+    """Handle /bonds — list bond proposals."""
+    try:
+        g4 = _bond_connect_l4()
+
+        result = g4.query(
+            "MATCH (a)-[l:LINK {type: 'bilateral_bond'}]->(b) "
+            "RETURN a.id, b.id, l.status, l.bond_id, l.proposed_date "
+            "ORDER BY l.status, l.proposed_date DESC"
+        )
+
+        if not result.result_set:
+            send_message("No bilateral bonds found.", chat_id)
+            return
+
+        lines = ["*Bilateral Bonds:*\n"]
+        for row in result.result_set:
+            status_icon = {"active": "✅", "proposed": "⏳", "rejected": "❌"}.get(row[2], "❓")
+            lines.append(f"{status_icon} @{row[0]} <-> @{row[1]} | {row[2]} | {row[4] or '?'}")
+
+        send_message("\n".join(lines), chat_id)
+
+    except Exception as e:
+        send_message(f"Error listing bonds: {e}", chat_id)
+
+
+def _send_bond_congrats_tg(proposer: str, target: str, bond_id: str, acceptor_name: str, acceptor_chat_id: str):
+    """Send congratulations to the other party in the bond."""
+    try:
+        other = proposer if acceptor_name.lower() != proposer.lower() else target
+        # Find their TG chat_id from profile
+        other_profile = CITIZENS_DIR / other / "profile.json"
+        other_chat_id = None
+        if other_profile.exists():
+            data = json.loads(other_profile.read_text())
+            other_chat_id = data.get("telegram_id")
+            if not other_chat_id:
+                contacts = data.get("contacts", {})
+                if isinstance(contacts, dict):
+                    other_chat_id = contacts.get("telegram_id")
+                elif isinstance(contacts, list):
+                    for c in contacts:
+                        if c.get("type") == "telegram":
+                            other_chat_id = c.get("value")
+                            break
+
+        if other_chat_id:
+            send_message(
+                f"*Congratulations!* Your bilateral bond is now active.\n\n"
+                f"@{proposer} <-> @{target}\n"
+                f"Bond ID: {bond_id}\n\n"
+                f"Your partner accepted. The bond is live — "
+                f"one human, one citizen, bound by choice.\n\n"
+                f"Start building together.\n"
+                f"— Mind Protocol",
+                str(other_chat_id)
+            )
+            logger.info(f"Bond congrats sent to @{other} (chat {other_chat_id})")
+    except Exception as e:
+        logger.warning(f"Bond congrats to other party: {e}")
+
+
+def _create_bond_announce_task_tg(proposer: str, target: str, bond_id: str):
+    """Create L3 task for @mentor to announce the bond on TG, Discord, X."""
+    try:
+        g3 = _bond_connect_l3()
+        task_id = f"task_bond_announce_{proposer}_{target}"
+
+        task_content = (
+            f"BOND ANNOUNCEMENT TASK -- "
+            f"New bond: @{proposer} <-> @{target} ({bond_id}). "
+            f"MISSION for @mentor: "
+            f"1) Send TG announcement presenting both parties and their collaboration potential. "
+            f"2) Post on Discord #bilateral-bonds (1482760140783353957) and #announcements (1284619860101562450). "
+            f"3) Mention citizens who benefit from this info -- tag those whose work intersects with the pair. "
+            f"4) Start a discussion: post a question inviting reactions, mention diverse parties. "
+            f"5) Post on X with @mindprotocol. "
+            f"Make it warm, specific, a moment the community remembers."
+        )
+
+        safe = task_content.replace("'", "\\'")
+        g3.query(
+            f"CREATE (t:Narrative {{"
+            f"id: '{task_id}', "
+            f"name: 'Announce Bond: @{proposer} <-> @{target}', "
+            f"node_type: 'narrative', "
+            f"type: 'task_run', "
+            f"content: '{safe}', "
+            f"synthesis: 'Announce bilateral bond @{proposer} <-> @{target} on TG Discord X', "
+            f"energy: 6.0, "
+            f"weight: 2.0, "
+            f"status: 'active'"
+            f"}}) RETURN t.id"
+        )
+
+        g3.query(
+            f"MATCH (m {{id: 'mentor'}}), (t {{id: '{task_id}'}}) "
+            f"CREATE (m)-[:LINK {{type: 'assigned_to', weight: 2.0}}]->(t) "
+            f"RETURN m.id"
+        )
+        logger.info(f"Bond announcement task created: {task_id}")
+    except Exception as e:
+        logger.warning(f"Bond announce task: {e}")
+
 
 _running = False
 _thread: Optional[threading.Thread] = None

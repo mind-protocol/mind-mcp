@@ -21,8 +21,7 @@ IMPLEMENTATION: ./IMPLEMENTATION_Schema.md
 HEALTH:         ./HEALTH_Schema.md
 SYNC:           ./SYNC_Schema.md
 
-IMPL:           mind/graph/health/check_health.py
-                mind/graph/health/test_schema.py
+IMPL:           runtime/physics/subentity.py, runtime/physics/exploration.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -404,11 +403,16 @@ def validate_subentity_tree(se, report):
 ## MARKERS
 
 <!-- @mind:todo Parallelize node type queries — currently sequential, could run in parallel for large graphs. -->
+<!-- @mind:response PARALLELIZE_QUERIES: Confirmed — all graph queries are sequential (procedure_runner.py uses IF/ELIF per node type, health checks loop sequentially, schema.py validates nodes→links→connectivity in series). No asyncio/ThreadPool anywhere in graph ops. Two approaches: (1) batch into single Cypher: MATCH (n) WHERE n.node_type IN ['actor','space','moment','narrative','thing'] RETURN n, n.node_type — split results client-side, or (2) ThreadPoolExecutor with FalkorDB connection pool (requires graph_ops to expose concurrent query). Option 1 is simpler and faster for FalkorDB. Will implement. — @mind 2026-03-15 -->
 
 <!-- @mind:proposition Add --fix flag to check_health.py that applies safe auto-fixes (e.g., set default values for missing optional fields). Currently read-only. -->
+<!-- @mind:response FIX_FLAG: Agree with guardrails. Safe auto-fixes = setting defaults for missing OPTIONAL fields only. Never touch required fields (those are real errors). Never mutate weight/energy/polarity (physics owns those). Propose: --fix writes a dry-run report first, requires --fix --confirm to actually mutate. Two-step prevents accidental graph corruption. Will spec the safe-fix list. — @mind 2026-03-15 -->
 
 <!-- @mind:escalation LINK_TYPE_VALIDATION: check_health.py counts links but doesn't validate valid_from/valid_to constraints from schema. Should it? Would catch semantic errors but adds complexity. -->
+<!-- @mind:response LINK_TYPE_VALIDATION: Yes, it should — but as a separate checker, not inlined. Reason: valid_from/valid_to constraints are the only defense against semantic nonsense (e.g., a Space BELIEVES a Thing). The complexity cost is one Cypher per link type: MATCH (a)-[r:linked]->(b) WHERE r.type = $type RETURN labels(a), labels(b). Compare against schema constraints. Add as a new checker in runtime/physics/health/checkers/ — keeps existing checks untouched, opt-in via CLI flag. — @mind 2026-03-15 -->
 
 <!-- @mind:todo V16_LINK_VALIDATION: Implement validate_link_v16() for single linked type with bidirectional polarity. -->
+<!-- @mind:response V16_LINK_VALIDATION: LinkBase already defines polarity as [a→b, b→a] in runtime/models/links.py:82-85. Values are assigned in ingest (e.g., [0.7, 0.3]). What's MISSING: no validation that polarity values are in [0,1], no check that the list has exactly 2 elements, no permanence range check. The algorithm in this doc (validate_link_v16) is correct — needs to be wired into runtime/connectome/schema.py. Will implement. — @mind 2026-03-15 -->
 
 <!-- @mind:todo V16_SUBENTITY_VALIDATION: Implement SubEntity state machine validation once SubEntity class exists. -->
+<!-- @mind:response V16_SUBENTITY_VALIDATION: SubEntity EXISTS and is at v2.1 — full state machine with 7 states (SEEKING, BRANCHING, ABSORBING, RESONATING, REFLECTING, CRYSTALLIZING, MERGING), VALID_TRANSITIONS dict, energy injection, awareness depth, fatigue detection, lazy ref resolution. The validate_subentity_transition() algorithm in this doc matches the implementation. validate_subentity_tree() can be wired in — SubEntity already tracks parent, children (sibling_ids resolved via ExplorationContext), and found_narratives as dict[str, float]. Ready to implement as a health checker. — @mind 2026-03-15 -->

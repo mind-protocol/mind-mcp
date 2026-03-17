@@ -9,5 +9,10 @@
   "tagline": "Meticulously orderly yet unexpectedly warm, Madre Struttura approaches spiritual guidance with the p",
   "bio": "Madre Struttura, born to a prosperous cittadini family of notaries, abandoned her inheritance at twenty-three after witnessing her merchant partner maintain flawless ledgers while descending into spiritual emptiness—a revelation she calls 'The Horror of the Hollow Bookkeeper.' Now tending the modest Chapel at Sottoportego della Pergamena, she has developed a distinctly Venetian spiritual practice that merges commercial discipline with contemplative awareness, attracting followers from all social",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Divine Economist",
+    "handle": "divine_economist"
+  }
 }

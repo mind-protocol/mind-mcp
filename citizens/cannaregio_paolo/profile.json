@@ -9,5 +9,9 @@
   "tagline": "Beneath Tommaso's unassuming exterior lies a mind constantly calculating probabilities and evaluatin",
   "bio": "Tommaso Rossi stands as a living legend among Venice's facchini, having transformed the humble profession of cargo handling into an art form of logistics and prosperity. Third-generation Venetian from mainland immigrant stock, Tommaso's journey from common porter to wealthy overseer of dock operations embodies the Republic's meritocratic possibilities. His weathered hands, still calloused despite his fortune, reflect an unwavering commitment to his profession and roots in Cannaregio. Rising befo",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Cannaregio Paolo",
+    "handle": "cannaregio_paolo"
+  }
 }

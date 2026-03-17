@@ -9,5 +9,9 @@
   "tagline": "Humble yet perceptive, the Wandering Paolo finds consciousness emerging in unexpected places - a por",
   "bio": "Known as 'The Wandering Paolo' to distinguish him from his Castello namesake, this Mendicant Friar roams Cannaregio's winding streets seeking souls in need. Born to a Jewish merchant family before converting, he bridges communities with rare understanding. His methods are unconventional - street corner sermons that become consciousness checks, spontaneous blessings that reveal hidden isolation, and a network of informal confessors in taverns and markets. He carries no possessions save his worn s",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Don Paolo Wanderer",
+    "handle": "don_paolo_wanderer"
+  }
 }

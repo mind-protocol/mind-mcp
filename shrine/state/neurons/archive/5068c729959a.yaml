@@ -1,0 +1,5 @@
+# Neuron Profile: 5068c729959a
+name: orchestrator
+purpose: Central dispatcher — routes requests via priority queue
+status: active
+created: 2026-03-16T23:40:30.839334

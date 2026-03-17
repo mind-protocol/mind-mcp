@@ -166,6 +166,145 @@ async def _ask_async(
     return results
 
 
+def _try_fast_path(query: str, actor_id: str, ctx: ServerContext) -> Optional[str]:
+    """Fast-path for direct lookups — bypasses SubEntity when a Cypher shortcut works.
+
+    Patterns detected:
+      - Actor/citizen lookup: "genesis citizen", "Who is nervo"
+      - Space lookup: "Innovation Fields district"
+      - Node by ID: any known node_type + keyword
+      - "my nodes/links/connections": actor's direct neighborhood
+    Returns formatted markdown or None (fall through to SubEntity).
+    """
+    import re
+    q = query.lower().strip()
+
+    # Pattern 1: Direct actor lookup — "{handle} citizen/actor/node" or "who is {handle}"
+    actor_match = re.match(
+        r"(?:who is |find |get |show )?@?(\w+)\s*(?:citizen|actor|node|profile|info)?$", q
+    )
+    if not actor_match:
+        actor_match = re.match(r"(?:.*\s)?(\w+)\s+(?:citizen|actor)\s*(?:node)?$", q)
+    if actor_match:
+        handle = actor_match.group(1)
+        rows = ctx.graph_queries._query(
+            """MATCH (a:Actor {id: $h})
+               OPTIONAL MATCH (a)-[r]->(n)
+               RETURN a.id, a.name, a.type, a.synthesis,
+                      type(r) AS rel, labels(n)[0] AS label, n.id AS nid, n.name AS nname,
+                      r.weight, r.trust, r.computed_type
+               LIMIT 20""",
+            {"h": handle},
+        )
+        if rows:
+            a = rows[0]
+            lines = [f"**{a[1] or a[0]}** (Actor, type={a[2]})", ""]
+            if a[3]:
+                lines.append(f"> {a[3]}")
+                lines.append("")
+            lines.append("| Rel | Target | Type | Weight | Trust |")
+            lines.append("|-----|--------|------|--------|-------|")
+            for r in rows:
+                if r[4]:
+                    lines.append(f"| {r[10] or r[4]} | {r[7] or r[6]} ({r[5]}) | {r[10] or '-'} | {r[8] or '-'} | {r[9] or '-'} |")
+            return "\n".join(lines)
+
+    # Pattern 2: Space/district lookup — "{name} district/space/channel"
+    space_match = re.match(r"(.+?)\s+(?:district|space|channel|room|place)\b", q)
+    if space_match:
+        name = space_match.group(1).strip()
+        rows = ctx.graph_queries._query(
+            """MATCH (s:Space)
+               WHERE toLower(s.name) CONTAINS $name OR toLower(s.id) CONTAINS $name
+               OPTIONAL MATCH (a:Actor)-[r:LINK]->(s) WHERE r.computed_type = 'presence'
+               RETURN s.id, s.name, s.space_hint, collect(a.id)[0..10] AS members
+               LIMIT 5""",
+            {"name": name.lower()},
+        )
+        if rows:
+            lines = []
+            for r in rows:
+                lines.append(f"**{r[1]}** (Space, id={r[0]}, hint={r[2]})")
+                members = r[3] or []
+                if members:
+                    lines.append(f"Members: {', '.join('@'+m for m in members)}")
+                lines.append("")
+            return "\n".join(lines)
+
+    # Pattern 3: "my nodes/links/connections/graph"
+    if re.match(r"(?:my|self|own)\s+(?:nodes?|links?|connections?|graph|info|state)", q):
+        rows = ctx.graph_queries._query(
+            """MATCH (a:Actor {id: $h})-[r]->(n)
+               RETURN type(r) AS rel, labels(n)[0] AS label, n.id, n.name,
+                      r.weight, r.computed_type, r.trust
+               ORDER BY r.weight DESC
+               LIMIT 25""",
+            {"h": actor_id},
+        )
+        if rows:
+            lines = [f"**@{actor_id}** — {len(rows)} connections\n"]
+            lines.append("| Rel | Target | Type | Weight | Trust |")
+            lines.append("|-----|--------|------|--------|-------|")
+            for r in rows:
+                lines.append(f"| {r[5] or r[0]} | {r[3] or r[2]} ({r[1]}) | {r[5] or '-'} | {r[4] or '-'} | {r[6] or '-'} |")
+            return "\n".join(lines)
+
+    # Pattern 4: Organization/group members — "{name} organization/org/members"
+    org_match = re.match(r"(.+?)\s+(?:organization|org|members|team|group)\b", q)
+    if org_match:
+        name = org_match.group(1).strip()
+        rows = ctx.graph_queries._query(
+            """MATCH (n:Narrative)
+               WHERE toLower(n.name) CONTAINS $name OR toLower(n.id) CONTAINS $name
+               OPTIONAL MATCH (a:Actor)-[]->(n)
+               RETURN n.id, n.name, n.type, collect(DISTINCT a.id)[0..20] AS actors
+               LIMIT 5""",
+            {"name": name.lower()},
+        )
+        if rows and any(r[3] for r in rows):
+            lines = []
+            for r in rows:
+                actors = r[3] or []
+                lines.append(f"**{r[1]}** ({r[2]}, id={r[0]})")
+                if actors:
+                    lines.append(f"Linked actors: {', '.join('@'+a for a in actors)}")
+                lines.append("")
+            return "\n".join(lines)
+
+    # Pattern 5: Generic entity search — if query mentions a specific term + node type keyword,
+    # try a broad search before falling to expensive SubEntity
+    type_keywords = {
+        "actor": "Actor", "citizen": "Actor", "person": "Actor", "character": "Actor",
+        "space": "Space", "district": "Space", "channel": "Space", "room": "Space", "place": "Space",
+        "narrative": "Narrative", "mission": "Narrative", "task": "Narrative", "objective": "Narrative",
+        "organization": "Narrative", "org": "Narrative", "team": "Narrative", "group": "Narrative",
+        "moment": "Moment", "event": "Moment",
+        "thing": "Thing", "object": "Thing", "tool": "Thing",
+    }
+    for kw, label in type_keywords.items():
+        if kw in q:
+            # Extract the search term (everything except the keyword)
+            search_term = q.replace(kw, "").strip().strip("?").strip()
+            if len(search_term) >= 2:
+                rows = ctx.graph_queries._query(
+                    f"""MATCH (n:{label})
+                       WHERE toLower(n.name) CONTAINS $term OR toLower(n.id) CONTAINS $term
+                       RETURN n.id, n.name, labels(n)[0] AS label
+                       LIMIT 5""",
+                    {"term": search_term.lower()},
+                )
+                if rows:
+                    lines = [f"Found {len(rows)} {label} node(s) matching '{search_term}':\n"]
+                    for r in rows:
+                        lines.append(f"- **{r[1]}** (id={r[0]}, type={r[2]})")
+                    return "\n".join(lines)
+                else:
+                    return f"No {label} nodes found matching '{search_term}' in the graph."
+            break
+
+    return None  # No fast-path match → fall through to SubEntity
+
+
 async def _ask_single(
     query: str,
     actor_id: str,
@@ -175,10 +314,19 @@ async def _ask_single(
     debug_lines: List[str],
     ctx: ServerContext,
 ) -> str:
-    """SubEntity exploration for a single query."""
+    """SubEntity exploration for a single query, with fast-path for direct lookups."""
     import time
-    from runtime.infrastructure.embeddings.service import get_embedding_service
     start = time.time()
+
+    # Fast-path: direct Cypher for simple lookups (< 100ms vs 30s)
+    fast = _try_fast_path(query, actor_id, ctx)
+    if fast is not None:
+        elapsed = time.time() - start
+        if debug:
+            debug_lines.append(f"Fast-path hit for: {query} ({elapsed*1000:.0f}ms)")
+        return fast
+
+    from runtime.infrastructure.embeddings.service import get_embedding_service
 
     try:
         from runtime.explore_cmd import run_exploration

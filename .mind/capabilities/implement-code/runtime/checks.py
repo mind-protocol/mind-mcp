@@ -51,9 +51,71 @@ STALENESS_THRESHOLD_DAYS = 7
 # =============================================================================
 
 
+def _is_stub_ast_body(body: list[ast.stmt]) -> bool:
+    """Check if a function's AST body is a stub (top-level statements only).
+
+    A function is a stub if its top-level body (excluding docstrings)
+    consists entirely of: pass, Ellipsis (...), or raise NotImplementedError.
+
+    This avoids false positives from `except: pass` inside otherwise
+    complete functions.
+    """
+    # Filter out docstring (first Expr node with Constant str)
+    stmts = body
+    if (
+        stmts
+        and isinstance(stmts[0], ast.Expr)
+        and isinstance(stmts[0].value, ast.Constant)
+        and isinstance(stmts[0].value.value, str)
+    ):
+        stmts = stmts[1:]
+
+    # Empty body after removing docstring = stub
+    if not stmts:
+        return True
+
+    # Check each top-level statement
+    for stmt in stmts:
+        if isinstance(stmt, ast.Pass):
+            continue
+        if isinstance(stmt, ast.Expr) and isinstance(stmt.value, ast.Constant):
+            if stmt.value.value is Ellipsis:
+                continue
+        if isinstance(stmt, ast.Raise):
+            # Check for raise NotImplementedError(...)
+            exc = stmt.exc
+            if exc is not None:
+                name = None
+                if isinstance(exc, ast.Name):
+                    name = exc.id
+                elif isinstance(exc, ast.Call) and isinstance(exc.func, ast.Name):
+                    name = exc.func.id
+                if name in ("NotImplementedError", "NotImplemented"):
+                    continue
+        # Any real statement means this is NOT a stub
+        return False
+
+    return True
+
+
 def is_stub_body(body_lines: list[str]) -> bool:
-    """Check if function body represents a stub."""
-    # Filter out docstrings and comments
+    """Check if function body represents a stub using AST analysis.
+
+    Wraps the body lines in a dummy function and parses the AST to
+    inspect top-level statements. Falls back to text-based detection
+    if AST parsing fails.
+    """
+    # Try AST-based detection first (accurate, no false positives)
+    source = "def _f():\n" + "\n".join("  " + line for line in body_lines)
+    try:
+        tree = ast.parse(source)
+        func_def = tree.body[0]
+        if isinstance(func_def, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            return _is_stub_ast_body(func_def.body)
+    except SyntaxError:
+        pass
+
+    # Fallback: text-based detection for non-parseable bodies
     code_lines = []
     in_docstring = False
     docstring_char = None
@@ -61,16 +123,13 @@ def is_stub_body(body_lines: list[str]) -> bool:
     for line in body_lines:
         stripped = line.strip()
 
-        # Skip empty lines
         if not stripped:
             continue
 
-        # Handle docstrings
         if not in_docstring:
             if stripped.startswith('"""') or stripped.startswith("'''"):
                 docstring_char = stripped[:3]
                 if stripped.count(docstring_char) >= 2:
-                    # Single-line docstring
                     continue
                 in_docstring = True
                 continue
@@ -79,23 +138,25 @@ def is_stub_body(body_lines: list[str]) -> bool:
                 in_docstring = False
             continue
 
-        # Skip comments
         if stripped.startswith("#"):
             continue
 
         code_lines.append(stripped)
 
-    # Empty body after filtering = stub
     if not code_lines:
         return True
 
-    # Check against stub patterns
-    body_text = "\n".join(code_lines)
-    for pattern in STUB_PATTERNS:
-        if re.search(pattern, body_text, re.MULTILINE):
-            return True
+    # Only match if ALL code lines are stubs (not just any line)
+    for line in code_lines:
+        is_stub_line = False
+        for pattern in STUB_PATTERNS:
+            if re.match(pattern, line):
+                is_stub_line = True
+                break
+        if not is_stub_line:
+            return False
 
-    return False
+    return True
 
 
 def extract_functions_from_ast(tree: ast.AST) -> list[dict]:
@@ -110,6 +171,7 @@ def extract_functions_from_ast(tree: ast.AST) -> list[dict]:
                     "lineno": node.lineno,
                     "end_lineno": getattr(node, "end_lineno", node.lineno + 1),
                     "body": node.body,
+                    "ast_body": node.body,
                 }
             )
 
@@ -211,12 +273,8 @@ def stub_detection(ctx) -> dict:  # ctx: CheckContext
             lines = content.split("\n")
 
             for func in extract_functions_from_ast(tree):
-                # Get function body lines
-                body_start = func["lineno"]
-                body_end = func["end_lineno"]
-                body_lines = lines[body_start:body_end]
-
-                if is_stub_body(body_lines):
+                # Prefer AST-based detection (no false positives)
+                if _is_stub_ast_body(func["ast_body"]):
                     stub_functions.append(
                         {
                             "file": str(path),

@@ -87,5 +87,13 @@
   "version": "2.0",
   "source": "discord",
   "spotify_track": null,
-  "avatar_local": "avatar.png"
+  "avatar_local": "avatar.png",
+  "identity": {
+    "universe": "lumina-prime",
+    "name": "Echo",
+    "handle": "echo"
+  },
+  "capabilities": {
+    "autonomy_level": 5
+  }
 }

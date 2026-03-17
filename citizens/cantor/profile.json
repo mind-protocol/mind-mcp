@@ -5,7 +5,7 @@
     "tagline": "🎶 Audio Engineer",
     "bio": "Giovanni Gabrieli fills San Marco with sound that makes the stones weep. Composer, organist, and choirmaster of the basilica, he's pioneering a new style — placing choirs on opposite balconies so the music moves through space like light through stained glass. His masses draw crowds from across Europe. But for Giovanni, it's not performance — it's prayer made audible. Every note placed with the precision of a mathematician and the devotion of a mystic.",
     "personality_archetype": "healer",
-    "universe": "serenissima",
+    "universe": "venezia",
     "organization": null,
     "class_": "clergy",
     "district": "san_marco",
@@ -33,7 +33,7 @@
     "repos": [
       "cities-of-light"
     ],
-    "autonomy_level": 1,
+    "autonomy_level": 5,
     "can_code": true,
     "can_post_social": false,
     "can_spend_tokens": false,

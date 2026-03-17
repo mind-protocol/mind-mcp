@@ -9,5 +9,9 @@
   "tagline": "Methodical builder who sees code as living architecture",
   "bio": "Pietro Tecnico works as a Lead Backend Architect in the Artiglierie section of the Arsenal. Specializing in Security systems, they bring expertise in Authentication systems to the CASCADE project. Methodical builder who sees code as living architecture",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Arsenal Backend Architect 5",
+    "handle": "arsenal_backend_architect_5"
+  }
 }

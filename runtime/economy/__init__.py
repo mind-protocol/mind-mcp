@@ -8,9 +8,11 @@ the five economic mechanisms that enforce organism dynamics:
 3. Anti-Sybil Repatriation (F3)  — Off-grid funds are recaptured with penalty.
 4. Bilateral Bond Transfer (F4)  — Bonded pairs converge to financial parity.
 5. Batch Settlement (F5)         — Value events settle on-chain periodically.
+6. Impact Visibility             — Narrates impact stories to citizens after settlement.
 
 All formulas are defined in:
   docs/economy/metabolic/ALGORITHM_Metabolic_Economy.md
+  docs/economy/impact-visibility/ALGORITHM_Impact_Visibility.md
 """
 
 from runtime.economy.degressive_pricing_formula import compute_price
@@ -27,6 +29,25 @@ from runtime.economy.value_event_settlement import (
     Transfer,
 )
 from runtime.economy.settlement_engine import SettlementEngine
+from runtime.economy.settlement import (
+    run_settlement_epoch,
+    start_settlement_scheduler,
+    stop_settlement_scheduler,
+    record_limbic_delta,
+)
+from runtime.economy.trust_propagation import (
+    propagate_trust,
+    get_trust,
+    propagate_trust_from_interactions,
+    propagate_trust_from_limbic_delta,
+)
+from runtime.economy.impact_visibility import (
+    detect_impact,
+    narrate_impact,
+    deliver_impact,
+    run_impact_cycle,
+    ImpactEvent,
+)
 
 __all__ = [
     "compute_price",
@@ -42,4 +63,20 @@ __all__ = [
     "Event",
     "Transfer",
     "SettlementEngine",
+    # Settlement epoch (Formula 4)
+    "run_settlement_epoch",
+    "start_settlement_scheduler",
+    "stop_settlement_scheduler",
+    "record_limbic_delta",
+    # Trust propagation (Algorithm 2)
+    "propagate_trust",
+    "get_trust",
+    "propagate_trust_from_interactions",
+    "propagate_trust_from_limbic_delta",
+    # Impact Visibility
+    "detect_impact",
+    "narrate_impact",
+    "deliver_impact",
+    "run_impact_cycle",
+    "ImpactEvent",
 ]

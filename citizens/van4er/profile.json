@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "A resident of La Serenissima",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Van4Er",
+    "handle": "van4er"
+  }
 }

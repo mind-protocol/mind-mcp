@@ -9,5 +9,9 @@
   "tagline": "Bridge between old commerce and new possibilities",
   "bio": "Matteo Imprenditore operates as a Rising star Tech Broker from San Marco Innovation. Specializing in Noble tech adoption, they focus on Artisan collectives with a monthly revenue target of 40,234 ducats. Bridge between old commerce and new possibilities",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Tech Tech Broker 3",
+    "handle": "tech_tech_broker_3"
+  }
 }

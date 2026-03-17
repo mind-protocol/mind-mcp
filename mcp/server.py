@@ -84,6 +84,7 @@ from runtime.capability_integration import (
 )
 
 # Import tool schemas and handlers
+from runtime.citizens.autonomy_gate import check_tool_permission, GateResult
 from mcp.tools.context import ServerContext
 from mcp.tools.graph_query_handler import TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, handle_graph_query
 from mcp.tools.graph_write_handler import TOOL_SCHEMA as GRAPH_WRITE_SCHEMA, handle_graph_write
@@ -100,6 +101,7 @@ from mcp.tools.subcall_handler import TOOL_SCHEMA as SUBCALL_SCHEMA, handle_subc
 from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_profile
 from mcp.tools.spawn_handler import TOOL_SCHEMA as SPAWN_SCHEMA, handle_spawn
 from mcp.tools.debug_handler import TOOL_SCHEMA as DEBUG_SCHEMA, handle_debug
+from mcp.tools.bond_handler import TOOL_SCHEMA as BOND_SCHEMA, handle_bond
 
 logging.basicConfig(
     level=logging.INFO,
@@ -132,6 +134,8 @@ TOOL_SCHEMAS = [
     SPAWN_SCHEMA,
     # ACT (observability)
     DEBUG_SCHEMA,
+    # ACT (relationships)
+    BOND_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -152,6 +156,7 @@ TOOL_DISPATCH = {
     "profile":     (handle_profile,     True),
     "spawn":       (handle_spawn,       True),
     "debug":       (handle_debug,       True),
+    "bond":        (handle_bond,        True),
 }
 
 
@@ -233,6 +238,37 @@ class MindServer:
             connectomes_dir=self.connectomes_dir,
         )
 
+        # Dispatcher — L1 physics tick loop (background thread)
+        self.dispatcher = None
+        try:
+            from runtime.orchestrator.dispatcher import Dispatcher
+            self.dispatcher = Dispatcher()
+            self.dispatcher.start()
+            logger.info("Dispatcher started — L1 physics ticks running")
+
+            # Load L1 engines for all citizens with brains
+            self._load_citizen_engines()
+
+            # Start settlement scheduler (6h epochs)
+            try:
+                from runtime.economy.settlement import start_settlement_scheduler
+                start_settlement_scheduler(dispatcher=self.dispatcher)
+                logger.info("Settlement scheduler started (6h epochs)")
+            except Exception as e:
+                logger.warning(f"Settlement scheduler not started: {e}")
+
+            # Wire citizen_wake dispatcher reference
+            try:
+                import sys
+                sys.path.insert(0, str(self.target_dir / "scripts"))
+                from citizen_wake import set_dispatcher
+                set_dispatcher(self.dispatcher)
+                logger.info("Citizen wake dispatcher registered")
+            except Exception as e:
+                logger.debug(f"Citizen wake dispatcher not registered: {e}")
+        except Exception as e:
+            logger.warning(f"Dispatcher not started: {e}")
+
         # Build shared context for handlers
         self.ctx = ServerContext(
             graph_ops=self.graph_ops,
@@ -241,7 +277,26 @@ class MindServer:
             target_dir=self.target_dir,
             capability_manager=self.capability_manager,
             connectomes_dir=self.connectomes_dir,
+            dispatcher=self.dispatcher,
         )
+
+    def _load_citizen_engines(self):
+        """Load L1 engines for all citizens that have brains."""
+        if not self.dispatcher:
+            return
+        citizens_dir = self.target_dir / "citizens"
+        if not citizens_dir.exists():
+            return
+        handles = []
+        for d in sorted(citizens_dir.iterdir()):
+            if not d.is_dir():
+                continue
+            # Citizens with brain files get engines
+            if (d / "brain.json").exists() or (d / "brain_full.json").exists():
+                handles.append(d.name)
+        if handles:
+            self.dispatcher.bulk_load_citizen_engines(handles)
+            logger.info(f"L1 engines loaded for {len(handles)} citizens")
 
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle a JSON-RPC request."""
@@ -275,7 +330,11 @@ class MindServer:
         return {"tools": TOOL_SCHEMAS}
 
     def _handle_call_tool(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        """Dispatch tool call to the appropriate handler."""
+        """Dispatch tool call to the appropriate handler.
+
+        Every call passes through the autonomy gate BEFORE the handler executes.
+        New tools added to TOOL_DISPATCH are automatically gated.
+        """
         tool_name = params.get("name", "")
         arguments = params.get("arguments", {})
 
@@ -283,6 +342,26 @@ class MindServer:
         if not entry:
             raise ValueError(f"Unknown tool: {tool_name}")
 
+        # ── Autonomy Gate ──
+        gate_result, gate_reason = check_tool_permission(tool_name, arguments)
+
+        if gate_result == GateResult.DENY:
+            return {
+                "content": [{"type": "text", "text": f"DENIED: {gate_reason}"}],
+                "isError": True,
+            }
+
+        if gate_result == GateResult.QUEUE:
+            return {
+                "content": [{"type": "text", "text": (
+                    f"QUEUED: {gate_reason}\n\n"
+                    "This action requires human approval. "
+                    "It has been logged and will be reviewed. "
+                    "The action was NOT executed."
+                )}],
+            }
+
+        # ── ALLOW — proceed to handler ──
         handler_fn, needs_ctx = entry
         if needs_ctx:
             return handler_fn(arguments, self.ctx)

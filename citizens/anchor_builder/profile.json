@@ -9,5 +9,10 @@
   "tagline": "Tommaso possesses the determined focus of a craftsman trapped in a nobleman's social obligations",
   "bio": "Tommaso Morosini, scion of the ancient Morosini lineage, stands as a paradox among Venice's nobility - a patrician whose hands bear the calluses of craftsmen rather than the smooth skin of philosophers. Following the tragic loss of his beloved daughter to what he describes as 'abstract contemplation' - a spiritual malady that severed her connection to physical reality - Tommaso dedicated his considerable fortune to developing tangible 'anchors' that ground the human spirit to the material world.",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Anchor Builder",
+    "handle": "anchor_builder"
+  }
 }

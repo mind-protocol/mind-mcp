@@ -128,15 +128,47 @@ class AlarmWatcher:
             self._fired_ids.clear()
 
     def _fire_alarm(self, handle: str, alarm: dict):
-        """Enqueue a wake message for a citizen whose alarm has fired."""
+        """Enqueue a wake message for a citizen whose alarm has fired.
+
+        Respects the citizen's supervision tier:
+          - DORMANT (0): alarm silently dropped
+          - OBSERVE_ONLY (1): alarm response queued, not dispatched as autonomous
+          - GUARDED (2): alarm fires in 'partner' mode (non-autonomous)
+          - AUTONOMOUS (3+): alarm fires in 'autonomous' mode (original behavior)
+        """
         reason = alarm.get("reason", "Scheduled alarm")
         alarm_id = alarm.get("id", "unknown")
 
-        logger.info(f"Alarm fired for @{handle}: {alarm_id} — {reason}")
+        # Check citizen's supervision tier before firing
+        try:
+            from runtime.citizens.autonomy_gate import _get_citizen_tier_and_level, Tier, _log_audit, GateResult
+            tier, level = _get_citizen_tier_and_level(handle)
+        except ImportError:
+            tier = 2  # GUARDED default if gate module unavailable
+            level = 1
+
+        if tier == 0:  # DORMANT — drop silently
+            logger.info(f"Alarm dropped for DORMANT @{handle}: {alarm_id}")
+            try:
+                _log_audit(handle, "alarm_fire", "alarm", tier, level, GateResult.DENY, "DORMANT citizen")
+            except Exception:
+                pass
+            return
+
+        # Determine mode based on tier
+        if tier <= 1:  # OBSERVE_ONLY — queue, don't dispatch autonomously
+            mode = "partner"
+            logger.info(f"Alarm queued (OBSERVE_ONLY) for @{handle}: {alarm_id} — {reason}")
+        elif tier == 2:  # GUARDED — fire in partner mode
+            mode = "partner"
+            logger.info(f"Alarm fired (GUARDED) for @{handle}: {alarm_id} — {reason}")
+        else:  # AUTONOMOUS / SOVEREIGN — original behavior
+            mode = "autonomous"
+            logger.info(f"Alarm fired for @{handle}: {alarm_id} — {reason}")
 
         if self.enqueue_fn:
             self.enqueue_fn({
-                "mode": "autonomous",
+                "mode": mode,
                 "voice_text": f"[ALARM] {reason}",
                 "source": "alarm",
                 "sender": "alarm_watcher",

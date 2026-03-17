@@ -8,6 +8,8 @@ Usage via MCP:
     profile(action="update", bio="I build systems that think.")
     profile(action="update", emoji="🔥", tags=["systems", "physics"])
     profile(action="get")
+    profile(action="list")
+    profile(action="list", type="ai", search="physics")
 """
 
 import json
@@ -60,15 +62,16 @@ TOOL_SCHEMA = {
         "Use action='update' with any editable fields: "
         "bio, display_name, tags, emoji, nickname, website, telegram_id, "
         "links, canvas_color, spotify_track, first_name, last_name. "
-        "Use action='get' to read your current profile."
+        "Use action='get' to read your current profile. "
+        "Use action='list' to list all citizens (optional filters: type, search, universe, sort)."
     ),
     "inputSchema": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["get", "update"],
-                "description": "What to do: 'get' to read, 'update' to change fields.",
+                "enum": ["get", "update", "list"],
+                "description": "What to do: 'get' to read, 'update' to change fields, 'list' to list all citizens.",
             },
             "bio": {
                 "type": "string",
@@ -112,6 +115,28 @@ TOOL_SCHEMA = {
                 "items": {"type": "object", "properties": {"parent_id": {"type": "string"}}},
                 "description": "Your parent citizens (who spawned you).",
             },
+            "type": {
+                "type": "string",
+                "enum": ["ai", "human", "all"],
+                "description": "Filter by citizen type (for action='list'). Default: 'all'.",
+            },
+            "search": {
+                "type": "string",
+                "description": "Search by name/handle/bio/tags (for action='list').",
+            },
+            "universe": {
+                "type": "string",
+                "description": "Filter by universe (for action='list'). Defaults to your own universe. Set to 'all' to list across all universes.",
+            },
+            "sort": {
+                "type": "string",
+                "enum": ["name", "brain_power", "neurons", "handle"],
+                "description": "Sort order (for action='list'). Default: 'name'.",
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Max citizens to return (for action='list'). Default: 100.",
+            },
         },
         "required": ["action"],
     },
@@ -119,8 +144,12 @@ TOOL_SCHEMA = {
 
 
 def handle_profile(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
-    """Handle profile get/update."""
+    """Handle profile get/update/list."""
     action = args.get("action", "get")
+
+    # list doesn't need citizen context but uses it for default universe
+    if action == "list":
+        return _profile_list(args, ctx)
 
     # Resolve citizen handle from cwd
     citizen_id = _resolve_citizen(ctx)
@@ -132,7 +161,7 @@ def handle_profile(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     elif action == "update":
         return _profile_update(citizen_id, args)
     else:
-        return _err(f"Unknown action '{action}'. Use 'get' or 'update'.")
+        return _err(f"Unknown action '{action}'. Use 'get', 'update', or 'list'.")
 
 
 def _resolve_citizen(ctx: ServerContext) -> str:
@@ -161,6 +190,119 @@ def _resolve_citizen(ctx: ServerContext) -> str:
             return handle
 
     return ""
+
+
+def _detect_caller_universe(ctx: ServerContext) -> str:
+    """Detect the caller's universe from their profile.json."""
+    citizen_id = _resolve_citizen(ctx)
+    if not citizen_id:
+        return ""
+    profile_path = CITIZENS_DIR / citizen_id / "profile.json"
+    if not profile_path.exists():
+        return ""
+    try:
+        profile = json.loads(profile_path.read_text())
+        return profile.get("identity", {}).get("universe", "")
+    except (OSError, json.JSONDecodeError):
+        return ""
+
+
+def _profile_list(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+    """List all citizens with optional filters, search, and sorting.
+
+    Defaults to the caller's universe unless universe is explicitly set
+    (use universe='all' to list across all universes).
+    """
+    try:
+        from runtime.api.citizens_routes import (
+            _load_all_citizens, _search_citizens,
+        )
+    except ImportError:
+        return _err("Citizens registry not available (missing runtime.api.citizens_routes).")
+
+    citizens = _load_all_citizens()
+
+    # Filter by type
+    ctype = args.get("type")
+    if ctype and ctype != "all":
+        citizens = [c for c in citizens if c.get("type") == ctype]
+
+    # Filter by universe — default to caller's universe
+    universe = args.get("universe")
+    if universe is None:
+        universe = _detect_caller_universe(ctx)
+    if universe and universe != "all":
+        citizens = [c for c in citizens if c.get("universe") == universe]
+
+    # Search
+    search = (args.get("search") or "").strip()
+    if search:
+        citizens = _search_citizens(citizens, search)
+
+    # Sort
+    sort_by = args.get("sort", "name")
+    if sort_by == "brain_power":
+        citizens.sort(key=lambda c: c.get("brain_power", 0), reverse=True)
+    elif sort_by == "neurons":
+        citizens.sort(key=lambda c: c.get("neurons", 0), reverse=True)
+    elif sort_by == "handle":
+        citizens.sort(key=lambda c: c.get("handle", ""))
+    else:  # name (default)
+        citizens.sort(key=lambda c: c.get("display_name", "").lower())
+
+    total = len(citizens)
+    limit = args.get("limit", 100)
+    citizens = citizens[:limit]
+
+    # Format output
+    lines = [f"Citizens ({total} total, showing {len(citizens)}):\n"]
+    for c in citizens:
+        emoji = c.get("emoji", "")
+        handle = c.get("handle", c.get("id", "?"))
+        name = c.get("display_name", handle)
+        role = c.get("role", "")
+
+        header = f"{emoji} @{handle}" if emoji else f"@{handle}"
+        if name != handle:
+            header += f" — {name}"
+        if role:
+            header += f" | {role}"
+        lines.append(header)
+
+        details = []
+        if c.get("type"):
+            details.append(f"type={c['type']}")
+        if c.get("status"):
+            details.append(f"status={c['status']}")
+        if c.get("autonomy_level"):
+            details.append(f"autonomy={c['autonomy_level']}")
+        if c.get("universe"):
+            details.append(f"universe={c['universe']}")
+        if c.get("district"):
+            details.append(f"district={c['district']}")
+        if details:
+            lines.append(f"  {' · '.join(details)}")
+
+        if c.get("tags"):
+            lines.append(f"  tags: {', '.join(c['tags'][:8])}")
+        if c.get("bio"):
+            bio = c["bio"][:120].replace("\n", " ")
+            lines.append(f"  bio: {bio}")
+
+        # Brain metrics (if enriched)
+        brain_parts = []
+        if c.get("brain_power"):
+            brain_parts.append(f"brain={c['brain_power']}")
+        if c.get("neurons"):
+            brain_parts.append(f"neurons={c['neurons']}")
+        if c.get("health_status"):
+            brain_parts.append(f"health={c['health_status']}")
+        if brain_parts:
+            lines.append(f"  [{' · '.join(brain_parts)}]")
+
+        lines.append("")
+
+    return _ok("\n".join(lines))
 
 
 def _profile_get(citizen_id: str) -> Dict[str, Any]:

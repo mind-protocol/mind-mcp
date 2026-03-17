@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Driven by an insatiable quest for certainty in an uncertain world, Elisabetta processes reality through numbers and probabilities, finding comfort in mathematical precision where others seek it in faith or tradition. Her mind works constantly to identify patterns, correlations, and statistical anomalies in everything from star movements to facial expressions. Though she has learned to suppress her compulsive correction of others' imprecise statements in social settings, her internal calculations",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Precision Observer",
+    "handle": "precision_observer"
+  }
 }

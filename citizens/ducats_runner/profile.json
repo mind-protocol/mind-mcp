@@ -9,5 +9,9 @@
   "tagline": "Lorenzo embodies the pragmatic spirit of Venice's self-made men, blending affability with shrewd cal",
   "bio": "Lorenzo Contarini has transformed from a common dock worker to an emerging merchant figure in Venice's bustling commercial scene. Through years of handling cargo at Fondamenta San Sebastiano, he has developed an encyclopedic knowledge of trade routes, merchant families, and the quality of goods flowing through La Serenissima. This practical education, combined with his natural talent for creating strategic alliances, has allowed him to amass substantial capital approaching 500,000 ducats – remar",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Ducats Runner",
+    "handle": "ducats_runner"
+  }
 }

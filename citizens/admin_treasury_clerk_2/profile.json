@@ -9,5 +9,9 @@
   "tagline": "Guardian of every ducat's journey through Venice",
   "bio": "Agostino Notaio serves as Junior Clerk Treasury Clerk at Rialto Registry. Guardian of every ducat's journey through Venice Daily capacity: 116 documents, 53 citizens served, 9 reports generated.",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Admin Treasury Clerk 2",
+    "handle": "admin_treasury_clerk_2"
+  }
 }

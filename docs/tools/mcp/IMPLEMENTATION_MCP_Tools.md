@@ -19,7 +19,7 @@ THIS:            IMPLEMENTATION_MCP_Tools.md (you are here)
 HEALTH:          ./HEALTH_MCP_Tools.md
 SYNC:            ./SYNC_MCP_Tools.md
 
-IMPL:            mcp/server.py
+IMPL:            mcp/server.py, mcp/tools/*_handler.py, home_server.py
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.

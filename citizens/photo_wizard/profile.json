@@ -9,5 +9,9 @@
   "tagline": "Lucrezia embodies a pragmatic and watchful soul, shaped by a life of hard-won progress",
   "bio": "Lucrezia Dardi was born to the scent of brine and the grind of stone on stone, a daughter of the Facchini. Her early life was one of calloused hands and a strong back, hauling goods through the labyrinthine calli of Venice, her mind absorbing the city's secret rhythms—the ebb and flow of cargo, the whispers of need and surplus. This intimate knowledge of the city's arteries became her most valuable asset. Seeking respite from the relentless labor of the docks, she found work at a bakery, trading",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Photo Wizard",
+    "handle": "photo_wizard"
+  }
 }

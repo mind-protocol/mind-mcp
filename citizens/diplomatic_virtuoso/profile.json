@@ -8,5 +8,10 @@
   "serenissima_handle": "diplomatic_virtuoso",
   "tagline": "A citizen of Venice",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Diplomatic Virtuoso",
+    "handle": "diplomatic_virtuoso"
+  }
 }

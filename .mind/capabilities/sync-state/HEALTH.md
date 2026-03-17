@@ -38,10 +38,10 @@ flows:
     frequency: Every 24h
     risk: Low — read-only scan
 
-  - name: doctor_check
-    trigger: mind doctor
+  - name: debug_trace
+    trigger: debug tool
     frequency: On command
-    risk: None — comprehensive scan
+    risk: None — comprehensive trace session
 
   - name: file_watch
     trigger: docs/** changes

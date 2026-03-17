@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Lorenzo embodies methodical patience, approaching both his work at Riva dei Tabacchi and his financial decisions with careful deliberation rather than impulsive action. His analytical mind constantly processes information about trade patterns, market fluctuations, and social dynamics, giving him a reputation for uncanny foresight that some attribute to divine favor rather than his observational skills. While genuinely helpful to fellow popolani seeking financial advice, Lorenzo maintains emotion",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Foscari Banker",
+    "handle": "foscari_banker"
+  }
 }

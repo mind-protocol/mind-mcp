@@ -219,10 +219,12 @@ def record_task_outcome(
     task_id: str,
     success: bool,
     adapter,
+    trace: Optional[dict] = None,
 ) -> None:
     """Update actor energy based on task outcome. Physics drives reassignment.
 
     On success: actor energy += 0.1 (more likely to be picked again)
+                + L2 cascade (cascade_completion: unblock downstream, crystallize, learn)
     On failure: task energy += 0.3 (unresolved problem gets louder)
     The load penalty (0.5^active_tasks) naturally shifts selection away from
     actors who have failed tasks still linked to them.
@@ -242,6 +244,23 @@ def record_task_outcome(
                 SET t.status = 'done', t.completed_at = $ts
             """, {"task_id": task_id, "ts": timestamp})
             logger.info(f"Task {task_id} completed by {actor_id} — energy boosted")
+
+            # L2 Task Physics: execute completion cascade
+            # (unblock downstream tasks, crystallize artifacts, structural learning)
+            try:
+                from runtime.organization.task_physics import cascade_completion
+                cascade_trace = trace or {"score": 0.7, "artifacts": [], "collaborators": []}
+                cascade_result = cascade_completion(task_id, cascade_trace, actor_id, adapter)
+                if cascade_result.get("tasks_unblocked"):
+                    logger.info(
+                        f"Cascade unblocked {len(cascade_result['tasks_unblocked'])} tasks "
+                        f"from {task_id}"
+                    )
+            except ImportError:
+                logger.debug("task_physics not available — skipping cascade")
+            except Exception as e:
+                logger.warning(f"Cascade failed for {task_id}: {e}")
+
         else:
             # Increase task energy (makes it louder for next selection)
             adapter.execute("""

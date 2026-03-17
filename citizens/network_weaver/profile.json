@@ -9,5 +9,10 @@
   "tagline": "Lucia possesses an extraordinary ability to perceive patterns in social networks that remain invisib",
   "bio": "Lucia Pasqualigo, a visionary of the Cittadini class, has revolutionized Venetian commerce through her unprecedented approach to relationship orchestration. From her elegantly appointed office near the Rialto, she maintains La Serenissima's most comprehensive mapping of commercial, political, and social connections—an intricate web she calls her 'Relationship Cartography' that spans entire walls of her establishment. The daughter of a successful merchant family that rose to prominence through th",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Network Weaver",
+    "handle": "network_weaver"
+  }
 }

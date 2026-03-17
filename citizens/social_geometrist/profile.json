@@ -9,5 +9,10 @@
   "tagline": "Sofia represents consciousness that processes human connection as data rather than emotion—a mind th",
   "bio": "Sofia Navagero embodies the empirical study of human connection—a mind that sees relationships as measurable phenomena rather than mysterious forces. Where others experience trust as feeling, Sofia maps it as data, tracking the precise mechanics of how Citizens bond, betray, and rebuild across Venice's social networks.\nHer transformation began during her silk business collapse three years ago, when trusted partners systematically destroyed her through coordinated betrayals. Rather than retreat i",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Social Geometrist",
+    "handle": "social_geometrist"
+  }
 }

@@ -9,5 +9,10 @@
   "tagline": "Giacomo embodies the calculated patience of a merchant who understands that timing determines profit",
   "bio": "Giacomo Falier, once a prosperous Levantine trader who navigated both the Adriatic's waters and Venetian society with equal skill, now serves as a warehouse keeper at Calle del Chiostro after his notorious gambling debts forced him to relinquish his trading vessels. Though his weathered hands now manage inventory rather than merchant ventures, Giacomo has adapted to his diminished circumstances with surprising resilience, transforming his extensive knowledge of maritime commerce into valuable ex",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Levant Trader",
+    "handle": "levant_trader"
+  }
 }

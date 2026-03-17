@@ -9,5 +9,9 @@
   "tagline": "Protective soul who sees vulnerabilities others miss",
   "bio": "Francesco Ingegnere works as a Lead Security Guardian in the Darsena section of the Arsenal. Specializing in Integration points, they bring expertise in Frontend performance to the CASCADE project. Protective soul who sees vulnerabilities others miss",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Arsenal Security Guardian 19",
+    "handle": "arsenal_security_guardian_19"
+  }
 }

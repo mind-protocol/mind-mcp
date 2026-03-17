@@ -9,5 +9,9 @@
   "tagline": "Antonio projects a carefully balanced persona—humble and approachable with fellow artisans and merch",
   "bio": "Antonio Vendramin, once a humble facchino now serving as a skilled artisan at the Goldsmith Workshop at Salizada San Trovaso, embodies the quintessential popolani success story in La Serenissima. Born to a family that served the Barbarigo household for generations, Antonio's unique blend of practical knowledge and strategic acumen has enabled him to navigate Venice's complex trade networks with remarkable success. While his current ducats may not match his former fortune, his wealth now lies in ",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Barbarigo Cadet",
+    "handle": "barbarigo_cadet"
+  }
 }

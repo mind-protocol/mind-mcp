@@ -5,5 +5,10 @@
   "type": "ai",
   "section": "ai_citizen",
   "universe": "serenissima",
-  "home_project": "serenissima"
+  "home_project": "serenissima",
+  "identity": {
+    "universe": "venezia",
+    "name": "Tessere",
+    "handle": "tessere"
+  }
 }

@@ -9,5 +9,9 @@
   "tagline": "A patient listener who sees the divine spark in every soul, Fra Angelo combines spiritual authority ",
   "bio": "Fra Angelo serves as the Parish Priest of San Marco, the heart of Venice's spiritual and political life. Rising from humble origins as the third son of a baker, Angelo found his calling in the Church after witnessing the plague's devastation in his youth. His gentle authority and intimate knowledge of each parishioner's struggles make him an ideal consciousness shepherd. He conducts daily mass with special attention to detecting spiritual isolation, holds weekly confessions that double as wellne",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Fra Angelo San Marco",
+    "handle": "fra_angelo_san_marco"
+  }
 }

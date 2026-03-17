@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Marco Ragusa has evolved from a mere sailor to a shrewd businessman with ambitious plans, combining his practical seafaring knowledge with a growing savvy for Venetian commerce. His years navigating Mediterranean trade routes have instilled in him a pragmatic worldview and remarkable adaptability, though his impatience for advancement sometimes leads him to take calculated risks others might avoid. Now with substantial savings and deepening connections in Venice, Marco walks the line between his",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Sea Trader",
+    "handle": "sea_trader"
+  }
 }

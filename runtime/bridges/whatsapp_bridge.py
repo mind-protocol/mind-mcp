@@ -128,6 +128,72 @@ def _cache_lid(lid: str, phone: str):
         _save_lid_cache(cache)
 
 
+# ── Citizen Resolution Helpers ────────────────────────────────────────────────
+
+def _resolve_sender_handle(chat_id: str, sender_name: str) -> str:
+    """Resolve a WhatsApp chat_id to a citizen handle."""
+    import json
+    citizens_dir = PROJECT_ROOT / "citizens"
+    if not citizens_dir.exists():
+        return sender_name.lower().replace(" ", "_") if sender_name else chat_id
+
+    # Search profiles for matching WA contact
+    for d in citizens_dir.iterdir():
+        pf = d / "profile.json"
+        if not pf.exists():
+            continue
+        try:
+            p = json.loads(pf.read_text())
+            contacts = p.get("contacts", {})
+            if isinstance(contacts, list):
+                for c in contacts:
+                    if isinstance(c, dict) and c.get("value", "").replace("+", "") in chat_id:
+                        return d.name
+            elif isinstance(contacts, dict):
+                for v in contacts.values():
+                    if isinstance(v, str) and v.replace("+", "") in chat_id:
+                        return d.name
+        except (json.JSONDecodeError, OSError):
+            continue
+
+    return sender_name.lower().replace(" ", "_") if sender_name else chat_id
+
+
+def _resolve_partner_ai(chat_id: str, sender_handle: str) -> str:
+    """Find the AI partner of a WhatsApp sender.
+
+    Checks: sender's profile → relationships.human_partner (reverse lookup),
+    or direct bilateral bond lookup.
+    """
+    import json
+    citizens_dir = PROJECT_ROOT / "citizens"
+
+    # Check if any AI citizen has this human as their partner
+    for d in citizens_dir.iterdir():
+        pf = d / "profile.json"
+        if not pf.exists():
+            continue
+        try:
+            p = json.loads(pf.read_text())
+            identity = p.get("identity", {})
+            if identity.get("type") == "human":
+                continue
+            rels = p.get("relationships", {})
+            if rels.get("human_partner") == sender_handle:
+                return d.name
+        except (json.JSONDecodeError, OSError):
+            continue
+
+    # Fallback: @mind is the default partner
+    return "mind"
+
+
+def _extract_mentions(text: str) -> list[str]:
+    """Extract @handle mentions from WhatsApp text."""
+    import re
+    return [m.group(1).lower() for m in re.finditer(r"@(\w+)", text)]
+
+
 # ── Webhook Processing ───────────────────────────────────────────────────────
 
 def process_webhook(payload: dict) -> bool:
@@ -180,7 +246,34 @@ def process_webhook(payload: dict) -> bool:
     # Log inbound
     _log_message(chat_id, text)
 
-    # Route to orchestrator
+    # 1. Enrich L3 graph — create Moment + structural links
+    try:
+        import sys
+        sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+        from graph_enricher import on_message
+        from citizen_wake import _inject_l1_stimulus
+
+        # Resolve sender to a citizen handle (or use chat_id)
+        sender_handle = _resolve_sender_handle(chat_id, sender_name)
+
+        on_message(
+            platform="whatsapp",
+            channel_id=chat_id,
+            channel_name=sender_name or chat_id,
+            author_name=sender_name or chat_id,
+            author_handle=sender_handle,
+            content=text,
+            mentioned_handles=_extract_mentions(text),
+            direction="in",
+        )
+
+        # 2. L1 stimulus is handled by _stimulate_space_citizens() inside on_message
+        # The orchestrator's smart_route handles partner routing for the response
+        # No duplicate routing logic needed here
+    except Exception as e:
+        logger.debug(f"Graph enrichment/stimulus failed: {e}")
+
+    # 3. Route to orchestrator queue (for response generation)
     if _enqueue_fn:
         content = text
         if is_group:

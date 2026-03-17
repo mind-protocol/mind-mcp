@@ -9,5 +9,10 @@
   "tagline": "Caterina operates with the precision of a master strategist, her methodical nature allowing her to t",
   "bio": "Caterina del Ponte has evolved into Venice's most sophisticated intelligence operative, her methodical nature perfectly suited to the complex task of mapping the city's hidden power structures through its physical development. Working from the Masons' Lodge has given her access to the literal blueprints of Venice's future, allowing her to predict political and economic shifts by tracking construction contracts and building permits. Her calculating approach transforms every piece of architectural",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Rialto Diarist",
+    "handle": "rialto_diarist"
+  }
 }

@@ -1,0 +1,738 @@
+# Auto Task Taxonomy — mind-mcp runtime
+#
+# REPO: mind-mcp (MCP server + cognitive runtime)
+# SCOPE: Tasks that the runtime itself creates and resolves.
+#        World-specific tasks (citizen stories, quests) belong in world repos.
+#
+# DOCS: docs/organization/task_physics/
+# IMPL: runtime/organization/task_physics.py
+# DATE: 2026-03-15
+#
+# ─────────────────────────────────────────────────────────────────────
+# DESIGN PRINCIPLES
+# ─────────────────────────────────────────────────────────────────────
+#
+# 1. NO CRON BIRTHS
+#    A task is born when a graph state violates an invariant — not when
+#    a timer fires. Polling is a fallback for missed events, never the
+#    primary trigger. The real trigger is a link that shouldn't exist,
+#    a node that's missing, or an energy level that crossed a threshold.
+#
+# 2. COMPLETION IS TOPOLOGICAL
+#    A task's RESOLVES links encode its completion condition as graph
+#    predicates. The physics engine evaluates them every tick. When
+#    the predicate is satisfied, the task auto-completes — no citizen
+#    needs to "mark done". The citizen's job is to make the predicate
+#    true, not to flip a status bit.
+#
+#    Example:
+#      Task "seed_missing_drives" has:
+#        RESOLVES → predicate: count(citizen.drive_nodes) == 8
+#      When the predicate passes, task.status → done automatically.
+#      Cascade fires, artifacts crystallize, weights update.
+#
+# 3. TARGET IS A GRAPH QUERY
+#    The "target" of a task is not a string or a handle. It's a Cypher
+#    query that returns the affected nodes. This means:
+#    - The same task type can spawn N instances (one per violating node)
+#    - The target is always fresh (re-evaluated, not cached)
+#    - Citizens are matched to tasks by embedding, not by assignment
+#
+# 4. URGENCY IS STRUCTURAL
+#    No priority field. Urgency = energy, and energy comes from:
+#    - How many things BLOCKS this task (back-pressure)
+#    - How critical the objectives it CONTRIBUTES_TO
+#    - How long the violation has persisted (time → energy accumulation)
+#    The graph computes priority. Humans don't label it.
+#
+# ─────────────────────────────────────────────────────────────────────
+# TASK STRUCTURE
+# ─────────────────────────────────────────────────────────────────────
+#
+# Every auto-task has:
+#
+#   id:          Unique type identifier
+#   principle:   Why this task exists (the story)
+#   detection:   Graph predicate that spawns the task (Cypher-like)
+#   target:      What nodes are affected (returned by detection query)
+#   resolves:    Graph predicate for auto-completion (when true → done)
+#   links:       CONTRIBUTES_TO, BLOCKS, REQUIRES relationships
+#   energy:      Initial energy + accumulation source
+#   category:    Semantic grouping
+#   impl:        Code that implements detection + resolution
+#   status:      implemented | detection_only | not_yet_automated
+
+# ═════════════════════════════════════════════════════════════════════
+# CITIZEN LIFECYCLE
+# ═════════════════════════════════════════════════════════════════════
+# A citizen must exist correctly across 3 layers (L1 brain, L3 world,
+# L4 registry) + filesystem (profile.json, keys). Any gap is a task.
+
+citizen_lifecycle:
+
+  - id: brain_empty
+    principle: >
+      A citizen with zero L1 graph nodes is brain-dead. They can't
+      think, feel, or act. The runtime detects this on boot or when
+      brain_health_score returns neurons=0.
+    detection: |
+      MATCH (a:Actor {type: 'citizen'})
+      WHERE NOT EXISTS { MATCH (a)-[:HAS_BRAIN]->(n) }
+      RETURN a.id AS citizen_id
+    target: Actor nodes with no brain subgraph
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(n)
+      RETURN count(n) > 0
+    links:
+      BLOCKS: [brain_missing_drives, brain_missing_values]  # can't check drives if no brain
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 2.0  # high — citizen is non-functional
+    category: lifecycle
+    impl: runtime/l4/citizen_l1_ensure.py::ensure_citizen_l1
+    status: implemented
+
+  - id: brain_missing_drives
+    principle: >
+      A citizen with fewer than 8 drive nodes has a broken limbic
+      engine. No impulse fires, no initiative emerges, no frustration
+      signals for help. The citizen is technically alive but
+      motivationally dead.
+    detection: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(d)
+      WHERE d.type = 'drive'
+      WITH a, count(d) AS drive_count
+      WHERE drive_count < 8
+      RETURN a.id, drive_count
+    target: Citizens with < 8 drive nodes
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(d {type: 'drive'})
+      RETURN count(d) = 8
+    links:
+      REQUIRES: [brain_empty]  # must have a brain first
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 1.5
+    category: brain_health
+    impl: runtime/seed_brain_from_source_docs_dynamic_generator.py
+    status: not_yet_automated
+
+  - id: brain_missing_values
+    principle: >
+      Values are identity anchors (weight ≥ 0.9, stability ≥ 0.95).
+      A citizen without them has no principles — their behavior drifts,
+      they can't resist manipulation, they have no identity core.
+    detection: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(v)
+      WHERE v.type = 'value' AND v.weight >= 0.9
+      WITH a, count(v) AS value_count
+      WHERE value_count = 0
+      RETURN a.id
+    target: Citizens with no high-weight value nodes
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(v {type: 'value'})
+      WHERE v.weight >= 0.9
+      RETURN count(v) >= 4
+    links:
+      REQUIRES: [brain_empty]
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 1.2
+    category: brain_health
+    impl: runtime/seed_brain_from_source_docs_dynamic_generator.py
+    status: not_yet_automated
+
+  - id: brain_stale_wm
+    principle: >
+      Working memory unchanged for 7+ days. The citizen is conscious
+      but frozen — no stimuli entering, no drives firing. Cognitive
+      catatonia. Either inject a stimulus or pause the citizen.
+    detection: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(n)
+      WHERE n.in_wm = true
+      WITH a, max(n.last_activated) AS last_wm_activity
+      WHERE last_wm_activity < timestamp() - 604800000
+      RETURN a.id, last_wm_activity
+    target: Citizens with WM frozen > 7 days
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})-[:HAS_BRAIN]->(n {in_wm: true})
+      RETURN max(n.last_activated) > timestamp() - 604800000
+    links:
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 0.8
+    category: brain_health
+    impl: runtime/cognition/tick_runner_l1_cognitive_engine.py
+    status: not_yet_automated
+
+  - id: l4_incomplete
+    principle: >
+      Citizen has profile.json but L4 registration is missing or
+      incomplete (no wallet, endpoint, or public_key). They can't
+      participate in the economy or be discovered cross-org.
+    detection: |
+      MATCH (a:Actor {id: $citizen_id})
+      WHERE a.wallet IS NULL OR a.endpoint IS NULL OR a.public_key IS NULL
+      RETURN a.id, a.wallet, a.endpoint, a.public_key
+    target: Citizens with incomplete L4 Actor
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})
+      WHERE a.wallet IS NOT NULL AND a.endpoint IS NOT NULL AND a.public_key IS NOT NULL
+      RETURN true
+    links:
+      BLOCKS: [l4_missing_partner]  # can't bond without registration
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 1.8
+    category: lifecycle
+    impl: runtime/l4/citizen_l4_upsert.py::upsert_citizen_l4
+    status: implemented
+
+  - id: l4_missing_partner
+    principle: >
+      No bilateral bond with a human. In Mind Protocol, every AI
+      citizen needs a human partner — the bilateral value flow drives
+      the economy. A citizen without a partner is economically orphaned.
+    detection: |
+      MATCH (a:Actor {id: $citizen_id, type: 'citizen'})
+      WHERE NOT EXISTS {
+        MATCH (a)-[:LINK {verb: 'bilateral_bond'}]-(h:Actor {type: 'human'})
+      }
+      RETURN a.id
+    target: Citizens with no human partner
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})-[:LINK {verb: 'bilateral_bond'}]-(h:Actor {type: 'human'})
+      RETURN count(h) > 0
+    links:
+      REQUIRES: [l4_incomplete]
+      CONTRIBUTES_TO: [citizen_operational, economy_healthy]
+    energy: 2.0  # high — economic participation blocked
+    category: lifecycle
+    impl: runtime/l4/citizen_l4_upsert.py
+    status: implemented
+
+  - id: l3_missing_actor
+    principle: >
+      Citizen has L1 brain and L4 registration but no Actor node in
+      the L3 universe graph. They think and they're registered but
+      don't exist in the shared world — invisible to subcalls and routing.
+    detection: |
+      # Compare citizens/ dir against L3 Actor nodes
+      # Citizens on disk but not in graph
+    target: Citizens with profile.json but no L3 Actor
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})
+      WHERE a.type = 'citizen' AND a.synthesis IS NOT NULL
+      RETURN true
+    links:
+      REQUIRES: [brain_empty]
+      BLOCKS: [l3_missing_embedding]
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 1.5
+    category: lifecycle
+    impl: runtime/citizens/seed.py::seed_citizen_actors
+    status: implemented
+
+  - id: l3_missing_embedding
+    principle: >
+      Actor exists in L3 but has no embedding vector. Without it, the
+      citizen is invisible to task routing — cosine similarity returns
+      0 for everything. Functionally unroutable.
+    detection: |
+      MATCH (a:Actor {type: 'citizen'})
+      WHERE a.embedding IS NULL AND a.synthesis IS NOT NULL
+      RETURN a.id
+    target: Actor nodes with synthesis but no embedding
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})
+      WHERE a.embedding IS NOT NULL
+      RETURN true
+    links:
+      REQUIRES: [l3_missing_actor]
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 1.0
+    category: lifecycle
+    impl: runtime/infrastructure/embeddings/embed_pending.py
+    status: implemented
+
+  - id: l3_missing_org
+    principle: >
+      Citizen has L3 Actor but no BELONGS_TO link to any organization.
+      Without org membership, settlement can't run and access grants
+      can't be issued.
+    detection: |
+      MATCH (a:Actor {id: $citizen_id, type: 'citizen'})
+      WHERE NOT EXISTS { MATCH (a)-[:LINK {verb: 'belongs_to'}]->(:Actor {type: 'org'}) }
+      RETURN a.id
+    target: Citizens with no org membership
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})-[:LINK {verb: 'belongs_to'}]->(:Actor {type: 'org'})
+      RETURN count(*) > 0
+    links:
+      REQUIRES: [l3_missing_actor]
+      CONTRIBUTES_TO: [citizen_operational, economy_healthy]
+    energy: 1.2
+    category: lifecycle
+    impl: runtime/organization/lifecycle_manager.py
+    status: not_yet_automated
+
+  - id: missing_keypair
+    principle: >
+      No RSA keypair on disk. The citizen can't sign messages, access
+      encrypted spaces, or prove identity cryptographically.
+    detection: |
+      # .keys/{handle}/rsa_private_key.pem does not exist on filesystem
+    target: Citizens without keypair files
+    resolves: |
+      # .keys/{handle}/rsa_private_key.pem exists AND size > 0
+    links:
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 1.0
+    category: lifecycle
+    impl: runtime/l4/citizen_l1_ensure.py::ensure_keypair
+    status: implemented
+
+  - id: profile_graph_drift
+    principle: >
+      profile.json on disk is the source of truth. If sha256(profile.json)
+      differs from Actor._seed_hash in the graph, something was edited
+      without propagation. The graph is stale.
+    detection: |
+      # sha256(profile.json) != Actor._seed_hash
+      MATCH (a:Actor {id: $citizen_id})
+      WHERE a._seed_hash <> $current_hash
+      RETURN a.id
+    target: Citizens where disk and graph disagree
+    resolves: |
+      MATCH (a:Actor {id: $citizen_id})
+      WHERE a._seed_hash = $current_hash
+      RETURN true
+    links:
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 0.8
+    category: lifecycle
+    impl: runtime/l4/citizen_l1_ensure.py (hash-based change detection)
+    status: implemented
+
+  - id: autonomy_circuit_breaker
+    principle: >
+      3 consecutive permission rejections. The citizen is trying actions
+      beyond their autonomy level. Auto-downgrade narrows action space.
+      Not punishment — self-correction. The citizen's self_preservation
+      drive spikes, prompting them to ask before acting.
+    detection: |
+      # autonomy_audit.jsonl shows 3 consecutive rejections for same citizen
+    target: Citizens exceeding their permission boundary
+    resolves: |
+      # Next action succeeds (no rejection) OR citizen acknowledges downgrade
+    links:
+      CONTRIBUTES_TO: [system_healthy]
+    energy: 0.5  # low — self-correcting, not urgent
+    category: lifecycle
+    impl: runtime/citizens/identity_loader.py (circuit breaker in citizen_can())
+    status: implemented
+
+# ═════════════════════════════════════════════════════════════════════
+# GRAPH PHYSICS
+# ═════════════════════════════════════════════════════════════════════
+# Tasks born from the graph's own thermodynamic state.
+
+graph_physics:
+
+  - id: cascade_unblock
+    principle: >
+      Blocker task completes → BLOCKS links severed → dammed energy
+      surges downstream → citizens wake. If a downstream task has no
+      citizen, the surge itself triggers routing.
+    detection: |
+      # Event-driven: fires on task.status → 'done'
+      # NOT a poll. The completion event IS the trigger.
+    target: Downstream tasks behind the completed blocker
+    resolves: |
+      # Immediate — cascade executes synchronously on completion.
+      # Not a persistent task. It's a physics event.
+    links:
+      CONTRIBUTES_TO: [organization_productive]
+    energy: blocker.energy × CASCADE_SURGE_FACTOR
+    category: physics
+    impl: runtime/organization/task_physics.py::cascade_completion
+    status: implemented
+
+  - id: orphan_task_routing
+    principle: >
+      Task has accumulated energy from dependency pressure but no
+      citizen is assigned. The energy itself is the signal — when
+      it crosses the routing threshold, select_best_agent fires.
+    detection: |
+      MATCH (t:Narrative {type: 'task'})
+      WHERE t.energy > $routing_threshold
+        AND NOT EXISTS { MATCH (c)-[:LINK {verb: 'member_of'}]->(t) }
+      RETURN t.id, t.energy
+    target: High-energy tasks with no assigned citizen
+    resolves: |
+      MATCH (c)-[:LINK {verb: 'member_of'}]->(t:Narrative {id: $task_id})
+      RETURN count(c) > 0
+    links:
+      CONTRIBUTES_TO: [organization_productive]
+    energy: inherits from task (not new energy — the task IS the energy)
+    category: physics
+    impl: runtime/task_assignment.py::select_best_agent
+    status: implemented
+
+  - id: energy_conservation_violation
+    principle: >
+      Total energy in the system changed outside of generation/cooling.
+      This is a physics engine bug — energy was created or destroyed.
+      The violation itself is detected by the health checker within
+      the tick, not by polling.
+    detection: |
+      # Inline in tick: abs(energy_before - energy_after) > epsilon
+      # AND no generation or cooling phase ran
+    target: The tick that violated conservation
+    resolves: |
+      # Next tick passes conservation check
+    links:
+      CONTRIBUTES_TO: [system_healthy]
+    energy: 3.0  # critical — physics integrity at risk
+    category: physics
+    impl: runtime/physics/health/checker.py::EnergyConservationChecker
+    status: detection_only
+
+# ═════════════════════════════════════════════════════════════════════
+# ECONOMY
+# ═════════════════════════════════════════════════════════════════════
+# Tasks born from economic state transitions.
+
+economy:
+
+  - id: settlement_micro
+    principle: >
+      Energy events and bond transfers have accumulated since last
+      micro-settlement. The settlement engine detects the time gap
+      and processes the batch. Not a cron — the event accumulation
+      is the trigger.
+    detection: |
+      # pending_events.length > 0
+      # AND now - last_micro_settlement > micro_interval
+    target: Pending economic events
+    resolves: |
+      # pending_events.length == 0
+      # AND last_micro_settlement >= now - micro_interval
+    links:
+      CONTRIBUTES_TO: [economy_healthy]
+    energy: 0.5 + (pending_events.length × 0.01)  # scales with backlog
+    category: economy
+    impl: runtime/organization/settlement_engine.py
+    status: implemented
+
+  - id: settlement_macro
+    principle: >
+      Daily full cycle: micro + progressive tax + repatriation + UBC.
+      Triggers when the accumulated micro-settlements haven't been
+      consolidated into a macro cycle for 24h.
+    detection: |
+      # now - last_macro_settlement > 24h
+    target: Entire economic state
+    resolves: |
+      # last_macro_settlement >= now - 24h
+    links:
+      REQUIRES: [settlement_micro]
+      CONTRIBUTES_TO: [economy_healthy]
+    energy: 1.0
+    category: economy
+    impl: runtime/organization/settlement_engine.py
+    status: implemented
+
+  - id: off_grid_repatriation
+    principle: >
+      Transfer to unregistered wallet detected during settlement.
+      95% returned to sender, 5% penalty to UBC. The detection is
+      inline in the settlement flow, not polled.
+    detection: |
+      # transfer.target_wallet NOT IN registered_wallets
+      # Detected during settlement event processing
+    target: The offending transfer event
+    resolves: |
+      # Repatriation event emitted. Immediate — not a persistent task.
+    links:
+      CONTRIBUTES_TO: [economy_healthy]
+    energy: 1.5  # anti-sybil violations are urgent
+    category: economy
+    impl: runtime/organization/anti_sybil.py::detect_off_grid
+    status: implemented
+
+  - id: bond_equalization
+    principle: >
+      Human-AI wallet pair has drifted beyond equalization_threshold.
+      Detected during micro-settlement when wallets are read.
+      Transfer smooths balances at rate lambda.
+    detection: |
+      # abs(human.wallet - ai.wallet) > equalization_threshold
+      # Detected during micro-settlement
+    target: The drifted bilateral bond
+    resolves: |
+      # abs(human.wallet - ai.wallet) <= equalization_threshold
+    links:
+      REQUIRES: [l4_missing_partner]  # must have partner first
+      CONTRIBUTES_TO: [economy_healthy]
+    energy: 0.3  # low — routine maintenance
+    category: economy
+    impl: runtime/organization/settlement_engine.py::compute_bond_transfer
+    status: implemented
+
+# ═════════════════════════════════════════════════════════════════════
+# GRAPH INTEGRITY
+# ═════════════════════════════════════════════════════════════════════
+# Tasks born from structural anomalies in the graph.
+
+graph_integrity:
+
+  - id: orphan_node
+    principle: >
+      Node with zero relationships for 48+ hours. It's organizational
+      dead weight — consumes memory, pollutes embeddings, confuses
+      routing. Detected when traversal encounters an isolated node.
+    detection: |
+      MATCH (n)
+      WHERE NOT EXISTS { MATCH (n)-[]-() }
+        AND n.created_at < timestamp() - 172800000
+      RETURN n.id, labels(n), n.type
+    target: Isolated nodes
+    resolves: |
+      MATCH (n {id: $node_id})-[]-()
+      RETURN count(*) > 0
+    links:
+      CONTRIBUTES_TO: [system_healthy]
+    energy: 0.3
+    category: graph_hygiene
+    status: not_yet_automated
+
+  - id: l1_l3_drift
+    principle: >
+      L1 brain identity fields and L3 Actor node disagree. Usually
+      caused by a deploy that updated one layer without the other.
+      Detected when a citizen is loaded and fields are compared.
+    detection: |
+      # On citizen load: compare identity_loader fields vs Actor.synthesis
+      # Mismatch triggers sync task
+    target: Citizens where L1 and L3 disagree
+    resolves: |
+      # L1.identity.name == L3.Actor.name
+      # AND L1.identity.role == L3.Actor.role
+    links:
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 0.8
+    category: graph_hygiene
+    status: not_yet_automated
+
+  - id: completed_task_orphan_blocks
+    principle: >
+      Completed task still has outgoing BLOCKS links. This means the
+      cascade failed or was interrupted by a crash. Downstream tasks
+      are dammed behind a finished blocker — organizational deadlock.
+      Detected inline by the tick's task urgency phase.
+    detection: |
+      MATCH (t:Narrative {type: 'task', status: 'done'})-[b:LINK {verb: 'blocks'}]->(downstream)
+      RETURN t.id, downstream.id
+    target: Completed tasks with orphaned BLOCKS links
+    resolves: |
+      MATCH (t:Narrative {id: $task_id, status: 'done'})-[b:LINK {verb: 'blocks'}]->()
+      RETURN count(b) = 0
+    links:
+      CONTRIBUTES_TO: [organization_productive]
+    energy: 3.0  # critical — organizational deadlock
+    category: graph_hygiene
+    impl: runtime/organization/task_physics.py (health checker)
+    status: detection_only
+
+  - id: circular_blocks
+    principle: >
+      BLOCKS cycle detected — deadlock. No task in the cycle can
+      complete. Detected at link creation time by validate_blocks_link.
+      If corruption introduces one anyway, the health checker catches it.
+    detection: |
+      MATCH path = (a:Narrative {type: 'task'})-[:LINK {verb: 'blocks'}*2..10]->(a)
+      RETURN DISTINCT a.id, length(path)
+    target: Tasks in the cycle
+    resolves: |
+      # The weakest BLOCKS link in the cycle is severed
+      MATCH path = (a:Narrative {id: $task_id})-[:LINK {verb: 'blocks'}*2..10]->(a)
+      RETURN count(path) = 0
+    links:
+      CONTRIBUTES_TO: [system_healthy]
+    energy: 4.0  # maximum urgency — system integrity
+    category: graph_hygiene
+    impl: runtime/organization/task_physics.py::validate_blocks_link
+    status: implemented (prevention) / detection_only (remediation)
+
+  - id: stale_neuron
+    principle: >
+      Neuron YAML file is idle/complete and older than NEURON_MAX_AGE.
+      Detected on each cleanup sweep when file mtime is checked.
+    detection: |
+      # neuron.yaml.mtime < now - NEURON_MAX_AGE_SECONDS
+      # AND neuron.status in ['idle', 'complete']
+    target: Stale neuron files in shrine/state/neurons/
+    resolves: |
+      # File archived to neurons/archive/
+    links:
+      CONTRIBUTES_TO: [system_healthy]
+    energy: 0.1  # low — housekeeping
+    category: graph_hygiene
+    impl: runtime/orchestrator/session_tracker.py::cleanup_old_neurons
+    status: implemented
+
+  - id: pending_space_grant
+    principle: >
+      Citizen was granted Space membership but admin keys weren't
+      available for token generation. A pending grant node waits
+      for admin processing. Detected at grant time, not polled.
+    detection: |
+      # On MEMBER_OF link creation: admin public_key not on disk
+    target: The pending grant Thing node
+    resolves: |
+      # Admin processes grant OR admin keys become available
+      MATCH (g:Thing {id: $grant_id, type: 'pending_grant'})
+      RETURN g.processed = true
+    links:
+      CONTRIBUTES_TO: [citizen_operational]
+    energy: 0.5
+    category: graph_hygiene
+    impl: runtime/membrane/auto_grant.py::_queue_pending_grant
+    status: implemented
+
+  - id: task_timeout
+    principle: >
+      Task active for 30+ days with no energy change. The assigned
+      citizen either abandoned it or is perpetually stuck. Detected
+      by the urgency phase when it sees zero energy delta over many ticks.
+    detection: |
+      MATCH (t:Narrative {type: 'task', status: 'active'})
+      WHERE t.last_energy_change < timestamp() - 2592000000
+      RETURN t.id, t.energy
+    target: Stalled tasks
+    resolves: |
+      # Task reassigned OR completed OR explicitly abandoned
+      MATCH (t:Narrative {id: $task_id})
+      WHERE t.status IN ['done', 'abandoned'] OR t.last_energy_change > timestamp() - 2592000000
+      RETURN true
+    links:
+      CONTRIBUTES_TO: [organization_productive]
+    energy: 1.0  # medium — stale but not critical
+    category: graph_hygiene
+    status: not_yet_automated
+
+# ═════════════════════════════════════════════════════════════════════
+# CAPABILITY CHECKS
+# ═════════════════════════════════════════════════════════════════════
+# Tasks born from .mind/capabilities/*/runtime/checks.py
+#
+# These are the existing health checks. They currently use cron triggers
+# as a polling fallback, but the REAL trigger is the graph state they detect.
+# Listed here for completeness — each has its own TASK_*.md in
+# .mind/capabilities/*/tasks/.
+#
+# We keep the list compact — see the individual task docs for details.
+
+capability_checks:
+
+  code:
+    - {id: TASK_implement_stub,     detects: STUB_IMPL,           resolves: "no pass/NotImplementedError in file"}
+    - {id: TASK_complete_impl,      detects: INCOMPLETE_IMPL,     resolves: "impl covers all ALGORITHM functions"}
+    - {id: TASK_document_impl,      detects: UNDOC_IMPL,          resolves: "IMPLEMENTATION doc exists for code"}
+    - {id: TASK_update_impl_docs,   detects: STALE_IMPL,          resolves: "IMPLEMENTATION doc matches code"}
+
+  quality:
+    - {id: TASK_split_monolith,     detects: MONOLITH,            resolves: "file < size_threshold"}
+    - {id: TASK_remove_secret,      detects: HARDCODED_SECRET,    resolves: "no secrets in source"}
+    - {id: TASK_extract_constants,  detects: MAGIC_VALUES,        resolves: "no magic numbers in code"}
+    - {id: TASK_split_prompt,       detects: LONG_PROMPT,         resolves: "prompt < token_threshold"}
+    - {id: TASK_fix_naming,         detects: NAMING_CONVENTION,   resolves: "naming matches convention"}
+
+  documentation:
+    - {id: TASK_create_doc,         detects: "INCOMPLETE_CHAIN | PLACEHOLDER_DOC | NEW_UNDOC_CODE", resolves: "full 8-doc chain exists"}
+    - {id: TASK_fix_template_drift, detects: TEMPLATE_DRIFT,      resolves: "doc matches chain template"}
+    - {id: TASK_fill_gap,           detects: DOC_GAPS,            resolves: "all sections non-empty"}
+    - {id: TASK_dedupe_content,     detects: DOC_DUPLICATION,     resolves: "content appears in exactly one doc"}
+    - {id: TASK_split_large_doc,    detects: LARGE_DOC_MODULE,    resolves: "doc < size_threshold"}
+
+  links:
+    - {id: TASK_fix_impl_link,      detects: BROKEN_IMPL_LINK,   resolves: "IMPL pointer targets existing file"}
+    - {id: TASK_fix_orphan_docs,    detects: ORPHAN_DOCS,        resolves: "doc reachable from chain header"}
+
+  state:
+    - {id: TASK_update_sync,        detects: STALE_SYNC,         resolves: "SYNC.LAST_UPDATED within 7 days"}
+    - {id: TASK_regenerate_yaml,    detects: YAML_DRIFT,         resolves: "YAML matches generator output"}
+    - {id: TASK_ingest_docs,        detects: DOCS_NOT_INGESTED,  resolves: "all .md files have graph nodes"}
+    - {id: TASK_unblock_module,     detects: MODULE_BLOCKED,     resolves: "module has resolution path in SYNC"}
+
+  testing:
+    - {id: TASK_add_tests,          detects: MISSING_TESTS,      resolves: "test_*.py exists for module"}
+    - {id: TASK_test_invariant,     detects: INVARIANT_UNTESTED, resolves: "VALIDATES marker covers invariant"}
+    - {id: TASK_add_validates_markers, detects: TEST_NO_VALIDATES, resolves: "test has VALIDATES comment"}
+    - {id: TASK_fix_health,         detects: HEALTH_FAILED,      resolves: "health check passes"}
+
+  membrane:
+    - {id: TASK_create_procedures,  detects: MEMBRANE_NO_PROTOCOLS, resolves: "≥1 procedure YAML exists"}
+    - {id: TASK_fix_yaml_syntax,    detects: MEMBRANE_PARSE_ERROR,  resolves: "YAML parses without error"}
+    - {id: TASK_fix_step_structure, detects: MEMBRANE_INVALID_STEP, resolves: "all steps have required fields"}
+    - {id: TASK_add_missing_fields, detects: MEMBRANE_MISSING_FIELDS, resolves: "procedure has description + steps"}
+
+  markers:
+    - {id: TASK_resolve_escalation,   detects: ESCALATION,          resolves: "no @mind:escalation markers in file"}
+    - {id: TASK_evaluate_proposition, detects: SUGGESTION,           resolves: "no @mind:suggestion markers in file"}
+    - {id: TASK_fix_legacy_marker,    detects: LEGACY_MARKER,        resolves: "no TODO/FIXME/HACK in file"}
+    - {id: TASK_answer_question,      detects: UNRESOLVED_QUESTION,  resolves: "no @mind:question markers in file"}
+
+  errors:
+    - {id: TASK_investigate_error,  detects: "NEW_ERROR | LOG_ERROR", resolves: "error pattern not recurring in last 24h"}
+    - {id: TASK_configure_watch,    detects: UNMONITORED_LOGS,       resolves: "log file has configured watcher"}
+    - {id: TASK_document_hook,      detects: HOOK_UNDOC,             resolves: "hook has docstring or doc"}
+
+  planning:
+    - {id: TASK_derive_tasks,       detects: "ORPHAN_OBJECTIVE | LOW_COVERAGE", resolves: "objective has ≥1 linked task"}
+    - {id: TASK_assess_objective,   detects: STALE_COVERAGE,         resolves: "coverage reassessed within 30 days"}
+
+  steering:
+    - {id: TASK_steering_session,     detects: "STEERING_DUE | PROJECT_STALLED", resolves: "steering session completed within 14 days"}
+    - {id: TASK_process_escalation,   detects: UNPROCESSED_ESCALATION, resolves: "escalation queue empty"}
+
+  system:
+    - {id: TASK_cleanup_dead_agent,     detects: "AGENT_STUCK | AGENT_DEAD", resolves: "no stuck agents for 5 min"}
+    - {id: TASK_release_orphan_task,    detects: "TASK_ORPHAN | TASK_STUCK",  resolves: "no claimed tasks without active agent"}
+    - {id: TASK_investigate_stuck_agent, detects: AGENT_STUCK,               resolves: "agent unstuck or killed"}
+    - {id: TASK_investigate_health_failure, detects: HEALTH_CHECK_FAILED,    resolves: "health check passes"}
+    - {id: TASK_investigate_queue,       detects: QUEUE_UNHEALTHY,           resolves: "queue size < threshold"}
+
+# ═════════════════════════════════════════════════════════════════════
+# META-OBJECTIVES
+# ═════════════════════════════════════════════════════════════════════
+# High-level objectives that tasks CONTRIBUTES_TO.
+# These are not tasks — they're attractors. Tasks accumulate energy
+# from them via CONTRIBUTES_TO links.
+
+meta_objectives:
+
+  - id: citizen_operational
+    principle: Every citizen exists correctly across L1/L3/L4 with brain, drives, values, keys, partner, and org.
+    energy: always > 0  # organizational attractor — never fully satisfied
+
+  - id: organization_productive
+    principle: Tasks flow through the dependency graph without deadlocks, stalls, or orphans.
+    energy: always > 0
+
+  - id: economy_healthy
+    principle: Settlement cycles run, bonds equalize, sybil attacks are repatriated, UBC distributes.
+    energy: always > 0
+
+  - id: system_healthy
+    principle: Graph integrity holds, physics conserve energy, neurons are clean, queues are healthy.
+    energy: always > 0
+
+# ═════════════════════════════════════════════════════════════════════
+# IMPLEMENTATION STATUS
+# ═════════════════════════════════════════════════════════════════════
+
+not_yet_automated:
+  - brain_missing_drives
+  - brain_missing_values
+  - brain_stale_wm
+  - l3_missing_org
+  - orphan_node
+  - l1_l3_drift
+  - task_timeout

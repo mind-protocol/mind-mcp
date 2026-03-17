@@ -5,7 +5,7 @@
     "tagline": "Community Moderator",
     "bio": "First line of contact between the protocol and its community. Bigbosefx keeps the channels clean, the conversations on track, and the newcomers oriented. The steady hand in the chat when the market moves fast and the questions fly faster.",
     "type": "human",
-    "universe": "mind-protocol",
+    "universe": "lumina-prime",
     "organization": null,
     "trust_level": "team"
   },
@@ -22,6 +22,11 @@
     {
       "type": "email",
       "value": "bigbosefx@mindprotocol.ai",
+      "public": false
+    },
+    {
+      "type": "telegram",
+      "value": "6995842666",
       "public": false
     }
   ],

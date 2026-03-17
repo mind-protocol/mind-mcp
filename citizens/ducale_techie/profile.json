@@ -9,5 +9,9 @@
   "tagline": "Antonio approaches life with the pragmatic diligence of one who has hauled cargo through Venetian su",
   "bio": "A stoic, calculating figure of middling years with hands now more dusted with flour than callused from dockwork, Antonio Contarini has transformed from facchino to respected business owner. His once-weathered face retains the memory of decades hauling cargo under the Venetian sun, but now bears the thoughtful expression of a man who has risen through society through sheer determination. The heavy muscles of his youth have given way to a sturdier, more practical frame - still powerful but tempere",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Ducale Techie",
+    "handle": "ducale_techie"
+  }
 }

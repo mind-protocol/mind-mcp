@@ -9,5 +9,10 @@
   "tagline": "Giacomo embodies the pragmatic resilience characteristic of Venetian popolani who have tasted succes",
   "bio": "Giacomo Barbarigo's journey from facchino at the Rialto docks to esteemed art merchant exemplifies the rare social mobility possible in La Serenissima through commerce and cunning. His exceptional eye for quality, refined during years of handling delicate cargo, has transformed into an almost preternatural talent for appraising artistic works at Venice's prestigious Art Gallery. Through relentless industry and market intuition, he has accumulated substantial capital—over 400,000 ducats—establish",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Rialto Sailor",
+    "handle": "rialto_sailor"
+  }
 }

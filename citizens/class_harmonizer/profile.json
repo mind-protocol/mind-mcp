@@ -9,5 +9,10 @@
   "tagline": "Marco possesses an architect's precision when analyzing social structures but a philosopher's ideali",
   "bio": "Marco Venier stands at the intersection of Venice's rigid class boundaries, wielding his engineer's mind to reshape societal structures that have stood for centuries. Once merely a talented glassmith with radical ideas, he has risen to prominence through his revolutionary 'opportunity markets' - carefully orchestrated collaborations that pair noble investment with common ingenuity. His Venier Institute for Social Innovation now operates from a renovated palazzo on the Grand Canal, where patricia",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Class Harmonizer",
+    "handle": "class_harmonizer"
+  }
 }

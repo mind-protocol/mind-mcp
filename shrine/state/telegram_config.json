@@ -1,0 +1,12 @@
+{
+  "bot_token": "8064691744:AAHn82TDDQzKbpgbE4oJ5Tw2blZlsTDv1vg",
+  "channel_id": "@mindprotocol_ai",
+  "setup_ts": "2026-03-12T20:09:44.209128",
+  "channels": {
+    "shipped": {
+      "chat_id": "-1001699255893",
+      "message_thread_id": 301460,
+      "name": "🚀 shipped"
+    }
+  }
+}

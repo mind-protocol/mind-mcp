@@ -97,7 +97,7 @@ throttling:
   cooldown: 24h
   dedupe: by module_id + missing_doc
 
-implements: runtime/health/checks/chain_completeness.py
+implements: runtime/checks.py::chain_completeness
 
 on_signal:
   degraded:
@@ -155,7 +155,7 @@ throttling:
   max_tasks_per_file: 1
   cooldown: 24h
 
-implements: runtime/health/checks/placeholder_detection.py
+implements: runtime/checks.py::placeholder_detection
 
 on_signal:
   degraded:
@@ -214,7 +214,7 @@ throttling:
   cooldown: 7d
   dedupe: by doc_path
 
-implements: runtime/health/checks/template_drift.py
+implements: runtime/checks.py::template_drift
 
 on_signal:
   degraded:
@@ -264,7 +264,7 @@ throttling:
   cooldown: 1h
   dedupe: by file_path
 
-implements: runtime/health/checks/new_undoc_code.py
+implements: runtime/checks.py::new_undoc_code
 
 on_signal:
   degraded:

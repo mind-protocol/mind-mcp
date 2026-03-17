@@ -54,12 +54,11 @@ _state = {
 
 
 def _check_graph_connection() -> bool:
-    """Test FalkorDB/Neo4j connectivity."""
+    """Test FalkorDB/Neo4j connectivity with an actual query."""
     try:
-        from runtime.physics.graph import GraphOps
-        ops = GraphOps()
-        # Simple query to verify connection
-        return True
+        from runtime.infrastructure.database import get_database_adapter
+        adapter = get_database_adapter()
+        return adapter.health_check()
     except Exception as e:
         logger.warning(f"Graph connection failed: {e}")
         return False
@@ -131,6 +130,11 @@ async def lifespan(app: FastAPI):
             import importlib
             import yaml
 
+            # Scan all universe citizen directories, not just mind-mcp/citizens
+            _universes = [
+                Path(__file__).parent / "citizens",                    # mind-mcp local
+                Path("/home/mind-protocol/lumina-prime/citizens"),     # Lumina Prime
+            ]
             citizens_dir = Path(__file__).parent / "citizens"
             config_path = Path(__file__).parent / ".mind" / "database_config.yaml"
 
@@ -156,6 +160,18 @@ async def lifespan(app: FastAPI):
                 # Pre-load L1 engines into dispatcher for auto-stimulation
                 if results:
                     _dispatcher.bulk_load_citizen_engines(list(results.keys()))
+
+                # Also load Lumina Prime citizens (may not be in mind-mcp/citizens)
+                for universe_dir in _universes:
+                    if universe_dir.is_dir() and universe_dir != citizens_dir:
+                        extra = [
+                            d.name for d in sorted(universe_dir.iterdir())
+                            if d.is_dir() and not d.name.startswith(".")
+                            and d.name not in (results or {})
+                        ]
+                        if extra:
+                            _dispatcher.bulk_load_citizen_engines(extra)
+                            logger.info(f"L1 boot: +{len(extra)} from {universe_dir.name}")
             else:
                 logger.info("L1 boot: citizen_seed disabled in database_config.yaml")
         except Exception as e:

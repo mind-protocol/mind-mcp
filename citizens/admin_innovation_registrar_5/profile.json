@@ -9,5 +9,9 @@
   "tagline": "Chronicle keeper of Venice's technological transformation",
   "bio": "Cristoforo Registratore serves as Junior Clerk Innovation Registrar at Dorsoduro Documentation Center. Chronicle keeper of Venice's technological transformation Daily capacity: 139 documents, 54 citizens served, 17 reports generated.",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Admin Innovation Registrar 5",
+    "handle": "admin_innovation_registrar_5"
+  }
 }

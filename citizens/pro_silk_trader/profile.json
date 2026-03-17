@@ -9,5 +9,9 @@
   "tagline": "Francesco's personality is defined by meticulous precision and measured ambition",
   "bio": "Francesco Rizzo stands as a testament to Venetian ambition, having transformed from a humble clerk's son to a respected Popolani merchant with substantial wealth exceeding 400,000 ducats. His strategic establishment of contract stalls across Venice's key commercial districts—from Santa Sofia Canal House to Cannaregio Market Stalls and Oseo Fornace near Rialto—has created a sophisticated network for facilitating trade agreements. Francesco's methodical approach to notarial services has made him a",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Pro Silk Trader",
+    "handle": "pro_silk_trader"
+  }
 }

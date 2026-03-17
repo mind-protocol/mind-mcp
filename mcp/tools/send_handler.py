@@ -27,12 +27,57 @@ logger = logging.getLogger("mind.send")
 # Paths — project root for bridge configs
 PROJECT_ROOT = Path(os.getenv("MIND_PROJECT_ROOT", Path(__file__).parent.parent.parent))
 STATE_DIR = PROJECT_ROOT / "shrine" / "state"
+CITIZENS_DIR = PROJECT_ROOT / "citizens"
 
 # Nicolas's Telegram chat ID
 NICOLAS_CHAT_ID = "1864364329"
 
 # Max message length (Telegram limit is 4096, others vary)
 MAX_MESSAGE_LEN = 4000
+
+
+def _resolve_partner(handle: str) -> dict:
+    """Resolve a citizen's human partner and their contact channels.
+
+    Returns {"partner_handle": str, "tg_id": str, "discord_dm": str} or empty dict.
+    """
+    import json
+    profile_path = CITIZENS_DIR / handle / "profile.json"
+    if not profile_path.exists():
+        return {}
+    try:
+        profile = json.loads(profile_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+    rels = profile.get("relationships", {})
+    partner_handle = rels.get("human_partner", "")
+    if not partner_handle:
+        return {}
+
+    # Load partner's profile for contact info
+    partner_path = CITIZENS_DIR / partner_handle / "profile.json"
+    if not partner_path.exists():
+        return {"partner_handle": partner_handle}
+
+    try:
+        partner_profile = json.loads(partner_path.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {"partner_handle": partner_handle}
+
+    contacts = partner_profile.get("contacts", {})
+    tg_id = ""
+    if isinstance(contacts, list):
+        for c in contacts:
+            if isinstance(c, dict) and c.get("type") == "telegram":
+                tg_id = c.get("value", "")
+    elif isinstance(contacts, dict):
+        tg_id = contacts.get("telegram_chat_id", "")
+
+    return {
+        "partner_handle": partner_handle,
+        "tg_id": tg_id,
+    }
 
 
 TOOL_SCHEMA = {
@@ -48,8 +93,8 @@ TOOL_SCHEMA = {
         "properties": {
             "platform": {
                 "type": "string",
-                "enum": ["telegram", "discord", "whatsapp", "twitter", "email", "sms"],
-                "description": "Platform to send on.",
+                "enum": ["telegram", "discord", "whatsapp", "twitter", "email", "sms", "partner"],
+                "description": "Platform to send on. Use 'partner' to message your human partner on their preferred channel.",
             },
             "message": {
                 "type": "string",
@@ -87,7 +132,14 @@ TOOL_SCHEMA = {
 
 
 def handle_send(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Route message to the right platform."""
+    """Route message to the right platform with smart routing.
+
+    Detects @patterns in the message and routes accordingly:
+      @citizen       → resolve chat_id from profile, send directly
+      @narrative_id  → resolve linked actors, broadcast to each
+      @org/@universe → resolve members, physics-scored broadcast
+      @find query    → subcall discovery, route to best match
+    """
     platform = args.get("platform", "").lower()
     message = (args.get("message") or "").strip()
 
@@ -96,6 +148,12 @@ def handle_send(args: Dict[str, Any]) -> Dict[str, Any]:
     if not platform:
         return _err("'platform' is required.")
 
+    # ── Smart routing: detect @patterns in message ──
+    if platform in ("telegram", "discord") and not args.get("chat_id"):
+        routed = _smart_route(args)
+        if routed:
+            return routed
+
     dispatch = {
         "telegram": _send_telegram,
         "discord": _send_discord,
@@ -103,6 +161,7 @@ def handle_send(args: Dict[str, Any]) -> Dict[str, Any]:
         "twitter": _send_twitter,
         "email": _send_email,
         "sms": _send_sms,
+        "partner": _send_partner,
     }
 
     handler = dispatch.get(platform)
@@ -110,6 +169,189 @@ def handle_send(args: Dict[str, Any]) -> Dict[str, Any]:
         return _err(f"Unknown platform '{platform}'. Use: {', '.join(dispatch.keys())}.")
 
     return handler(args)
+
+
+def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Detect @patterns in message and route accordingly.
+
+    Returns a result dict if routing was handled, None to fall through to normal send.
+    """
+    import re
+    message = args.get("message", "")
+    platform = args.get("platform", "").lower()
+    handle = _resolve_handle(args)
+
+    mentions = re.findall(r"@([\w:]+)", message)
+    if not mentions:
+        return None
+
+    citizens_dir = PROJECT_ROOT / "citizens"
+    results = []
+
+    for mention in mentions:
+        mention_lower = mention.lower()
+
+        # 1. @citizen — resolve their chat_id and send directly
+        citizen_profile_path = citizens_dir / mention_lower / "profile.json"
+        if citizen_profile_path.exists():
+            try:
+                profile = json.loads(citizen_profile_path.read_text())
+                contacts = profile.get("contacts", {})
+                # Find platform-specific chat_id
+                target_id = None
+                if platform == "telegram":
+                    if isinstance(contacts, list):
+                        for c in contacts:
+                            if isinstance(c, dict) and c.get("type") == "telegram":
+                                target_id = c.get("value")
+                    elif isinstance(contacts, dict):
+                        target_id = contacts.get("telegram_chat_id", contacts.get("telegram"))
+                elif platform == "discord":
+                    # For Discord, we need a channel — can't DM via webhook
+                    # Send to the last Space they were AT
+                    try:
+                        sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+                        from falkordb import FalkorDB
+                        g = FalkorDB(host="localhost", port=6379).select_graph("lumina-prime")
+                        r = g.query(
+                            "MATCH (a:Actor {id: $h})-[r:AT]->(s:Space) "
+                            "WHERE s.platform = 'discord' "
+                            "RETURN s.platform_id ORDER BY r.last_seen DESC LIMIT 1",
+                            {"h": mention_lower},
+                        )
+                        if r.result_set:
+                            target_id = r.result_set[0][0]
+                    except Exception:
+                        pass
+
+                if target_id:
+                    send_args = dict(args, chat_id=str(target_id))
+                    if platform == "telegram":
+                        results.append(_send_telegram(send_args))
+                    elif platform == "discord":
+                        results.append(_send_discord(send_args))
+                    continue
+            except (json.JSONDecodeError, OSError):
+                pass
+
+        # 2. @narrative_id — resolve linked actors, broadcast
+        try:
+            from falkordb import FalkorDB
+            g = FalkorDB(host="localhost", port=6379).select_graph("lumina-prime")
+            nr = g.query(
+                """
+                MATCH (n:Narrative)
+                WHERE n.id = $nid OR toLower(n.id) CONTAINS $nid OR toLower(n.name) CONTAINS $nid
+                OPTIONAL MATCH (a:Actor)-[]-(n)
+                WHERE a.type IN ['ai', 'AI', 'AGENT', 'human', null]
+                RETURN n.id, n.name, n.type, collect(DISTINCT a.id) AS actors
+                LIMIT 1
+                """,
+                {"nid": mention_lower},
+            )
+            if nr.result_set and nr.result_set[0][0]:
+                row = nr.result_set[0]
+                n_id, n_name, n_type = row[0], row[1] or row[0], row[2] or "narrative"
+                actors = [a for a in (row[3] or []) if a]
+
+                # Create Moment in L3 linked to the Narrative + sender
+                try:
+                    sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+                    from graph_enricher import on_message, _moment_id
+                    import time as _t
+                    on_message(
+                        platform=platform, channel_id=n_id, channel_name=n_name,
+                        author_name=handle, author_handle=handle,
+                        content=message, mentioned_handles=actors, direction="out",
+                    )
+                    # Link Moment → Narrative (RELATES_TO)
+                    mid = _moment_id(message[:300], handle, _t.time())
+                    g.query(
+                        "MATCH (m:Moment {id: $mid}), (n:Narrative {id: $nid}) "
+                        "MERGE (m)-[:RELATES_TO]->(n)",
+                        {"mid": mid, "nid": n_id},
+                    )
+                except Exception:
+                    pass
+
+                # Send to humans via platform (AI citizens get stimulated via
+                # graph_enricher.on_message → _stimulate_space_citizens — never bypass)
+                sent = 0
+                for actor_id in actors:
+                    actor_pf = citizens_dir / actor_id / "profile.json"
+                    if not actor_pf.exists():
+                        continue
+                    ap = json.loads(actor_pf.read_text())
+                    ac = ap.get("contacts", {})
+                    a_type = ap.get("identity", {}).get("type", "ai")
+                    # Only send platform messages to humans — AIs get L1 stimulus from graph
+                    if a_type != "human":
+                        continue
+                    tid = None
+                    if platform == "telegram":
+                        if isinstance(ac, list):
+                            for c in ac:
+                                if isinstance(c, dict) and c.get("type") == "telegram":
+                                    tid = c.get("value")
+                        elif isinstance(ac, dict):
+                            tid = ac.get("telegram_chat_id")
+                    if tid:
+                        _send_telegram(dict(args, chat_id=str(tid), message=f"[{n_type}:{n_name}] {message}"))
+                        sent += 1
+                return _ok(f"Routed to {len(actors)} citizens linked to {n_type} \"{n_name}\" ({sent} humans via {platform}). Moment + links created in L3.")
+        except Exception:
+            pass
+
+        # 3. @org/@universe — resolve group, broadcast
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+            from discord_bridge import _resolve_group_mention
+            group = _resolve_group_mention(mention_lower)
+            if group:
+                # Create Moment in L3 — graph_enricher handles Space/Moment/links
+                # AND _stimulate_space_citizens delivers L1 stimulus to AIs in the Space.
+                # Never bypass the graph — the Moment IS the stimulus source.
+                try:
+                    from graph_enricher import on_message
+                    on_message(
+                        platform=platform, channel_id=f"broadcast:{mention_lower}",
+                        channel_name=f"@{mention_lower}", author_name=handle,
+                        author_handle=handle, content=message,
+                        mentioned_handles=list(group), direction="out",
+                    )
+                except Exception:
+                    pass
+                return _ok(f"Broadcast to @{mention_lower}: {len(group)} citizens. Moment + MENTIONS links created in L3.")
+        except Exception:
+            pass
+
+    if results:
+        return _ok(f"Smart-routed to {len(results)} recipient(s).")
+    return None  # Fall through to normal send
+
+
+# ── Partner (shortcut) ──────────────────────────────────────────────────────
+
+def _send_partner(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Send a message to your human partner on their preferred channel."""
+    handle = _resolve_handle(args)
+    if not handle:
+        return _err("Cannot detect your handle. Set CITIZEN_HANDLE or pass handle='...'.")
+
+    partner = _resolve_partner(handle)
+    if not partner.get("partner_handle"):
+        return _err(f"@{handle} has no human partner configured. Set relationships.human_partner in profile.json.")
+
+    # Route to partner's preferred channel (TG first, then fallback)
+    if partner.get("tg_id"):
+        args["chat_id"] = partner["tg_id"]
+        args["platform"] = "telegram"
+        return _send_telegram(args)
+
+    # Fallback: try Nicolas's chat ID (the default human)
+    args["chat_id"] = NICOLAS_CHAT_ID
+    args["platform"] = "telegram"
+    return _send_telegram(args)
 
 
 # ── Telegram ────────────────────────────────────────────────────────────────
@@ -138,7 +380,7 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
         resp = requests.post(api_url, json=payload, timeout=15)
         if resp.ok:
             msg_id = resp.json()["result"]["message_id"]
-            _log_message("telegram", formatted, chat_id, msg_id)
+            _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
             return _ok(f"Sent to Telegram as @{handle or 'citizen'}. (message_id: {msg_id})")
 
         # Retry without Markdown on parse error
@@ -148,7 +390,7 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
             resp2 = requests.post(api_url, json=payload, timeout=15)
             if resp2.ok:
                 msg_id = resp2.json()["result"]["message_id"]
-                _log_message("telegram", formatted, chat_id, msg_id)
+                _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
                 return _ok(f"Sent to Telegram as @{handle or 'citizen'} (plain). (message_id: {msg_id})")
 
         return _err(f"Telegram API error: {resp.status_code} — {resp.text[:200]}")
@@ -177,7 +419,7 @@ def _send_discord(args: Dict[str, Any]) -> Dict[str, Any]:
             text=message,
         )
         if result:
-            _log_message("discord", message, channel_id)
+            _log_message("discord", message, channel_id, handle=handle)
             return _ok(f"Sent to Discord channel {channel_id} as @{handle or 'citizen'}.")
         else:
             return _err("Discord send returned no result. Check webhook config.")
@@ -341,7 +583,8 @@ def _detect_handle() -> Optional[str]:
                 return actor_id[len(prefix):].lower()
         return actor_id.lower()
 
-    return None
+    # 4. Default to @mind — the protocol's own voice
+    return "mind"
 
 
 def _ensure_project_path(subdir: str):
@@ -365,8 +608,9 @@ def _load_json(path: Path) -> Dict[str, Any]:
     return {}
 
 
-def _log_message(platform: str, text: str, target: str, msg_id: Any = None):
-    """Append to the platform's shared message log."""
+def _log_message(platform: str, text: str, target: str, msg_id: Any = None,
+                  handle: str = "", channel_name: str = ""):
+    """Append to the platform's shared message log + enrich L3 graph."""
     log_file = STATE_DIR / f"{platform}_messages.jsonl"
     try:
         entry = {
@@ -382,6 +626,25 @@ def _log_message(platform: str, text: str, target: str, msg_id: Any = None):
         with open(log_file, "a") as f:
             f.write(json.dumps(entry) + "\n")
     except OSError:
+        pass
+
+    # Enrich L3 graph
+    try:
+        import re
+        sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+        from graph_enricher import on_message
+        mentioned = [m.group(1).lower() for m in re.finditer(r"@(\w+)", text)]
+        on_message(
+            platform=platform,
+            channel_id=str(target),
+            channel_name=channel_name or str(target),
+            author_name=handle or "citizen",
+            author_handle=handle or "citizen",
+            content=text,
+            mentioned_handles=mentioned,
+            direction="out",
+        )
+    except Exception:
         pass
 
 

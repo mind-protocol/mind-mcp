@@ -13,8 +13,11 @@ DOCS: docs/schema/GRAMMAR_Link_Synthesis.md
 """
 
 from typing import List, Dict, Any, Optional, Tuple
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+import json
 import re
+import time
+from pathlib import Path
 
 
 # =============================================================================
@@ -651,3 +654,353 @@ def synthesize_link_full(link: Dict[str, Any], from_node: Dict[str, Any] = None,
     verb_synthesis = synthesize_from_dict(link)
 
     return f"{from_name} {verb_synthesis} {to_name}"
+
+
+# =============================================================================
+# GRAMMAR v2 — Full 6-stage pipeline (ALGORITHM_Grammar.md)
+# =============================================================================
+
+# Plutchik emotion → (dimensions that drive intensity, modifier tiers)
+_PLUTCHIK_EMOTIONS = {
+    "fear":         {"dims": ("energy", "valence"),    "sign": (1, -1), "tiers": ("with apprehension", "with fear", "with terror")},
+    "anger":        {"dims": ("friction", "energy"),   "sign": (1,  1), "tiers": ("with annoyance", "with hostility", "with rage")},
+    "trust":        {"dims": ("trust", "valence"),     "sign": (1,  1), "tiers": ("with acceptance", "with confidence", "with admiration")},
+    "disgust":      {"dims": ("aversion", "valence"),  "sign": (1, -1), "tiers": ("with distaste", "with distrust", "with disgust")},
+    "joy":          {"dims": ("affinity", "valence"),  "sign": (1,  1), "tiers": ("with serenity", "with satisfaction", "with euphoria")},
+    "sadness":      {"dims": ("energy", "valence"),    "sign": (-1,-1), "tiers": ("with pensiveness", "with sadness", "with despair")},
+    "surprise":     {"dims": ("surprise",),            "sign": (1,),    "tiers": ("with distraction", "with surprise", "with amazement")},
+    "anticipation": {"dims": ("energy", "valence"),    "sign": (1,  1), "tiers": ("with interest", "with anticipation", "with vigilance")},
+}
+
+# Contextual verb overrides: (source_type, target_type) → [(condition_fn, verb)]
+_CONTEXTUAL_OVERRIDES: Dict[Tuple[str, str], list] = {
+    ("actor", "space"): [
+        (lambda d: d.get("hierarchy", 0) < -0.5, "created"),
+        (lambda d: d.get("permanence", 0) > 0.8, "inhabits"),
+        (lambda d: d.get("recency", 999999) < 3600, "visits"),
+        (lambda d: d.get("trust", 0) > 0.7, "administers"),
+        (lambda d: d.get("energy", 1) < 0.5, "left"),
+    ],
+    ("actor", "actor"): [
+        (lambda d: d.get("trust", 0) > 0.8 and d.get("affinity", 0) > 0.7, "trusted collaborator of"),
+        (lambda d: d.get("hierarchy", 0) > 0.5, "mentors"),
+        (lambda d: d.get("friction", 0) > 0.7, "in conflict with"),
+        (lambda d: d.get("hierarchy", 0) < -0.5 and d.get("trust", 0) > 0.5, "employs"),
+    ],
+    ("space", "space"): [
+        (lambda d: d.get("hierarchy", 0) < -0.5, "contains"),
+        (lambda d: d.get("hierarchy", 0) > 0.5, "is nested in"),
+        (lambda d: d.get("friction", 0) > 0.5, "borders"),
+    ],
+    ("thing", "thing"): [
+        (lambda d: d.get("hierarchy", 0) < -0.5, "is a component of"),
+        (lambda d: d.get("affinity", 0) > 0.7, "accompanies"),
+        (lambda d: d.get("friction", 0) > 0.5, "competes with"),
+    ],
+}
+
+
+def _clamp(value: float, lo: float, hi: float) -> float:
+    return max(lo, min(value, hi))
+
+
+def select_plutchik_modifier(
+    energy: float = 0.0,
+    valence: float = 0.0,
+    friction: float = 0.0,
+    trust: float = 0.0,
+    affinity: float = 0.0,
+    aversion: float = 0.0,
+    surprise: float = 0.0,
+) -> Optional[str]:
+    """Select the single strongest Plutchik emotion modifier.
+
+    Spec: ALGORITHM_Grammar.md § Step 5 (L1 context).
+    Maps 7 dimensions to 8 Plutchik emotions, returns the modifier
+    string for the highest-scoring emotion.
+    """
+    dim_vals = {
+        "energy": energy, "valence": valence, "friction": friction,
+        "trust": trust, "affinity": affinity, "aversion": aversion,
+        "surprise": surprise,
+    }
+
+    best_emotion = None
+    best_score = 0.0
+
+    for emo, spec in _PLUTCHIK_EMOTIONS.items():
+        score = 0.0
+        for i, dim_name in enumerate(spec["dims"]):
+            raw = dim_vals.get(dim_name, 0.0)
+            sign = spec["sign"][i]
+            score += raw * sign
+        score = abs(score) / len(spec["dims"])
+
+        if score > best_score:
+            best_score = score
+            best_emotion = emo
+
+    if best_emotion is None or best_score < 0.1:
+        return None
+
+    tiers = _PLUTCHIK_EMOTIONS[best_emotion]["tiers"]
+    if best_score > 0.7:
+        return tiers[2]  # high
+    elif best_score > 0.3:
+        return tiers[1]  # medium
+    else:
+        return tiers[0]  # low
+
+
+def select_structural_modifier(
+    friction: float = 0.0,
+    affinity: float = 0.0,
+    valence: float = 0.0,
+) -> List[str]:
+    """Produce L3 post-verb modifiers from structural dimensions.
+
+    Spec: ALGORITHM_Grammar.md § Step 5 (L3 context).
+    Multiple modifiers can co-occur.
+    """
+    modifiers = []
+
+    if friction > 0.7:
+        modifiers.append("(high friction)")
+    elif friction > 0.3:
+        modifiers.append("(some friction)")
+
+    if affinity > 0.7:
+        modifiers.append("(strong affinity)")
+    elif affinity < -0.7:
+        modifiers.append("(structural tension)")
+    elif -0.3 <= affinity <= 0.3 and abs(affinity) > 0.01:
+        modifiers.append("(ambiguous)")
+
+    if valence > 0.5:
+        modifiers.append("(constructive)")
+    elif valence < -0.5:
+        modifiers.append("(destructive)")
+
+    return modifiers
+
+
+def lookup_contextual_verb(
+    source_type: str,
+    target_type: str,
+    dimensions: Dict[str, float],
+) -> Optional[str]:
+    """Find domain-specific verb override based on node type pair.
+
+    Spec: ALGORITHM_Grammar.md § Step 6.
+    Evaluates conditions in priority order; first match wins.
+    Returns override verb or None.
+    """
+    key = (source_type.lower(), target_type.lower())
+    overrides = _CONTEXTUAL_OVERRIDES.get(key, [])
+
+    for condition_fn, verb in overrides:
+        if condition_fn(dimensions):
+            return verb
+
+    return None
+
+
+def load_seed_dictionary(
+    identity_keys: List[str],
+    language: str = "en",
+) -> Dict[str, str]:
+    """Load native-language translations for citizen identity keys.
+
+    Spec: ALGORITHM_Grammar.md § SeedDictionary.
+    Looks for seed_dictionary.json in .mind/ or falls back to
+    identity key text extraction.
+    """
+    result: Dict[str, str] = {}
+
+    # Try loading from seed dictionary file
+    seed_paths = [
+        Path(".mind") / "seed_dictionary.json",
+        Path(__file__).parent.parent.parent / ".mind" / "seed_dictionary.json",
+    ]
+
+    seed_data: Dict[str, Dict[str, str]] = {}
+    for path in seed_paths:
+        if path.exists():
+            try:
+                with open(path) as f:
+                    raw = json.load(f)
+                seed_data = raw.get("lookup", raw)
+                break
+            except (json.JSONDecodeError, OSError):
+                continue
+
+    for key in identity_keys:
+        if key in seed_data and language in seed_data[key]:
+            result[key] = seed_data[key][language]
+        else:
+            # Fallback: extract readable text from key
+            # "desire:grow_personally" → "grow personally"
+            text = key.split(":")[-1] if ":" in key else key
+            result[key] = text.replace("_", " ")
+
+    return result
+
+
+def synthesize_link_phrase(
+    link: Dict[str, Any],
+    context: str = "L3",
+    source_type: Optional[str] = None,
+    target_type: Optional[str] = None,
+    language: str = "en",
+) -> str:
+    """Transform link dimensions into a natural-language verb phrase.
+
+    Implements the full 6-stage pipeline from ALGORITHM_Grammar.md:
+    1. Dimension extraction & clamping
+    2. Temporal modifier selection
+    3. Pre-verb modifier assembly
+    4. Base verb lookup (hierarchy × polarity)
+    5. Post-verb modifier selection (L1: Plutchik | L3: structural)
+    6. Contextual semantic override
+
+    Args:
+        link: Dict with physics dimensions (hierarchy, polarity, permanence,
+              energy, surprise, recency, trust, friction, affinity, aversion,
+              valence, weight, moment_status, link_age)
+        context: "L1" for subjective/emotional or "L3" for structural
+        source_type: Source node type (actor, space, thing, narrative, moment)
+        target_type: Target node type
+        language: "en" or "fr" (currently en only)
+
+    Returns:
+        Assembled verb phrase string
+    """
+    # ── Step 1: Dimension extraction & clamping ──
+    polarity = link.get("polarity", [0.5, 0.5])
+    if isinstance(polarity, (list, tuple)) and len(polarity) >= 2:
+        pol_ab, pol_ba = float(polarity[0]), float(polarity[1])
+    else:
+        pol_ab = float(link.get("polarity_ab", 0.5))
+        pol_ba = float(link.get("polarity_ba", 0.5))
+
+    hierarchy = _clamp(float(link.get("hierarchy", 0.0)), -1.0, 1.0)
+    permanence = _clamp(float(link.get("permanence", 0.5)), 0.0, 1.0)
+    energy = _clamp(float(link.get("energy", 1.0)), 0.0, 10.0)
+    surprise = _clamp(float(link.get("surprise", 0.0)), -1.0, 1.0)
+    recency = float(link.get("recency", 999999))
+    link_age = float(link.get("link_age", 86400))
+    moment_status = link.get("moment_status", "")
+    trust = float(link.get("trust", 0.0))
+    friction = float(link.get("friction", 0.0))
+    affinity = float(link.get("affinity", 0.0))
+    aversion = float(link.get("aversion", 0.0))
+    valence = float(link.get("valence", 0.0))
+
+    # ── Step 2: Temporal modifiers ──
+    temporal_parts: List[str] = []
+
+    if recency < 60:
+        temporal_parts.append("just now")
+    elif recency < 3600:
+        temporal_parts.append("recently")
+    elif recency < 86400:
+        temporal_parts.append("today")
+    elif recency < 604800:
+        temporal_parts.append("this week")
+    elif recency >= 604800 and recency < 999999:
+        temporal_parts.append("long ago")
+
+    if link_age < 3600:
+        temporal_parts.append("newly")
+    elif link_age < 86400:
+        temporal_parts.append("freshly")
+    elif link_age >= 2592000 and link_age < 31536000:
+        temporal_parts.append("anciently")
+    elif link_age >= 31536000:
+        temporal_parts.append("timelessly")
+
+    status_map = {"BRIEF": "briefly", "ONGOING": "ongoing", "PENDING": "pending", "WELL_TRODDEN": "well-trodden"}
+    if moment_status in status_map:
+        temporal_parts.append(status_map[moment_status])
+
+    # ── Step 3: Pre-verb modifiers ──
+    pre_verb: List[str] = []
+
+    if permanence >= 0.8:
+        pre_verb.append("definitely")
+    elif permanence >= 0.6:
+        pre_verb.append("clearly")
+    elif permanence < 0.2:
+        pre_verb.append("maybe")
+    elif permanence < 0.4:
+        pre_verb.append("probably")
+
+    if surprise > 0.7:
+        pre_verb.append("suddenly")
+    elif surprise > 0.3:
+        pre_verb.append("unexpectedly")
+    elif surprise < -0.7:
+        pre_verb.append("inevitably")
+    elif surprise < -0.3:
+        pre_verb.append("as expected")
+
+    if energy > 8.0:
+        pre_verb.append("intensely")
+    elif energy > 5.0:
+        pre_verb.append("actively")
+    elif energy <= 0.5:
+        pre_verb.append("barely")
+    elif energy <= 2.0:
+        pre_verb.append("weakly")
+
+    # ── Step 4: Base verb ──
+    base_verb = get_base_verb_key(hierarchy, pol_ab, pol_ba)
+
+    # Special overrides
+    if energy > 8.0 and abs(hierarchy) <= 0.5:
+        base_verb = "reinforces"
+    elif pol_ab < 0.1 and pol_ba < 0.1:
+        base_verb = "absorbs"
+
+    verb_str = VERBS.get(base_verb, base_verb.replace("_", " "))
+
+    # Apply intensifier
+    intensity = compute_intensity(permanence, pol_ab, pol_ba)
+    verb_str = apply_intensifier(base_verb, intensity)
+
+    # ── Step 5: Post-verb modifiers ──
+    post_verb: List[str] = []
+
+    if context.upper() == "L1":
+        plutchik = select_plutchik_modifier(
+            energy=energy, valence=valence, friction=friction,
+            trust=trust, affinity=affinity, aversion=aversion,
+            surprise=surprise,
+        )
+        if plutchik:
+            post_verb.append(plutchik)
+    else:
+        post_verb.extend(select_structural_modifier(friction, affinity, valence))
+
+    # ── Step 6: Contextual semantic override ──
+    if source_type and target_type:
+        dims = {
+            "hierarchy": hierarchy, "permanence": permanence,
+            "energy": energy, "recency": recency, "trust": trust,
+            "friction": friction, "affinity": affinity,
+        }
+        override = lookup_contextual_verb(source_type, target_type, dims)
+        if override:
+            verb_str = override
+
+    # ── Assemble ──
+    parts: List[str] = []
+    if temporal_parts:
+        parts.append(", ".join(temporal_parts[:2]))
+    if pre_verb:
+        parts.append(" ".join(pre_verb[:2]))
+    parts.append(verb_str)
+    if post_verb:
+        parts.append(" ".join(post_verb))
+
+    return " ".join(parts)

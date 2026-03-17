@@ -24,6 +24,8 @@ from runtime.physics.phases.narrative_backflow import phase_narrative_backflow
 from runtime.physics.phases.link_cooling import phase_link_cooling
 from runtime.physics.phases.completion import phase_completion
 from runtime.physics.phases.rejection import phase_rejection
+from runtime.physics.phases.task_urgency import phase_task_urgency
+from runtime.physics.phases.task_decay import phase_task_decay
 
 logger = logging.getLogger(__name__)
 
@@ -91,6 +93,10 @@ class GraphTickV1_2:
                 combined_result.rejections.extend(res.rejections)
                 combined_result.hot_links = res.hot_links
                 combined_result.cold_links = res.cold_links
+                combined_result.tasks_urgency_updated = max(combined_result.tasks_urgency_updated, res.tasks_urgency_updated)
+                combined_result.tasks_urgency_delta += res.tasks_urgency_delta
+                combined_result.tasks_decayed = max(combined_result.tasks_decayed, res.tasks_decayed)
+                combined_result.tasks_energy_decayed += res.tasks_energy_decayed
             
             # Add legacy fields for Orchestrator compatibility
             setattr(combined_result, 'energy_total', combined_result.energy_generated) # Simplified
@@ -164,6 +170,16 @@ class GraphTickV1_2:
         )
         result.rejections = rejections
         result.moments_rejected = len(rejections)
+
+        # Phase 9a: Task Urgency (L2 organizational pressure)
+        result.tasks_urgency_delta, result.tasks_urgency_updated = phase_task_urgency(
+            self.read, self.write
+        )
+
+        # Phase 9b: Task Decay (completed tasks fade)
+        result.tasks_energy_decayed, result.tasks_decayed = phase_task_decay(
+            self.read, self.write
+        )
 
         # Add legacy fields for single tick too
         setattr(result, 'energy_total', result.energy_generated)

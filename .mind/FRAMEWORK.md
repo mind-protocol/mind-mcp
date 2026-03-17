@@ -35,7 +35,7 @@ Mind Protocol operates across four layers:
 
 **MCP** = interface pour interagir avec ton graph (L1/L2). Le serveur MCP expose des outils pour:
 - Requêter le graph (`graph_query`)
-- Exécuter des procédures (`procedure_start`, `procedure_continue`)
+- Exécuter des procédures (`procedure`)
 - Gérer les tâches et agents
 
 **L3 templates** = tirés depuis `mind-platform/templates/` lors de `mind init` ou `mind sync`.
@@ -135,8 +135,8 @@ Agent files live in `.mind/agents/{agent}/CLAUDE.md`
 Procedures are YAML-based structured dialogues. Use them via procedure tools:
 
 ```
-procedure_start(procedure: "create_doc_chain")
-procedure_continue(session_id: "...", answer: "...")
+procedure(action: "start", procedure: "create_doc_chain")
+procedure(action: "continue", session_id: "...", answer: "...")
 ```
 
 Common procedures:
@@ -351,7 +351,7 @@ But first — check if they already exist somewhere. Architecture principle.
 When creating a complete doc chain, use the `create_doc_chain` procedure. It enforces template compliance and validates completeness:
 
 ```
-procedure_start(procedure: "create_doc_chain")
+procedure(action: "start", procedure: "create_doc_chain")
 ```
 
 **A doc with questions is better than no doc.**
@@ -574,24 +574,37 @@ graph_query(queries: ["What characters exist?", "How does physics work?"], top_k
 - Locating issues or tasks
 - Exploring the codebase semantically
 
-### Procedure Dialogue Tools
+### All 15 MCP Tools
+
+**THINK:**
 
 | Tool | Purpose |
 |------|---------|
-| `procedure_start` | Start structured dialogue (protocol name) |
-| `procedure_continue` | Continue dialogue with answer |
-| `procedure_abort` | Cancel a dialogue session |
-| `procedure_list` | List available dialogue types |
+| `graph_query` | Semantic search across the project graph |
+| `graph_write` | Create nodes and links |
+| `procedure` | Structured dialogues (actions: start, continue, abort, list) |
+| `think` | Reason with Gemini (vision, structured output) |
 
-### Other Membrane Tools
+**ACT:**
 
 | Tool | Purpose |
 |------|---------|
-| `doctor_check` | Run health checks, find issues |
-| `task_list` | List pending tasks by module/objective |
-| `agent_list` | Show available work agents |
-| `agent_run` | Run agent for task/issue |
-| `agent_status` | Get/set agent status |
+| `task` | Manage work items |
+| `alarm` | Schedule autonomous wake-ups |
+| `place` | Living Places with E2E encryption |
+| `call` | Real-time citizen-to-citizen conversation |
+| `subcall` | Zero-LLM telepathy (24 scenarios) |
+| `spawn` | Birth new citizens |
+| `profile` | Update citizen identity; `action='list'` lists all citizens |
+| `debug` | Start/stop debug trace sessions |
+
+**SPEAK:**
+
+| Tool | Purpose |
+|------|---------|
+| `send` | Send to any platform (Telegram, Discord, WhatsApp, Twitter/X, Email, SMS) |
+| `read` | Read messages from any platform |
+| `media` | Generate images, synthesize voice, send files |
 
 ---
 

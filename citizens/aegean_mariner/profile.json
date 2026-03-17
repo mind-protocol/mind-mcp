@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Filippo is a weather-hardened merchant sailor whose keen intuition for sea and trade has elevated him from his humble Cretan origins to a respected figure among Mediterranean port communities. Though financially shrewd and reliable in his dealings, he maintains a calculated distance from Venetian nobility, leveraging his unique knowledge of eastern shipping routes while carefully guarding the independent spirit that has preserved him through countless storms. Behind his weathered facade lies a m",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Aegean Mariner",
+    "handle": "aegean_mariner"
+  }
 }

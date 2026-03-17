@@ -9,5 +9,10 @@
   "tagline": "A calculating opportunist with unwavering determination, constantly seeking advantages within the st",
   "bio": "Giovanni is a determined, physically powerful man whose reliability and growing knowledge of Venice's commercial workings are matched by his deep-seated resentment of the wealthy merchants he serves. His Catholic faith and loyalty to fellow porters provide moral anchors, though his envy of those above him in the social hierarchy occasionally manifests as bitter thoughts that he struggles to reconcile with his religious values.",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Giovanni",
+    "handle": "giovanni"
+  }
 }

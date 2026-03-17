@@ -571,3 +571,109 @@ def _felt_intensity(intensity: float) -> str:
     elif intensity > 0.2:
         return "mildly"
     return "barely"
+
+
+# ── Exported serialization helpers ─────────────────────────────────────────
+
+
+def serialize_link(
+    link,
+    source_node: Optional[Node] = None,
+    target_node: Optional[Node] = None,
+) -> str:
+    """Serialize a single link as first-person natural language.
+
+    Produces a sentence like:
+      "Connected to: <target content> — and I deeply trust that"
+
+    Used by external callers who need individual link serialization
+    rather than the full WM prompt.
+
+    Args:
+        link: A Link object (from models.py) or dict-like with link_type,
+              source_id, target_id, trust, affinity, friction, weight.
+        source_node: Optional source Node for richer context.
+        target_node: Optional target Node for content.
+
+    Returns:
+        Natural language string describing the link relationship.
+    """
+    # Resolve link type → verb
+    link_type = getattr(link, "link_type", None)
+    if link_type is not None:
+        verb_variants = _LINK_VERB_VARIANTS.get(link_type, ["connected to"])
+    else:
+        verb_variants = ["connected to"]
+
+    # Pick deterministic variant from target content
+    target_content = ""
+    if target_node:
+        target_content = getattr(target_node, "content", "") or getattr(target_node, "id", "")
+    if not target_content:
+        target_content = getattr(link, "target_id", "something")
+
+    verb = _pick_variant(verb_variants, target_content[:30])
+
+    # Build qualifier from link metrics
+    link_quals = _qualify_link(link)
+
+    return f"{verb.capitalize()}: {target_content}{link_quals}"
+
+
+def build_context(
+    state: CitizenCognitiveState,
+    orientation: Optional[str] = None,
+    previous_wm_ids: Optional[list[str]] = None,
+    previous_emotions: Optional[dict[str, float]] = None,
+) -> dict:
+    """Build a structured context dict from cognitive state.
+
+    Unlike serialize_wm_to_prompt() which returns a single string,
+    this returns a dict with separate sections that callers can
+    assemble into their own prompt format.
+
+    Args:
+        state: The full citizen cognitive state.
+        orientation: Current orientation label (explore, create, etc.)
+        previous_wm_ids: WM node IDs from previous tick (for shift detection)
+        previous_emotions: Emotion values from previous tick
+
+    Returns:
+        Dict with keys: orientation, shifts, emotions, focus, peripheral,
+        drives, system. Each value is a string (may be empty).
+    """
+    wm_ids = set(state.wm.node_ids)
+    all_by_salience = sorted(
+        state.nodes.values(), key=lambda n: n.salience, reverse=True,
+    )
+
+    ctx: dict[str, str] = {}
+
+    # Orientation
+    ctx["orientation"] = _ORIENTATION_FELT.get(orientation, "") if orientation else ""
+
+    # Shifts
+    ctx["shifts"] = _narrate_shifts(state, wm_ids, previous_wm_ids, previous_emotions)
+
+    # Emotions
+    ctx["emotions"] = _narrate_emotions(state, all_by_salience)
+
+    # Focus (WM nodes)
+    ctx["focus"] = _narrate_focus(state, wm_ids, 2500)
+
+    # Peripheral
+    peripheral = [n for n in all_by_salience if n.id not in wm_ids and n.energy > 0.03]
+    ctx["peripheral"] = _narrate_peripheral(state, peripheral, 1000) if peripheral else ""
+
+    # Drives
+    ctx["drives"] = _narrate_drives(state)
+
+    # System line
+    node_count = len(state.nodes)
+    memory_count = sum(1 for n in state.nodes.values() if n.node_type == NodeType.MEMORY)
+    ctx["system"] = (
+        f"_[{node_count} nodes in graph, {len(wm_ids)} in focus, "
+        f"{memory_count} memories, tick #{state.tick_count}]_"
+    )
+
+    return ctx

@@ -69,16 +69,18 @@ class AngelOrchestrator:
             # Change to angel directory
             os.chdir(angel_config["path"])
             
-            # Special handling for infiniband scripts
-            if angel_config["command"].endswith(".sh"):
-                cmd = f"bash {angel_config['command']}"
+            # Build command as a list — never use shell=True with string commands
+            raw_cmd = angel_config["command"]
+            if raw_cmd.endswith(".sh"):
+                cmd_list = ["bash", raw_cmd]
             else:
-                cmd = angel_config["command"]
-                
-            # Start the process
+                # Split into args safely (handles quoted strings)
+                import shlex
+                cmd_list = shlex.split(raw_cmd)
+
+            # Start the process — no shell=True
             proc = subprocess.Popen(
-                cmd,
-                shell=True,
+                cmd_list,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )

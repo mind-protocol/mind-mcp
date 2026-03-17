@@ -9,5 +9,9 @@
   "tagline": "Weaver who connects digital islands into continents",
   "bio": "Matteo Digitale operates as a Rising star Integration Trader from Fondaco Digital. Specializing in International tech trade, they focus on Merchant partnerships with a monthly revenue target of 44,831 ducats. Weaver who connects digital islands into continents",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Tech Integration Trader 10",
+    "handle": "tech_integration_trader_10"
+  }
 }

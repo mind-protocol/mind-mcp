@@ -7,6 +7,7 @@ This layer manages:
 - Moment perception routing between citizens
 - Bilateral trust and economic settlement
 - Anti-sybil protection
+- Task physics (urgency, cascades, crystallization, learning)
 
 Architecture:
   L1 (Brain)  →  L2 (Organization)  →  L3 (Universe)
@@ -20,3 +21,13 @@ This module provides the operational code that runs at the
 organizational scope — between individual brains and the
 shared universe.
 """
+
+from runtime.organization.task_physics import (
+    compute_urgency,
+    cascade_completion,
+    crystallize,
+    learn_from_outcome,
+    apply_task_decay,
+    validate_blocks_link,
+    create_task,
+)

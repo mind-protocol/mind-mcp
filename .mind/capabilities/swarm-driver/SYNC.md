@@ -55,15 +55,22 @@ Expected files:
 
 | Component | Status |
 |-----------|--------|
-| Doc chain | ✅ complete |
+| Doc chain | ✅ CANONICAL (all 8 docs) |
 | Runtime | pending |
 | Integration | pending |
+
+---
+
+## Recent Changes
+
+- **2026-03-15** — @debug42: BEHAVIORS.md, VALIDATION.md, IMPLEMENTATION.md written and marked CANONICAL. Doc chain complete. 11 behaviors (B1-B11), 8 invariants (V1-V8), full file structure, runtime code, data flow diagram.
 
 ---
 
 ## Next Steps
 
 1. Create `.mind/swarm/logs/` directory
-2. Implement `runtime/driver.py`
-3. Register with cron scheduler
-4. Test with sample logs
+2. Implement `runtime/driver.py` (code in IMPLEMENTATION.md is reference — wire to actual graph)
+3. Create task templates in `tasks/` (4 files)
+4. Register with cron scheduler
+5. Test with sample logs

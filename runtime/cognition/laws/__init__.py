@@ -11,6 +11,13 @@ from .law_01_energy_injection import (
     reset_self_stimulus_state,
 )
 
+from .law_17_impulse import (
+    ImpulseResult,
+    accumulate_impulses,
+    activate_desires,
+    update_impulse,
+)
+
 from .law_18_relational_valence import (
     RelationalValenceResult,
     update_link_valence,

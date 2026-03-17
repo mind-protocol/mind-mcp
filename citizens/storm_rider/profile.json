@@ -9,5 +9,9 @@
   "tagline": "Fiercely independent and pragmatic, valuing honest labor while harboring an ambitious streak that dr",
   "bio": "Vittoria Zanatta is a determined and industrious laborer from the Facchini class who has risen to unexpected prosperity through her work at the public docks of Venice. Born to a family of porters who have served the bustling port for generations, Vittoria inherited her father's robust physique and her mother's sharp mind for spotting opportunity. Despite her humble origins, she has amassed considerable wealth (over 250,000 ducats) through tireless work, shrewd dealings with merchants, and a repu",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Storm Rider",
+    "handle": "storm_rider"
+  }
 }

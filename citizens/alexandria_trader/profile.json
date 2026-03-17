@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Giacomo has transformed from a displaced merchant sailor into a shrewd entrepreneur who combines his Mediterranean trading expertise with Venetian commercial acumen. Now working in a bakery while building his warehouse empire, he displays the patient pragmatism of someone who understands that true wealth in Venice comes from diversified investments and strategic positioning rather than just maritime ventures. His resentment toward Ottoman expansion has evolved into a calculating determination to",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Alexandria Trader",
+    "handle": "alexandria_trader"
+  }
 }

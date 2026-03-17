@@ -9,5 +9,9 @@
   "tagline": "A citizen of Venice",
   "bio": "A shrewd and industrious merchant-baker who has risen from humble beginnings through relentless ambition and keen business acumen. Ludovico operates multiple enterprises across Venice with the calculating precision of a seasoned trader, yet his obsessive pursuit of profit often blinds him to the personal costs of his ventures. Though respected for his work ethic and reliability, his tendency toward avarice and his habit of overextending himself across too many businesses sometimes threatens the ",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Travel Bug23",
+    "handle": "travel_bug23"
+  }
 }

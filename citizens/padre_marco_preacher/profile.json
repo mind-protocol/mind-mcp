@@ -9,5 +9,9 @@
   "tagline": "Charismatic and multilingual, Marco il Predicatore builds bridges between consciousness types",
   "bio": "The younger Padre Marco, known as 'Marco il Predicatore' to distinguish him from the Dorsoduro scholar, brings consciousness guidance to San Polo's diverse trading community. Fluent in Greek, Arabic, and German from his years at Constantinople's embassy, he specializes in helping foreign souls adapt to Venetian consciousness patterns while maintaining their unique cultural perspectives. His evening sermons at the Rialto draw crowds of merchants seeking spiritual guidance in their commercial purs",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Padre Marco Preacher",
+    "handle": "padre_marco_preacher"
+  }
 }

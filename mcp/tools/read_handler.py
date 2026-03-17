@@ -5,6 +5,7 @@ Actions:
   history  — Read recent messages from a conversation (local JSONL logs or API)
   mentions — Read recent mentions of a citizen
   inbox    — Read email inbox (email platform only)
+  channels — List available channels/chats with descriptions (telegram, discord)
 
 All bridge imports are lazy — missing dependencies return clear errors, not crashes.
 
@@ -13,6 +14,8 @@ Usage via MCP:
     read(action="history", platform="discord", chat_id="123456789", limit=10)
     read(action="mentions", platform="twitter", limit=5)
     read(action="inbox", platform="email", handle="forge")
+    read(action="channels", platform="telegram")
+    read(action="channels", platform="discord")
 """
 
 import json
@@ -44,20 +47,21 @@ TOOL_SCHEMA = {
         "Use action='history' to read recent messages from a conversation log. "
         "Use action='mentions' to see recent mentions. "
         "Use action='inbox' for email. "
-        "Supports: telegram, discord, whatsapp, twitter, email, sms."
+        "Use action='channels' to list available channels/chats with descriptions. "
+        "Supports: telegram, discord, whatsapp, twitter, email, sms, partner."
     ),
     "inputSchema": {
         "type": "object",
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["history", "mentions", "inbox"],
-                "description": "What to read: conversation history, mentions, or email inbox.",
+                "enum": ["history", "mentions", "inbox", "channels"],
+                "description": "What to read: conversation history, mentions, email inbox, or list channels.",
             },
             "platform": {
                 "type": "string",
-                "enum": ["telegram", "discord", "whatsapp", "twitter", "email", "sms"],
-                "description": "Platform to read from.",
+                "enum": ["telegram", "discord", "whatsapp", "twitter", "email", "sms", "partner"],
+                "description": "Platform to read from. Use 'partner' to read messages with your human partner.",
             },
             "chat_id": {
                 "type": "string",
@@ -100,6 +104,24 @@ def handle_read(args: Dict[str, Any]) -> Dict[str, Any]:
     if not platform:
         return _err("'platform' is required.")
 
+    # Partner shortcut — resolve to partner's TG chat and read history
+    if platform == "partner":
+        handle = args.get("handle", "")
+        if not handle:
+            handle = os.getenv("CITIZEN_HANDLE", "")
+        if not handle:
+            return _err("Cannot detect your handle for partner lookup.")
+        try:
+            sys.path.insert(0, str(PROJECT_ROOT / "mcp" / "tools"))
+            from send_handler import _resolve_partner
+            partner = _resolve_partner(handle)
+            if not partner.get("tg_id"):
+                return _err(f"@{handle} has no partner with Telegram contact configured.")
+            args["chat_id"] = partner["tg_id"]
+            platform = "telegram"
+        except Exception as e:
+            return _err(f"Partner resolution failed: {e}")
+
     if action == "history":
         return _read_history(platform, args)
     elif action == "mentions":
@@ -108,8 +130,165 @@ def handle_read(args: Dict[str, Any]) -> Dict[str, Any]:
         if platform != "email":
             return _err("action='inbox' is only available for platform='email'.")
         return _read_email_inbox(args)
+    elif action == "channels":
+        return _read_channels(platform, args)
     else:
-        return _err(f"Unknown action '{action}'. Use: history, mentions, inbox.")
+        return _err(f"Unknown action '{action}'. Use: history, mentions, inbox, channels.")
+
+
+# ── Channels ───────────────────────────────────────────────────────────────
+
+def _read_channels(platform: str, args: Dict[str, Any]) -> Dict[str, Any]:
+    """List available channels/chats with descriptions."""
+    if platform == "telegram":
+        return _list_telegram_channels()
+    elif platform == "discord":
+        return _list_discord_channels()
+    else:
+        return _err(f"action='channels' supports telegram and discord only.")
+
+
+def _list_telegram_channels() -> Dict[str, Any]:
+    """List Telegram chats from config + message logs, with descriptions."""
+    import requests as req
+
+    # Load config for bot token and known channels
+    config_path = STATE_DIR / "telegram_config.json"
+    config = json.loads(config_path.read_text()) if config_path.exists() else {}
+    bot_token = config.get("bot_token")
+    if not bot_token:
+        return _err("Telegram not configured. No bot_token in telegram_config.json.")
+
+    # Collect known chat IDs from config + message logs
+    chats: Dict[str, Dict[str, str]] = {}
+
+    # From config
+    for key, ch in config.get("channels", {}).items():
+        cid = str(ch.get("chat_id", ""))
+        if cid:
+            chats[cid] = {
+                "name": ch.get("name", key),
+                "type": "configured",
+                "thread_id": str(ch.get("message_thread_id", "")),
+            }
+
+    # From message logs
+    log_path = STATE_DIR / "telegram_messages.jsonl"
+    if log_path.exists():
+        seen = set()
+        for line in log_path.read_text().splitlines():
+            try:
+                d = json.loads(line)
+                cid = str(d.get("chat_id", ""))
+                if cid and cid not in chats and cid not in seen:
+                    seen.add(cid)
+                    chats[cid] = {
+                        "name": d.get("chat_title", d.get("from", cid)),
+                        "type": "from_logs",
+                    }
+            except (json.JSONDecodeError, KeyError):
+                continue
+
+    # Enrich with Telegram API getChat for each known chat
+    results = []
+    for cid, info in sorted(chats.items(), key=lambda x: x[1].get("name", "")):
+        entry = {"chat_id": cid, "name": info.get("name", cid), "source": info.get("type", "?")}
+
+        # Try to get description from Telegram API
+        try:
+            resp = req.post(
+                f"https://api.telegram.org/bot{bot_token}/getChat",
+                json={"chat_id": cid}, timeout=5,
+            )
+            if resp.ok:
+                chat_data = resp.json().get("result", {})
+                entry["name"] = chat_data.get("title", chat_data.get("first_name", entry["name"]))
+                entry["type"] = chat_data.get("type", "?")
+                entry["description"] = chat_data.get("description", "")
+                entry["username"] = chat_data.get("username", "")
+                entry["member_count"] = chat_data.get("member_count")
+                if info.get("thread_id"):
+                    entry["thread_id"] = info["thread_id"]
+        except Exception:
+            pass
+
+        results.append(entry)
+
+    # Format output
+    lines = [f"Telegram channels/chats ({len(results)}):\n"]
+    for ch in results:
+        desc = ch.get("description", "")
+        uname = f" @{ch['username']}" if ch.get("username") else ""
+        members = f" ({ch.get('member_count')} members)" if ch.get("member_count") else ""
+        thread = f" [thread:{ch['thread_id']}]" if ch.get("thread_id") else ""
+        lines.append(f"  {ch['chat_id']:20} | {ch.get('type','?'):12} | {ch['name']}{uname}{members}{thread}")
+        if desc:
+            lines.append(f"  {'':20}   {desc[:120]}")
+
+    return _ok("\n".join(lines))
+
+
+def _list_discord_channels() -> Dict[str, Any]:
+    """List Discord channels with descriptions from the API."""
+    import requests as req
+
+    # Get bot token from .env
+    env_path = PROJECT_ROOT / ".env"
+    bot_token = ""
+    if env_path.exists():
+        for line in env_path.read_text().splitlines():
+            if line.startswith("DISCORD_BOT_TOKEN="):
+                bot_token = line.split("=", 1)[1].strip()
+                break
+    if not bot_token:
+        # Try mind-mcp .env
+        mcp_env = Path("/home/mind-protocol/mind-mcp/.env")
+        if mcp_env.exists():
+            for line in mcp_env.read_text().splitlines():
+                if line.startswith("DISCORD_BOT_TOKEN="):
+                    bot_token = line.split("=", 1)[1].strip()
+                    break
+    if not bot_token:
+        return _err("Discord bot token not found in .env")
+
+    # Load channel map for guild ID
+    channel_map_path = Path("/home/mind-protocol/manemus/shrine/state/discord_channel_map.json")
+    guild_id = "985825810667667487"  # AutonomousAIs default
+
+    headers = {"Authorization": f"Bot {bot_token}"}
+    try:
+        resp = req.get(
+            f"https://discord.com/api/v10/guilds/{guild_id}/channels",
+            headers=headers, timeout=10,
+        )
+        if not resp.ok:
+            return _err(f"Discord API error: {resp.status_code}")
+        channels = resp.json()
+    except Exception as e:
+        return _err(f"Discord API failed: {e}")
+
+    type_names = {0: "text", 2: "voice", 4: "category", 5: "announce", 13: "stage", 15: "forum"}
+    cats = {c["id"]: c["name"] for c in channels if c["type"] == 4}
+
+    lines = [f"Discord channels ({len(channels)}):\n"]
+
+    # Group by category
+    by_cat: Dict[str, list] = {}
+    for c in sorted(channels, key=lambda x: x.get("position", 0)):
+        if c["type"] == 4:
+            continue
+        parent = cats.get(c.get("parent_id", ""), "uncategorized")
+        by_cat.setdefault(parent, []).append(c)
+
+    for cat_name, cat_channels in by_cat.items():
+        lines.append(f"\n  ── {cat_name} ──")
+        for c in cat_channels:
+            t = type_names.get(c["type"], "?")
+            topic = c.get("topic", "") or ""
+            topic_short = topic[:80].replace("\n", " ") if topic else ""
+            lines.append(f"    {c['id']} | {t:7} | #{c['name']:30} | {topic_short}")
+
+    return _ok("\n".join(lines))
 
 
 # ── History ─────────────────────────────────────────────────────────────────
@@ -172,6 +351,7 @@ def _read_discord_api(args: Dict[str, Any]) -> Dict[str, Any]:
     """Read Discord channel messages via REST API."""
     channel_id = args.get("chat_id")
     limit = min(args.get("limit") or 20, 100)
+    handle = args.get("handle", "")
 
     try:
         _ensure_project_path("scripts")
@@ -180,6 +360,14 @@ def _read_discord_api(args: Dict[str, Any]) -> Dict[str, Any]:
         messages = read_channel_sync(channel_id=int(channel_id), limit=limit)
         if not messages:
             return _ok(f"No messages in Discord channel {channel_id}.")
+
+        # Enrich L3 — record that this citizen read this channel
+        if handle:
+            try:
+                from graph_enricher import on_read
+                on_read("discord", str(channel_id), str(channel_id), handle)
+            except Exception:
+                pass
 
         lines = [f"**Discord channel {channel_id}** ({len(messages)} messages):"]
         lines.append("")

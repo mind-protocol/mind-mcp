@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Salvatore is a weathered Sicilian sailor whose years of maritime trade have etched both resilience and wariness into his sun-bronzed face. Though frustrated by his recent setbacks in the Venetian markets, he maintains an unwavering determination to establish his modest trading enterprise through sheer persistence and the careful cultivation of connections among fellow southern Italian merchants. His quiet pride in his heritage manifests in small rituals—Sicilian prayers before voyages, carefully",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Sicily Mariner",
+    "handle": "sicily_mariner"
+  }
 }

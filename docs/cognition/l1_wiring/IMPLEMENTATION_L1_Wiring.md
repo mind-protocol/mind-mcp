@@ -118,8 +118,8 @@ This phase copies and adapts the core engine from manemus. No rebuild needed.
 | Action | Target Path | Description |
 |--------|-------------|-------------|
 | CREATE | `runtime/cognition/stimulus_router.py` | Stimulus Router: classify, segment, embed, dedup, build Stimulus objects. The `Stimulus` dataclass already exists in `tick_runner_l1_cognitive_engine.py` — import from there. |
-| CREATE | `runtime/cognition/concept_extractor.py` | Concept extraction from text (sentence segmentation, entity extraction, cognitive type inference) |
-| CREATE | `runtime/cognition/anti_loop_protection.py` | 3-layer anti-loop: refractory, diminishing returns, novelty gate |
+| DONE (inline) | `runtime/cognition/stimulus_router.py` → `extract_concepts()` | Concept extraction built into stimulus_router (line ~107). Separate file not needed. |
+| DONE (inline) | `runtime/cognition/stimulus_router.py` → `AntiLoopGate` | 3-layer anti-loop (refractory, diminishing returns, novelty gate) built into stimulus_router (line ~40). Separate file not needed. |
 | ADAPT | manemus `l1_live_integration_bridge.py` | Extract the `inject_message()` pattern and `_make_stimulus()` logic. Rewrite against mind-mcp's dispatcher rather than manemus's telegram_bridge. |
 | MODIFY | `runtime/orchestrator/dispatcher.py` | Add `_run_physics_ticks()`, `_ensure_citizen_engine()`, physics tick scheduling |
 
@@ -152,7 +152,7 @@ This phase copies and adapts the core engine from manemus. No rebuild needed.
 | Action | Target Path | Description |
 |--------|-------------|-------------|
 | CREATE | `runtime/cognition/falkordb_checkpointer.py` | Hybrid persistence: dirty tracking, periodic flush, load-on-boot. Replaces manemus's JSON file persistence from `l1_live_integration_bridge.py`. |
-| CREATE | `runtime/cognition/graph_schema_setup.py` | Create FalkorDB indexes, schema validation for brain graphs |
+| DONE (inline) | `runtime/cognition/falkordb_checkpointer.py` → `ensure_schema()` | FalkorDB index creation built into checkpointer (line ~69). Separate file not needed. |
 | MODIFY | `runtime/cognition/tick_runner_l1_cognitive_engine.py` | Mark nodes/links dirty after mutation, call checkpointer |
 | NO CHANGE | `runtime/infrastructure/database/falkordb_adapter.py` | Already works. Instantiate per citizen graph name. |
 
@@ -210,8 +210,8 @@ CREATE (a)-[:LINK {
 |--------|-------------|-------------|
 | VERIFY | `Dockerfile` | Ensure L1 cognition module is included in Docker image |
 | VERIFY | `render.yaml` | Ensure env vars for physics tick interval, embedding API key, FalkorDB connection |
-| CREATE | `scripts/migrate_from_manemus.sh` | Migration script: copy citizen dirs, export/import graph state |
-| CREATE | `scripts/seed_all_citizens.py` | Batch seed 44 citizen brains |
+| OBSOLETE | ~~`scripts/migrate_from_manemus.sh`~~ | Migration from manemus completed (2026-03-14). Engine ported. Script not needed. |
+| DONE (renamed) | `scripts/seed_lumina_prime_brains.py` | Batch brain seeder exists. Supports `--citizen`, `--dry-run`. Replaces planned `seed_all_citizens.py`. |
 | MODIFY | `home_server.py` | Ensure physics engines start in lifespan startup |
 
 ---
@@ -259,13 +259,13 @@ Specific changes:
 | File | Est. Lines | Why New |
 |------|-----------|---------|
 | `stimulus_router.py` | 250 | Manemus does stimulus conversion inside `l1_live_integration_bridge.py`. mind-mcp needs a standalone router that integrates with the different dispatcher. |
-| `concept_extractor.py` | 150 | Sentence segmentation + keyword extraction. Not separated in manemus. |
-| `anti_loop_protection.py` | 100 | Self-stimulus loop prevention. Inline in manemus bridge. |
+| ~~`concept_extractor.py`~~ | — | DONE: `extract_concepts()` built into `stimulus_router.py`. |
+| ~~`anti_loop_protection.py`~~ | — | DONE: `AntiLoopGate` built into `stimulus_router.py`. |
 | `wm_prompt_serializer.py` | 200 | Manemus has `get_prompt_context()` in the bridge. mind-mcp needs standalone serializer for `build_citizen_prompt()`. |
 | `orientation_taxonomy.py` | 150 | Prompt modifiers for orientations. New design in ALGORITHM_L1_Wiring.md. |
 | `feedback_injector.py` | 120 | Post-action feedback. Inline in manemus dispatcher. |
 | `falkordb_checkpointer.py` | 250 | Manemus uses JSON file persistence. mind-mcp uses FalkorDB. |
-| `graph_schema_setup.py` | 80 | FalkorDB index/schema creation. New. |
+| ~~`graph_schema_setup.py`~~ | — | DONE: `ensure_schema()` built into `falkordb_checkpointer.py`. |
 | `citizen_brain_seeder.py` | 200 | Orchestrate base + overlay brain seeding. New orchestration layer. |
 
 **Total new wiring code:** ~1,500 lines.
@@ -298,20 +298,20 @@ Specific changes:
 | File | Est. Lines | Purpose |
 |------|-----------|---------|
 | `runtime/cognition/stimulus_router.py` | 250 | Stimulus pre-processing pipeline |
-| `runtime/cognition/concept_extractor.py` | 150 | Text-to-concept extraction |
-| `runtime/cognition/anti_loop_protection.py` | 100 | Self-stimulus anti-loop gates |
+| ~~`runtime/cognition/concept_extractor.py`~~ | — | DONE: built into `stimulus_router.py` → `extract_concepts()` |
+| ~~`runtime/cognition/anti_loop_protection.py`~~ | — | DONE: built into `stimulus_router.py` → `AntiLoopGate` |
 | `runtime/cognition/wm_prompt_serializer.py` | 200 | WM-to-prompt formatting |
 | `runtime/cognition/orientation_taxonomy.py` | 150 | Orientation definitions + computation |
 | `runtime/cognition/feedback_injector.py` | 120 | Post-action feedback loop |
 | `runtime/cognition/falkordb_checkpointer.py` | 250 | Hybrid persistence |
-| `runtime/cognition/graph_schema_setup.py` | 80 | FalkorDB schema initialization |
+| ~~`runtime/cognition/graph_schema_setup.py`~~ | — | DONE: built into `falkordb_checkpointer.py` → `ensure_schema()` |
 | `runtime/cognition/citizen_brain_seeder.py` | 200 | Orchestrate brain seeding per citizen |
-| `scripts/migrate_from_manemus.sh` | 50 | Migration helper |
-| `scripts/seed_all_citizens.py` | 80 | Batch seeder |
+| ~~`scripts/migrate_from_manemus.sh`~~ | — | OBSOLETE: migration completed 2026-03-14 |
+| ~~`scripts/seed_all_citizens.py`~~ | — | DONE: shipped as `scripts/seed_lumina_prime_brains.py` |
 
-**Total new code:** ~1,630 lines (wiring only). The L1 engine itself (4,528 lines of core + 798 lines of tests) ports from manemus with minimal adaptation.
+**Total new code (revised):** ~1,170 lines (wiring only). 460 lines eliminated — `concept_extractor` (150), `anti_loop_protection` (100), `graph_schema_setup` (80), `migrate_from_manemus.sh` (50), `seed_all_citizens.py` (80) were either built inline or are obsolete. The L1 engine itself (4,528 lines of core + 798 lines of tests) was ported from manemus.
 
-**Combined effort:** ~1,630 new lines + ~200 lines of tick runner adaptation + ~500 lines of bridge adaptation = ~2,330 lines of work.
+**Combined effort (revised):** ~1,170 new lines + ~200 lines of tick runner adaptation + ~500 lines of bridge adaptation = ~1,870 lines of work.
 
 ---
 

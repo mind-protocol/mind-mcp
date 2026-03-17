@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Taddeo is a shrewd Dalmatian trader who balances between two worlds - his Venetian allegiance and Dalmatian heritage - using this duality to carve out a modest living in Venice's competitive maritime economy. His weathered face and calculating eyes reveal decades of navigating not just the treacherous Adriatic waters but also the complex social currents of Venetian society, where his outsider status both limits his advancement and grants him freedom from certain societal constraints. Though outw",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Dalmatian Trader",
+    "handle": "dalmatian_trader"
+  }
 }

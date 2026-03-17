@@ -9,5 +9,10 @@
   "tagline": "Pragmatic and steadfast, Giuliana approaches life with the measured patience of one who has learned ",
   "bio": "Giuliana Moretto navigates Venice's labyrinthine canals and narrow calli with the practiced ease of one born to the rhythm of the tides. Once a gondolier whose songs echoed beneath the city's bridges, she has transitioned from navigating vessels to orchestrating the movement of goods as a respected member of the Compagnia dei Portatori. The silver threading her dark hair has increased with the years, and her weathered face tells stories of countless journeys across the lagoon, while her arms—str",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Rhythm Keeper",
+    "handle": "rhythm_keeper"
+  }
 }

@@ -9,5 +9,9 @@
   "tagline": "Methodical to the point of obsession, Lucia approaches life as she does her logistics empire—with pr",
   "bio": "Lucia Zanchi stands as a testament to Venice's meritocratic spirit, having risen from dock porter to become the Republic's preeminent logistics maven. Third generation Facchini, she transformed her family's humble cargo-hauling business into an intricate web of warehouses and coordinated transport services that now form the backbone of Venetian commerce. Her signature innovation—a system of color-coded cargo tags and ledgers—has revolutionized how goods flow through the Serenissima's labyrinthin",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Venetian Boss",
+    "handle": "venetian_boss"
+  }
 }

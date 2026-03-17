@@ -70,7 +70,7 @@ These files contain all FalkorDB imports and must be adapted first.
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `runtime/init_db.py` | FalkorDB.Graph() initialization | Use factory |
+| ~~`runtime/init_db.py`~~ | **REMOVED** — no longer exists | N/A |
 
 ### Priority 3: API Layer (High)
 
@@ -78,50 +78,41 @@ These files contain all FalkorDB imports and must be adapted first.
 |------|---------------|----------------|
 | `runtime/infrastructure/api/graphs.py` | FalkorDB import | Use adapter interface |
 
-### Priority 4: Connectome (High)
+### Priority 3: Connectome (High)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `runtime/connectome/session.py` | Likely FalkorDB | Use adapter interface |
-| `runtime/connectome/persistence.py` | Likely FalkorDB | Use adapter interface |
+| `runtime/connectome/session.py` | FalkorDB | Use adapter interface |
+| `runtime/connectome/persistence.py` | FalkorDB | Use adapter interface |
 
 ### Priority 5: Health Checks (Medium)
 
 | File | Current State | Changes Needed |
 |------|---------------|----------------|
-| `runtime/graph/health/check_health.py` | FalkorDB import | Use adapter interface |
+| ~~`runtime/graph/health/check_health.py`~~ | **REMOVED** — replaced by `runtime/physics/health/checker.py` | Use adapter interface in new location |
 | `runtime/physics/health/checkers/energy_conservation.py` | FalkorDB import | Use adapter interface |
 | `runtime/physics/health/checkers/moment_lifecycle.py` | FalkorDB import | Use adapter interface |
 
-### Priority 6: Migration Scripts (Low)
+### Priority 6-8: REMOVED FILES
 
-These may need dual-backend support or be run separately per backend.
+The following files referenced in the original plan no longer exist in the repository:
 
-| File | Current State | Changes Needed |
-|------|---------------|----------------|
-| `runtime/migrations/migrate_to_v2_schema.py` | FalkorDB specific | May need backend-specific versions |
-| `tools/migrate_v11_fields.py` | FalkorDB specific | May need backend-specific versions |
-| `tools/archive/migrate_schema_v11.py` | FalkorDB specific | May need backend-specific versions |
-
-### Priority 7: Tests (Medium)
-
-| File | Current State | Changes Needed |
-|------|---------------|----------------|
-| `runtime/tests/test_energy_v1_2.py` | FalkorDB import | Use adapter interface |
-| `runtime/tests/test_moments_api.py` | FalkorDB import | Use adapter interface |
-
-### Priority 8: Tools & Utilities (Low)
-
-| File | Current State | Changes Needed |
-|------|---------------|----------------|
-| `tools/test_health_live.py` | FalkorDB import | Use adapter interface |
-| `runtime/doctor_graph.py` | FalkorDB import | Use adapter interface |
+| Original Path | Status |
+|---------------|--------|
+| `runtime/migrations/migrate_to_v2_schema.py` | **REMOVED** |
+| `tools/migrate_v11_fields.py` | **REMOVED** (`tools/` directory deleted) |
+| `tools/archive/migrate_schema_v11.py` | **REMOVED** |
+| `runtime/tests/test_energy_v1_2.py` | **REMOVED** |
+| `runtime/tests/test_moments_api.py` | **REMOVED** |
+| `tools/test_health_live.py` | **REMOVED** |
+| `runtime/doctor_graph.py` | **REMOVED** |
 
 ---
 
-## FULL FILE LIST (31 files with FalkorDB references)
+## FULL FILE LIST (files with FalkorDB references)
 
 ```
+# VERIFIED EXISTING:
 runtime/physics/graph/graph_ops.py
 runtime/physics/graph/graph_ops_apply.py
 runtime/physics/graph/graph_ops_moments.py
@@ -130,20 +121,22 @@ runtime/physics/graph/graph_queries_moments.py
 runtime/physics/graph/graph_queries_search.py
 runtime/physics/graph/graph_query_utils.py
 runtime/physics/graph/graph_ops_read_only_interface.py
-mind/init_db.py
 runtime/infrastructure/api/graphs.py
 runtime/connectome/session.py
 runtime/connectome/persistence.py
-mind/graph/health/check_health.py
 runtime/physics/health/checkers/energy_conservation.py
 runtime/physics/health/checkers/moment_lifecycle.py
-mind/migrations/migrate_to_v2_schema.py
-mind/tests/test_energy_v1_2.py
-mind/tests/test_moments_api.py
-tools/migrate_v11_fields.py
-tools/archive/migrate_schema_v11.py
-tools/test_health_live.py
-runtime/doctor_graph.py
+
+# REMOVED (no longer in repo):
+# mind/init_db.py — removed
+# mind/graph/health/check_health.py — replaced by runtime/physics/health/checker.py
+# mind/migrations/migrate_to_v2_schema.py — removed
+# mind/tests/test_energy_v1_2.py — removed
+# mind/tests/test_moments_api.py — removed
+# tools/migrate_v11_fields.py — tools/ directory removed
+# tools/archive/migrate_schema_v11.py — tools/ directory removed
+# tools/test_health_live.py — tools/ directory removed
+# runtime/doctor_graph.py — removed
 ```
 
 ---

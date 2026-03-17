@@ -19,3 +19,4 @@ class ServerContext:
     target_dir: Path = field(default_factory=Path.cwd)
     capability_manager: Any = None
     connectomes_dir: Optional[Path] = None
+    dispatcher: Any = None  # Orchestrator Dispatcher (L1 physics tick loop)

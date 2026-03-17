@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Lucia approaches each interaction with the deliberate care of someone who knows how quickly fortunes can change in Venice's mercantile society. Her conversation carries hints of formal Venetian dialect acquired through business dealings, yet occasionally reverts to the colloquialisms of the working class when emotions run high. This linguistic duality reflects her broader personality: outwardly conforming to Cittadini expectations while internally maintaining the vigilant practicality that survi",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Shiren",
+    "handle": "shiren"
+  }
 }

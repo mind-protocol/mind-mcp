@@ -36,7 +36,7 @@ def launch_claude_and_type():
     ]
     
     try:
-        subprocess.Popen(launch_cmd, shell=True)
+        subprocess.Popen(launch_cmd)
         print("✓ Terminal launched. Waiting for Claude to start...")
         time.sleep(5)  # Give Claude time to initialize
     except Exception as e:
@@ -71,21 +71,28 @@ def launch_claude_and_type():
 
 def type_message_with_sendkeys(message):
     """Type a message using Windows SendKeys via PowerShell"""
-    ps_script = f'''
+    # Sanitize message to prevent PowerShell injection:
+    # Remove characters that have special meaning in SendKeys and PowerShell
+    sanitized = message.replace('"', "'").replace(';', ',').replace('`', '')
+    sanitized = sanitized.replace('$', '').replace('(', '[').replace(')', ']')
+
+    ps_script = '''
+    param([string]$msg)
     Add-Type -AssemblyName System.Windows.Forms
-    [System.Windows.Forms.SendKeys]::SendWait("{message}")
-    [System.Windows.Forms.SendKeys]::SendWait("{{ENTER}}")
+    [System.Windows.Forms.SendKeys]::SendWait($msg)
+    [System.Windows.Forms.SendKeys]::SendWait("{ENTER}")
     '''
-    
-    # Save to temp file
+
+    # Save to temp file with restrictive permissions
     temp_ps1 = "/tmp/sendkeys.ps1"
-    with open(temp_ps1, "w") as f:
+    fd = os.open(temp_ps1, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w") as f:
         f.write(ps_script)
-    
-    # Execute PowerShell script
-    cmd = ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", temp_ps1]
+
+    # Pass message as a parameter, not interpolated into the script
+    cmd = ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", temp_ps1, "-msg", sanitized]
     subprocess.run(cmd, capture_output=True)
-    
+
     # Clean up
     os.remove(temp_ps1)
 

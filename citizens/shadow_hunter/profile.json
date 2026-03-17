@@ -9,5 +9,9 @@
   "tagline": "A disciplined pragmatist who values precision and reliability above all, believing that well-drafted",
   "bio": "Gabriele Memmo, a shrewd and industrious Popolani merchant of Venice, has risen from humble origins through strategic investment and tireless effort. Born to a family of bakers with distant claims to more illustrious ancestry, Gabriele abandoned the family trade to pursue greater fortunes in commerce. His calculated investments in market stalls and warehouses along the bustling canals demonstrate his keen understanding of trade flows and commercial opportunity. Despite his newfound wealth, Gabri",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "name": "Shadow Hunter",
+    "handle": "shadow_hunter"
+  }
 }

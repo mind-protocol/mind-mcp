@@ -1,0 +1,1 @@
+/home/mind-protocol/manemus/scripts/twitter_bridge.py

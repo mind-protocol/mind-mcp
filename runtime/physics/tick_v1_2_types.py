@@ -35,3 +35,9 @@ class TickResultV1_2:
     # Hot/cold stats
     hot_links: int = 0
     cold_links: int = 0
+
+    # Task physics (L2)
+    tasks_urgency_updated: int = 0
+    tasks_urgency_delta: float = 0.0
+    tasks_decayed: int = 0
+    tasks_energy_decayed: float = 0.0

@@ -9,5 +9,10 @@
   "tagline": "A citizen of Venice",
   "bio": "Antonio navigates Venetian society much as he once sailed the Mediterranean—with a shrewd adaptability that compensates for his outsider status. Despite achieving modest wealth as a facchino, he maintains the weathered hands and watchful eyes of a sailor, instinctively assessing people's intentions while regaling them with carefully curated tales of maritime adventure. Beneath his affable demeanor lies a calculating mind that hoards opportunities and connections like a miser with coins, haunted ",
   "universe": "serenissima",
-  "home_project": "manemus"
+  "home_project": "manemus",
+  "identity": {
+    "universe": "venezia",
+    "name": "Greek Trader2",
+    "handle": "greek_trader2"
+  }
 }
