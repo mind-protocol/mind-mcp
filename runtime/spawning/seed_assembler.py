@@ -37,7 +37,7 @@ DEDUP_THRESHOLD = 0.9  # cosine similarity above which nodes are considered dupl
 class SeedNode:
     """A node in the seed brain with provenance."""
     content: str
-    embedding: np.ndarray         # R^1536
+    embedding: np.ndarray         # R^D
     node_type: str                # trait, value, aspiration, fear, knowledge, skill
     source_godparent: str         # handle of the godparent this node came from
     distance_to_child: float      # cosine distance to child vector (lower = more relevant)
@@ -47,8 +47,8 @@ class SeedNode:
 class SeedBrain:
     """The crystallized seed brain for a new citizen."""
     nodes: list[SeedNode]
-    child_vector: np.ndarray      # R^1536 — the projection result
-    centroid: np.ndarray          # R^1536 — centroid of seed node embeddings
+    child_vector: np.ndarray      # R^D — the projection result
+    centroid: np.ndarray          # R^D — centroid of seed node embeddings
     k_target: int                 # how many nodes we aimed for
     godparent_count: int
 

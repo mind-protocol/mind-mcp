@@ -20,7 +20,7 @@ MODELS = {
     "text-embedding-3-large": {"dimension": 3072, "max_tokens": 8191},
 }
 
-DEFAULT_MODEL = "text-embedding-3-small"
+DEFAULT_MODEL = "text-embedding-3-large"
 
 
 class OpenAIEmbeddingAdapter:

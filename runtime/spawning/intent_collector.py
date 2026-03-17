@@ -3,7 +3,7 @@
 Intent Collection — Embed paragraphs, validate quality, compute weighted centroid.
 
 Each godparent writes a substantive paragraph (min 20 words) describing what kind of
-citizen the world needs. These paragraphs are embedded into R^1536 and combined via
+citizen the world needs. These paragraphs are embedded into R^D and combined via
 weighted centroid to form the intent vector that drives the prismatic projection.
 """
 
@@ -21,7 +21,7 @@ MIN_EMBEDDING_MAGNITUDE = 0.1
 @dataclass
 class IntentResult:
     """Output of intent collection: validated paragraphs + combined intent vector."""
-    intent_vector: np.ndarray          # R^1536 — weighted centroid of all paragraphs
+    intent_vector: np.ndarray          # R^D — weighted centroid of all paragraphs
     intent_matrix: np.ndarray          # [N_intents x 1536] — each paragraph embedded
     paragraphs: list[str]              # Original paragraphs, preserved verbatim
     weights: list[float]               # Weight per paragraph
