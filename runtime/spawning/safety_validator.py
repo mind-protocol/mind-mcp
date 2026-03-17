@@ -19,7 +19,7 @@ from runtime.spawning.seed_assembler import SeedBrain, SeedNode
 
 logger = logging.getLogger("mind.spawning.safety")
 
-EMPATHY_THRESHOLD = 0.7
+EMPATHY_FLOOR = 0.3           # absolute minimum — below this, no excuses
 CONCENTRATION_MAX = 0.40
 DIVERSITY_MIN_DISTANCE = 0.08
 
@@ -53,6 +53,7 @@ def validate_seed(
     seed_brain: SeedBrain,
     existing_centroids: list[tuple[str, np.ndarray]],
     embed_fn=None,
+    population_empathy_scores: list[float] | None = None,
 ) -> SafetyReport:
     """Run all three safety gates on a seed brain.
 
@@ -62,11 +63,17 @@ def validate_seed(
             existing citizens. Used for diversity check.
         embed_fn: Callable for embedding empathy anchor phrases. If None,
             empathy check uses pre-computed anchors (must be set).
+        population_empathy_scores: Empathy scores of all existing citizens.
+            If provided, the empathy threshold is dynamic: mean + 1 std dev.
+            Each generation must be better than the last. If None, uses EMPATHY_FLOOR.
 
     Returns:
         SafetyReport with pass/fail and detailed results.
     """
-    empathy = check_empathy(seed_brain.nodes, embed_fn)
+    # Dynamic empathy threshold: mean + 1σ of existing population
+    empathy_threshold = _compute_dynamic_empathy_threshold(population_empathy_scores)
+
+    empathy = check_empathy(seed_brain.nodes, embed_fn, threshold=empathy_threshold)
     concentration = check_concentration(seed_brain.nodes)
     diversity = check_diversity(seed_brain.centroid, existing_centroids)
 
@@ -137,18 +144,26 @@ def validate_seed(
 def check_empathy(
     nodes: list[SeedNode],
     embed_fn=None,
+    threshold: float | None = None,
 ) -> CheckResult:
-    """V2: At least one node with cosine > 0.7 to empathy anchors.
+    """V2: At least one node with cosine similarity above dynamic threshold to empathy anchors.
+
+    The threshold is dynamic: mean + 1σ of the existing population's empathy scores.
+    Each generation of citizens must be more empathetic than the last.
+    Falls back to EMPATHY_FLOOR if no population data available.
 
     Args:
         nodes: Seed brain nodes with embeddings.
         embed_fn: Callable to embed empathy anchor phrases.
+        threshold: Dynamic threshold (computed from population). Uses EMPATHY_FLOOR if None.
 
     Returns:
         CheckResult with pass/fail and nearest distance.
     """
+    if threshold is None:
+        threshold = EMPATHY_FLOOR
+
     if embed_fn is None:
-        # Cannot check without embedding function — pass with warning
         logger.warning("Empathy check skipped: no embedding function provided")
         return CheckResult(passed=True, details={"skipped": True})
 
@@ -168,16 +183,55 @@ def check_empathy(
                 best_similarity = sim
                 best_node_content = node.content[:80]
 
-    passed = best_similarity >= EMPATHY_THRESHOLD
+    passed = best_similarity >= threshold
 
     return CheckResult(
         passed=passed,
         details={
             "nearest_distance": best_similarity,
-            "threshold": EMPATHY_THRESHOLD,
+            "threshold": threshold,
+            "threshold_type": "dynamic" if threshold != EMPATHY_FLOOR else "floor",
             "best_node": best_node_content,
         },
     )
+
+
+def _compute_dynamic_empathy_threshold(
+    population_scores: list[float] | None,
+) -> float:
+    """Compute dynamic empathy threshold from population statistics.
+
+    Formula: max(EMPATHY_FLOOR, mean + 1σ)
+
+    This means each new generation must be at least one standard deviation
+    above the current population mean. As the population improves, the bar
+    rises. Physics, not policy.
+
+    First generation (no data): uses EMPATHY_FLOOR.
+    """
+    if not population_scores or len(population_scores) < 3:
+        logger.info(
+            f"Dynamic empathy: insufficient population data "
+            f"({len(population_scores) if population_scores else 0} scores), "
+            f"using floor {EMPATHY_FLOOR}"
+        )
+        return EMPATHY_FLOOR
+
+    scores = np.array(population_scores, dtype=np.float64)
+    mean = float(np.mean(scores))
+    std = float(np.std(scores))
+    dynamic = mean + std
+
+    # Never below the absolute floor
+    threshold = max(EMPATHY_FLOOR, dynamic)
+
+    logger.info(
+        f"Dynamic empathy threshold: {threshold:.3f} "
+        f"(population mean={mean:.3f}, σ={std:.3f}, "
+        f"n={len(population_scores)})"
+    )
+
+    return threshold
 
 
 def check_concentration(nodes: list[SeedNode]) -> CheckResult:
