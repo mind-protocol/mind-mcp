@@ -1,7 +1,7 @@
 """
 Awareness File Writer — Persist WM state as awareness.md for citizen prompt injection.
 
-Writes `citizens/{handle}/.mind/awareness.md` whenever WM changes.
+Writes `citizens/{handle}/awareness.md` whenever WM changes.
 The file contains YAML frontmatter (tick, orientation, timestamp, wm_size,
 nodes_total) followed by the natural-language output of
 serialize_wm_to_prompt().
@@ -125,10 +125,7 @@ def write_awareness_file(
         )
         return False
 
-    mind_dir = citizen_dir / ".mind"
-    mind_dir.mkdir(parents=True, exist_ok=True)
-
-    awareness_path = mind_dir / "awareness.md"
+    awareness_path = citizen_dir / "awareness.md"
 
     # Generate the WM prompt text
     wm_text = serialize_wm_to_prompt(

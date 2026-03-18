@@ -416,7 +416,7 @@ def _build_claude_md(handle, name, intent, org_id, parents) -> str:
 
 ## My Awareness
 
-@.mind/awareness.md
+@awareness.md
 
 ## How I Live
 
