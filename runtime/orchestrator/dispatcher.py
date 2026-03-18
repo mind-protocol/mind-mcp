@@ -36,6 +36,7 @@ from runtime.orchestrator.session_tracker import (
 )
 from runtime.orchestrator import degradation
 from runtime.orchestrator.first_boot_registrar import check_and_register_new_citizens
+from runtime.orchestrator.tick_health import record_tick_cycle, inject_health_into_brains
 
 # L1 Cognitive Engine integration
 try:
@@ -164,6 +165,11 @@ class Dispatcher:
         if now - self._last_cleanup > NEURON_CLEANUP_INTERVAL:
             cleanup_old_neurons()
             enforce_neuron_cap()
+            # Inject health signals into carrier citizens' brains (HEALTH_Tick_System.md)
+            try:
+                inject_health_into_brains(self._citizen_states)
+            except Exception as e:
+                logger.debug(f"Health injection: {e}")
             self._last_cleanup = now
 
         if now - self._last_health_check > HEALTH_CHECK_INTERVAL:
@@ -231,11 +237,20 @@ class Dispatcher:
             except Exception as e:
                 logger.exception(f"Tick error for {handle}: {e}")
 
-        # Log tick summary (only when something happened)
+        # Record health signals (HEALTH_Tick_System.md — every signal has a carrier)
+        tick_duration = time.time() - now
         if awareness_count or thought_count:
+            record_tick_cycle(
+                awareness_count=awareness_count,
+                thought_count=thought_count,
+                action_count=action_count,
+                duration_s=tick_duration,
+                engine_count=len(self._citizen_engines),
+            )
             logger.info(
                 f"Tick cycle: {awareness_count} awareness, {thought_count} thought, "
-                f"{action_count} actions fired ({len(self._citizen_engines)} engines)"
+                f"{action_count} actions fired ({len(self._citizen_engines)} engines, "
+                f"{tick_duration:.2f}s)"
             )
 
     def _awareness_tick(self, handle: str) -> None:
