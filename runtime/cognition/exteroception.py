@@ -144,7 +144,9 @@ class ExteroceptionEngine:
                     f"{author} in #{space}: {text}", 0.4,
                     {"is_social": True}))
 
-            # ── Channel 2: Mentions of me ──
+            # ── Channel 2: Mentions of me (both directions) ──
+            # Moment→Actor = someone mentioned me
+            # Actor→Moment = results of my actions (prescriptions, subcalls, etc.)
             mention_rows = _safe_query(query_fn,
                 "MATCH (m:Moment)-[:LINK]->(a:Actor {id: $cid}) "
                 "WHERE m.timestamp > $since "
@@ -162,6 +164,24 @@ class ExteroceptionEngine:
                 candidates.append((90, "new_mention",
                     f"{row[2] or 'someone'} mentioned me: {(row[1] or '')[:60]}", 0.6,
                     {"is_social": True}))
+
+            # Results of MY actions (Actor→Moment, e.g. frequency measurements)
+            result_rows = _safe_query(query_fn,
+                "MATCH (a:Actor {id: $cid})-[:LINK]->(m:Moment) "
+                "WHERE m.timestamp > $since "
+                "RETURN m.id, m.synthesis, m.name "
+                "ORDER BY m.timestamp DESC LIMIT 3",
+                {"cid": citizen_id, "since": since},
+            )
+            for row in result_rows:
+                m_id = row[0]
+                if m_id in self._seen_ids:
+                    continue
+                self._seen_ids.add(m_id)
+                text = (row[1] or row[2] or "")[:60]
+                if text:
+                    candidates.append((75, "new_message",
+                        f"Result of my action: {text}", 0.35, {}))
 
             # ── Channel 3: Narrative shifts (new/changed narratives in my Spaces) ──
             if self._active_narratives:
