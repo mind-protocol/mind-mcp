@@ -974,6 +974,16 @@ class L1CognitiveTickRunner:
         # 8. FORGET (every N ticks)
         links_dissolved = self._step_forget()
 
+        # 8b. CRYSTALLIZE (Law 10 — every CRYSTALLIZATION_INTERVAL ticks)
+        crystallizations = 0
+        if crystallize is not None:
+            try:
+                cryst_result = crystallize(self.state, self.tick_count)
+                if cryst_result.crystallized:
+                    crystallizations = 1
+            except Exception as e:
+                pass  # crystallization failure is non-fatal
+
         # 9. LIMBIC (drives, boredom, frustration, desire, impulse — Laws 13-17)
         self._step_limbic(stimulus)
 
@@ -1055,6 +1065,7 @@ class L1CognitiveTickRunner:
             energy_propagated=energy_propagated,
             nodes_dormant=nodes_dormant,
             links_dissolved=links_dissolved,
+            crystallizations=crystallizations,
         )
 
         # Attach metabolism snapshot (optional field, backward compatible)
