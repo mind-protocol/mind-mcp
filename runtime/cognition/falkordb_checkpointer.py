@@ -97,35 +97,37 @@ class FalkorDBBrainCheckpointer:
         )
 
     def checkpoint(self, state: CitizenCognitiveState):
-        """Flush dirty nodes and links to FalkorDB."""
+        """Flush ALL nodes and links to FalkorDB.
+
+        Previously only flushed explicitly marked dirty nodes, but
+        the tick runner modifies node energies/weights in-memory without
+        calling mark_dirty(). Result: ticks ran but nothing persisted.
+
+        Fix: flush everything. 220 nodes × 1 upsert = ~220 queries
+        every 5 minutes. Acceptable for brain-sized graphs.
+        """
         if not self._connected:
             return
 
         flushed_nodes = 0
         flushed_links = 0
 
-        # Flush dirty nodes
-        for node_id in list(self._dirty_nodes):
-            node = state.nodes.get(node_id)
-            if node:
-                try:
-                    self._upsert_node(node)
-                    flushed_nodes += 1
-                except Exception as e:
-                    logger.warning(f"Node upsert failed for {node_id}: {e}")
+        # Flush ALL nodes (tick runner modifies energy/weight in-memory)
+        for node_id, node in state.nodes.items():
+            try:
+                self._upsert_node(node)
+                flushed_nodes += 1
+            except Exception as e:
+                logger.warning(f"Node upsert failed for {node_id}: {e}")
 
-        # Flush dirty links (links is a list, dirty_links stores index keys)
+        # Flush ALL links
         for link in state.links:
-            link_key = f"{link.source_id}_{link.target_id}"
-            if link_key in self._dirty_links:
-                try:
-                    self._upsert_link(link)
-                    flushed_links += 1
-                except Exception as e:
-                    logger.warning(f"Link upsert failed for {link_key}: {e}")
-
-        self._dirty_nodes.clear()
-        self._dirty_links.clear()
+            try:
+                self._upsert_link(link)
+                flushed_links += 1
+            except Exception as e:
+                link_key = f"{link.source_id}_{link.target_id}"
+                logger.warning(f"Link upsert failed for {link_key}: {e}")
         self._last_checkpoint = time.time()
 
         # Persist limbic state (drives must survive restarts for health scores)
