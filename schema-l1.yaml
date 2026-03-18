@@ -235,6 +235,23 @@ NodeBase:
       length: 3
       nullable: true
       description: "World position [x, y, z]. x/z = barycentrique weighted by zone affinities (7 fixed attractors + hash dispersion). y = abstraction level (Creative Nexus high, Arsenal low, actors above, things below). Pre-computed by spatial mapper, damped at 0.95 for smooth transitions. See: docs/city-architecture/spatial-mapping/ALGORITHM_Spatial_Mapping.md"
+    orientation:
+      type: array
+      items: float
+      length: 4
+      nullable: true
+      description: "Quaternion [qx, qy, qz, qw] representing facing direction in world space. For Actors: where the citizen is looking (drives vision cone for FOV screenshot). For Spaces: the 'front' direction of the structure. For Things: display orientation. Updated by the engine on movement/rotation. Default [0, 0, 0, 1] = facing +Z."
+    scale:
+      type: float
+      nullable: true
+      default: 1.0
+      description: "Visual scale multiplier. Derived from weight: scale = 1.0 + log1p(weight). Heavy nodes are physically larger. Used by renderers for mesh/sprite sizing."
+    velocity:
+      type: array
+      items: float
+      length: 3
+      nullable: true
+      description: "Current movement vector [vx, vy, vz] in world units/tick. For Actors: movement direction and speed. Used by proprioception (accelerometer sense) and by renderers for motion trails. Null when stationary."
     zone_id:
       type: string
       nullable: true
