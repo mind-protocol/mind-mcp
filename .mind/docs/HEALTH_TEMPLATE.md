@@ -446,10 +446,76 @@ What to track here:
 
 ---
 
+## VITAL SIGN
+
+**Before writing anything else: identify THE ONE NUMBER that tells you if this module is alive or dead.**
+
+Not a dashboard of metrics. Not a list of indicators. ONE number. The vital sign.
+
+```yaml
+vital_sign:
+  metric: {the_one_number}              # e.g. "moments_per_min", "response_time_p95", "success_rate"
+  healthy: "> {threshold}"              # e.g. "> 0.5", "< 200ms", "> 95%"
+  dead: "{condition}"                   # e.g. "= 0 for > 10 min", "> 5000ms", "< 50%"
+  why: "{why this number and not another}"
+  sensor_id: "sensor:{module}:vital"    # L3 sensor node that carries this number
+```
+
+**How to choose the vital sign:**
+- It should be a LEADING indicator, not a trailing one. "Moments created per minute" tells you the system is alive NOW. "Total moments ever" tells you nothing about now.
+- It should be the number that, if it goes to zero or crosses a threshold, means the module has FAILED its purpose. Not degraded — failed.
+- If you can't identify one number, your module does too many things. Split it.
+
+**Examples from real modules:**
+- **Ecosystem:** `moments_per_min` — if 0, the city is dead
+- **FalkorDB:** `redis PING response` — if no PONG, everything is down
+- **L3 Seeding:** `verifier PASS count / total` — if < 7/11, integrity compromised
+- **Resilience:** `unresolved P0 signals` — if > 0, something critical is broken
+- **Video Selfie:** `render_success_rate` — if < 90%, the product doesn't work
+- **Citizen Page:** `inline_chat_response_rate` — if 0%, the conversion engine is dead
+
+**The vital sign MUST be the first sensor created, the first sense wired, and the first thing checked.**
+
+---
+
+## PROPRIOCEPTIVE SENSES
+
+**Every HEALTH indicator MUST become a custom sense on the responsible citizen.**
+
+HEALTH docs are not reports — they are nerve endings. The responsible citizen must FEEL degradation, not read about it. When you write a HEALTH doc, you wire it into the citizen's awareness.
+
+For each indicator above, create a Thing(type=sense) in L3 and link it to the responsible Actor via `→perceives_with→`:
+
+```yaml
+senses:
+  - indicator: {indicator_name}          # must match a checker above
+    responsible: {citizen_handle}         # who feels this (from RACI)
+    sense:
+      name: "{indicator_name} Health Sense"
+      source: {moment|narrative|thing}    # what node type the checker produces
+      scan: all                           # or spaces_i_am_in
+      keywords: [{keywords from the checker's domain}]
+      filter:
+        type: "contains {checker signal type}"
+      stimulus:
+        template: "HEALTH {indicator_name}: {node.synthesis}"
+        energy: {0.5 for high priority, 0.3 for medium, 0.15 for low}
+        source: "health_{indicator_name}_sense"
+      refractory_ticks: {50 for high, 100 for medium, 200 for low}
+      priority: {9 for high, 6 for medium, 3 for low}
+```
+
+**The rule:** If a HEALTH indicator exists but no sense is wired to the responsible citizen, the module's health is unperceived — equivalent to a body part with no nerves. The citizen cannot feel it break.
+
+**Implementation:** After writing this section, create the Thing nodes in L3 and the perceives_with links. This is part of the HEALTH doc's implementation, not a separate task.
+
+---
+
 ## MARKERS
 
 > See PRINCIPLES.md "Feedback Loop" section for marker format and usage.
 
 <!-- @mind:todo {Missing health check} -->
+<!-- @mind:todo {Missing sense for indicator — which citizen should feel this?} -->
 <!-- @mind:proposition {Health signal improvement} -->
 <!-- @mind:escalation {Throttling or monitoring decision needed} -->
