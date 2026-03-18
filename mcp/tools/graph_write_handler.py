@@ -143,7 +143,8 @@ TOOL_SCHEMA = {
         "[THINK] Create a new node in the knowledge graph. "
         "Supports all 5 node types: narrative, actor, thing, moment, space. "
         "For narratives, use type to set the subtype: vision, mission, objective, "
-        "initiative, project, programme, task, role, thought, fact. "
+        "initiative, project, programme, task, role, thought, fact, problem. "
+        "Problem nodes gain weight while unresolved — use 'blocks' to link to blocked objectives. "
         "Use parent to auto-link into the hierarchy (CONTRIBUTES_TO). "
         "Use responsible/accountable/consulted/informed for RACI assignment. "
         "@mentions in content auto-create MENTIONS links."
@@ -167,7 +168,7 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": (
                     "Subtype. For narratives: vision, mission, objective, initiative, "
-                    "project, programme, task, role, thought, fact."
+                    "project, programme, task, role, thought, fact, problem."
                 ),
             },
             "name": {
@@ -231,6 +232,11 @@ TOOL_SCHEMA = {
                 "type": "string",
                 "description": "For type=role: the actor handle who holds this role. Creates HOLDS link.",
             },
+            "blocks": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "For type=problem: narrative IDs that this problem blocks. Creates tension links with negative polarity.",
+            },
         },
         "required": ["node_type"],
     },
@@ -246,6 +252,7 @@ _VALID_PARENTS = {
     "mission": {"vision"},
     "role": set(),  # roles don't have parents in the hierarchy
     "vision": set(),
+    "problem": {"objective", "project", "initiative", "task"},  # problems block things
 }
 
 
@@ -260,8 +267,11 @@ def handle_graph_write(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, An
     name = args.get("name", node_id)
     content = args.get("content", "")
     synthesis = args.get("synthesis") or (content[:100] if content else name)
-    weight = args.get("weight", 1.0)
-    energy = args.get("energy", 1.0)
+    # Problems start heavier — they create immediate tension in the graph
+    default_weight = 3.0 if subtype == "problem" else 1.0
+    default_energy = 1.5 if subtype == "problem" else 1.0
+    weight = args.get("weight", default_weight)
+    energy = args.get("energy", default_energy)
     link_to = args.get("link_to", [])
 
     if not ctx.graph_ops:
@@ -439,6 +449,83 @@ def handle_graph_write(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, An
                          desc=f"→@{mentioned}",
                          source_label=node_type, target_label="actor")
 
+        # 8. Problem blocks links
+        if subtype == "problem":
+            for blocked_id in (args.get("blocks") or []):
+                _create_link(node_id, blocked_id,
+                             {"polarity": -1.0, "permanence": 0.8, "friction": 0.5,
+                              "hierarchy": 1.0},
+                             desc=f"→blocks:{blocked_id}",
+                             source_label="narrative", target_label="narrative")
+
+        # 9. Auto-create sense + RACI routing for RACI-assigned narratives
+        raci_gap = None
+        sense_created = False
+        if node_type == "narrative" and (responsible or accountable):
+            try:
+                from mcp.tools.raci_query import ensure_sense_coverage, route_sense_to_raci
+
+                coverage = ensure_sense_coverage(node_id, ctx.graph_ops)
+
+                if not coverage["has_sense"]:
+                    # Auto-create a minimal sense that monitors this narrative's energy/weight
+                    sense_id = f"sense:{node_id}"
+                    import yaml
+                    sense_def = {
+                        "measure_query": (
+                            f"MATCH (n {{id: '{node_id}'}}) "
+                            f"RETURN n.energy, n.weight"
+                        ),
+                        "variables": ["energy", "weight"],
+                        "outcomes": [],
+                        "score": "first_outcome",
+                        "eval_interval": 20,
+                        "internalize": True,
+                    }
+                    ctx.graph_ops._query(
+                        "CREATE (s:Thing {"
+                        "  id: $sid, type: 'sense', "
+                        "  name: $sname, "
+                        "  content: $content, "
+                        "  weight: 1.0, energy: 1.0"
+                        "})",
+                        {
+                            "sid": sense_id,
+                            "sname": f"Sense: {name}",
+                            "content": yaml.dump(sense_def),
+                        },
+                    )
+                    # Link sense → narrative (measures)
+                    _create_link(sense_id, node_id,
+                                 {"polarity": 1.0, "permanence": 1.0},
+                                 desc=f"measures→{node_id}",
+                                 source_label="thing", target_label="narrative")
+                    # Route to RACI actors
+                    route_sense_to_raci(sense_id, node_id, ctx.graph_ops)
+                    sense_created = True
+                    logger.info(f"Auto-created sense {sense_id} and routed to RACI actors")
+
+                elif not coverage["sense_routed"]:
+                    # Sense exists but not routed — fix routing
+                    sense_rows = ctx.graph_ops._query(
+                        "MATCH (s:Thing {type: 'sense'})-[r:LINK]->(n {id: $nid}) "
+                        "WHERE r.computed_type = 'measures' "
+                        "RETURN s.id LIMIT 1",
+                        {"nid": node_id},
+                    )
+                    if sense_rows:
+                        route_sense_to_raci(sense_rows[0][0], node_id, ctx.graph_ops)
+                        sense_created = True
+                        logger.info(f"Auto-routed existing sense to RACI actors of {node_id}")
+                    else:
+                        raci_gap = f"Sense routing failed for {node_id}"
+
+            except ImportError:
+                raci_gap = f"No sense (raci_query not available)"
+            except Exception as e:
+                logger.debug(f"RACI sense auto-creation failed: {e}")
+                raci_gap = f"Sense auto-creation failed: {e}"
+
         lines = [
             f"Created {node_type} node:",
             f"  ID: {node_id}",
@@ -451,6 +538,10 @@ def handle_graph_write(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, An
             lines.append(f"  Links ({len(links_created)}):")
             for lk in links_created:
                 lines.append(f"    {lk}")
+        if sense_created:
+            lines.append(f"  ✓ Sense auto-created and routed to RACI actors")
+        if raci_gap:
+            lines.append(f"  ⚠ Sense gap: {raci_gap}")
 
         return _ok("\n".join(lines))
 
