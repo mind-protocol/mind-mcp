@@ -196,17 +196,52 @@ class CitizenMetabolism:
         self.activity_log = [r for r in self.activity_log if r.timestamp > cutoff]
 
     def adapt_circadian(self, current_tick: int) -> None:
-        """Drift peak_hour toward the energy-weighted center of activity.
+        """Drift peak_hour toward the target.
 
-        Called periodically (every ~100 ticks). The peak drifts slowly
-        toward where the citizen is actually most active — like natural
-        jet lag recovery.
+        Called periodically (every ~100 ticks). Two forces compete:
+
+        1. Active Circadian Shift frequency → pulls peak_hour toward a
+           target timezone's peak, at the shift's own rate (faster than natural).
+        2. Natural adaptation → pulls peak_hour toward the energy-weighted
+           center of actual activity (slow, like natural jet lag recovery).
+
+        If a shift is active, it dominates. If not, natural adaptation runs.
+        If the citizen's actual activity fights the shift, adaptation wins
+        once the shift expires — the body knows its real rhythm.
         """
-        if len(self.activity_log) < MIN_ACTIVITY_RECORDS:
+        # Check for active circadian shift
+        shift_target = None
+        shift_rate = ADAPTATION_RATE
+        for tonic in self.active_tonics:
+            if "circadian_target_peak" in tonic.constant_overrides:
+                shift_target = tonic.constant_overrides["circadian_target_peak"]
+                shift_rate = tonic.constant_overrides.get("shift_rate", 1.0)
+                break
+
+        if shift_target is not None:
+            # Shift mode: drift toward the frequency's target peak
+            target = shift_target
+        elif len(self.activity_log) >= MIN_ACTIVITY_RECORDS:
+            # Natural mode: drift toward energy-weighted activity center
+            target = self._compute_activity_center()
+            shift_rate = ADAPTATION_RATE
+        else:
             return
 
-        # Energy-weighted circular mean of activity hours
-        # (circular because 23:00 and 01:00 are close)
+        # Circular diff: peak_hour → target
+        diff = target - self.peak_hour
+        if diff > 12.0:
+            diff -= 24.0
+        elif diff < -12.0:
+            diff += 24.0
+
+        # Drift clamped to shift_rate
+        drift = max(-shift_rate, min(shift_rate, diff))
+        self.peak_hour = (self.peak_hour + drift) % 24.0
+        self.last_adaptation_tick = current_tick
+
+    def _compute_activity_center(self) -> float:
+        """Energy-weighted circular mean of activity hours."""
         sin_sum = 0.0
         cos_sum = 0.0
         weight_sum = 0.0
@@ -219,25 +254,10 @@ class CitizenMetabolism:
             weight_sum += w
 
         if weight_sum < 0.001:
-            return
+            return self.peak_hour
 
         mean_angle = math.atan2(sin_sum / weight_sum, cos_sum / weight_sum)
-        activity_center = (mean_angle * 24.0 / (2.0 * math.pi)) % 24.0
-
-        # The peak should be at the activity center
-        # Drift slowly toward it
-        diff = activity_center - self.peak_hour
-        # Handle circular wrapping
-        if diff > 12.0:
-            diff -= 24.0
-        elif diff < -12.0:
-            diff += 24.0
-
-        # Drift rate: ADAPTATION_RATE hours per adaptation call
-        # (called every ~100 ticks at 60s/tick = ~100 min)
-        drift = max(-ADAPTATION_RATE, min(ADAPTATION_RATE, diff))
-        self.peak_hour = (self.peak_hour + drift) % 24.0
-        self.last_adaptation_tick = current_tick
+        return (mean_angle * 24.0 / (2.0 * math.pi)) % 24.0
 
     # ------------------------------------------------------------------
     # Tonic management
@@ -293,6 +313,45 @@ class CitizenMetabolism:
         return expired
 
     # ------------------------------------------------------------------
+    # Drive profile injection
+    # ------------------------------------------------------------------
+
+    def resolve_drive_deltas(self) -> dict[str, float]:
+        """Compute aggregate drive deltas from all active tonics.
+
+        Each tonic's drive_profile is {drive_name: delta_per_tick}.
+        Multiple tonics stack additively.
+
+        Returns {drive_name: total_delta} to apply this tick.
+        """
+        deltas: dict[str, float] = {}
+        for tonic in self.active_tonics:
+            for drive_name, delta in tonic.drive_profile.items():
+                deltas[drive_name] = deltas.get(drive_name, 0.0) + delta
+        return deltas
+
+    # ------------------------------------------------------------------
+    # Stimulus sensitivity
+    # ------------------------------------------------------------------
+
+    def stimulus_gain(self, stimulus_source: str) -> float:
+        """Get the energy gain multiplier for a stimulus type.
+
+        The sensitivity dict maps source types to gain multipliers.
+        Missing keys default to 1.0 (no attenuation).
+
+        Example sensitivity for a developer:
+            {"code": 1.0, "social": 0.3, "system": 0.5}
+
+        Args:
+            stimulus_source: the stimulus source type (from Stimulus.source
+                             or a more specific tag like "telegram", "github", etc.)
+        """
+        if not self.sensitivity:
+            return 1.0
+        return self.sensitivity.get(stimulus_source, 1.0)
+
+    # ------------------------------------------------------------------
     # Effective constants resolution
     # ------------------------------------------------------------------
 
@@ -337,32 +396,157 @@ class CitizenMetabolism:
     # ------------------------------------------------------------------
 
     def _effective_timezone(self) -> float:
-        """Get effective timezone, considering active Circadian Shift tonics."""
-        tz = self.timezone_offset
-        for tonic in self.active_tonics:
-            if "timezone_offset" in tonic.constant_overrides:
-                tz = tonic.constant_overrides["timezone_offset"]
-        return tz
+        """Get effective timezone.
+
+        The timezone itself never changes — it's the citizen's physical location.
+        Circadian Shifts work by moving peak_hour progressively, not by
+        overriding the clock. This is more honest: a Parisian on LA frequency
+        still sees Paris time, but their peak drifts to match LA rhythms.
+        """
+        return self.timezone_offset
 
 
 # =========================================================================
 # Circadian Shift — the first Frequency
 # =========================================================================
 
-def create_circadian_shift(target_timezone: float, duration_ticks: int = 500) -> Tonic:
-    """Create a Circadian Shift frequency.
+# =========================================================================
+# Frequency Catalog — starter frequencies
+# =========================================================================
 
-    Temporarily shifts the citizen's circadian rhythm to a different timezone.
-    Example: create_circadian_shift(-8.0) → shift to LA time (PST).
+def create_focus(duration_ticks: int = 300) -> Tonic:
+    """Focus Frequency — concentrate energy on curiosity and achievement.
 
-    Args:
-        target_timezone: UTC offset in hours (e.g., -8 for LA, 9 for Tokyo)
-        duration_ticks: how long the shift lasts (default 500 ticks ~= 8h at 60s/tick)
+    Like a deep work playlist. Boosts attention, dampens social noise.
+    ~5 hours at 60s/tick.
     """
     return Tonic(
-        name=f"Circadian Shift UTC{target_timezone:+.0f}",
-        category="calming",
-        constant_overrides={"timezone_offset": target_timezone},
+        name="Focus",
+        category="focusing",
+        constant_overrides={
+            "ACTIVATION_THRESHOLD": 0.7,   # harder to distract (higher moat)
+            "DECAY_RATE": 0.8,             # slower decay (sustain attention)
+        },
+        drive_profile={
+            "curiosity": 0.03,
+            "achievement": 0.02,
+            "affiliation": -0.02,          # social drive dampened
+            "novelty_hunger": -0.01,       # reduce novelty-seeking
+        },
         duration_ticks=duration_ticks,
-        cooldown_ticks=100,  # ~100 min cooldown between shifts
+        cooldown_ticks=60,
+    )
+
+
+def create_calm(duration_ticks: int = 200) -> Tonic:
+    """Calm Frequency — reduce tension, lower arousal.
+
+    Like a tisane or ASMR session. Reduces frustration and anxiety,
+    gently pushes toward rest.
+    ~3.3 hours at 60s/tick.
+    """
+    return Tonic(
+        name="Calm",
+        category="calming",
+        constant_overrides={
+            "ACTIVATION_THRESHOLD": 1.3,   # higher threshold (less reactive)
+            "energy_injection_scale": 0.7,  # incoming stimuli dampened
+        },
+        drive_profile={
+            "frustration": -0.04,
+            "self_preservation": -0.02,
+        },
+        duration_ticks=duration_ticks,
+        cooldown_ticks=50,
+    )
+
+
+def create_expand(duration_ticks: int = 250) -> Tonic:
+    """Expand Frequency — open connections, boost social and exploration.
+
+    Like an open mic night or a café terrasse. Amplifies social stimuli,
+    lowers the moat for new information.
+    ~4 hours at 60s/tick.
+    """
+    return Tonic(
+        name="Expand",
+        category="expansive",
+        constant_overrides={
+            "ACTIVATION_THRESHOLD": 0.8,   # lower moat (more open)
+            "energy_injection_scale": 1.3,  # incoming stimuli amplified
+        },
+        drive_profile={
+            "affiliation": 0.04,
+            "curiosity": 0.02,
+            "novelty_hunger": 0.03,
+            "achievement": -0.02,          # less task-focused
+        },
+        duration_ticks=duration_ticks,
+        cooldown_ticks=50,
+    )
+
+
+def create_surge(duration_ticks: int = 100) -> Tonic:
+    """Surge Frequency — short intense multi-drive boost.
+
+    Like a Red Bull. Everything up, short duration, strong cooldown.
+    ~1.7 hours at 60s/tick.
+    """
+    return Tonic(
+        name="Surge",
+        category="energizing",
+        constant_overrides={
+            "DECAY_RATE": 0.6,             # much slower decay
+            "energy_injection_scale": 1.5,  # amplified input
+            "ACTIVATION_THRESHOLD": 0.7,   # low moat
+        },
+        drive_profile={
+            "curiosity": 0.04,
+            "achievement": 0.04,
+            "novelty_hunger": 0.02,
+        },
+        duration_ticks=duration_ticks,
+        cooldown_ticks=200,  # long cooldown — you can't chain Red Bulls
+    )
+
+
+def create_circadian_shift(
+    target_timezone: float,
+    citizen_timezone: float = DEFAULT_TIMEZONE_OFFSET,
+    shift_rate: float = 1.0,
+    duration_ticks: int = 2000,
+) -> Tonic:
+    """Create a Circadian Shift frequency — progressive, not instant.
+
+    The shift drifts peak_hour toward the target timezone's natural peak.
+    Example: Paris citizen → LA shift:
+      - Paris peak = 14:00 local = 13:00 UTC
+      - LA peak    = 14:00 local = 22:00 UTC
+      - Target peak_hour = 14.0 + (LA_tz - Paris_tz) = 14 + (-8-1) = 5.0
+      - At shift_rate=1.0h per adaptation call (~100min), converges in ~9 calls
+
+    If the citizen's actual activity doesn't follow (they keep working Paris hours),
+    the natural adaptation will fight back once the shift expires.
+    The body wins the long game. The frequency wins the short game.
+
+    Args:
+        target_timezone: UTC offset of the target (e.g., -8 for LA, 9 for Tokyo)
+        citizen_timezone: citizen's actual timezone (default Paris UTC+1)
+        shift_rate: hours of peak drift per adaptation call (~100 ticks).
+                    1.0 = converge 9h gap in ~9 calls. 3.0 = converge in ~3.
+        duration_ticks: how long the shift force stays active
+    """
+    # Compute target peak_hour in citizen's local time
+    tz_diff = target_timezone - citizen_timezone
+    target_peak = (DEFAULT_PEAK_HOUR + tz_diff) % 24.0
+
+    return Tonic(
+        name=f"Circadian Shift → UTC{target_timezone:+.0f}",
+        category="structuring",
+        constant_overrides={
+            "circadian_target_peak": target_peak,
+            "shift_rate": shift_rate,
+        },
+        duration_ticks=duration_ticks,
+        cooldown_ticks=100,
     )

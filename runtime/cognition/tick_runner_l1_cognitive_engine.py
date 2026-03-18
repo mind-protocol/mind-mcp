@@ -311,9 +311,11 @@ class L1CognitiveTickRunner:
         injection_scale = self._metabolic_multipliers.get("energy_injection_scale", 1.0)
         stimulus.energy_budget *= injection_scale
 
-        # Metabolism: record activity for circadian adaptation
+        # Metabolism: stimulus sensitivity (per-source-type gain)
         metabolism = getattr(self.state, 'metabolism', None)
         if metabolism is not None:
+            source_gain = metabolism.stimulus_gain(stimulus.source)
+            stimulus.energy_budget *= source_gain
             metabolism.record_activity(stimulus.energy_budget)
 
         # Track social stimuli for solitude
@@ -535,6 +537,15 @@ class L1CognitiveTickRunner:
         for drive in limbic.drives.values():
             drive.toward_baseline(DRIVE_DECAY)
             drive.intensity = max(0.0, min(DRIVE_MAX, drive.intensity))
+
+        # --- Metabolism: apply tonic drive profiles (Frequencies) ---
+        metabolism = getattr(self.state, 'metabolism', None)
+        if metabolism is not None:
+            drive_deltas = metabolism.resolve_drive_deltas()
+            for drive_name, delta in drive_deltas.items():
+                drive = limbic.drives.get(drive_name)
+                if drive is not None:
+                    drive.intensity = max(0.0, min(DRIVE_MAX, drive.intensity + delta))
 
         # --- Boredom (Law 15) ---
         self._step_boredom(stimulus)
