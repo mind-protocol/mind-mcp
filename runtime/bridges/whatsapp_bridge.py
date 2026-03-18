@@ -36,7 +36,7 @@ STATE_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── Config ───────────────────────────────────────────────────────────────────
 
-WAHA_URL = os.environ.get("WAHA_URL", "http://localhost:3001")
+WAHA_URL = os.environ.get("WAHA_URL", "http://localhost:3002")
 WAHA_SESSION = os.environ.get("WAHA_SESSION", "default")
 WAHA_API_KEY = os.environ.get("WAHA_API_KEY", "")
 OWNER_PHONE = os.environ.get("OWNER_WHATSAPP_PHONE", "")

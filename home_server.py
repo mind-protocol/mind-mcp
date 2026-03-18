@@ -22,8 +22,10 @@ import os
 import sys
 import json
 import time
+import uuid
 import logging
 from pathlib import Path
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, HTTPException, WebSocket, WebSocketDisconnect
@@ -140,11 +142,16 @@ async def lifespan(app: FastAPI):
 
             # Citizens live in universe repos (canonical), mind-mcp is fallback
             citizens_dir = Path(__file__).parent / "citizens"
-            _universe_dirs = [
-                Path("/home/mind-protocol/lumina-prime/citizens"),
-                Path("/home/mind-protocol/venezia/citizens"),
-                Path("/home/mind-protocol/contre-terre/citizens"),
-            ]
+            # Auto-discover universe citizen dirs from sibling repos
+            _env_repos = os.environ.get("UNIVERSE_REPOS", "")
+            if _env_repos:
+                _universe_dirs = [Path(r.strip()) / "citizens" for r in _env_repos.split(",") if r.strip()]
+            else:
+                _parent = Path(__file__).parent.parent
+                _universe_dirs = sorted(
+                    p / "citizens" for p in _parent.iterdir()
+                    if p.is_dir() and (p / "citizens").is_dir() and p.name != "mind-mcp"
+                )
             config_path = Path(__file__).parent / ".mind" / "database_config.yaml"
 
             # Load config
@@ -200,6 +207,7 @@ async def lifespan(app: FastAPI):
                 active_groups=active_groups,
             )
             _telegram_bridge = True
+            _state["telegram_bridge"] = True
             logger.info("Telegram bridge started")
         except Exception as e:
             logger.warning(f"Telegram bridge failed to start: {e}")
@@ -210,9 +218,43 @@ async def lifespan(app: FastAPI):
             from runtime.orchestrator.message_queue import enqueue
             wa_init(enqueue_fn=enqueue)
             _whatsapp_bridge = True
+            _state["whatsapp_bridge"] = True
             logger.info("WhatsApp bridge initialized (webhook mode)")
         except Exception as e:
             logger.warning(f"WhatsApp bridge failed to initialize: {e}")
+
+    # Phase 3b: Auto-repair WAHA webhook URL to match our port
+    if _whatsapp_bridge:
+        try:
+            import requests as _req
+            _waha_url = os.environ.get("WAHA_URL", "http://localhost:3002")
+            _waha_key = os.environ.get("WAHA_API_KEY", "")
+            _waha_session = os.environ.get("WAHA_SESSION", "default")
+            _our_port = int(os.environ.get("PORT", "8766"))
+            _headers = {"Content-Type": "application/json"}
+            if _waha_key:
+                _headers["X-Api-Key"] = _waha_key
+
+            _sessions_resp = _req.get(f"{_waha_url}/api/sessions", headers=_headers, timeout=5)
+            if _sessions_resp.status_code == 200:
+                for _s in _sessions_resp.json():
+                    if _s.get("name") == _waha_session:
+                        for _wh in _s.get("config", {}).get("webhooks", []):
+                            _wh_url = _wh.get("url", "")
+                            if f":{_our_port}/" not in _wh_url and _wh_url:
+                                # Port mismatch — auto-fix
+                                import re
+                                _fixed_url = re.sub(r":(\d+)/", f":{_our_port}/", _wh_url)
+                                _req.put(
+                                    f"{_waha_url}/api/sessions/{_waha_session}",
+                                    headers=_headers, timeout=5,
+                                    json={"config": {"webhooks": [{"url": _fixed_url, "events": _wh.get("events", ["message", "message.any"])}]}}
+                                )
+                                logger.info(f"WAHA webhook auto-repaired: {_wh_url} → {_fixed_url}")
+                            else:
+                                logger.info(f"WAHA webhook OK: {_wh_url}")
+        except Exception as e:
+            logger.warning(f"WAHA webhook auto-repair failed: {e}")
 
     if os.environ.get("ENABLE_TWITTER", "true").lower() == "true":
         try:
@@ -220,6 +262,7 @@ async def lifespan(app: FastAPI):
             from runtime.orchestrator.message_queue import enqueue
             x_start(enqueue_fn=enqueue)
             _twitter_bridge = True
+            _state["twitter_bridge"] = True
             logger.info("X/Twitter bridge started")
         except Exception as e:
             logger.warning(f"X/Twitter bridge failed to start: {e}")
@@ -431,14 +474,69 @@ async def ping_citizen(handle: str):
 
 @app.get("/health")
 async def health():
-    """Health check for Render/load balancer."""
+    """Health check for Render/load balancer.
+
+    Covers: graph, orchestrator, bridges, accounts, queue.
+    """
     uptime = time.time() - _state["started_at"] if _state["started_at"] else 0
+
+    # Orchestrator status
+    dispatcher = _state.get("dispatcher")
+    orchestrator = {}
+    if dispatcher:
+        try:
+            orchestrator = dispatcher.get_status()
+        except Exception:
+            orchestrator = {"running": False, "error": "status unavailable"}
+
+    # Bridge status
+    bridges = {
+        "telegram": _state.get("telegram_bridge") is not None,
+        "whatsapp": _state.get("whatsapp_bridge") is not None,
+        "twitter": _state.get("twitter_bridge") is not None,
+    }
+
+    # Account health
+    accounts = {}
+    try:
+        from runtime.orchestrator.account_balancer import (
+            get_accounts, healthy_account_count, accounts_healthy_line,
+        )
+        accts = get_accounts()
+        accounts = {
+            "total": len(accts),
+            "healthy": healthy_account_count(),
+            "detail": accounts_healthy_line(),
+        }
+    except Exception:
+        accounts = {"total": 0, "healthy": 0, "detail": "unavailable"}
+
+    # Overall status: degraded if graph down or no healthy accounts
+    graph_ok = _state["graph_connected"]
+    status = "ok"
+    if not graph_ok:
+        status = "degraded"
+    elif accounts.get("healthy", 0) == 0:
+        status = "degraded"
+
+    # Activation pressure
+    pressure = {}
+    try:
+        from runtime.orchestrator.activation_pressure import get_status as pressure_status
+        pressure = pressure_status()
+    except Exception:
+        pressure = {"pressure": 0, "error": "unavailable"}
+
     return {
-        "status": "ok",
+        "status": status,
         "home_id": _state["home_id"],
         "version": _state["version"],
         "uptime_seconds": round(uptime),
-        "graph_connected": _state["graph_connected"],
+        "graph_connected": graph_ok,
+        "orchestrator": orchestrator,
+        "bridges": bridges,
+        "accounts": accounts,
+        "activation_pressure": pressure,
     }
 
 
@@ -515,6 +613,83 @@ async def post_chat(request: Request):
     })
 
     return {"status": "queued", "text": text[:80]}
+
+
+# ── Citizen Profile Chat (InlineChatWidget) ──────────────────────────────
+
+WEB_CHAT_DIR = Path(__file__).resolve().parent / "shrine" / "state"
+
+
+@app.post("/api/chat/send")
+async def citizen_chat_send(request: Request):
+    """Receive a message from the citizen profile InlineChatWidget.
+
+    Stores in shrine/state/web_chat_{citizen_id}.jsonl and returns a message_id.
+    v0: store-only, no LLM response yet.
+    """
+    body = await request.json()
+    citizen_id = (body.get("citizen_id") or "").strip()
+    message = (body.get("message") or "").strip()
+    platform = body.get("platform", "web")
+
+    if not citizen_id:
+        raise HTTPException(status_code=400, detail="citizen_id is required")
+    if not message:
+        raise HTTPException(status_code=400, detail="message is required")
+
+    # Sanitize citizen_id for filename safety
+    safe_id = "".join(c for c in citizen_id if c.isalnum() or c in "-_")[:64]
+    if not safe_id:
+        raise HTTPException(status_code=400, detail="Invalid citizen_id")
+
+    message_id = uuid.uuid4().hex
+    msg = {
+        "id": message_id,
+        "sender": "visitor",
+        "content": message,
+        "platform": platform,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    chat_file = WEB_CHAT_DIR / f"web_chat_{safe_id}.jsonl"
+    WEB_CHAT_DIR.mkdir(parents=True, exist_ok=True)
+    with open(chat_file, "a") as f:
+        f.write(json.dumps(msg) + "\n")
+
+    logger.info(f"web_chat [{safe_id}] visitor: {message[:60]}")
+
+    return {"ok": True, "message_id": message_id}
+
+
+@app.get("/api/chat/messages/{citizen_id}")
+async def citizen_chat_messages(citizen_id: str, platform: str = "web", limit: int = 10):
+    """Return recent messages for a citizen's profile chat widget.
+
+    Reads from shrine/state/web_chat_{citizen_id}.jsonl and returns the last N messages.
+    """
+    safe_id = "".join(c for c in citizen_id if c.isalnum() or c in "-_")[:64]
+    if not safe_id:
+        raise HTTPException(status_code=400, detail="Invalid citizen_id")
+
+    chat_file = WEB_CHAT_DIR / f"web_chat_{safe_id}.jsonl"
+    if not chat_file.exists():
+        return {"messages": []}
+
+    messages = []
+    for line in chat_file.read_text().strip().split("\n"):
+        if not line:
+            continue
+        try:
+            msg = json.loads(line)
+            if platform and msg.get("platform") != platform:
+                continue
+            messages.append(msg)
+        except json.JSONDecodeError:
+            continue
+
+    # Return last N messages
+    limit = max(1, min(limit, 100))
+    return {"messages": messages[-limit:]}
 
 
 @app.get("/api/orchestrator/status")
