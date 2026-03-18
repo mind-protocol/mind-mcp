@@ -43,11 +43,11 @@ Design phase. The full documentation chain has been written based on the NLR + @
 
 - **OBJECTIVES**: State-to-sensation translation, threshold-based firing, refractory protection, drive-agnostic injection
 - **PATTERNS**: Read-only observer pattern, standard Law 1 injection, silence as default, natural language, metabolism coupling
-- **BEHAVIORS**: 8 behavior specs with GIVEN/WHEN/THEN across 6 sense channels (energy, time, cognitive load, drives, social, metabolic)
-- **ALGORITHM**: 4-step pipeline (capture -> evaluate -> gate -> update), 22 channel configurations, priority ordering, hysteresis
-- **VALIDATION**: 8 invariants covering state immutability, refractory, caps, standard injection, NL content, timing, silence, metabolism independence
-- **IMPLEMENTATION**: File structure, data flow, entry points, configuration constants (~20 INTERO_* constants)
-- **HEALTH**: 4 runtime indicators (stimulus rate, refractory compliance, silence ratio, state immutability)
+- **BEHAVIORS**: 11 behavior specs with GIVEN/WHEN/THEN across 11 sense channels (energy, time, cognitive load, drives, social, metabolic, brain health, architectural layers, zone awareness, emotional self-perception, context window)
+- **ALGORITHM**: 4-step pipeline (capture -> evaluate -> gate -> update), 34 channel configurations, priority ordering, hysteresis, zone aggregation, delta detection, context estimation
+- **VALIDATION**: 12 invariants covering state immutability, refractory, caps, standard injection, NL content, timing, silence, metabolism independence, zone mapping, emotional delta accuracy, context graceful degradation, zone minimum nodes
+- **IMPLEMENTATION**: File structure, data flow, entry points, configuration constants (~30 INTERO_* constants)
+- **HEALTH**: 4 runtime indicators (stimulus rate, refractory compliance, silence ratio, state immutability) + zone/emotion/context indicators planned
 
 The tick_runner already has the placement understood: between `_step_limbic()` (step 9 in run_tick) and `_step_orient()` (step 10). The Stimulus dataclass already supports `source="interoception"`. The metabolism already exposes `circadian_phase()` and `active_tonics`. All dependencies exist.
 
@@ -102,7 +102,12 @@ None yet — module is in design phase. Potential issues to watch during impleme
 **Where I stopped:** Doc chain is complete. No code written yet.
 
 **What you need to understand:**
-The interoception engine is a pure function `(CitizenCognitiveState, CitizenMetabolism, InteroceptionState) -> (list[Stimulus], InteroceptionState)`. It reads state, evaluates ~22 channels against thresholds, gates by refractory periods with hysteresis, caps output at 3 per tick, and returns stimuli for Law 1 injection. It hooks into the tick_runner between `_step_limbic()` and `_step_orient()`. All the structures it reads already exist. The Stimulus dataclass already supports `source="interoception"`.
+The interoception engine is a pure function `(CitizenCognitiveState, CitizenMetabolism, InteroceptionState, session_metadata) -> (list[Stimulus], InteroceptionState)`. It reads state, evaluates ~34 channels across 4 layers (somatic, drive, metacognitive, substrate) against thresholds, gates by refractory periods with hysteresis, caps output at 3 per tick, and returns stimuli for Law 1 injection. It hooks into the tick_runner between `_step_limbic()` and `_step_orient()`. All the structures it reads already exist. The Stimulus dataclass already supports `source="interoception"`.
+
+Three new channel groups make the citizen genuinely self-aware:
+- **Zone awareness** aggregates node energy by type into stem/limbic/cortex zones and reports cognitive topology shifts
+- **Emotional self-perception** detects drive/emotion deltas (rising/falling edges) and injects the emotion as a thought-stimulus
+- **Context window** estimates LLM context usage and produces bandwidth pressure when high
 
 **Watch out for:**
 - Do NOT mutate state inside interoception. This is invariant V1 (CRITICAL). Use deepcopy or snapshot comparison in tests.
@@ -121,7 +126,10 @@ The interoception engine is a pure function `(CitizenCognitiveState, CitizenMeta
 Full 8-file documentation chain designed for the interoception module. This module translates internal state (drives, energy, WM fullness, circadian phase, graph health, social field) into natural-language stimuli that enter Working Memory via Law 1. No code written yet — the design is complete and ready for implementation.
 
 **Decisions made:**
-- 6 sense channels: energy, time, cognitive load, brain health, social field, metabolic
+- 11 sense channels across 4 layers: somatic (energy, time, cognitive load, brain health, social field, metabolic), drive (drive awareness), metacognitive (zone awareness), substrate (emotional self-perception, context window fullness, architectural layer awareness)
+- Zone mapping: stem (process/state), limbic (desire/narrative/memory), cortex (concept/value) — mirrors biological neuroanatomy
+- Emotional self-perception fires on TRANSITIONS (deltas), not absolute values — the citizen notices when emotions CHANGE, not when they hold steady
+- Context window awareness estimates usage from session metadata or heuristic, with graceful degradation when unavailable
 - Threshold-based with refractory periods and hysteresis bands (not continuous)
 - Max 3 stimuli per tick (hard cap)
 - Placement in tick cycle: after limbic, before orient
