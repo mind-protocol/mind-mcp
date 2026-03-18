@@ -103,6 +103,25 @@ class CitizenMetabolism:
     # ── Stimulus sensitivity (v0.2 stub) ──
     sensitivity: dict[str, float] = field(default_factory=dict)
 
+    # ── Stimulus flood protection ──
+    # Protects the circadian rhythm against stimulus flooding.
+    # When stimuli arrive faster than the brain can process,
+    # the gain drops — like ears ringing in a loud room.
+    #
+    # saturation_shape: the dampening curve applied when rate > baseline
+    #   "sigmoid"  — smooth S-curve, gradual onset (default, most organic)
+    #   "log"      — logarithmic, strong initial dampening then plateau
+    #   "linear"   — proportional, simple but harsh
+    #   "exp"      — exponential decay, aggressive protection
+    # saturation_rate_baseline: stimuli/tick below which no dampening occurs
+    # saturation_floor: minimum gain (never fully deaf, even under max flood)
+    # saturation_steepness: how fast the curve drops (higher = sharper cutoff)
+    saturation_shape: str = "sigmoid"
+    saturation_rate_baseline: float = 3.0    # stimuli/tick before dampening kicks in
+    saturation_floor: float = 0.1            # min gain under max flood (never 0)
+    saturation_steepness: float = 2.0        # curve sharpness
+    _stimulus_count_this_tick: int = 0       # reset each tick by the runner
+
     # ── Audit log ──
     tonic_log: list[TonicEvent] = field(default_factory=list)
 
@@ -335,21 +354,77 @@ class CitizenMetabolism:
     # ------------------------------------------------------------------
 
     def stimulus_gain(self, stimulus_source: str) -> float:
-        """Get the energy gain multiplier for a stimulus type.
+        """Get the energy gain multiplier for a stimulus, combining type sensitivity + flood protection.
 
-        The sensitivity dict maps source types to gain multipliers.
-        Missing keys default to 1.0 (no attenuation).
+        Two layers:
+        1. Type sensitivity: per-source gain (developer dims social, amplifies code)
+        2. Flood protection: dynamic dampening when stimuli arrive faster than baseline
 
-        Example sensitivity for a developer:
-            {"code": 1.0, "social": 0.3, "system": 0.5}
+        The flood protection shape is configurable per citizen:
+          sigmoid  — smooth S-curve (most organic, default)
+          log      — logarithmic (strong initial dampening)
+          linear   — proportional (simple)
+          exp      — exponential decay (aggressive)
 
         Args:
-            stimulus_source: the stimulus source type (from Stimulus.source
-                             or a more specific tag like "telegram", "github", etc.)
+            stimulus_source: the stimulus source type
         """
-        if not self.sensitivity:
+        # Layer 1: type sensitivity
+        type_gain = self.sensitivity.get(stimulus_source, 1.0) if self.sensitivity else 1.0
+
+        # Layer 2: flood protection
+        self._stimulus_count_this_tick += 1
+        flood_gain = self._compute_flood_dampening(self._stimulus_count_this_tick)
+
+        return type_gain * flood_gain
+
+    def reset_stimulus_counter(self):
+        """Reset per-tick stimulus counter. Called at start of each tick by the runner."""
+        self._stimulus_count_this_tick = 0
+
+    def _compute_flood_dampening(self, count: int) -> float:
+        """Compute flood protection gain based on stimulus count this tick.
+
+        Returns 1.0 when count <= baseline (no dampening).
+        Returns a value between floor and 1.0 when count > baseline.
+        The shape of the curve is configurable via saturation_shape.
+        """
+        baseline = self.saturation_rate_baseline
+        if count <= baseline:
             return 1.0
-        return self.sensitivity.get(stimulus_source, 1.0)
+
+        floor = self.saturation_floor
+        k = self.saturation_steepness
+        # Normalized excess: how far above baseline (0 = at baseline, 1 = 2x baseline, etc.)
+        excess = (count - baseline) / max(baseline, 1.0)
+
+        shape = self.saturation_shape
+
+        if shape == "sigmoid":
+            # Smooth S-curve: gradual onset, saturates at floor
+            # gain = floor + (1-floor) / (1 + exp(k * (excess - 1)))
+            raw = 1.0 / (1.0 + math.exp(k * (excess - 1.0)))
+            return floor + (1.0 - floor) * raw
+
+        elif shape == "log":
+            # Logarithmic: strong initial dampening then plateau
+            # gain = floor + (1-floor) / (1 + k * log(1 + excess))
+            raw = 1.0 / (1.0 + k * math.log1p(excess))
+            return floor + (1.0 - floor) * raw
+
+        elif shape == "linear":
+            # Linear: proportional drop, clamps at floor
+            raw = max(0.0, 1.0 - excess * k * 0.5)
+            return floor + (1.0 - floor) * raw
+
+        elif shape == "exp":
+            # Exponential decay: aggressive protection
+            raw = math.exp(-k * excess)
+            return floor + (1.0 - floor) * raw
+
+        else:
+            # Unknown shape: no dampening (safe fallback)
+            return 1.0
 
     # ------------------------------------------------------------------
     # Effective constants resolution
