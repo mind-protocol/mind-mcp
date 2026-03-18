@@ -247,6 +247,59 @@ def check_circadian_sanity(db) -> CheckResult:
     )
 
 
+def check_interoception_live(db) -> CheckResult:
+    """HC8: Load a real brain, run interoception, verify stimuli are generated."""
+    brains = [g for g in db.list_graphs() if g.startswith("brain_")]
+    if not brains:
+        return CheckResult("interoception_live", "FAIL", "No brain graphs found")
+
+    try:
+        from runtime.cognition.falkordb_checkpointer import FalkorDBBrainCheckpointer
+        from runtime.cognition.interoception import InteroceptionEngine
+        from runtime.cognition.metabolism import CitizenMetabolism
+    except ImportError as e:
+        return CheckResult("interoception_live", "FAIL", f"Import error: {e}")
+
+    # Find a brain with enough nodes
+    for brain_name in brains[:5]:
+        handle = brain_name.replace("brain_", "")
+        try:
+            ckpt = FalkorDBBrainCheckpointer(handle)
+            ckpt.connect()
+            state = ckpt.load_state()
+            if not state or len(state.nodes) < 50:
+                continue
+
+            state.metabolism = CitizenMetabolism()
+            intero = InteroceptionEngine()
+
+            # Set conditions that SHOULD trigger interoception
+            state.limbic.drives["frustration"].intensity = 0.8
+            state.limbic.ticks_since_social = 200
+            state.wm.node_ids = list(state.nodes.keys())[:7]
+            state.tick_count = 500
+
+            stimuli = intero.tick(state, state.metabolism)
+
+            if len(stimuli) > 0:
+                contents = [s.content[:50] for s in stimuli]
+                return CheckResult(
+                    "interoception_live", "PASS",
+                    f"{len(stimuli)} stimuli on {handle} ({len(state.nodes)}n): {contents}",
+                    {"citizen": handle, "stimuli_count": len(stimuli),
+                     "contents": [s.content for s in stimuli]},
+                )
+            else:
+                return CheckResult(
+                    "interoception_live", "WARN",
+                    f"No stimuli generated for {handle} despite extreme conditions",
+                )
+        except Exception as e:
+            continue
+
+    return CheckResult("interoception_live", "FAIL", "Could not load any brain for live test")
+
+
 # =========================================================================
 # Runner
 # =========================================================================
@@ -259,6 +312,7 @@ ALL_CHECKS = [
     check_platform_handles,
     check_brain_inventory,
     check_circadian_sanity,
+    check_interoception_live,
 ]
 
 
