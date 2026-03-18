@@ -1,11 +1,20 @@
 # MIND Graph Schema v2.3 — L1 Cognitive Substrate
-# The brain: 7 cognitive types, 21 physics laws, 8 drives, Working Memory, Visual Memory
+# The brain: 7 cognitive types, 21 physics laws, 8 drives, Working Memory, Visual Memory,
+# Multimodal Media, Spatial Presence, Metabolism, Interoception, Exteroception.
 #
 # This file defines: nodes, links, cognitive types, drives, WM, tick cycle, kernels, invariants.
 # For the L3 Universe Graph and L4 Protocol, see schema-l3.yaml.
+#
+# v2.3 CHANGES (2026-03-18):
+#   - media: dict replaces image_uri/image_embedding — extensible multimodal (image, audio, video, geometry)
+#   - Spatial presence: position [x,y,z], orientation [qx,qy,qz,qw], scale, velocity, mass, zone_id
+#   - Coherence formula extended for multimodal (per-modality weights, graceful degradation)
+#   - Metabolism sublayer: circadian rhythm, stimulus sensitivity, Frequencies (Tonic at L4)
+#   - Interoception: 16 channels sensing internal state → stimuli
+#   - Exteroception: L3 scan → stimuli (state-biased, goal-aligned, habituated)
 
-version: "2.2"
-updated: "2026-03-14"
+version: "2.3"
+updated: "2026-03-18"
 status: "CANONICAL"
 
 # =============================================================================
