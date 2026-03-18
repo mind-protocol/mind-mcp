@@ -128,6 +128,9 @@ class FalkorDBBrainCheckpointer:
         self._dirty_links.clear()
         self._last_checkpoint = time.time()
 
+        # Persist limbic state (drives must survive restarts for health scores)
+        self._save_limbic(state)
+
         # Persist metabolism (adaptive peak_hour must survive restarts)
         self._save_metabolism(state)
 
@@ -316,6 +319,9 @@ class FalkorDBBrainCheckpointer:
                 link.stability = float(row[10] or 0.5)
                 state.links.append(link)
 
+            # Restore limbic state (drives + emotions survive restarts)
+            self._load_limbic(state)
+
             # Restore metabolism (circadian adaptation survives restarts)
             self._load_metabolism(state)
 
@@ -328,6 +334,72 @@ class FalkorDBBrainCheckpointer:
         except Exception as e:
             logger.exception(f"Failed to load brain state for {self.citizen_handle}: {e}")
             return None
+
+    # ------------------------------------------------------------------
+    # Limbic state persistence
+    # ------------------------------------------------------------------
+
+    def _save_limbic(self, state: CitizenCognitiveState):
+        """Persist limbic state (drives + emotions) as a __limbic__ Meta node."""
+        if not self._connected:
+            return
+
+        import json
+        limbic = state.limbic
+
+        data = json.dumps({
+            "drives": {
+                name: {"intensity": drive.intensity, "baseline": drive.baseline}
+                for name, drive in limbic.drives.items()
+            },
+            "emotions": dict(limbic.emotions),
+            "ticks_since_social": limbic.ticks_since_social,
+        })
+
+        try:
+            self._graph.query(
+                "MERGE (m:Meta {id: '__limbic__'}) "
+                "SET m.data = $data, m.updated_at = $ts",
+                {"data": data, "ts": int(time.time())},
+            )
+        except Exception as e:
+            logger.warning(f"Limbic save failed for {self.citizen_handle}: {e}")
+
+    def _load_limbic(self, state: CitizenCognitiveState):
+        """Restore limbic state from the __limbic__ Meta node."""
+        if not self._connected:
+            return
+
+        try:
+            result = self._graph.query(
+                "MATCH (m:Meta {id: '__limbic__'}) RETURN m.data"
+            )
+            if result.result_set and result.result_set[0][0]:
+                import json
+                from .models import Drive, DriveName, LimbicState
+                data = json.loads(result.result_set[0][0])
+
+                # Restore drives
+                for drive_name, drive_data in data.get("drives", {}).items():
+                    drive = state.limbic.drives.get(drive_name)
+                    if drive is not None:
+                        drive.intensity = drive_data.get("intensity", 0.0)
+                        drive.baseline = drive_data.get("baseline", 0.3)
+
+                # Restore emotions
+                for emotion_name, intensity in data.get("emotions", {}).items():
+                    state.limbic.emotions[emotion_name] = intensity
+
+                # Restore social timer
+                state.limbic.ticks_since_social = data.get("ticks_since_social", 0)
+
+                logger.info(
+                    f"Limbic restored for {self.citizen_handle}: "
+                    f"{len(data.get('drives', {}))} drives, "
+                    f"{len(data.get('emotions', {}))} emotions"
+                )
+        except Exception as e:
+            logger.warning(f"Limbic load failed for {self.citizen_handle}: {e}")
 
     # ------------------------------------------------------------------
     # Metabolism persistence
@@ -395,5 +467,6 @@ class FalkorDBBrainCheckpointer:
         self._dirty_nodes = set(state.nodes.keys())
         self._dirty_links = {f"{l.source_id}_{l.target_id}" for l in state.links}
         self.checkpoint(state)
+        self._save_limbic(state)
         self._save_metabolism(state)
         logger.info(f"Full flush for {self.citizen_handle}: {len(state.nodes)}n, {len(state.links)}l")
