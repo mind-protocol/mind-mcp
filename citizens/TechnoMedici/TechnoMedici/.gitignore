@@ -1,8 +1,0 @@
-# Mind runtime
-.mind/runtime/
-.env
-
-# mind agent working directories
-.mind/work/
-.mind/traces/
-.mcp.json

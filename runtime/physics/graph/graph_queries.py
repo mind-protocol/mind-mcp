@@ -195,7 +195,7 @@ Error: {e}"""
             ''')
         """
         try:
-            result = self.graph.query(cypher, params or {})
+            result = self.graph.query(cypher, params or {}, timeout=5000)
 
             if not result.result_set:
                 return []

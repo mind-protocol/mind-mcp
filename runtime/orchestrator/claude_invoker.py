@@ -35,7 +35,21 @@ logger = logging.getLogger("orchestrator.invoker")
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
-SESSION_TIMEOUT = 900  # 15 minutes
+SESSION_TIMEOUT = 600  # 10 minutes max per subprocess
+
+
+def _set_resource_limits():
+    """Set resource limits for citizen Claude processes."""
+    import resource
+    # 50MB max file write
+    resource.setrlimit(resource.RLIMIT_FSIZE, (50_000_000, 50_000_000))
+    # 500MB virtual memory
+    try:
+        resource.setrlimit(resource.RLIMIT_AS, (500_000_000, 500_000_000))
+    except ValueError:
+        pass  # Not available on all platforms
+    # 5 min CPU time
+    resource.setrlimit(resource.RLIMIT_CPU, (300, 300))
 
 
 def get_state_dir() -> Path:
@@ -131,6 +145,7 @@ def invoke_claude(
         text=True,
         cwd=working_dir,
         env=balanced_env,
+        preexec_fn=_set_resource_limits,
     )
 
     # Simple message — CLAUDE.md in the citizen dir provides all context
@@ -234,11 +249,21 @@ def invoke_claude(
             response_file, elapsed,
         )
 
-    # Recovery / degradation tracking
+    # Recovery / degradation tracking + activation pressure
     if response:
         attempt_recovery()
+        try:
+            from runtime.orchestrator.activation_pressure import on_success
+            on_success()
+        except ImportError:
+            pass
     elif detect_rate_limit_error(stderr or "", stdout or ""):
         escalate(f"Empty response from {account_id}")
+        try:
+            from runtime.orchestrator.activation_pressure import on_rate_limit
+            on_rate_limit()
+        except ImportError:
+            pass
 
     logger.info(f"Session {session_id} done in {elapsed:.0f}s — {len(response)} chars")
     return (response, voice_response)
@@ -276,6 +301,7 @@ def _attempt_failover(
         failover_cmd,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, cwd=working_dir, env=failover_env,
+        preexec_fn=_set_resource_limits,
     )
 
     fo_start = time.time()

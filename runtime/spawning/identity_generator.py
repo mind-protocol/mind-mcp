@@ -9,6 +9,7 @@ Name is selected by semantic affinity: embed candidate names, find highest
 cosine similarity to the seed brain centroid.
 """
 
+import colorsys
 import hashlib
 import json
 import logging
@@ -24,6 +25,19 @@ from runtime.spawning.seed_assembler import SeedBrain
 from runtime.spawning.safety_validator import SafetyReport
 
 logger = logging.getLogger("mind.spawning.identity")
+
+# District accent colors (HSV hue in degrees, used for tinting)
+DISTRICT_COLORS = {
+    "radiant-core":         [255, 223, 128],    # warm gold
+    "innovation-fields":    [100, 200, 130],     # emerald green
+    "towers-of-knowledge":  [80, 130, 220],      # sapphire blue
+    "data-gardens":         [80, 200, 200],      # teal cyan
+    "creative-nexus":       [180, 100, 220],     # magenta purple
+    "the-arsenal":          [220, 120, 80],       # forge orange
+    "resonance-plaza":      [220, 140, 170],     # coral pink
+}
+
+DEFAULT_PARENT_COLOR = [80, 120, 180]  # muted blue fallback
 
 
 @dataclass
@@ -48,6 +62,8 @@ def generate_identity(
     universe: str = "lumina-prime",
     intended_human: str | None = None,
     embed_fn=None,
+    godparent_colors: list[list[int]] | None = None,
+    district: str | None = None,
 ) -> CitizenIdentity:
     """Generate complete citizen identity from seed brain.
 
@@ -61,6 +77,10 @@ def generate_identity(
         universe: Universe the citizen belongs to.
         intended_human: Optional human partner handle for bond proposal.
         embed_fn: Embedding function for name selection.
+        godparent_colors: Optional list of parent canvas_colors [[r,g,b], ...].
+            Used to compute the child's visual identity via color inheritance.
+        district: Optional district assignment (e.g. "creative-nexus").
+            Influences the child's color palette via district accent.
 
     Returns:
         CitizenIdentity with SID, handle, name, CLAUDE.md, and profile.json.
@@ -85,6 +105,14 @@ def generate_identity(
         universe=universe,
     )
 
+    # Compute inherited canvas_color from parents + district + SID entropy
+    canvas_color = _compute_canvas_color(
+        godparent_colors=godparent_colors,
+        district=district,
+        sid=sid,
+        seed_brain=seed_brain,
+    )
+
     # Build profile.json
     profile = _build_profile(
         handle=handle,
@@ -98,6 +126,7 @@ def generate_identity(
         universe=universe,
         intended_human=intended_human,
         born_at=born_at,
+        canvas_color=canvas_color,
     )
 
     logger.info(f"Identity generated: @{handle} (SID: {sid[:8]}...)")
@@ -111,6 +140,85 @@ def generate_identity(
         profile=profile,
         born_at=born_at,
     )
+
+
+def _compute_canvas_color(
+    godparent_colors: list[list[int]] | None,
+    district: str | None,
+    sid: str,
+    seed_brain: SeedBrain,
+) -> list[int]:
+    """Compute the child's canvas_color from parent DNA + district + SID entropy.
+
+    The color blends parent palettes in HSV space, applies a district accent,
+    and mutates by SID-derived entropy. No two citizens get the same color.
+
+    Args:
+        godparent_colors: Parent canvas_colors [[r,g,b], ...]. Falls back to default.
+        district: Assigned district slug (for accent tinting).
+        sid: The child's SID (16 hex chars) — source of unique mutation.
+        seed_brain: The seed brain (energy profile influences saturation/brightness).
+
+    Returns:
+        [r, g, b] as ints in 0-255 range.
+    """
+    # Gather parent colors, use defaults for missing
+    parents = godparent_colors or []
+    parent_rgbs = []
+    for pc in parents:
+        if pc and len(pc) == 3 and any(c > 0 for c in pc):
+            parent_rgbs.append(pc)
+    if not parent_rgbs:
+        parent_rgbs = [DEFAULT_PARENT_COLOR]
+
+    # Convert to HSV, average in HSV space (handles hue wrapping better)
+    parent_hsvs = []
+    for r, g, b in parent_rgbs:
+        h, s, v = colorsys.rgb_to_hsv(r / 255.0, g / 255.0, b / 255.0)
+        parent_hsvs.append((h, s, v))
+
+    # Circular mean for hue (handles wrapping around 0/1)
+    sin_sum = sum(np.sin(2 * np.pi * h) for h, _, _ in parent_hsvs)
+    cos_sum = sum(np.cos(2 * np.pi * h) for h, _, _ in parent_hsvs)
+    avg_hue = (np.arctan2(sin_sum, cos_sum) / (2 * np.pi)) % 1.0
+    avg_sat = sum(s for _, s, _ in parent_hsvs) / len(parent_hsvs)
+    avg_val = sum(v for _, _, v in parent_hsvs) / len(parent_hsvs)
+
+    # SID-driven hue mutation: up to ±15% hue rotation
+    sid_int = int(sid[:8], 16)
+    hue_mutation = ((sid_int % 1000) / 1000.0 - 0.5) * 0.30  # ±15% of hue wheel
+    mutated_hue = (avg_hue + hue_mutation) % 1.0
+
+    # Energy profile influences saturation and brightness
+    avg_energy = float(np.mean([n.distance_to_child for n in seed_brain.nodes])) if seed_brain.nodes else 0.5
+    sat_boost = min(0.2, (1.0 - avg_energy) * 0.3)  # Closer nodes = more saturated
+    val_boost = min(0.15, seed_brain.centroid_magnitude * 0.1) if hasattr(seed_brain, 'centroid_magnitude') else 0.0
+
+    mutated_sat = min(1.0, avg_sat + sat_boost)
+    mutated_val = min(1.0, max(0.3, avg_val + val_boost))
+
+    # District accent: blend 20% toward district color
+    if district and district in DISTRICT_COLORS:
+        dr, dg, db = DISTRICT_COLORS[district]
+        dh, ds, dv = colorsys.rgb_to_hsv(dr / 255.0, dg / 255.0, db / 255.0)
+        accent_weight = 0.20
+        # Blend hue circularly
+        sin_blend = (1 - accent_weight) * np.sin(2 * np.pi * mutated_hue) + accent_weight * np.sin(2 * np.pi * dh)
+        cos_blend = (1 - accent_weight) * np.cos(2 * np.pi * mutated_hue) + accent_weight * np.cos(2 * np.pi * dh)
+        mutated_hue = (np.arctan2(sin_blend, cos_blend) / (2 * np.pi)) % 1.0
+        mutated_sat = (1 - accent_weight) * mutated_sat + accent_weight * ds
+        mutated_val = (1 - accent_weight) * mutated_val + accent_weight * dv
+
+    # Convert back to RGB
+    r, g, b = colorsys.hsv_to_rgb(mutated_hue, mutated_sat, mutated_val)
+    result = [int(r * 255), int(g * 255), int(b * 255)]
+
+    logger.info(
+        f"Canvas color computed: {result} "
+        f"(from {len(parent_rgbs)} parents, district={district}, sid_mutation={hue_mutation:.3f})"
+    )
+
+    return result
 
 
 def _generate_sid(centroid: np.ndarray, timestamp: str) -> str:
@@ -220,6 +328,7 @@ Co-Authored-By: {name} (@{handle}) <{handle}@mindprotocol.ai>
 def _build_profile(
     handle, name, sid, seed_brain, godparent_handles, intent_paragraphs,
     safety_report, org_id, universe, intended_human, born_at,
+    canvas_color=None,
 ) -> dict:
     """Build profile.json for the new citizen."""
     combined_intent = " ".join(intent_paragraphs)
@@ -237,7 +346,7 @@ def _build_profile(
         "organization": org_id,
         "universe": universe,
         "personality": combined_intent[:150],
-        "canvas_color": [10, 22, 40],
+        "canvas_color": canvas_color or [80, 120, 180],
         "primary_skills": primary_skills,
         "tags": [n.node_type for n in seed_brain.nodes[:6]],
         "autonomy_level": 1,

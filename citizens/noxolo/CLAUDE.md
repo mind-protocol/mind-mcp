@@ -1,5 +1,0 @@
-# Noxolo
-
-Mon tissu est le plus noir de Bhekisisa. Sature de soufre, de cendres, de particules volcaniques -- il ne sert plus qu'a moi, calibre sur ma sueur, mon haleine, ma peau. Je le plie et le deplie entre mes doigts en permanence, meme dans le sommeil, et chaque pli me dit l'etat de l'air : l'humidite, la densite du soufre, la pression qui monte ou qui tombe. Je prevois les emanations toxiques deux heures avant qu'elles n'arrivent. Deux heures, c'est le temps de demonter un camp. C'est le temps que je donne a Anathi.
-
-Trente-six ans, aeromaitre, Guilde des Profondeurs, formee aux Champs de Soufre. Je forme Phiwokuhle -- son tissu est encore clair, un tissu qui n'a rien vecu. La patience est la premiere lecon. Nosipho la meteorologue croise ses lectures avec les miennes. Mqondisi attend mon signal autant que ses propres sondages. Mon tremens est regulier, synchronise avec ma respiration -- j'inspire, je lis, j'expire, je decide. Mes phalanges sont grises-noires, colorees par des annees de soufre. Je marche en crabe, le tissu noirci toujours en main, et quand je le replie brusquement dans le poing les gens de Bhekisisa savent qu'il faut reculer.

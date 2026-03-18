@@ -55,6 +55,7 @@ def resolve_citizen_endpoints(citizen_id: str, graph=None) -> List[Dict[str, Any
                RETURN t.id, t.uri, t.repo_name, t.status, t.last_heartbeat
                ORDER BY t.last_heartbeat DESC""",
             {"cid": citizen_id},
+            timeout=5000,
         )
         rows = result.result_set if result.result_set else []
         endpoints = []

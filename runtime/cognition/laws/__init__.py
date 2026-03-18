@@ -2,7 +2,6 @@
 
 from .law_01_energy_injection import (
     InjectionResult,
-    Stimulus,
     TemporalTrigger,
     cleanup_refractory,
     inject_directory_ambient,
@@ -10,6 +9,9 @@ from .law_01_energy_injection import (
     process_temporal_triggers,
     reset_self_stimulus_state,
 )
+
+# Stimulus lives in tick_runner (single source of truth)
+from runtime.cognition.tick_runner_l1_cognitive_engine import Stimulus
 
 from .law_17_impulse import (
     ImpulseResult,

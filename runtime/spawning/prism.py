@@ -142,6 +142,12 @@ def run_prism(
 
         # Step 5: Generate identity (SID, name, CLAUDE.md, profile.json)
         logger.info("Step 5/6: Generating identity...")
+
+        # Collect parent visual data for color inheritance
+        godparent_colors = _collect_godparent_colors(
+            [g.handle for g in selected], graph_ops
+        )
+
         identity = generate_identity(
             seed_brain=seed_brain,
             working_name=working_name,
@@ -152,6 +158,7 @@ def run_prism(
             universe=universe,
             intended_human=intended_human,
             embed_fn=embed_fn,
+            godparent_colors=godparent_colors,
         )
         result.identity = identity
 
@@ -192,6 +199,40 @@ def run_prism(
         result.duration_seconds = time.time() - start_time
         logger.exception(f"=== PRISM BIRTH FAILED: {working_name} === {e}")
         return result
+
+
+def _collect_godparent_colors(
+    handles: list[str],
+    graph_ops,
+) -> list[list[int]]:
+    """Collect canvas_color from each godparent's profile for visual inheritance.
+
+    Falls back gracefully — if a parent has no color or graph_ops is unavailable,
+    that parent is skipped. The identity generator handles missing data.
+    """
+    colors = []
+    if graph_ops is None:
+        return colors
+
+    for handle in handles:
+        try:
+            # Look up the actor node in the universe graph
+            profile = graph_ops.get_node_by_id(
+                f"actor:{handle}", graph_name="lumina_prime"
+            )
+            if profile and profile.get("canvas_color"):
+                cc = profile["canvas_color"]
+                if isinstance(cc, list) and len(cc) == 3:
+                    colors.append(cc)
+                    continue
+
+            # Fallback: try reading from citizen profile file
+            # (some citizens may not have canvas_color in graph yet)
+            logger.debug(f"No canvas_color in graph for @{handle}, skipping")
+        except Exception as e:
+            logger.debug(f"Could not get canvas_color for @{handle}: {e}")
+
+    return colors
 
 
 def _extract_godparent_brains(

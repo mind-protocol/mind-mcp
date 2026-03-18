@@ -60,23 +60,23 @@ def ingest_actors(
         "unchanged": 0,
     }
 
-    # Create actors space (no context - init-time bulk operation)
+    # Create actors module (narrative, not space — folders are logical containers)
     result = inject(adapter, {
-        "id": "space:actors",
-        "label": "Space",
+        "id": "narrative:actors",
+        "label": "Narrative",
         "name": "actors",
-        "type": "system",
-        "synthesis": "space:actors — Work agents that execute tasks with specific cognitive names",
+        "type": "MODULE",
+        "synthesis": "narrative:actors — Work agents that execute tasks with specific cognitive names",
         "content": "Work agents that execute tasks with specific cognitive names",
         "weight": 8.0,
         "energy": 0.0,
     }, with_context=False)
-    logger.debug(f"space:actors: {result}")
+    logger.debug(f"narrative:actors: {result}")
 
-    # Link actors space to root
+    # Link actors module to root
     inject(adapter, {
-        "from": "space:root",
-        "to": "space:actors",
+        "from": "narrative:root",
+        "to": "narrative:actors",
         "nature": "contains",
     }, with_context=False)
 
@@ -145,9 +145,9 @@ def _ingest_actor(adapter, actor_dir: Path) -> str:
         "energy": 0.0,
     }, with_context=False)
 
-    # Link actor to actors space
+    # Link actor to actors module
     inject(adapter, {
-        "from": "space:actors",
+        "from": "narrative:actors",
         "to": actor_id,
         "nature": "contains",
     }, with_context=False)

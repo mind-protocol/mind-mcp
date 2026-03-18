@@ -7,6 +7,9 @@ this home's public nodes through these endpoints.
 Wired into home_server.py as a FastAPI router.
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 import os
 import json
 import logging
@@ -95,7 +98,7 @@ async def membrane_ping(handle: str):
         port = int(os.environ.get("FALKORDB_PORT", "6379"))
         db = FalkorDB(host=host, port=port)
         graph = db.select_graph(f"brain_{handle}")
-        result = graph.query("MATCH (n) RETURN count(n)")
+        result = graph.query("MATCH (n) RETURN count(n)", timeout=5000)
         if result.result_set:
             brain_nodes = result.result_set[0][0]
     except Exception as e:

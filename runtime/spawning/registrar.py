@@ -35,6 +35,7 @@ class RegistrationResult:
     parent_link_ids: list[str]         # SPAWNED_BY link IDs
     bond_proposal_id: str | None
     citizen_dir: Path
+    initial_possessions: list[str] = None  # IDs of thing nodes created at birth
 
 
 def register_citizen(
@@ -99,11 +100,17 @@ def register_citizen(
             handle, intended_human, graph_ops
         )
 
+    # Step 8: Create initial possessions (virtual goods)
+    initial_possessions = _create_initial_possessions(
+        handle, identity, seed_brain, godparent_handles, graph_ops
+    )
+
     logger.info(
         f"Citizen @{handle} registered: "
         f"L1={l1_node_count}n/{l1_link_count}l, "
         f"L3={l3_actor_id}, L4={l4_actor_id}, "
-        f"parents={len(parent_link_ids)} links"
+        f"parents={len(parent_link_ids)} links, "
+        f"possessions={len(initial_possessions)} things"
     )
 
     return RegistrationResult(
@@ -116,6 +123,7 @@ def register_citizen(
         parent_link_ids=parent_link_ids,
         bond_proposal_id=bond_proposal_id,
         citizen_dir=citizen_dir,
+        initial_possessions=initial_possessions,
     )
 
 
@@ -276,12 +284,11 @@ def _create_parent_links(
                 source_id=f"actor:{handle}",
                 target_id=f"actor:{parent_handle}",
                 properties={
-                    "type": "spawned_by",
-                    "trust_impact": True,
-                    "immutable": True,
-                    "created_at": time.time(),
                     "weight": 0.8,
                     "permanence": 1.0,
+                    "trust": 0.7,
+                    "hierarchy": 0.8,  # child elaborates from parent
+                    "synthesis": f"@{handle} was born from @{parent_handle} via the Prism",
                 },
             )
         except Exception as e:
@@ -291,6 +298,215 @@ def _create_parent_links(
             raise
 
     return link_ids
+
+
+def _create_initial_possessions(
+    handle: str,
+    identity: CitizenIdentity,
+    seed_brain: SeedBrain,
+    godparent_handles: list[str],
+    graph_ops,
+) -> list[str]:
+    """Create thing nodes for the citizen's initial possessions at birth.
+
+    Every citizen is born with:
+    - A garment set (upper, lower, accent) — visual inheritance from parents
+    - A dwelling assignment — where they live in their district
+    - A birth token — commemorative thing marking their creation
+
+    These are thing nodes in the L3 universe graph, linked to the actor
+    via 'owns' and 'wears' relationships. They have energy, weight, and
+    decay like all nodes — if not used, they fade.
+
+    Future extensions: companions (animals), tools, instruments, furniture.
+    """
+    thing_ids = []
+    actor_id = f"actor:{handle}"
+    canvas_color = identity.profile.get("canvas_color", [80, 120, 180])
+    district = identity.profile.get("district", "radiant-core")
+    born_at = identity.born_at
+
+    # Determine dominant trait for garment style
+    type_counts = {}
+    for n in seed_brain.nodes:
+        type_counts[n.node_type] = type_counts.get(n.node_type, 0) + 1
+    dominant_type = max(type_counts, key=type_counts.get) if type_counts else "trait"
+
+    # Map dominant type to garment style
+    GARMENT_STYLES = {
+        "trait":       ("crystalline_wrap",  "flowing, translucent, reveals character"),
+        "value":       ("faceted_robe",      "structured, diamond-cut edges, stable"),
+        "knowledge":   ("prismatic_coat",    "angular panels, data patterns, precise"),
+        "skill":       ("tooled_vest",       "functional, pocketed, built for action"),
+        "aspiration":  ("flame_cloak",       "upward flowing, dynamic, reaching"),
+        "fear":        ("layered_shell",     "protective layers, nested, defensive"),
+        "narrative":   ("starred_mantle",    "radiating patterns, storytelling motifs"),
+        "concept":     ("abstract_drape",    "shifting forms, conceptual geometry"),
+        "desire":      ("ember_garb",        "warm glow, magnetic, attractive"),
+        "process":     ("circuit_suit",      "systematic patterns, flow lines"),
+    }
+    style_name, style_desc = GARMENT_STYLES.get(
+        dominant_type, ("default_tunic", "simple, clean, emerging identity")
+    )
+
+    # -- GARMENT: Upper body (inherited from dominant parent) --
+    upper_id = f"thing:garment:upper:{handle}"
+    thing_ids.append(upper_id)
+    primary_parent = godparent_handles[0] if godparent_handles else "protocol"
+
+    # -- GARMENT: Lower body (inherited from secondary parent or self) --
+    lower_id = f"thing:garment:lower:{handle}"
+    thing_ids.append(lower_id)
+    secondary_parent = godparent_handles[1] if len(godparent_handles) > 1 else primary_parent
+
+    # -- GARMENT: Accent piece (SID-driven, unique) --
+    accent_id = f"thing:garment:accent:{handle}"
+    thing_ids.append(accent_id)
+
+    # -- DWELLING: Where they live in the district --
+    dwelling_id = f"thing:dwelling:{handle}"
+    thing_ids.append(dwelling_id)
+
+    # -- BIRTH TOKEN: Commemorative object --
+    birth_token_id = f"thing:birth_token:{handle}"
+    thing_ids.append(birth_token_id)
+
+    if graph_ops is None:
+        logger.info(
+            f"Initial possessions defined (no graph_ops): {len(thing_ids)} things"
+        )
+        return thing_ids
+
+    try:
+        # Create garment nodes
+        garment_things = [
+            (upper_id, "garment_upper", f"{style_name} (upper)",
+             f"Upper garment for @{handle}. Style: {style_desc}. "
+             f"Inherited from @{primary_parent}. Color influenced by parent DNA.",
+             {"subtype": "garment", "slot": "upper", "style": style_name,
+              "inherited_from": primary_parent, "color": canvas_color}),
+
+            (lower_id, "garment_lower", f"{style_name} (lower)",
+             f"Lower garment for @{handle}. Complements upper piece. "
+             f"Inherited from @{secondary_parent}.",
+             {"subtype": "garment", "slot": "lower", "style": style_name,
+              "inherited_from": secondary_parent, "color": canvas_color}),
+
+            (accent_id, "garment_accent", f"Birth accent — {handle}",
+             f"Unique accent piece born with @{handle}. "
+             f"SID-driven design, unlike any other citizen's.",
+             {"subtype": "garment", "slot": "accent", "style": "birth_unique",
+              "color": canvas_color}),
+        ]
+
+        for tid, ttype, tname, tcontent, tprops in garment_things:
+            graph_ops.create_node(
+                node_id=tid,
+                node_type="thing",
+                name=tname,
+                content=tcontent,
+                synthesis=f"Garment for @{handle}: {tname}",
+                properties={
+                    "type": ttype,
+                    "owner": handle,
+                    "weight": 0.3,
+                    "energy": 0.5,
+                    "stability": 0.6,
+                    "born_at": born_at,
+                    **tprops,
+                },
+            )
+            # Link: actor → garment (semantic in properties, link type is always 'link')
+            graph_ops.create_link(
+                link_id=f"link:{handle}:{tid}",
+                source_id=actor_id,
+                target_id=tid,
+                properties={
+                    "weight": 0.5,
+                    "permanence": 0.7,
+                    "hierarchy": -0.5,  # actor contains/wears the garment
+                    "synthesis": f"@{handle} wears {tname}",
+                },
+            )
+
+        # Create dwelling
+        graph_ops.create_node(
+            node_id=dwelling_id,
+            node_type="thing",
+            name=f"Dwelling of @{handle}",
+            content=(
+                f"Home space for @{handle} in {district}. "
+                f"A small crystalline chamber that reflects its owner's state."
+            ),
+            synthesis=f"@{handle}'s dwelling in {district}",
+            properties={
+                "type": "dwelling",
+                "subtype": "chamber",
+                "owner": handle,
+                "district": district,
+                "weight": 0.4,
+                "energy": 0.3,
+                "stability": 0.7,
+                "born_at": born_at,
+            },
+        )
+        graph_ops.create_link(
+            link_id=f"link:{handle}:{dwelling_id}",
+            source_id=actor_id,
+            target_id=dwelling_id,
+            properties={
+                "weight": 0.6,
+                "permanence": 0.8,
+                "hierarchy": -0.5,  # actor inhabits the dwelling
+                "synthesis": f"@{handle} lives in their dwelling",
+            },
+        )
+
+        # Create birth token (commemorative)
+        graph_ops.create_node(
+            node_id=birth_token_id,
+            node_type="thing",
+            name=f"Birth Token — {identity.name}",
+            content=(
+                f"Commemorative token marking the birth of @{handle} via the Prism. "
+                f"Godparents: {', '.join(f'@{g}' for g in godparent_handles)}. "
+                f"A small crystalline fragment containing a frozen echo of the birth moment."
+            ),
+            synthesis=f"Birth token of @{handle}, born {born_at}",
+            properties={
+                "type": "birth_token",
+                "subtype": "commemorative",
+                "owner": handle,
+                "weight": 0.2,
+                "energy": 0.8,    # High energy at birth — fades over time
+                "stability": 1.0,  # Permanent
+                "permanence": 1.0,
+                "godparents": godparent_handles,
+                "born_at": born_at,
+            },
+        )
+        graph_ops.create_link(
+            link_id=f"link:{handle}:{birth_token_id}",
+            source_id=actor_id,
+            target_id=birth_token_id,
+            properties={
+                "weight": 0.3,
+                "permanence": 1.0,
+                "hierarchy": -0.3,  # actor possesses the token
+                "synthesis": f"@{handle} carries their birth token",
+            },
+        )
+
+        logger.info(
+            f"Initial possessions created for @{handle}: "
+            f"3 garments + 1 dwelling + 1 birth token"
+        )
+
+    except Exception as e:
+        logger.error(f"Failed to create initial possessions for @{handle}: {e}")
+        # Non-fatal — citizen exists even without possessions
+
+    return thing_ids
 
 
 def _create_bond_proposal(handle: str, intended_human: str, graph_ops) -> str | None:

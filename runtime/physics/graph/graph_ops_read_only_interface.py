@@ -64,9 +64,12 @@ class GraphReadOps:
 Error: {exc}"""
             )
 
+    # Default query timeout in milliseconds.
+    _QUERY_TIMEOUT_MS = 5000  # 5 seconds
+
     def _query(self, cypher: str, params: Dict[str, Any] = None) -> List:
         try:
-            result = self.graph.query(cypher, params or {})
+            result = self.graph.query(cypher, params or {}, timeout=self._QUERY_TIMEOUT_MS)
             return result.result_set if result.result_set else []
         except Exception as exc:
             raise WriteError(

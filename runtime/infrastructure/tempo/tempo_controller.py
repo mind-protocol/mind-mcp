@@ -11,6 +11,11 @@ FREEZE BEHAVIOR (decided 2025-12-23):
 
 SEE: docs/infrastructure/tempo/PATTERNS_Tempo.md
 """
+
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 from __future__ import annotations
 
 import asyncio

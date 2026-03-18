@@ -147,38 +147,42 @@ def scan_and_ingest_files(
     # Track created spaces to avoid duplicates
     created_spaces: Set[str] = set()
 
-    def _ensure_space(space_id: str, name: str, space_type: str, location: str = None) -> None:
-        """Create Space node if not exists.
+    def _ensure_module(module_id: str, name: str, module_type: str, location: str = None) -> None:
+        """Create Narrative node for a folder grouping (not a Space).
 
-        Space types (uppercase):
+        Folders are logical containers (narratives), not physical spaces.
+        Spaces are reserved for physical/spatial locations (districts, rooms, portals).
+        Nodes inside these narratives get attracted to city districts by semantic gravity.
+
+        Module types (uppercase):
         - ROOT: Repository root
         - AREA: Top-level code grouping (first directory level)
         - MODULE: Sub-area grouping (second directory level)
 
         Args:
-            space_id: Unique ID for the space
+            module_id: Unique ID for the narrative
             name: Display name
-            space_type: Type (ROOT, AREA, MODULE)
-            location: Physical path for folder containers (relative to repo root)
+            module_type: Type (ROOT, AREA, MODULE)
+            location: Folder path (relative to repo root)
         """
-        if space_id in created_spaces:
+        if module_id in created_spaces:
             return
 
         # Check if exists in DB
         result = adapter.query(
-            "MATCH (s:Space {id: $id}) RETURN s.id",
-            {"id": space_id}
+            "MATCH (n {id: $id}) RETURN n.id",
+            {"id": module_id}
         )
         if result:
-            created_spaces.add(space_id)
+            created_spaces.add(module_id)
             return
 
         # Normalize type to uppercase
-        type_upper = space_type.upper()
+        type_upper = module_type.upper()
 
         # Build properties
         props = {
-            "id": space_id,
+            "id": module_id,
             "name": name,
             "type": type_upper,
             "synthesis": f"{type_upper}: {name}",
@@ -186,14 +190,14 @@ def scan_and_ingest_files(
         if location:
             props["location"] = location
 
-        # Create Space node
+        # Create Narrative node (not Space)
         if location:
             adapter.execute(
                 """
-                CREATE (s:Space {
+                CREATE (n:Narrative {
                     id: $id,
                     name: $name,
-                    node_type: 'space',
+                    node_type: 'narrative',
                     type: $type,
                     synthesis: $synthesis,
                     location: $location
@@ -204,17 +208,17 @@ def scan_and_ingest_files(
         else:
             adapter.execute(
                 """
-                CREATE (s:Space {
+                CREATE (n:Narrative {
                     id: $id,
                     name: $name,
-                    node_type: 'space',
+                    node_type: 'narrative',
                     type: $type,
                     synthesis: $synthesis
                 })
                 """,
                 props
             )
-        created_spaces.add(space_id)
+        created_spaces.add(module_id)
         stats["spaces_created"] += 1
         if type_upper == "AREA":
             stats["areas"].add(name)
@@ -223,7 +227,7 @@ def scan_and_ingest_files(
 
     def _create_thing(rel_path: str, parent_space_id: str) -> None:
         """
-        Create Thing node and link to parent Space.
+        Create Thing node and link to parent Narrative (module/area).
 
         Computes and stores physics properties:
         - line_count, size_class, has_stub, has_secret, updated_at
@@ -321,15 +325,15 @@ def scan_and_ingest_files(
             )
             stats["things_created"] += 1
 
-        # Create contains link
+        # Create contains link (parent is now a Narrative, not a Space)
         adapter.execute(
             """
-            MATCH (s:Space {id: $space_id})
+            MATCH (n:Narrative {id: $parent_id})
             MATCH (t:Thing {id: $thing_id})
-            MERGE (s)-[r:LINK {type: 'contains'}]->(t)
+            MERGE (n)-[r:LINK {type: 'contains'}]->(t)
             ON CREATE SET r.hierarchy = -0.7, r.synthesis = 'contains'
             """,
-            {"space_id": parent_space_id, "thing_id": thing_id}
+            {"parent_id": parent_space_id, "thing_id": thing_id}
         )
         stats["links_created"] += 1
 
@@ -506,27 +510,27 @@ def scan_and_ingest_files(
 
                     if not parts:
                         # Root level file
-                        parent_id = "space:root"
-                        _ensure_space(parent_id, "root", "ROOT", location=".")
+                        parent_id = "narrative:root"
+                        _ensure_module(parent_id, "root", "ROOT", location=".")
                     elif len(parts) == 1:
                         # Area level (e.g., engine/file.py)
-                        area_id = f"space:area:{parts[0]}"
-                        _ensure_space(area_id, parts[0], "AREA", location=parts[0])
+                        area_id = f"narrative:area:{parts[0]}"
+                        _ensure_module(area_id, parts[0], "AREA", location=parts[0])
                         parent_id = area_id
                     else:
                         # Module level (e.g., engine/physics/file.py)
-                        area_id = f"space:area:{parts[0]}"
+                        area_id = f"narrative:area:{parts[0]}"
                         module_name = f"{parts[0]}/{parts[1]}"
-                        module_id = f"space:module:{module_name}"
+                        module_id = f"narrative:module:{module_name}"
 
-                        _ensure_space(area_id, parts[0], "AREA", location=parts[0])
-                        _ensure_space(module_id, module_name, "MODULE", location=module_name)
+                        _ensure_module(area_id, parts[0], "AREA", location=parts[0])
+                        _ensure_module(module_id, module_name, "MODULE", location=module_name)
 
                         # Link area -> module
                         adapter.execute(
                             """
-                            MATCH (a:Space {id: $area_id})
-                            MATCH (m:Space {id: $module_id})
+                            MATCH (a:Narrative {id: $area_id})
+                            MATCH (m:Narrative {id: $module_id})
                             MERGE (a)-[r:LINK {type: 'contains'}]->(m)
                             ON CREATE SET r.hierarchy = -0.7
                             """,

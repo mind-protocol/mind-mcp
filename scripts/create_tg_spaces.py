@@ -1,19 +1,25 @@
 #!/usr/bin/env python3
 """
-Create Space nodes in lumina-prime for Telegram forum topics.
+Create Thing nodes in lumina-prime for Telegram forum topics.
+
+Telegram channels are communication tools (Things), not physical spaces.
+Spaces are reserved for physical/spatial locations (districts, rooms, portals).
 
 Usage:
     python3 scripts/create_tg_spaces.py "General:1" "Shipped:301460" "Announcements:2"
 
 Each argument is "TopicName:ThreadID".
-Creates Space nodes with:
+Creates Thing nodes with:
     id:             space:telegram:{chat_id}:{thread_id}
     name:           topic name
-    space_hint:     telegram_forum_topic
-    platform:       telegram
+    node_type:      thing
+    type:           channel
+    platform_hint:  telegram_forum_topic
     platform_id:    thread_id (str)
     parent_chat_id: -1001699255893  (@mindprotocol_ai supergroup)
     url:            https://t.me/mindprotocol_ai/{thread_id}
+
+Note: IDs keep the space: prefix for backwards compatibility with existing links.
 """
 
 import sys
@@ -24,7 +30,7 @@ TG_GROUP_HANDLE = "mindprotocol_ai"
 GRAPH_NAME = "lumina-prime"
 
 
-def create_tg_spaces(topics: list[tuple[str, str]]):
+def create_tg_channels(topics: list[tuple[str, str]]):
     db = FalkorDB(host="localhost", port=6379)
     g = db.select_graph(GRAPH_NAME)
 
@@ -35,10 +41,11 @@ def create_tg_spaces(topics: list[tuple[str, str]]):
 
         g.query(
             """
-            MERGE (s:Space {id: $space_id})
+            MERGE (s:Thing {id: $space_id})
             SET s.name = $name,
-                s.space_hint = 'telegram_forum_topic',
-                s.platform = 'telegram',
+                s.node_type = 'thing',
+                s.type = 'channel',
+                s.platform_hint = 'telegram_forum_topic',
                 s.platform_id = $thread_id,
                 s.parent_chat_id = $parent_chat_id,
                 s.url = $url
@@ -54,23 +61,15 @@ def create_tg_spaces(topics: list[tuple[str, str]]):
         created += 1
         print(f"  MERGE {name} (thread {thread_id})")
 
-    print(f"\nCreated/updated {created} Telegram forum topic Space nodes.")
+    print(f"\nCreated/updated {created} Telegram forum topic Thing nodes.")
 
     # Summary
-    print("\n--- Space summary ---")
+    print("\n--- Channel summary ---")
     result = g.query(
-        "MATCH (s:Space) RETURN s.platform, count(s) ORDER BY count(s) DESC"
+        "MATCH (s:Thing) WHERE s.type = 'channel' RETURN s.platform_hint, count(s) ORDER BY count(s) DESC"
     )
     for row in result.result_set:
-        print(f"  {row[0]}: {row[1]} spaces")
-
-    print("\n--- Telegram spaces ---")
-    result2 = g.query(
-        'MATCH (s:Space) WHERE s.platform = "telegram" '
-        "RETURN s.name, s.platform_id, s.space_hint ORDER BY s.name"
-    )
-    for row in result2.result_set:
-        print(f"  {row[0]} (id={row[1]}, hint={row[2]})")
+        print(f"  {row[0]}: {row[1]} channels")
 
 
 def parse_args(args: list[str]) -> list[tuple[str, str]]:
@@ -101,4 +100,4 @@ if __name__ == "__main__":
         print("No valid topics provided.", file=sys.stderr)
         sys.exit(1)
 
-    create_tg_spaces(topics)
+    create_tg_channels(topics)

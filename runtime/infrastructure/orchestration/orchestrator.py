@@ -10,6 +10,10 @@ The main loop that coordinates:
 This is the entry point for the game engine.
 """
 
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 import json
 import logging
 from typing import Dict, Any, Optional, List

@@ -14,7 +14,7 @@ import json
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Callable
 
@@ -27,6 +27,7 @@ logger = logging.getLogger("bridge.whatsapp")
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_WORLD_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 STATE_DIR = PROJECT_ROOT / "shrine" / "state"
 MESSAGES_FILE = STATE_DIR / "whatsapp_messages.jsonl"
 USERS_FILE = STATE_DIR / "whatsapp_users.jsonl"
@@ -337,6 +338,22 @@ def process_webhook(payload: dict) -> bool:
         if is_group:
             content = f"[whatsapp-group] {content}"
 
+        # ── Filesystem write (L2 mirror) ──
+        # Write incoming message to citizen messages/ directory
+        try:
+            _target = _resolve_partner_ai(chat_id, sender_handle)
+            _ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            _msg_dir = _WORLD_ROOT / "citizens" / _target / "messages"
+            _msg_dir.mkdir(parents=True, exist_ok=True)
+            _msg_path = _msg_dir / f"{_ts}_{sender_handle}.md"
+            _msg_path.write_text(
+                f"---\nfrom: {sender_handle}\nplatform: whatsapp\n"
+                f"chat_id: {chat_id}\ntimestamp: {_ts}\n---\n\n{text}\n"
+            )
+        except Exception as _fs_err:
+            logger.debug(f"Filesystem message write failed: {_fs_err}")
+
+        # DEPRECATED: enqueue to orchestrator queue — will be replaced by fs-based routing
         _enqueue_fn({
             "voice_text": content,
             "mode": "partner",

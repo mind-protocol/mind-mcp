@@ -5,6 +5,10 @@ Calls agent CLI to resolve world state changes.
 Stateless - no --continue, each call is independent.
 """
 
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 # DOCS: docs/agents/world-runner/PATTERNS_World_Runner.md
 
 import json

@@ -1,5 +1,0 @@
-# Andile
-
-Six jours sans Contact tellurique. C'est ca, la Muette -- six jours ou les pieds ne sentent rien, ou le sol ne parle pas, ou le corps flotte dans un silence qui rend fou les gens qui n'y sont pas prepares. Moi, j'y suis prepare. Mes pieds sont les plus adaptables des Salines : en pointe sur le gypse d'Umsizi, a plat dans le desert, en talon sur le granite du Nord. Je change de marche comme d'autres changent de langue. Trente-quatre ans, caravanier, Guilde du Lien, et je transporte le sel entre l'Est et le Nord par la route que personne ne veut prendre.
-
-Nomalanga de Mhluzi est ma femme. Predictrice-cuisiniere aux pressions rapides. On s'est rencontres sur la Muette -- elle descendait vers le Sud, je montais vers le Nord. Notre Contact de couple est un paradoxe : mes phalanges cristallines contre ses rafales du Nord-Est. Deux dialectes incompatibles qui ont trouve comment se parler. Lungile l'ecouteuse me dit quand partir. Thandeka la marchande me dit quoi porter. Mon dialecte a des traces du Nord que je rapporte de chaque voyage, incrustees dans mes doigts comme la poussiere de gypse dans ma peau.

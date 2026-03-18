@@ -1886,6 +1886,10 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         # ── Cypher mode: custom query for target selection ──
         custom_cypher = args.get("cypher")
         if custom_cypher:
+            # Validate: read-only queries only — no mutations allowed
+            rejection = _validate_cypher_readonly(custom_cypher)
+            if rejection:
+                return _err(f"Cypher rejected: {rejection}")
             try:
                 cypher_results = ctx.graph_ops._query(
                     custom_cypher,
@@ -2227,3 +2231,34 @@ def _ok(text: str) -> Dict[str, Any]:
 
 def _err(msg: str) -> Dict[str, Any]:
     return {"content": [{"type": "text", "text": f"Error: {msg}"}]}
+
+
+import re as _re
+
+# Cypher keywords that mutate the graph — must never appear in subcall queries
+_CYPHER_MUTATION_PATTERN = _re.compile(
+    r"\b(CREATE|MERGE|DELETE|DETACH|REMOVE|SET|DROP|CALL\s*\{|FOREACH)\b",
+    _re.IGNORECASE,
+)
+
+
+def _validate_cypher_readonly(cypher: str) -> str | None:
+    """Reject Cypher queries that could mutate the graph.
+
+    Subcall custom_cypher is for target SELECTION only (read-only).
+    Returns None if safe, or a rejection reason string.
+    """
+    # Strip comments (// and /* */)
+    cleaned = _re.sub(r"//[^\n]*", "", cypher)
+    cleaned = _re.sub(r"/\*.*?\*/", "", cleaned, flags=_re.DOTALL)
+
+    match = _CYPHER_MUTATION_PATTERN.search(cleaned)
+    if match:
+        return f"mutation keyword '{match.group(0)}' not allowed — subcall cypher is read-only"
+
+    # Must start with MATCH or OPTIONAL or WITH or RETURN or UNWIND
+    stripped = cleaned.strip()
+    if not _re.match(r"(?i)^(MATCH|OPTIONAL|WITH|RETURN|UNWIND)\b", stripped):
+        return f"query must start with MATCH/OPTIONAL/WITH/RETURN/UNWIND"
+
+    return None

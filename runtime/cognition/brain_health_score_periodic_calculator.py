@@ -34,9 +34,10 @@ from typing import Optional
 
 logger = logging.getLogger(__name__)
 
-_PROJECT_ROOT = Path(__file__).parent.parent.parent
-_CITIZENS_DIR = _PROJECT_ROOT / "citizens"
-_SCORES_PATH = _PROJECT_ROOT / "shrine" / "state" / "brain_scores.json"
+_MIND_MCP_ROOT = Path(__file__).resolve().parent.parent.parent
+_WORLD_ROOT = _MIND_MCP_ROOT.parent.parent
+_CITIZENS_DIR = _WORLD_ROOT / "citizens"
+_SCORES_PATH = _WORLD_ROOT / "shrine" / "state" / "brain_scores.json"
 
 
 def compute_brain_power(neurons: int, synapses: int) -> int:
@@ -129,7 +130,7 @@ def compute_score_for_citizen(handle: str, live_data: Optional[dict] = None) -> 
                 last_active_ts = mtime
 
     # Also check neuron state files for recent activity
-    neurons_dir = _PROJECT_ROOT / "shrine" / "state" / "neurons"
+    neurons_dir = _WORLD_ROOT / "shrine" / "state" / "neurons"
     if neurons_dir.exists():
         for nf in neurons_dir.iterdir():
             if nf.is_file() and nf.suffix in (".yaml", ".yml"):

@@ -650,8 +650,8 @@ def inject(
 
     Link format:
         {
-            "from": "space:root",              # Required
-            "to": "space:actors",              # Required
+            "from": "narrative:root",           # Required
+            "to": "narrative:actors",           # Required
             "nature": "contains, with force",  # Optional, parsed to physics floats
             "verb": "contains",                # Optional (extracted from nature)
             "synthesis": "...",                # Optional

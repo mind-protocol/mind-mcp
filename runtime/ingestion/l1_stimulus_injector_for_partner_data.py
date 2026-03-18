@@ -19,6 +19,9 @@ Uses the existing runtime/cognition/stimulus_router.py interface
 (StimulusRouter.route) for final injection into the tick loop.
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 from __future__ import annotations
 
 import logging

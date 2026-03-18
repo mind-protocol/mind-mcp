@@ -4,6 +4,10 @@ Helper queries for v1.2 Energy Physics Tick.
 DOCS: docs/physics/IMPLEMENTATION_Physics.md
 """
 
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 from typing import List, Dict, Any, Tuple
 from runtime.physics.graph import GraphQueries
 from runtime.physics.constants import COLD_THRESHOLD

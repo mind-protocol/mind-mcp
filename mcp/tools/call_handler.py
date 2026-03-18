@@ -10,6 +10,10 @@ Usage via MCP:
     call(target="sentinel", message="Security check needed")
 """
 
+# DEPRECATED: Direct citizen invocation replaced by file-based /call.
+# See DECISION_Call_As_File_Watch.md. Use call_file_watcher.py instead.
+# Citizens communicate via filesystem writes, not direct invocation.
+
 import json
 import logging
 import os

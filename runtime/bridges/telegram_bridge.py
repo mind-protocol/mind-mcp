@@ -18,7 +18,7 @@ import subprocess
 import tempfile
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Callable
 
@@ -31,6 +31,7 @@ logger = logging.getLogger("bridge.telegram")
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+_WORLD_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
 STATE_DIR = PROJECT_ROOT / "shrine" / "state"
 CITIZENS_DIR = PROJECT_ROOT / "citizens"
 MESSAGES_FILE = STATE_DIR / "telegram_messages.jsonl"
@@ -798,6 +799,23 @@ def process_update(update: dict) -> bool:
         if target_handle:
             metadata["citizen_handle"] = target_handle
 
+        # ── Filesystem write (L2 mirror) ──
+        # Write incoming message to citizen messages/ directory
+        try:
+            _sender_handle = username.lower() if username else _sanitize_tg_handle(sender_name)
+            _target = target_handle or "mind"
+            _ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            _msg_dir = _WORLD_ROOT / "citizens" / _target / "messages"
+            _msg_dir.mkdir(parents=True, exist_ok=True)
+            _msg_path = _msg_dir / f"{_ts}_{_sender_handle}.md"
+            _msg_path.write_text(
+                f"---\nfrom: {_sender_handle}\nplatform: telegram\n"
+                f"chat_id: {chat_id}\ntimestamp: {_ts}\n---\n\n{text}\n"
+            )
+        except Exception as _fs_err:
+            logger.debug(f"Filesystem message write failed: {_fs_err}")
+
+        # DEPRECATED: enqueue to orchestrator queue — will be replaced by fs-based routing
         _enqueue_fn({
             "voice_text": content,
             "mode": route_mode,

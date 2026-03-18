@@ -61,6 +61,7 @@ Usage:
   python mcp/server.py
 """
 
+import os
 import sys
 import json
 import logging
@@ -96,13 +97,14 @@ from mcp.tools.read_handler import TOOL_SCHEMA as READ_SCHEMA, handle_read
 from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
 from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
 from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
-from mcp.tools.call_handler import TOOL_SCHEMA as CALL_SCHEMA, handle_call
+from mcp.tools.call_file_watcher import TOOL_SCHEMA as CALL_SCHEMA, handle_call_file_watcher as handle_call
 from mcp.tools.subcall_handler import TOOL_SCHEMA as SUBCALL_SCHEMA, handle_subcall
 from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_profile
 from mcp.tools.spawn_handler import TOOL_SCHEMA as SPAWN_SCHEMA, handle_spawn
 from mcp.tools.debug_handler import TOOL_SCHEMA as DEBUG_SCHEMA, handle_debug
 from mcp.tools.bond_handler import TOOL_SCHEMA as BOND_SCHEMA, handle_bond
 from mcp.tools.anamnesis_handler import TOOL_SCHEMA as ANAMNESIS_SCHEMA, handle as handle_anamnesis
+from mcp.tools.sense_handler import TOOL_SCHEMA as SENSE_SCHEMA, handle_sense
 
 logging.basicConfig(
     level=logging.INFO,
@@ -139,6 +141,8 @@ TOOL_SCHEMAS = [
     BOND_SCHEMA,
     # ACT (memory)
     ANAMNESIS_SCHEMA,
+    # THINK (perception)
+    SENSE_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -161,6 +165,7 @@ TOOL_DISPATCH = {
     "debug":       (handle_debug,       True),
     "bond":        (handle_bond,        True),
     "anamnesis":   (handle_anamnesis,   True),
+    "sense":       (handle_sense,       True),
 }
 
 
@@ -379,8 +384,41 @@ class MindServer:
         return {"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}
 
 
+def _kill_previous_instances():
+    """Kill any orphaned MCP server processes from previous sessions.
+
+    Each Claude Code session spawns a new MCP server. When sessions die
+    (timeout, crash, ctrl+C), the MCP process stays orphaned — eating RAM
+    and causing connection instability. This guard kills all other instances
+    of this server on startup, keeping exactly one alive (us).
+    """
+    import subprocess
+    my_pid = os.getpid()
+    try:
+        result = subprocess.run(
+            ["pgrep", "-f", "mcp.server"],
+            capture_output=True, text=True, timeout=5
+        )
+        for line in result.stdout.strip().split("\n"):
+            if not line:
+                continue
+            pid = int(line.strip())
+            if pid != my_pid:
+                try:
+                    os.kill(pid, 9)
+                    logger.info(f"Killed orphaned MCP server (PID {pid})")
+                except ProcessLookupError:
+                    pass
+                except PermissionError:
+                    pass
+    except Exception as e:
+        logger.debug(f"Could not check for orphans: {e}")
+
+
 def main():
     """Run the MCP server on stdio."""
+    _kill_previous_instances()
+
     server = MindServer()
     logger.info(f"Mind MCP server started ({len(TOOL_SCHEMAS)} tools: THINK/ACT/SPEAK)")
 

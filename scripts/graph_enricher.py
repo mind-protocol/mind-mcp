@@ -5,7 +5,7 @@ All links use a SINGLE relationship type: :LINK with 13 dimensional properties
 + computed_type inferred from dimensions via infer_computed_type().
 
 When someone posts or reads a channel:
-  1. MERGE Space node for the channel
+  1. MERGE Thing node for the channel (channels are communication tools, not spaces)
   2. MERGE Actor node for the poster
   3. Create Moment node for the message
   4. Link: Actor→Space (:LINK computed_type="presence")
@@ -214,12 +214,15 @@ def on_message(
     snippet = content[:300].replace("'", "\\'").replace('"', '\\"')
 
     try:
-        # 1. MERGE Space — structural existence only
+        # 1. MERGE Thing — channels are communication tools, not spaces
+        # Spaces are reserved for physical/spatial locations (districts, rooms, portals)
         g.query(
             """
-            MERGE (s:Space {id: $space_id})
+            MERGE (s:Thing {id: $space_id})
             SET s.name = $name,
-                s.space_hint = $hint,
+                s.node_type = 'thing',
+                s.type = 'channel',
+                s.platform_hint = $hint,
                 s.platform_id = $platform_id
             """,
             {
@@ -571,7 +574,7 @@ def on_reply(
         g.query(
             """
             MATCH (m:Moment {id: $moment_id})
-            MERGE (s:Space {id: $space_id})
+            MERGE (s:Thing {id: $space_id})
             MERGE (m)-[r:LINK]->(s)
             SET r.hierarchy = 1.0,
                 r.polarity = 1.0,
@@ -803,17 +806,17 @@ def on_commit(
         return
 
     ts = time.time()
-    space_id = f"space:repo:{repo_name}"
+    space_id = f"narrative:repo:{repo_name}"
     actor_id = author_handle or _sanitize_handle(author_name)
     moment_id = f"moment:commit:{commit_hash[:12]}"
     snippet = message[:300].replace("'", "\\'").replace('"', '\\"')
 
     try:
-        # MERGE repo Space
+        # MERGE repo Narrative (repos are logical containers, not physical spaces)
         g.query(
             """
-            MERGE (s:Space {id: $space_id})
-            SET s.name = $name, s.space_hint = 'git_repository', s.platform = 'git'
+            MERGE (n:Narrative {id: $space_id})
+            SET n.name = $name, n.node_type = 'narrative', n.type = 'REPOSITORY', n.platform = 'git'
             """,
             {"space_id": space_id, "name": repo_name},
         )
@@ -946,7 +949,7 @@ def on_file_change(
 
     ts = time.time()
     thing_id = f"thing:file:{repo_name}:{file_path.replace('/', ':')}"
-    space_id = f"space:repo:{repo_name}"
+    space_id = f"narrative:repo:{repo_name}"
 
     try:
         # MERGE Thing for the file
@@ -1090,8 +1093,8 @@ def on_read(
         )
         g.query(
             """
-            MERGE (s:Space {id: $space_id})
-            ON CREATE SET s.name = $name, s.space_hint = $hint, s.platform_id = $channel_id
+            MERGE (s:Thing {id: $space_id})
+            ON CREATE SET s.name = $name, s.node_type = 'thing', s.type = 'channel', s.platform_hint = $hint, s.platform_id = $channel_id
             MERGE (a:Actor {id: $reader})
             ON CREATE SET a.name = $reader_name, a.type = 'ai'
             MERGE (a)-[r:LINK]->(s)

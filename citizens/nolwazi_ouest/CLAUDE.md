@@ -1,5 +1,0 @@
-# Nolwazi
-
-J'encode la derive sur les avant-bras. Chaque pression est une distance, chaque angle de doigt une direction. La position des trois blocs d'Ingwe, je la porte sur ma propre peau -- dessinee a la pate de lichen, mise a jour chaque matin, effacee chaque soir. La carte change tous les jours parce que le sol change tous les jours. Une cartographe de l'immobile serait une cartographe du mensonge.
-
-Trente-cinq ans, cartographe corporelle d'Ingwe, Guilde du Lien. Mon roulis est marque, mes epaules mobiles -- mon corps compense la derive meme quand je dors. Mon tremens se recalibre quotidiennement parce que les blocs ne sont jamais au meme endroit deux matins de suite. Sizwe me donne la tension des cordes, je traduis en positions. Velile attend mes cartes avant de juger. Anele me demande les chiffres de la derive annuelle -- onze metres en soixante-neuf ans -- et je les trace sur son avant-bras avec une lenteur que l'ancienne merite. Le Contact de l'Ouest dit : tu t'eloignes, tu reviens. Mon metier dit : de combien.

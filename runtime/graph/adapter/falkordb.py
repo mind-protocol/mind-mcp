@@ -22,6 +22,10 @@ from .base import (
 
 logger = logging.getLogger(__name__)
 
+# Default query timeout in milliseconds.
+# Prevents a single runaway query from locking the database.
+QUERY_TIMEOUT_MS = 5000  # 5 seconds
+
 
 class FalkorDBAdapter(DatabaseAdapter):
     """
@@ -85,14 +89,14 @@ class FalkorDBAdapter(DatabaseAdapter):
             List of result rows
         """
         try:
-            result = self._graph.query(cypher, params or {})
+            result = self._graph.query(cypher, params or {}, timeout=QUERY_TIMEOUT_MS)
             return result.result_set if result.result_set else []
         except Exception as e:
             # Try reconnecting once
             if self._is_connection_error(e):
                 try:
                     self._connect()
-                    result = self._graph.query(cypher, params or {})
+                    result = self._graph.query(cypher, params or {}, timeout=QUERY_TIMEOUT_MS)
                     return result.result_set if result.result_set else []
                 except Exception as retry_error:
                     raise QueryError(f"Query failed after reconnect: {retry_error}")
@@ -107,12 +111,12 @@ class FalkorDBAdapter(DatabaseAdapter):
             params: Optional parameters for the mutation
         """
         try:
-            self._graph.query(cypher, params or {})
+            self._graph.query(cypher, params or {}, timeout=QUERY_TIMEOUT_MS)
         except Exception as e:
             if self._is_connection_error(e):
                 try:
                     self._connect()
-                    self._graph.query(cypher, params or {})
+                    self._graph.query(cypher, params or {}, timeout=QUERY_TIMEOUT_MS)
                     return
                 except Exception as retry_error:
                     raise QueryError(f"Execute failed after reconnect: {retry_error}")
@@ -142,7 +146,7 @@ class FalkorDBAdapter(DatabaseAdapter):
         """
         try:
             cypher = f"CREATE INDEX FOR (n:{label}) ON (n.{property_name})"
-            self._graph.query(cypher)
+            self._graph.query(cypher, timeout=QUERY_TIMEOUT_MS)
             logger.info(f"[FalkorDBAdapter] Created index on {label}.{property_name}")
         except Exception as e:
             # Index might already exist
@@ -157,7 +161,7 @@ class FalkorDBAdapter(DatabaseAdapter):
             True if database responds, False otherwise.
         """
         try:
-            self._graph.query("RETURN 1")
+            self._graph.query("RETURN 1", timeout=QUERY_TIMEOUT_MS)
             return True
         except Exception:
             return False
@@ -194,7 +198,7 @@ class FalkorDBTransaction(TransactionAdapter):
 
         Note: Returns result immediately for FalkorDB.
         """
-        result = self._graph.query(cypher, params or {})
+        result = self._graph.query(cypher, params or {}, timeout=QUERY_TIMEOUT_MS)
         return result.result_set if result.result_set else []
 
     def execute(self, cypher: str, params: Optional[Dict[str, Any]] = None) -> None:
@@ -204,5 +208,5 @@ class FalkorDBTransaction(TransactionAdapter):
     def _commit(self) -> None:
         """Execute all queued commands."""
         for cypher, params in self._commands:
-            self._graph.query(cypher, params or {})
+            self._graph.query(cypher, params or {}, timeout=QUERY_TIMEOUT_MS)
         self._commands = []

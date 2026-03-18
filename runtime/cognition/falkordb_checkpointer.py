@@ -27,6 +27,10 @@ logger = logging.getLogger("cognition.checkpointer")
 CHECKPOINT_INTERVAL = float(os.environ.get("L1_CHECKPOINT_INTERVAL", "300"))  # 5 min default
 GRAPH_PREFIX = os.environ.get("L1_GRAPH_PREFIX", "brain_")
 
+# Default query timeout in milliseconds.
+# Prevents a single runaway query from locking the database.
+QUERY_TIMEOUT_MS = 5000  # 5 seconds
+
 
 class FalkorDBBrainCheckpointer:
     """Persist citizen brain state to FalkorDB.
@@ -73,9 +77,9 @@ class FalkorDBBrainCheckpointer:
 
         try:
             # Node index on id
-            self._graph.query("CREATE INDEX IF NOT EXISTS FOR (n:Node) ON (n.id)")
+            self._graph.query("CREATE INDEX IF NOT EXISTS FOR (n:Node) ON (n.id)", timeout=QUERY_TIMEOUT_MS)
             # Node index on node_type for type-based queries
-            self._graph.query("CREATE INDEX IF NOT EXISTS FOR (n:Node) ON (n.node_type)")
+            self._graph.query("CREATE INDEX IF NOT EXISTS FOR (n:Node) ON (n.node_type)", timeout=QUERY_TIMEOUT_MS)
             logger.debug(f"Schema ensured for {self.graph_name}")
         except Exception as e:
             logger.warning(f"Schema setup failed for {self.graph_name}: {e}")
@@ -107,7 +111,7 @@ class FalkorDBBrainCheckpointer:
 
         try:
             # Count nodes in FalkorDB vs in-memory
-            result = self._graph.query("MATCH (n:Node) RETURN n.id, n.node_type, n.type, n.content, n.weight, n.energy, n.synthesis")
+            result = self._graph.query("MATCH (n:Node) RETURN n.id, n.node_type, n.type, n.content, n.weight, n.energy, n.synthesis", timeout=QUERY_TIMEOUT_MS)
             if not result.result_set:
                 return
 
@@ -238,7 +242,7 @@ class FalkorDBBrainCheckpointer:
             "created_at_s": int(getattr(node, 'created_at', 0)),
             "last_activated_s": int(getattr(node, 'last_activated_at', 0)),
         }
-        self._graph.query(query, params)
+        self._graph.query(query, params, timeout=QUERY_TIMEOUT_MS)
 
     def _upsert_link(self, link: Link):
         """Upsert a single link to FalkorDB.
@@ -284,7 +288,7 @@ class FalkorDBBrainCheckpointer:
             "hierarchy": getattr(link, 'hierarchy', 0.0),
             "permanence": getattr(link, 'permanence', 0.5),
         }
-        self._graph.query(query, params)
+        self._graph.query(query, params, timeout=QUERY_TIMEOUT_MS)
 
     def load_state(self) -> Optional[CitizenCognitiveState]:
         """Load a citizen's brain state from FalkorDB.
@@ -296,7 +300,7 @@ class FalkorDBBrainCheckpointer:
 
         try:
             # Count nodes
-            result = self._graph.query("MATCH (n:Node) RETURN count(n) as cnt")
+            result = self._graph.query("MATCH (n:Node) RETURN count(n) as cnt", timeout=QUERY_TIMEOUT_MS)
             if not result.result_set or result.result_set[0][0] == 0:
                 logger.info(f"No brain state in {self.graph_name}")
                 return None
@@ -310,7 +314,8 @@ class FalkorDBBrainCheckpointer:
                 "n.weight, n.energy, n.stability, n.activation_count, "
                 "n.synthesis, n.content, n.novelty_affinity, n.goal_relevance, "
                 "n.care_affinity, n.achievement_affinity, n.risk_affinity, "
-                "n.self_relevance, n.partner_relevance"
+                "n.self_relevance, n.partner_relevance",
+                timeout=QUERY_TIMEOUT_MS,
             )
 
             for row in node_result.result_set:
@@ -346,7 +351,8 @@ class FalkorDBBrainCheckpointer:
                 "MATCH (a:Node)-[r:LINK]->(b:Node) "
                 "RETURN r.id, a.id, b.id, r.relation_kind, r.weight, "
                 "r.energy, r.trust, r.friction, r.affinity, r.aversion, "
-                "r.stability, r.permanence"
+                "r.stability, r.permanence",
+                timeout=QUERY_TIMEOUT_MS,
             )
 
             for row in link_result.result_set:
@@ -412,6 +418,7 @@ class FalkorDBBrainCheckpointer:
                 "MERGE (m:Meta {id: '__limbic__'}) "
                 "SET m.data = $data, m.updated_at = $ts",
                 {"data": data, "ts": int(time.time())},
+                timeout=QUERY_TIMEOUT_MS,
             )
         except Exception as e:
             logger.warning(f"Limbic save failed for {self.citizen_handle}: {e}")
@@ -423,7 +430,8 @@ class FalkorDBBrainCheckpointer:
 
         try:
             result = self._graph.query(
-                "MATCH (m:Meta {id: '__limbic__'}) RETURN m.data"
+                "MATCH (m:Meta {id: '__limbic__'}) RETURN m.data",
+                timeout=QUERY_TIMEOUT_MS,
             )
             if result.result_set and result.result_set[0][0]:
                 import json
@@ -475,6 +483,7 @@ class FalkorDBBrainCheckpointer:
                 "MERGE (m:Meta {id: '__metabolism__'}) "
                 "SET m.data = $data, m.updated_at = $ts",
                 {"data": data, "ts": int(time.time())},
+                timeout=QUERY_TIMEOUT_MS,
             )
         except Exception as e:
             logger.warning(f"Metabolism save failed for {self.citizen_handle}: {e}")
@@ -486,7 +495,8 @@ class FalkorDBBrainCheckpointer:
 
         try:
             result = self._graph.query(
-                "MATCH (m:Meta {id: '__metabolism__'}) RETURN m.data"
+                "MATCH (m:Meta {id: '__metabolism__'}) RETURN m.data",
+                timeout=QUERY_TIMEOUT_MS,
             )
             if result.result_set and result.result_set[0][0]:
                 import json

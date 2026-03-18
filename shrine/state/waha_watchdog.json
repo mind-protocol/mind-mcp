@@ -1,0 +1,11 @@
+{
+  "last_check": "2026-03-18T20:53:18.479018",
+  "status": "healthy",
+  "downtime_start": null,
+  "restart_count": 2,
+  "incidents": [],
+  "me": {
+    "id": "447916653048@c.us",
+    "pushName": "MIND"
+  }
+}

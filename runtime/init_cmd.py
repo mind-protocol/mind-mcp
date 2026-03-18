@@ -174,39 +174,66 @@ def _update_or_add_section(file_path: Path, section_content: str, section_marker
         print(f"✓ Created: {file_path}")
 
 
-def _update_root_claude_md(target_dir: Path, mode: str = None) -> None:
-    """Generate root CLAUDE.md from template + FRAMEWORK + BEHAVIORS inlined.
+def _update_root_claude_md(target_dir: Path, **kwargs) -> None:
+    """Generate root CLAUDE.md by merging all prompts/*.md files.
 
-    Reads mode from arg or database_config.yaml (system_prompt_mode):
-      project-team (default), universe, roleplay
-    Populates with project structure, git URL, team roster.
-    Appends full text of FRAMEWORK.md and BEHAVIORS.md (not @ references).
+    Reads prompts/00_SYSTEM.md (with {{placeholders}}), fills them,
+    then appends 01-05 foundation docs. One file, everything inlined.
     """
     root_claude = target_dir / "CLAUDE.md"
+    prompts_dir = Path(__file__).parent.parent / "prompts"
 
-    # If mode provided, write it to config so future inits remember
-    if mode:
-        config_file = target_dir / ".mind" / "database_config.yaml"
-        if config_file.exists():
-            try:
-                import yaml
-                config = yaml.safe_load(config_file.read_text())
-                config["system_prompt_mode"] = mode
-                config_file.write_text(yaml.dump(config, default_flow_style=False))
-            except Exception as e:
-                logger.warning(f"Error writing system_prompt_mode to config: {e}")
+    # Build system section (00_SYSTEM.md with placeholders filled)
+    system_src = prompts_dir / "00_SYSTEM.md"
+    if system_src.exists():
+        content = _fill_placeholders(system_src.read_text(encoding="utf-8"), target_dir)
+    else:
+        content = f"# {target_dir.name}\n"
 
-    content = _build_root_claude_section(target_dir)
-
-    # Inline FRAMEWORK.md and BEHAVIORS.md (full text, not @ references)
-    templates_dir = Path(__file__).parent.parent / "templates"
-    for doc in ["FRAMEWORK.md", "BEHAVIORS.md"]:
-        src = templates_dir / doc
-        if src.exists():
-            content += "\n\n---\n\n" + src.read_text(encoding="utf-8")
+    # Append all foundation docs in order
+    for doc in sorted(prompts_dir.glob("[0-9][0-9]_*.md")):
+        if doc.name == "00_SYSTEM.md":
+            continue
+        content += "\n\n---\n\n" + doc.read_text(encoding="utf-8")
 
     root_claude.write_text(content, encoding="utf-8")
-    print(f"✓ Generated: {root_claude} (mode: {mode or 'from config'})")
+    print(f"✓ Generated: {root_claude}")
+
+
+def _fill_placeholders(template: str, target_dir: Path) -> str:
+    """Fill {{PLACEHOLDER}} tokens in system prompt template."""
+    import subprocess
+
+    project_name = target_dir.name.replace("-", " ").replace("_", " ").title()
+
+    # Git URL
+    github_url = ""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(target_dir), "remote", "get-url", "origin"],
+            capture_output=True, text=True, timeout=2,
+        )
+        if result.returncode == 0:
+            github_url = result.stdout.strip()
+    except Exception:
+        pass
+
+    # Citizen count
+    citizens_dir = target_dir / "citizens"
+    citizen_count = str(len([d for d in citizens_dir.iterdir() if d.is_dir()])) if citizens_dir.is_dir() else "0"
+
+    replacements = {
+        "{{UNIVERSE_NAME}}": project_name,
+        "{{UNIVERSE_DESCRIPTION}}": f"A Mind Protocol world",
+        "{{CITIZEN_COUNT}}": citizen_count,
+        "{{SPACE_COUNT}}": "—",
+        "{{GRAPH_NAME}}": target_dir.name.replace("-", "_"),
+    }
+
+    for placeholder, value in replacements.items():
+        template = template.replace(placeholder, value)
+
+    return template
 
 
 def _build_root_claude_section(target_dir: Path = None) -> str:
@@ -485,24 +512,19 @@ def _enforce_readonly_for_runtime(mind_dir: Path) -> None:
 # GRAPH INITIALIZATION
 # =============================================================================
 
-def _init_graph(target_dir: Path, clear: bool = False, behaviors: dict = None) -> bool:
+def _init_graph(target_dir: Path, clear: bool = False) -> bool:
     """
     Initialize graph named after repo and ingest content.
 
-    Respects behavior flags from database_config.yaml:
-    - doc_ingest: ingest docs/ files
-    - mind_ingest: ingest .mind/ files
+    Ingests docs/ and templates/ into the graph. Always on, no toggles.
 
     Args:
         target_dir: Project directory
         clear: If True, delete all nodes/links before ingestion
-        behaviors: Dict of behavior flags (default: all True)
 
     Returns:
         True if successful, False if graph connection failed
     """
-    if behaviors is None:
-        behaviors = {}
 
     repo_name = target_dir.name
 
@@ -533,28 +555,27 @@ def _init_graph(target_dir: Path, clear: bool = False, behaviors: dict = None) -
             print(f"  ✗ Failed to clear graph: {e}")
 
     # Ingest docs/*.md files into graph
-    if behaviors.get("doc_ingest", True):
+    try:
+        from .ingest.docs import ingest_docs_to_graph
+        print("  Ingesting docs/*.md files...")
+        doc_stats = ingest_docs_to_graph(target_dir, graph_ops)
+        docs_count = doc_stats.get('docs_ingested', doc_stats.get('files_ingested', 0))
+        spaces_count = doc_stats.get('spaces_created', 0)
+        print(f"  ✓ Docs ingested: {docs_count} docs, {spaces_count} spaces")
+    except Exception as e:
+        print(f"  ○ Doc ingestion failed: {e}")
+
+    # Ingest templates/ into graph
+    templates_dir = target_dir / "templates"
+    if templates_dir.exists():
         try:
             from .ingest.docs import ingest_docs_to_graph
-            print("  Ingesting docs/*.md files...")
-            doc_stats = ingest_docs_to_graph(target_dir, graph_ops)
-            print(f"  ✓ Docs ingested: {doc_stats['docs_ingested']} docs, {doc_stats['spaces_created']} spaces")
+            print("  Ingesting templates/...")
+            tmpl_stats = ingest_docs_to_graph(templates_dir, graph_ops)
+            tmpl_count = tmpl_stats.get('docs_ingested', tmpl_stats.get('files_ingested', 0))
+            print(f"  ✓ Templates ingested: {tmpl_count} files")
         except Exception as e:
-            print(f"  ○ Doc ingestion failed: {e}")
-    else:
-        print("  ○ Doc ingestion: disabled")
-
-    # Ingest .mind/ files into graph (except runtime/)
-    if behaviors.get("mind_ingest", True):
-        try:
-            from .ingest.docs import ingest_mind_to_graph
-            print("  Ingesting .mind/ files...")
-            mind_stats = ingest_mind_to_graph(target_dir, graph_ops)
-            print(f"  ✓ Mind ingested: {mind_stats['files_ingested']} files, {mind_stats['spaces_created']} spaces")
-        except Exception as e:
-            print(f"  ○ Mind ingestion failed: {e}")
-    else:
-        print("  ○ Mind ingestion: disabled")
+            print(f"  ○ Template ingestion failed: {e}")
 
     return True
 
@@ -626,18 +647,17 @@ def _clean_legacy(target_dir: Path) -> None:
         print(f"✓ Cleaned {cleaned} legacy files/folders")
 
 
-def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = False, mode: str = None) -> bool:
+def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = False, **kwargs) -> bool:
     """
-    Initialize the mind in a project directory.
+    Initialize mind in a project directory.
 
-    Generates CLAUDE.md from templates, copies protocol files, seeds graph.
+    Merges prompts/ (00_SYSTEM through 05_STYLE) into CLAUDE.md.
+    Ingests docs/ into graph. No .mind/ directory.
 
     Args:
         target_dir: The project directory to initialize
-        force: If True, overwrite existing .mind/
+        force: If True, overwrite existing CLAUDE.md
         clear_graph: If True, clear existing graph data before injection
-        mode: System prompt mode ('project-team', 'universe', 'roleplay').
-              If provided, overrides database_config.yaml setting.
     Returns:
         True if successful, False otherwise
     """
@@ -647,295 +667,52 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
         print(f"Error: {e}")
         return False
 
-    # Clean legacy files/folders from previous versions
-    _clean_legacy(target_dir)
+    # Clean legacy .mind/ if it exists
+    legacy_mind = target_dir / ".mind"
+    if legacy_mind.exists() and legacy_mind.is_dir():
+        shutil.rmtree(legacy_mind, ignore_errors=True)
+        print(f"✓ Removed legacy .mind/")
 
-    # Source paths (templates/ is the root, no nested /mind/)
-    protocol_source = templates_path
-    modules_yaml_source = templates_path / "modules.yaml"
-    ignore_source = templates_path / "mindignore"
-    capabilities_source = templates_path.parent / "capabilities"  # mind-platform/capabilities/
-
-    # Destination paths
-    protocol_dest = target_dir / ".mind"
-    modules_yaml_dest = target_dir / "modules.yaml"
-    ignore_dest = target_dir / ".mindignore"
-    capabilities_dest = protocol_dest / "capabilities"  # .mind/capabilities/
-
-    claude_md = protocol_dest / "CLAUDE.md"
-    agents_md = target_dir / "AGENTS.md"
-    manager_agents_md = protocol_dest / "agents" / "manager" / "AGENTS.md"
-
-    # Check if already initialized
-    if protocol_dest.exists() and not force:
-        print(f"Error: {protocol_dest} already exists.")
-        print("Use --force to overwrite.")
-        return False
-
-    # Load behavior flags from database_config.yaml (all default to True)
-    _behaviors = {
-        "file_ingest": True,
-        "doc_ingest": True,
-        "mind_ingest": True,
-        "overview": True,
-        "embeddings": True,
-        "health_checks": True,
-        "capabilities_graph": True,
-        "citizen_seed": True,
-        "mcp_config": True,
-    }
-    db_config_path = protocol_dest / "database_config.yaml"
-    if db_config_path.exists():
+    # Load config from mind.yaml (root level, not .mind/)
+    config_path = target_dir / "mind.yaml"
+    # Load config (mode, db connection). No behavior toggles — everything runs.
+    if config_path.exists():
         try:
             import yaml
-            with open(db_config_path) as f:
+            with open(config_path) as f:
                 _cfg = yaml.safe_load(f) or {}
-            for k, v in _cfg.get("behaviors", {}).items():
-                if k in _behaviors:
-                    _behaviors[k] = bool(v)
-            disabled = [k for k, v in _behaviors.items() if not v]
-            if disabled:
-                print(f"  Behaviors disabled: {', '.join(disabled)}")
         except Exception as e:
-            logger.warning(f"Error loading behaviors from config: {e}")
-
-    # Note: VIEWs are deprecated - replaced by agents, skills, and protocols
-
-    # Copy protocol files
-    def copy_protocol_partial(src: Path, dst: Path) -> None:
-        for root, dirs, files in os.walk(src):
-            rel = Path(root).relative_to(src)
-            target_root = dst / rel
-            target_root.mkdir(parents=True, exist_ok=True)
-            for dirname in dirs:
-                (target_root / dirname).mkdir(parents=True, exist_ok=True)
-            for filename in files:
-                src_path = Path(root) / filename
-                dst_path = target_root / filename
-                try:
-                    shutil.copy2(src_path, dst_path)
-                except PermissionError:
-                    print(f"  ○ Skipped (permission): {dst_path}")
-
-    if protocol_dest.exists():
-        try:
-            shutil.rmtree(protocol_dest)
-            shutil.copytree(protocol_source, protocol_dest)
-            print(f"✓ Created: {protocol_dest}/")
-        except PermissionError:
-            print(f"  ○ Permission denied removing {protocol_dest}, attempting partial refresh")
-            copy_protocol_partial(protocol_source, protocol_dest)
+            logger.warning(f"Error loading config: {e}")
+            _cfg = {}
     else:
-        shutil.copytree(protocol_source, protocol_dest)
-        print(f"✓ Created: {protocol_dest}/")
+        _cfg = {}
 
-    # Remove doctor-ignore after copy (we want a clean, read-only protocol install)
-    doctor_ignore = protocol_dest / "doctor-ignore.yaml"
-    if doctor_ignore.exists():
-        try:
-            doctor_ignore.unlink()
-            print(f"○ Removed: {doctor_ignore}")
-        except PermissionError:
-            print(f"  ○ Skipped (permission): {doctor_ignore}")
+    # ── 1. Generate CLAUDE.md (merge all prompts/) ─────────────────────
+    _update_root_claude_md(target_dir)
 
-    # Copy capabilities from mind-platform/capabilities/ to .mind/capabilities/
-    if capabilities_source.exists():
-        try:
-            if capabilities_dest.exists():
-                shutil.rmtree(capabilities_dest)
-            shutil.copytree(capabilities_source, capabilities_dest)
-            cap_count = len(list(capabilities_dest.iterdir()))
-            print(f"✓ Created: {capabilities_dest}/ ({cap_count} capabilities)")
-        except PermissionError:
-            print(f"  ○ Skipped (permission): {capabilities_dest}")
-    else:
-        print(f"○ Capabilities not found: {capabilities_source}")
+    # ── 2. Generate AGENTS.md (for Codex) ────────────────────────────
+    agents_md = target_dir / "AGENTS.md"
+    agents_content = _build_agents_addition(templates_path)
+    _update_or_add_section(agents_md, agents_content, "# mind")
 
-    # Schema: copy both L1 and L3 schemas to project root
-    mcp_root = Path(__file__).parent.parent
-    for schema_file in ["schema-l1.yaml", "schema-l3.yaml"]:
-        src = mcp_root / schema_file
-        dst = target_dir / schema_file
-        if src.exists() and src.resolve() != dst.resolve():
-            shutil.copy2(src, dst)
-            print(f"✓ Schema: {dst}")
-
-    # Copy modules.yaml to project root (if not exists or force)
-    if not modules_yaml_dest.exists() or force:
-        if modules_yaml_source.exists():
-            try:
-                shutil.copy2(modules_yaml_source, modules_yaml_dest)
-                print(f"✓ Created: {modules_yaml_dest}")
-            except PermissionError:
-                print(f"  ○ Skipped (permission): {modules_yaml_dest}")
-    else:
-        print(f"○ {modules_yaml_dest} already exists")
-
-    # Copy .mindignore to project root (if not exists or force)
-    if not ignore_dest.exists() or force:
-        if ignore_source.exists():
-            try:
-                shutil.copy2(ignore_source, ignore_dest)
-                print(f"✓ Created: {ignore_dest}")
-            except PermissionError:
-                print(f"  ○ Skipped (permission): {ignore_dest}")
-    else:
-        print(f"○ {ignore_dest} already exists")
-
-    # Create docs/ directory structure with TAXONOMY.md and MAPPING.md
-    docs_dir = target_dir / "docs"
-    docs_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create citizens/ directory if it doesn't exist
-    citizens_dir = target_dir / "citizens"
-    if not citizens_dir.exists():
-        citizens_dir.mkdir(parents=True, exist_ok=True)
-        print(f"✓ Created: {citizens_dir}/")
-
-    taxonomy_template = templates_path / "docs" / "TAXONOMY_TEMPLATE.md"
-    mapping_template = templates_path / "docs" / "MAPPING_TEMPLATE.md"
-    taxonomy_dest = docs_dir / "TAXONOMY.md"
-    mapping_dest = docs_dir / "MAPPING.md"
-
-    if not taxonomy_dest.exists() or force:
-        if taxonomy_template.exists():
-            try:
-                shutil.copy2(taxonomy_template, taxonomy_dest)
-                print(f"✓ Created: {taxonomy_dest}")
-            except PermissionError:
-                print(f"  ○ Skipped (permission): {taxonomy_dest}")
-    else:
-        print(f"○ {taxonomy_dest} already exists")
-
-    if not mapping_dest.exists() or force:
-        if mapping_template.exists():
-            try:
-                shutil.copy2(mapping_template, mapping_dest)
-                print(f"✓ Created: {mapping_dest}")
-            except PermissionError:
-                print(f"  ○ Skipped (permission): {mapping_dest}")
-    else:
-        print(f"○ {mapping_dest} already exists")
-
-    # Copy skills into .claude/skills and Codex skills directory
-    # Primary source: mind-mcp/.claude/skills/ (renamed skill directories: 01-onboard, etc.)
-    # Fallback: .mind/skills/ (SKILL_*.md reference files)
+    # ── 3. Copy skills into .claude/skills ────────────────────────────
     mind_mcp_root = Path(__file__).parent.parent
     claude_skills_src = mind_mcp_root / ".claude" / "skills"
-    skills_src = claude_skills_src if claude_skills_src.exists() else protocol_dest / "skills"
-    claude_skills_dest = target_dir / ".claude" / "skills"
-    codex_home = Path(os.environ.get("CODEX_HOME", "~/.codex")).expanduser()
-    codex_skills_dest = codex_home / "skills"
-    _copy_skills(skills_src, claude_skills_dest)
-    _copy_skills(skills_src, codex_skills_dest)
+    if claude_skills_src.exists():
+        claude_skills_dest = target_dir / ".claude" / "skills"
+        _copy_skills(claude_skills_src, claude_skills_dest)
 
-    # Add agent working directories to .gitignore
-    gitignore_path = target_dir / ".gitignore"
-    mind_gitignore_entries = [
-        "# mind agent working directories",
-        ".mind/work/",
-        ".mind/traces/",
-        ".mcp.json",  # Machine-specific MCP config
-    ]
-    try:
-        existing = gitignore_path.read_text() if gitignore_path.exists() else ""
-        missing_entries = [e for e in mind_gitignore_entries if e not in existing]
-        if missing_entries:
-            with open(gitignore_path, "a") as f:
-                f.write("\n" + "\n".join(missing_entries) + "\n")
-            print(f"✓ Updated: {gitignore_path}")
-    except PermissionError:
-        print(f"  ○ Skipped (permission): {gitignore_path}")
+    # ── 4. Initialize graph (ingest docs/ and templates/) ─────────────
+    _init_graph(target_dir, clear=clear_graph)
 
-    # Build system prompt content from SYSTEM.md + model-specific additions
-    claude_content = _build_claude_addition(templates_path)
-    gemini_content = _build_gemini_addition(templates_path)
-    agents_content = _build_agents_addition(templates_path)
-    manager_agents_content = _build_manager_agents_addition(templates_path)
-
-    # Update .mind/CLAUDE.md (replace # mind section if exists, otherwise append)
-    try:
-        _update_or_add_section(claude_md, claude_content, "# mind")
-    except PermissionError:
-        print(f"  ○ Skipped (permission): {claude_md}")
-
-    # Update root CLAUDE.md with mind section (using @ references)
-    try:
-        _update_root_claude_md(target_dir, mode=mode)
-    except PermissionError:
-        print(f"  ○ Skipped (permission): {target_dir / 'CLAUDE.md'}")
-
-    # Update .mind/GEMINI.md
-    gemini_md = protocol_dest / "GEMINI.md"
-    try:
-        _update_or_add_section(gemini_md, gemini_content, "# mind")
-    except PermissionError:
-        print(f"  ○ Skipped (permission): {gemini_md}")
-
-    # Update root AGENTS.md (for Codex)
-    try:
-        _update_or_add_section(agents_md, agents_content, "# mind")
-    except PermissionError:
-        print(f"  ○ Skipped (permission): {agents_md}")
-
-    # Update manager agent's AGENTS.md
-    if manager_agents_content:
-        try:
-            manager_agents_md.parent.mkdir(parents=True, exist_ok=True)
-            _update_or_add_section(manager_agents_md, manager_agents_content, "# mind")
-        except PermissionError:
-            print(f"  ○ Skipped (permission): {manager_agents_md}")
-
-    # Generate repository map
-    if _behaviors["overview"]:
-        print()
-        print("Generating repository map...")
-        try:
-            output_path = generate_and_save(target_dir, output_format="md")
-            print(f"✓ Created: {output_path}")
-        except Exception as e:
-            print(f"○ Map generation skipped: {e}")
-    else:
-        print("○ Overview: disabled")
-
-    # Enforce read-only permissions for core protocol artifacts
-    read_only_targets = [
-        protocol_dest / "GEMINI.md",
-        protocol_dest / "PRINCIPLES.md",
-        protocol_dest / "PROTOCOL.md",
-        protocol_dest / "schema.yaml",
-        protocol_dest / "nature.yaml",
-        claude_md,
-    ]
-    for ro_path in read_only_targets:
-        _remove_write_permissions(ro_path)
-    _enforce_readonly_for_templates(protocol_dest / "templates")
-
-    # Initialize graph and ingest content (respects doc_ingest + mind_ingest flags)
-    if _behaviors["doc_ingest"] or _behaviors["mind_ingest"]:
-        _init_graph(target_dir, clear=clear_graph, behaviors=_behaviors)
-    else:
-        print("○ Graph ingestion: disabled (doc_ingest + mind_ingest both off)")
-
-    # Configure MCP membrane server
-    if _behaviors["mcp_config"]:
-        _configure_mcp_membrane(target_dir)
-    else:
-        print("○ MCP config: disabled")
+    # ── 5. Configure MCP ──────────────────────────────────────────────
+    _configure_mcp_membrane(target_dir)
 
     print()
     print("mind initialized!")
-    # Lock runtime files read-only to prevent accidental edits
-    # (canonical source is mind-mcp/runtime/, not .mind/runtime/)
-    _enforce_readonly_for_runtime(protocol_dest)
-
     print()
-    print("Next steps:")
-    print("  1. Read .mind/PROTOCOL.md")
-    print("  2. Update .mind/state/SYNC_Project_State.md")
-    print("  3. Choose an agent name and use protocols for your task")
+    print(f"  CLAUDE.md: {target_dir / 'CLAUDE.md'}")
+    print(f"  Config:    {config_path}")
     print()
-    print("To bootstrap an LLM, run:")
-    print(f"  mind prompt --dir {target_dir}")
 
     return True

@@ -7,6 +7,10 @@ Refactored into modular phases.
 DOCS: docs/physics/algorithms/ALGORITHM_Physics_Schema_v1.2_Energy_Physics.md
 """
 
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 import logging
 from typing import List, Dict, Any, Tuple
 from runtime.physics.graph import GraphQueries, GraphOps

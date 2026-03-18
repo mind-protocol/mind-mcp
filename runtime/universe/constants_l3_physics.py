@@ -13,6 +13,10 @@ These parameters govern:
 DOCS: docs/universe/ALGORITHM_Universe_Graph.md (ALG-3, ALG-6)
 """
 
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 # =============================================================================
 # ENERGY MODEL (ALG-6)
 # =============================================================================

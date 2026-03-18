@@ -19,6 +19,9 @@ Steps 1-5: Threshold oracle, budget split, floor, amplifier, application.
 Plus: self-stimulus anti-loop, directory ambient, temporal triggers.
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 from __future__ import annotations
 
 import math
@@ -71,21 +74,9 @@ from ..models import (
 # Data types
 # ---------------------------------------------------------------------------
 
-@dataclass
-class Stimulus:
-    """An incoming stimulus to be injected into the cognitive graph."""
-    content: str
-    embedding: list[float]
-    source: str  # "external", "self", "directory", "temporal", "feed"
-    budget: float = 1.0
-    segments: list[dict] = field(default_factory=list)
-    # segments: list of {"content": str, "embedding": list[float],
-    #                     "node_type": str (optional)}
-    # v2.2: Provenance + visual
-    origin_citizen: str = ""       # actor ID of the sender
-    origin_citizen_name: str = ""  # display name
-    origin_citizen_image: str = "" # sender's profile pic URI
-    image_uri: str = ""            # stimulus-specific image (vision, screenshot)
+# Stimulus class lives in tick_runner_l1_cognitive_engine.py (single source of truth).
+# Law 1 accepts any object with .content, .energy_budget, .source, .embedding.
+# No duplicate class here.
 
 
 @dataclass
@@ -242,115 +233,58 @@ def _preprocess_stimulus(
     created = 0
     merged = 0
 
-    segments = stimulus.segments
-    if not segments:
-        # No pre-segmented content — treat the whole stimulus as one segment
-        segments = [{
-            "content": stimulus.content,
-            "embedding": stimulus.embedding,
-        }]
+    # One stimulus = one node (find existing or create new)
+    stim_embedding = getattr(stimulus, 'embedding', [])
+    stim_content = stimulus.content or ""
 
-    # v2.2: Cluster energy distribution — main node gets 50% of budget,
-    # context nodes share the remaining 50%. First segment = anchor/main.
-    n_segs = len(segments)
-    main_energy = budget_per_segment * n_segs * 0.5 if n_segs > 1 else budget_per_segment
-    ctx_energy = (budget_per_segment * n_segs * 0.5) / max(n_segs - 1, 1) if n_segs > 1 else 0.0
+    if not stim_content:
+        return target_ids, created, merged
 
-    anchor_node_id = None  # track the main node for link creation
+    # Deduplication: by embedding similarity if available, by content prefix otherwise
+    nearest, sim = None, 0.0
+    if stim_embedding:
+        nearest, sim = _find_nearest_node(stim_embedding, state.nodes)
+    else:
+        # Lexical fallback — match by content prefix
+        prefix = stim_content[:80].lower()
+        for node in state.nodes.values():
+            if node.content and node.content[:80].lower() == prefix:
+                nearest, sim = node, 1.0
+                break
 
-    for seg_idx, seg in enumerate(segments):
-        seg_embedding = seg.get("embedding", stimulus.embedding)
-        seg_content = seg.get("content", stimulus.content)
-        seg_type_str = seg.get("node_type", "concept")
-        is_main = (seg_idx == 0)  # first segment is the anchor
+    if nearest is not None and sim > DEDUP_THRESHOLD:
+        nearest.activation_count += 1
+        nearest.recency = 1.0
+        nearest.last_activated_at = time.time()
+        target_ids.append(nearest.id)
+        merged += 1
+    else:
+        # Create new node
+        node_id = _generate_node_id("concept", stim_content)
+        new_node = Node(
+            id=node_id,
+            node_type=NodeType.CONCEPT,
+            content=stim_content,
+            embedding=stim_embedding,
+            weight=NEWBORN_WEIGHT,
+            energy=budget_per_segment,
+            stability=0.0,
+            recency=1.0,
+            novelty_affinity=1.0,
+            self_relevance=0.0,
+            activation_count=1,
+            last_activated_at=time.time(),
+            origin_citizen=getattr(stimulus, 'origin_citizen', None) or None,
+            origin_date=time.time(),
+            image_uri=getattr(stimulus, 'image_uri', None) or None,
+        )
+        state.add_node(new_node)
+        target_ids.append(node_id)
+        created += 1
 
-        if not seg_embedding:
-            continue
-
-        # Deduplication gate
-        nearest, sim = _find_nearest_node(seg_embedding, state.nodes)
-
-        if nearest is not None and sim > DEDUP_THRESHOLD:
-            # Merge into existing node
-            nearest.activation_count += 1
-            nearest.recency = 1.0
-            nearest.last_activated_at = time.time()
-            target_ids.append(nearest.id)
-            merged += 1
-            if is_main:
-                anchor_node_id = nearest.id
-        else:
-            # Create new node with birth properties
-            try:
-                ntype = NodeType(seg_type_str)
-            except ValueError:
-                ntype = NodeType.CONCEPT
-
-            seg_energy = main_energy if is_main else ctx_energy
-
-            node_id = _generate_node_id(ntype.value, seg_content)
-            new_node = Node(
-                id=node_id,
-                node_type=ntype,
-                content=seg_content,
-                embedding=seg_embedding,
-                weight=NEWBORN_WEIGHT,
-                energy=seg_energy,
-                stability=0.0,              # zero — vulnerable to Law 7
-                recency=1.0,                # fresh
-                novelty_affinity=1.0,       # max — curiosity amplifies
-                self_relevance=0.0,
-                activation_count=1,
-                last_activated_at=time.time(),
-                # v2.2: Provenance — stamp origin on every node created from stimulus
-                origin_citizen=stimulus.origin_citizen or None,
-                origin_date=time.time(),
-                # v2.2: Visual — attach stimulus image to the new moment node
-                image_uri=seg.get("image_uri") or stimulus.image_uri or None,
-            )
-            state.add_node(new_node)
-            target_ids.append(node_id)
-            created += 1
-            if is_main:
-                anchor_node_id = node_id
-
-    # v2.2: Create links between cluster nodes (anchor → each context node)
-    # This ensures the cluster propagates as a unit via Law 2.
-    # Link types: anchor relates_to context nodes (semantic association).
-    # For actor origin nodes: remembers (the target remembers who asked).
-    if anchor_node_id and len(target_ids) > 1:
-        for nid in target_ids:
-            if nid == anchor_node_id:
-                continue
-            ctx_node = state.get_node(nid)
-            if ctx_node is None:
-                continue
-
-            # Determine link type based on context node type
-            if ctx_node.node_type == NodeType.MEMORY:
-                link_type = LinkType.REMINDS_OF
-            elif ctx_node.node_type == NodeType.NARRATIVE:
-                link_type = LinkType.SUPPORTS
-            else:
-                link_type = LinkType.ASSOCIATES
-
-            # Check if this is the origin actor node
-            if seg_type_str == "actor" or getattr(ctx_node, 'origin_citizen', None) and ctx_node.node_type == NodeType.CONCEPT:
-                # Actor reference → the target remembers who sent the stimulus
-                link_type = LinkType.REMINDS_OF
-
-            link_id = f"link_{anchor_node_id}_{nid}"
-            link = Link(
-                source_id=anchor_node_id,
-                target_id=nid,
-                link_type=link_type,
-                weight=NEWBORN_WEIGHT,          # low — must earn permanence
-                activation_gain=1.0,            # neutral transfer
-                energy=ctx_energy * 0.5,        # some energy on the link too
-                stability=0.0,                  # fragile
-                recency=1.0,                    # fresh
-            )
-            state.add_link(link)
+    # Links between new stimulus node and existing relevant nodes
+    # are created by Law 2 (propagation) and Law 5 (co-activation).
+    # No need to pre-create cluster links here.
 
     return target_ids, created, merged
 
@@ -510,7 +444,7 @@ def _gate_self_stimulus(
     # Gate 2: Diminishing returns
     loop_count = ss["loop_count"]
     diminish = 0.5 ** loop_count
-    effective_budget = stimulus.budget * SELF_STIMULUS_RATIO * diminish
+    effective_budget = stimulus.energy_budget * SELF_STIMULUS_RATIO * diminish
 
     # Update tracking
     ss["loop_count"] += 1
@@ -666,7 +600,7 @@ def inject_energy(
     # Self-stimulus gating
     # ---------------------------------------------------------------
     is_self = stimulus.source == "self"
-    effective_budget = stimulus.budget
+    effective_budget = stimulus.energy_budget
 
     if is_self:
         effective_budget, suppressed = _gate_self_stimulus(state, stimulus, tick)
@@ -685,41 +619,20 @@ def inject_energy(
     # Directory ambient: special lightweight path
     # ---------------------------------------------------------------
     if stimulus.source == "directory":
-        # Directory listing is handled by inject_directory_ambient
-        # which uses lexical matching, not the full dual-channel pipeline.
-        # Extract file names from segments or content lines.
-        file_names = []
-        if stimulus.segments:
-            file_names = [seg.get("content", "") for seg in stimulus.segments]
-        else:
-            file_names = [
-                line.strip()
-                for line in stimulus.content.split("\n")
-                if line.strip()
-            ]
+        file_names = [
+            line.strip()
+            for line in stimulus.content.split("\n")
+            if line.strip()
+        ]
         total = inject_directory_ambient(state, file_names)
         result.total_energy_injected = total
         return result
 
     # ---------------------------------------------------------------
-    # Step 0: Bulk handling
+    # Pre-processing — deduplicate, create or merge node
     # ---------------------------------------------------------------
-    if len(stimulus.content) > BULK_THRESHOLD and not stimulus.segments:
-        selected_segments, summary_segment = _handle_bulk_stimulus(
-            state, stimulus
-        )
-        stimulus.segments = selected_segments
-        if summary_segment:
-            stimulus.segments.append(summary_segment)
-
-    # ---------------------------------------------------------------
-    # Step 0: Pre-processing — segment, deduplicate, create nodes
-    # ---------------------------------------------------------------
-    n_segments = max(len(stimulus.segments), 1)
-    budget_per_new_node = effective_budget / n_segments
-
     target_ids, created, merged = _preprocess_stimulus(
-        state, stimulus, budget_per_new_node
+        state, stimulus, effective_budget
     )
     result.nodes_created = created
     result.nodes_merged = merged

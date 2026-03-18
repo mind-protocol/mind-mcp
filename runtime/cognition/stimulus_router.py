@@ -9,6 +9,9 @@ Stimulus objects for injection into the L1 cognitive engine.
 Pipeline: classify → segment → embed → dedup → build Stimulus
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 from __future__ import annotations
 
 import hashlib

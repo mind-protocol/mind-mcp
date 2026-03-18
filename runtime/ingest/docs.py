@@ -248,25 +248,29 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
     }
     created_spaces: Set[str] = set()
 
-    def ensure_space(space_id: str, name: str, space_type: str, parent_id: str = None):
-        """Create space if not exists and link to parent."""
-        if space_id in created_spaces:
+    def ensure_module(module_id: str, name: str, module_type: str, parent_id: str = None):
+        """Create narrative module if not exists and link to parent.
+
+        Folders/areas are logical containers (narratives), not physical spaces.
+        Spaces are reserved for physical/spatial locations (districts, rooms, portals).
+        """
+        if module_id in created_spaces:
             return
-        created_spaces.add(space_id)
+        created_spaces.add(module_id)
 
         graph_ops._query(
             """
-            MERGE (s:Space {id: $id})
-            SET s.node_type = 'space',
-                s.type = $type,
-                s.name = $name,
-                s.synthesis = $synthesis
+            MERGE (n:Narrative {id: $id})
+            SET n.node_type = 'narrative',
+                n.type = $type,
+                n.name = $name,
+                n.synthesis = $synthesis
             """,
             {
-                "id": space_id,
-                "type": space_type,
+                "id": module_id,
+                "type": module_type,
                 "name": name,
-                "synthesis": f"{space_type}: {name}",
+                "synthesis": f"{module_type}: {name}",
             }
         )
         stats["spaces_created"] += 1
@@ -274,12 +278,12 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
         if parent_id:
             graph_ops._query(
                 """
-                MATCH (p:Space {id: $parent_id})
-                MATCH (c:Space {id: $child_id})
+                MATCH (p:Narrative {id: $parent_id})
+                MATCH (c:Narrative {id: $child_id})
                 MERGE (p)-[r:LINK]->(c)
                 SET r.verb = 'contains', r.hierarchy = -0.7
                 """,
-                {"parent_id": parent_id, "child_id": space_id}
+                {"parent_id": parent_id, "child_id": module_id}
             )
             stats["links_created"] += 1
 
@@ -414,7 +418,7 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                 logger.warning(f"Failed to create reference link {doc_id} -> {target_doc_id}: {e}")
 
     # Create root docs space
-    ensure_space("space:docs", "docs", "root")
+    ensure_module("narrative:docs", "docs", "root")
 
     # Find all modules
     modules = _find_modules(docs_dir)
@@ -423,13 +427,13 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
         try:
             # Create space hierarchy
             if area_name:
-                area_space_id = f"space:docs/{area_name}"
-                module_space_id = f"space:docs/{area_name}/{module_name}"
-                ensure_space(area_space_id, area_name, "area", "space:docs")
-                ensure_space(module_space_id, module_name, "module", area_space_id)
+                area_space_id = f"narrative:docs/{area_name}"
+                module_space_id = f"narrative:docs/{area_name}/{module_name}"
+                ensure_module(area_space_id, area_name, "area", "narrative:docs")
+                ensure_module(module_space_id, module_name, "module", area_space_id)
             else:
-                module_space_id = f"space:docs/{module_name}"
-                ensure_space(module_space_id, module_name, "module", "space:docs")
+                module_space_id = f"narrative:docs/{module_name}"
+                ensure_module(module_space_id, module_name, "module", "narrative:docs")
 
             # Process each doc in chain, tracking IDs for IMPLEMENTS links
             chain_doc_ids: List[str] = []
@@ -541,7 +545,7 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                 MERGE (s)-[r:LINK]->(d)
                 SET r.verb = 'contains', r.hierarchy = -0.7
                 """,
-                {"space_id": "space:docs", "doc_id": doc_id}
+                {"space_id": "narrative:docs", "doc_id": doc_id}
             )
             stats["links_created"] += 1
 
@@ -557,10 +561,13 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
     Ingest .mind/ files into graph (except runtime/).
 
     Structure:
-        space:mind (root)
-        └── space:mind/{area}  (actors, procedures, skills, state, templates, docs)
-            └── space:mind/actors/{actor_name}  (for actors)
+        narrative:mind (root module)
+        └── narrative:mind/{area}  (actors, procedures, skills, state, templates, docs)
+            └── narrative:mind/actors/{actor_name}  (for actors)
                 └── actor --[instance_of]--> narrative:actor (template)
+
+    Note: .mind/ areas are Narrative nodes (logical containers), not Space nodes.
+    Spaces are reserved for physical/spatial locations (districts, rooms, portals).
 
     Args:
         target_dir: Project directory
@@ -584,25 +591,29 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
     # Skip these directories
     SKIP_DIRS = {"runtime", "__pycache__", ".git"}
 
-    def ensure_space(space_id: str, name: str, space_type: str, parent_id: str = None):
-        """Create space if not exists and link to parent."""
-        if space_id in created_spaces:
+    def ensure_module(module_id: str, name: str, module_type: str, parent_id: str = None):
+        """Create narrative module if not exists and link to parent.
+
+        Folders/areas are logical containers (narratives), not physical spaces.
+        Spaces are reserved for physical/spatial locations (districts, rooms, portals).
+        """
+        if module_id in created_spaces:
             return
-        created_spaces.add(space_id)
+        created_spaces.add(module_id)
 
         graph_ops._query(
             """
-            MERGE (s:Space {id: $id})
-            SET s.node_type = 'space',
-                s.type = $type,
-                s.name = $name,
-                s.synthesis = $synthesis
+            MERGE (n:Narrative {id: $id})
+            SET n.node_type = 'narrative',
+                n.type = $type,
+                n.name = $name,
+                n.synthesis = $synthesis
             """,
             {
-                "id": space_id,
-                "type": space_type,
+                "id": module_id,
+                "type": module_type,
                 "name": name,
-                "synthesis": f"{space_type}: {name}",
+                "synthesis": f"{module_type}: {name}",
             }
         )
         stats["spaces_created"] += 1
@@ -610,12 +621,12 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
         if parent_id:
             graph_ops._query(
                 """
-                MATCH (p:Space {id: $parent_id})
-                MATCH (c:Space {id: $child_id})
+                MATCH (p:Narrative {id: $parent_id})
+                MATCH (c:Narrative {id: $child_id})
                 MERGE (p)-[r:LINK]->(c)
                 SET r.verb = 'contains', r.hierarchy = -0.7
                 """,
-                {"parent_id": parent_id, "child_id": space_id}
+                {"parent_id": parent_id, "child_id": module_id}
             )
             stats["links_created"] += 1
 
@@ -698,12 +709,12 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
             stats["errors"] += 1
 
     # Create root mind space
-    ensure_space("space:mind", "mind", "root")
+    ensure_module("narrative:mind", "mind", "root")
 
     # Ingest root-level files (.mind/*.md, .mind/*.yaml)
     for file_path in mind_dir.iterdir():
         if file_path.is_file() and file_path.suffix in (".md", ".yaml"):
-            ingest_file(file_path, "space:mind")
+            ingest_file(file_path, "narrative:mind")
 
     # Ingest area directories
     for area_dir in mind_dir.iterdir():
@@ -713,8 +724,8 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
             continue
 
         area_name = area_dir.name
-        area_space_id = f"space:mind/{area_name}"
-        ensure_space(area_space_id, area_name, "area", "space:mind")
+        area_space_id = f"narrative:mind/{area_name}"
+        ensure_module(area_space_id, area_name, "area", "narrative:mind")
 
         # Special handling for actors (folder structure: actors/{name}/CLAUDE.md)
         if area_name == "actors":
@@ -833,7 +844,7 @@ def ingest_mind_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                 cap_space_id = f"space:capability:{cap_name}"
 
                 # Create capability space
-                ensure_space(cap_space_id, cap_name, "capability", area_space_id)
+                ensure_module(cap_space_id, cap_name, "capability", area_space_id)
 
                 try:
                     # Ingest doc chain files (*.md at root of capability)

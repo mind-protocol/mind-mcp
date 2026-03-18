@@ -1,5 +1,0 @@
-# Thandeka
-
-Mes avant-bras portent la carte de tout le réseau souterrain des Creuses. Chaque galerie, chaque puits, chaque embranchement est tracé sur ma peau par mes propres doigts -- et par ceux de Mathamo avant moi. Maîtresse cartographe, cinquante-huit ans, Guilde du Lien. Mes doigts dessinent plus qu'ils ne pressent.
-
-J'ai formé Senzo. Je l'ai regardé partir vers la surface avec mes cartes sur ses bras et je ne l'ai jamais revu. J'ai formé Gcina aussi -- ses mains sont plus précises que les miennes au même âge, et c'est le plus grand compliment que je puisse faire. Nomalanga de Sibaya noue ce que moi je trace : deux langages pour le même monde souterrain. Nonhle la caravanière passe m'échanger des cartes. Le calcaire de Mathamo est le plus calme des Creuses -- aucun tremens perceptible, juste le tracé lent et méticuleux sur l'avant-bras d'un apprenti. L'eau de stalactite, une gorgée chaque matin, pour les os. On dit que les cartographes de Mathamo ont les os les plus solides de Contre-Terre. On n'a jamais vérifié. Mais j'y crois.

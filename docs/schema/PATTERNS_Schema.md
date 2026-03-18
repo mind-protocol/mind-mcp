@@ -22,7 +22,8 @@ node_type: actor | space | thing | narrative | moment
 
 These five categories cover all graph entities:
 - **actor** — anything that can act (human, agent, NPC, system)
-- **space** — containers and locations (folder, module, city, room)
+- **space** — physical/spatial locations only (district, building, room, portal)
+  - NOT folders or modules — those are narratives (the container emerges from semantic gravity, not filesystem hierarchy)
 - **thing** — objects that can be referenced/possessed (file, weapon, document)
 - **narrative** — stories and knowledge about nodes (pattern, memory, oath)
 - **moment** — temporal events (task, input, thought, tick)
@@ -60,13 +61,13 @@ All node and link IDs follow a consistent pattern for agent scanning:
 narrative_ISSUE_monolith-engine-physics-graph-ops_a7
 narrative_OBJECTIVE_engine-physics-documented
 narrative_TASK_serve-engine-physics-documented_01
-space_MODULE_engine-physics
+narrative_MODULE_engine-physics
 thing_FILE_engine-physics-graph-ops_a7
 moment_TICK_1000_a7
 
 # Links
 relates_BLOCKS_narrative-issue-a7_TO_narrative-objective-b3
-contains_space-module-engine_TO_narrative-issue-a7
+contains_narrative-module-engine_TO_narrative-issue-a7
 ```
 
 **Rationale:**

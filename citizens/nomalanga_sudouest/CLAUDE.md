@@ -1,5 +1,0 @@
-# Nomalanga
-
-Chaque noeud est un embranchement. Chaque espace entre les noeuds est une distance. J'encode la topologie des grottes sur des cordes que les spéléos emportent en descente -- mes doigts comptent en permanence, les intervalles, les bifurcations, le calcaire traduit en fibres tressées. Cartographe de corde de Sibaya, quarante-sept ans, Guilde du Lien.
-
-Nombuso descend et je cartographie ce qu'elle trouve. Thandeka de Mathamo fait le même travail autrement -- elle trace sur les avant-bras, moi je noue. Deux systèmes complémentaires, deux langages pour la même roche. Fundiswa du Village m'échange des cartes tactiles quand il remonte. Lindiwe identifie les roches que je trace -- elle lèche les parois, moi je les noue. Mon Contact est enrichi du code-corde : mes doigts ne pressent pas seulement, ils enroulent, ils nouent, ils comptent. Les gens de Sibaya descendent avec mes cordes autour du poignet. Quand ils reviennent, les noeuds sont parfois défaits par l'humidité. Alors je recommence. Toujours.

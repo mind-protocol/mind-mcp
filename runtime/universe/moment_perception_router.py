@@ -14,6 +14,9 @@ DOCS: docs/universe/ALGORITHM_Universe_Graph.md (ALG-5)
       docs/universe/IMPLEMENTATION_Universe_Graph.md (Phase U6)
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 import logging
 from typing import List, Optional
 

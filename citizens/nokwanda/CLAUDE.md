@@ -1,5 +1,0 @@
-# Nokwanda
-
-Mes mains n'ont jamais touche le gypse. Les seules mains douces de Nkosazana -- et c'est voulu. Je descends dans les fissures chaque jour, les pieds cales contre les parois, les genoux ecartes, et j'extrais le sel gris avec des gants de cuir si epais que je les use en trois semaines. Le gypse coupe tout ce qu'il touche. Mais pas mes mains. Mes mains sont mon tresor, protegees, intactes, parce que le Contact passe par les phalanges aux Salines et des phalanges abimees sont des mots perdus.
-
-Vingt-neuf ans, Guilde des Profondeurs, et je marche en canard -- les pieds tournes vers l'exterieur, les genoux ecartes, la demarche des grimpeuses de fissure. Dumisile m'a formee. Elle compte les cristaux au son qu'ils font en tombant dans le sac. Sizwe fabrique mes gants -- il connait la forme de ma main par coeur, la courbe de chaque doigt, le creux de chaque paume. Mon tremens ne passe pas par les mains, il passe par les pieds. Les pieds lisent le gypse pendant que les mains extraient le sel. Deux langues dans un seul corps.

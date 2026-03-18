@@ -315,6 +315,7 @@ class TickResult:
     orientation: Optional[str] = None  # qualitative tendency
     action_emitted: Optional[str] = None  # action_command if fired
     limbic_snapshot: Optional[dict] = None
+    wm_changed: bool = False
     energy_injected: float = 0.0
     energy_decayed: float = 0.0
     energy_propagated: float = 0.0

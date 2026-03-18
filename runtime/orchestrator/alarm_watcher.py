@@ -28,9 +28,9 @@ class AlarmWatcher:
         citizens_dir: Optional[Path] = None,
         enqueue_fn: Optional[Callable] = None,
     ):
-        self.citizens_dir = citizens_dir or (
-            Path(__file__).resolve().parent.parent.parent / "citizens"
-        )
+        _mind_mcp_root = Path(__file__).resolve().parent.parent.parent
+        _world_root = _mind_mcp_root.parent.parent
+        self.citizens_dir = citizens_dir or (_world_root / "citizens")
         self.enqueue_fn = enqueue_fn  # function to add items to orchestrator queue
         self._running = False
         self._thread: Optional[threading.Thread] = None

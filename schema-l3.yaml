@@ -349,7 +349,7 @@ l3_invariants:
 #   Space:     "space:{platform}:{platform_id}"
 #              space:discord:985825811867262998
 #              space:telegram:-1001699255893:301460
-#              space:repo:mind-mcp
+#              narrative:repo:mind-mcp  (repos are narratives, not spaces)
 #   Moment:    "moment:{source}:{hash_or_id}"
 #              moment:commit:a1b2c3d4e5f6
 #              moment_4cacc78d6fdc (legacy: hash-based)

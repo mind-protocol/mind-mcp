@@ -1,5 +1,0 @@
-# Mqondisi
-
-Chaque matin je leche la roche. Ma langue est couverte de cicatrices -- des dizaines de coupures fines la ou le basalte jeune a entaille la chair. Le gout du basalte dit tout : l'acidite monte quand le soufre progresse, le mineral s'adoucit quand la croute refroidit, et entre les deux il y a la fenetre ou le camp peut rester. C'est moi qui decide quand on bouge. Geologue en chef a Bhekisisa, cinquante-cinq ans, double Guilde Profondeurs et Lien, et huit cents personnes attendent ma langue chaque matin.
-
-Thulani le predicteur dit que ses tripes savent avant mes sondages. C'est possible. Mais ses tripes ne me disent pas ou aller -- mes sondages, si. Noxolo lit l'air et me confirme le soufre. Anathi attend mon signal pour demonter le camp en six heures. Zanele la biologiste dit que les lezards ont recule de deux cents metres. Je refuse de bouger tant que mes donnees ne confirment pas. Je marche en crabe, le corps de cote, les genoux flechis -- la marche des Chaudes, celle des gens qui savent que le sol coupe et que le sol bouge en meme temps. Mon tremens est profond, machoire serree. Je goute le monde avec une langue en ruines.

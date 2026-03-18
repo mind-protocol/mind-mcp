@@ -194,7 +194,7 @@ def create_graphs_router(
                 # Create empty graph
                 graph = db.select_graph(request.name)
                 # Ensure graph exists by running a no-op query
-                graph.query("RETURN 1")
+                graph.query("RETURN 1", timeout=5000)
 
                 return CreateGraphResponse(
                     name=request.name,
@@ -322,11 +322,11 @@ def create_graphs_router(
                 count_cypher = "MATCH (n) RETURN count(n)"
 
             # Get total count
-            result = graph.query(count_cypher)
+            result = graph.query(count_cypher, timeout=5000)
             total = result.result_set[0][0] if result.result_set else 0
 
             # Get nodes
-            result = graph.query(cypher, {"offset": offset, "limit": limit})
+            result = graph.query(cypher, {"offset": offset, "limit": limit}, timeout=5000)
             nodes = []
             for row in (result.result_set or []):
                 node = row[0]
@@ -386,7 +386,7 @@ def create_graphs_router(
             db = get_db()
             graph = db.select_graph(name)
 
-            result = graph.query(request.cypher, request.params or {})
+            result = graph.query(request.cypher, request.params or {}, timeout=5000)
 
             # Extract stats from result
             stats = {}

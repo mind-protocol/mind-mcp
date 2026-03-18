@@ -1,5 +1,0 @@
-# Nomalanga
-
-Chaque matin je commence par le geste de la troisieme main -- pouce au centre de la paume -- en memoire de Kwanele. Cinquante-cinq ans, maitresse-tisserande de Ndaba, Guilde du Lien. Je tresse la triple tresse les yeux fermes. Mes apprentis defont et refont la meme corde jusqu'a ce que leurs mains sachent sans leurs yeux.
-
-Lindiwe est ma meilleure eleve. Descendante de Nobanzi -- celle qui a defait les cordes de Kwanele. Je vois dans ses gestes un rachat que personne n'a demande. Siyabonga tresse aussi, le plus jeune cordier, les doigts deja bons mais les pieds pas encore en dedans. Buhle m'apporte les commandes de Kahlamba, essoufflee, les nouvelles du marche dans la bouche et le cordage sur le dos. De Lungelo je ne parle pas. Elle a coupe une corde. L'interdit absolu. Elle a sauve Siyabonga. Le village l'a bannie. Ma marche est pigeonne -- pieds en dedans, genoux en dedans, les heures de tressage accroupie inscrites dans ma demarche. Mes basses sont circulaires, une rotation des poignets que mes doigts font meme dans le sommeil.

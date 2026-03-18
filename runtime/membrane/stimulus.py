@@ -5,6 +5,9 @@ Handles incoming cross-org queries via membrane.
 Other orgs can query our public nodes through the membrane routing layer.
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 import logging
 import os
 from typing import Dict, Any, List, Optional, Callable

@@ -149,6 +149,7 @@ class EndpointRegistrar:
                     "repo": self.repo_name,
                     "now": now,
                 },
+                timeout=5000,
             )
 
             # MERGE the SERVES link from Actor to endpoint
@@ -157,6 +158,7 @@ class EndpointRegistrar:
                    MERGE (a)-[r:link {type: 'SERVES'}]->(t)
                    SET r.weight = 1.0, r.permanence = 0.8""",
                 {"cid": self.citizen_id, "eid": self.endpoint_id},
+                timeout=5000,
             )
 
             self._registered = True
@@ -183,6 +185,7 @@ class EndpointRegistrar:
                     "eid": self.endpoint_id,
                     "now": datetime.now(timezone.utc).isoformat(),
                 },
+                timeout=5000,
             )
             logger.info(f"Deregistered endpoint: {self.endpoint_id}")
         except Exception as e:
@@ -200,6 +203,7 @@ class EndpointRegistrar:
                     "eid": self.endpoint_id,
                     "now": datetime.now(timezone.utc).isoformat(),
                 },
+                timeout=5000,
             )
         except Exception as e:
             logger.warning(f"Heartbeat failed for {self.endpoint_id}: {e}")

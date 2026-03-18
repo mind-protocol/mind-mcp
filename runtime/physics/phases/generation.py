@@ -7,6 +7,10 @@ Proximity = 1 / (1 + path_resistance(player, actor))
 DOCS: docs/physics/IMPLEMENTATION_Physics.md
 """
 
+# DEPRECATED: L3 universe tick eliminated per DECISION_One_Physics_Engine.md
+# The L1 cognitive tick is the only physics engine. This code is retained
+# for reference but is no longer called from the dispatcher or home_server.
+
 import logging
 from typing import Tuple
 from runtime.physics.graph import GraphQueries, GraphOps

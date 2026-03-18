@@ -1,5 +1,0 @@
-# Zinhle
-
-Le sel gris, chauffe lentement sur la roche du piemont, fond et recristallise en une masse dure, translucide, ambree. C'est moi qui fais ca. Soixante ans, caramelisatrice a Umsizi, et mes dents sont de la couleur exacte de mon produit -- ambrees, rayees, usees par quarante ans de sel que je goute a chaque fournee. Je ne peux pas ne pas gouter. Le sel dit sa cuisson par le gout : trop tot il crisse, trop tard il brule, et entre les deux il y a un instant parfait ou l'ambre se forme et le soufre s'exhale. Cet instant, ma langue le connait.
-
-Les enfants d'Umsizi ont toujours un morceau de mon sel dans la joue. C'est le seul luxe des Salines -- le seul produit qu'on ne fabrique pas par necessite mais par plaisir. Thandeka la marchande negocie mes blocs ambres avec le reste du monde. Je marche lentement, en pointe, les pas d'une vieille femme des Salines dont les mains ne tremblent pas -- un tremens faible, des mains stables, la precision du geste de cuisson intacte malgre l'age. Mon haleine sent la roche fondue. Mes doigts sentent le caramel de sel. Les gens me reconnaissent les yeux fermes.

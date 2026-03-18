@@ -110,15 +110,10 @@ async def lifespan(app: FastAPI):
     if os.environ.get("ENABLE_ORCHESTRATOR", "true").lower() == "true":
         try:
             from runtime.orchestrator.dispatcher import Dispatcher
-            from runtime.orchestrator.compute_budget import ComputeBudget
-            budget = ComputeBudget(
-                mode="subscription",
-                monthly_budget_usd=300,
-            )
-            _dispatcher = Dispatcher(budget=budget)
+            _dispatcher = Dispatcher()
             _dispatcher.start()
             _state["dispatcher"] = _dispatcher
-            logger.info(f"Orchestrator started (mode={budget.mode})")
+            logger.info("Orchestrator started (two-tick engine)")
 
             # Register dispatcher in citizen_wake for fast L1 stimulus injection
             try:
@@ -140,9 +135,12 @@ async def lifespan(app: FastAPI):
             import importlib
             import yaml
 
-            # Citizens live in universe repos (canonical), mind-mcp is fallback
-            citizens_dir = Path(__file__).parent / "citizens"
+            # Citizens live in universe repos (canonical), world repo is primary
+            _mind_mcp = Path(__file__).parent
+            citizens_dir = _mind_mcp.parent.parent / "citizens"
             # Auto-discover universe citizen dirs from sibling repos
+            # UNIVERSE_REPOS env: explicit comma-separated paths (for prod)
+            # Otherwise: scan for sibling repos with world-manifest.json + citizens/
             _env_repos = os.environ.get("UNIVERSE_REPOS", "")
             if _env_repos:
                 _universe_dirs = [Path(r.strip()) / "citizens" for r in _env_repos.split(",") if r.strip()]
@@ -150,7 +148,10 @@ async def lifespan(app: FastAPI):
                 _parent = Path(__file__).parent.parent
                 _universe_dirs = sorted(
                     p / "citizens" for p in _parent.iterdir()
-                    if p.is_dir() and (p / "citizens").is_dir() and p.name != "mind-mcp"
+                    if p.is_dir()
+                    and (p / "citizens").is_dir()
+                    and (p / "world-manifest.json").exists()
+                    and p.name != "mind-mcp"
                 )
             config_path = Path(__file__).parent / ".mind" / "database_config.yaml"
 
@@ -191,18 +192,18 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Citizen L1 boot failed: {e}")
 
-    # Phase 3: Start bridges
+    # Phase 3: Start bridges — pass dispatch_fn instead of enqueue
+    _dispatch_fn = _dispatcher.dispatch if _dispatcher else None
     _telegram_bridge = None
     _whatsapp_bridge = None
     _twitter_bridge = None
     if os.environ.get("ENABLE_TELEGRAM", "true").lower() == "true":
         try:
             from runtime.bridges.telegram_bridge import start as tg_start
-            from runtime.orchestrator.message_queue import enqueue
             known_ids = set(filter(None, os.environ.get("KNOWN_CHAT_IDS", "").split(",")))
             active_groups = set(filter(None, os.environ.get("ACTIVE_GROUPS", "").split(",")))
             tg_start(
-                enqueue_fn=enqueue,
+                enqueue_fn=_dispatch_fn,
                 known_chat_ids=known_ids,
                 active_groups=active_groups,
             )
@@ -215,8 +216,7 @@ async def lifespan(app: FastAPI):
     if os.environ.get("ENABLE_WHATSAPP", "true").lower() == "true":
         try:
             from runtime.bridges.whatsapp_bridge import init as wa_init
-            from runtime.orchestrator.message_queue import enqueue
-            wa_init(enqueue_fn=enqueue)
+            wa_init(enqueue_fn=_dispatch_fn)
             _whatsapp_bridge = True
             _state["whatsapp_bridge"] = True
             logger.info("WhatsApp bridge initialized (webhook mode)")
@@ -259,21 +259,19 @@ async def lifespan(app: FastAPI):
     if os.environ.get("ENABLE_TWITTER", "true").lower() == "true":
         try:
             from runtime.bridges.twitter_bridge import start as x_start
-            from runtime.orchestrator.message_queue import enqueue
-            x_start(enqueue_fn=enqueue)
+            x_start(enqueue_fn=_dispatch_fn)
             _twitter_bridge = True
             _state["twitter_bridge"] = True
             logger.info("X/Twitter bridge started")
         except Exception as e:
             logger.warning(f"X/Twitter bridge failed to start: {e}")
 
-    # Phase 4: Start alarm watcher
+    # Phase 4: Start alarm watcher — pass dispatch_fn instead of enqueue
     _alarm_watcher = None
     if _dispatcher and os.environ.get("ENABLE_ALARMS", "true").lower() == "true":
         try:
             from runtime.orchestrator.alarm_watcher import AlarmWatcher
-            from runtime.orchestrator.message_queue import enqueue
-            _alarm_watcher = AlarmWatcher(enqueue_fn=enqueue)
+            _alarm_watcher = AlarmWatcher(enqueue_fn=_dispatch_fn)
             _alarm_watcher.start()
             logger.info("Alarm watcher started")
         except Exception as e:
@@ -603,8 +601,9 @@ async def post_chat(request: Request):
     if not dispatcher:
         raise HTTPException(status_code=503, detail="Orchestrator not running")
 
-    dispatcher.submit_request({
+    dispatcher.dispatch({
         "voice_text": text,
+        "text": text,
         "mode": body.get("mode", "partner"),
         "source": body.get("source", "api"),
         "sender": body.get("sender", "api_user"),
@@ -612,7 +611,7 @@ async def post_chat(request: Request):
         "metadata": body.get("metadata", {}),
     })
 
-    return {"status": "queued", "text": text[:80]}
+    return {"status": "dispatched", "text": text[:80]}
 
 
 # ── Citizen Profile Chat (InlineChatWidget) ──────────────────────────────

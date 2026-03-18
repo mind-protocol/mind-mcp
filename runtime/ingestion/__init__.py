@@ -13,6 +13,9 @@ Spec: docs/human_integration/IMPLEMENTATION_Human_Integration.md
       docs/human_integration/ALGORITHM_Human_Integration.md
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 from .consent_gate_and_bond_validator import (
     check_consent,
     grant_consent,

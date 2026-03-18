@@ -12,6 +12,9 @@ Stub fallbacks absorb ImportError so other agents can develop laws
 independently.
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 from __future__ import annotations
 
 import logging
@@ -99,6 +102,7 @@ class Stimulus:
     origin_citizen_name: str = ""  # display name for prompt injection
     origin_citizen_image: str = "" # sender's profile pic URI
     image_uri: str = ""            # stimulus-specific image (screenshot, vision, etc.)
+    segments: list[dict] = field(default_factory=list)  # chunked content for Law 1 energy injection
 
 
 # =========================================================================
@@ -933,6 +937,8 @@ class L1CognitiveTickRunner:
         # 0. EXTEROCEPTION — scan L3 for new events in my Spaces
         # Before inject: the citizen LOOKS at the world and converts what
         # it sees into stimuli. 1-2-3 hop scan of connected L3 nodes.
+        energy_injected = 0.0
+
         extero = getattr(self, '_exteroception', None)
         if extero is None:
             try:
@@ -942,7 +948,6 @@ class L1CognitiveTickRunner:
             except ImportError:
                 self._exteroception = False
         if extero and extero is not False:
-            # query_fn needs to be provided via state or context
             query_fn = getattr(self.state, '_l3_query_fn', None)
             extero_stimuli = extero.tick(
                 citizen_id=self.state.citizen_id,
@@ -953,8 +958,30 @@ class L1CognitiveTickRunner:
                 self._step_inject(s)
                 energy_injected += s.energy_budget
 
-        # 1. INJECT
-        energy_injected = self._step_inject(stimulus)
+        # 0b. SENSE ENGINE — continuous measurement → awareness
+        # Evaluates custom senses, computes correlations, updates L3 nodes,
+        # mirrors to L1 if internalized. Runs every SENSE_EVAL_INTERVAL ticks.
+        sense_eng = getattr(self, '_sense_engine', None)
+        if sense_eng is None:
+            try:
+                from .sense_engine import SenseEngine
+                self._sense_engine = SenseEngine()
+                sense_eng = self._sense_engine
+            except ImportError:
+                self._sense_engine = False
+        if sense_eng and sense_eng is not False:
+            query_fn = getattr(self.state, '_l3_query_fn', None)
+            write_fn = getattr(self.state, '_l3_write_fn', None)
+            sense_eng.tick(
+                citizen_id=self.state.citizen_id,
+                tick=self.tick_count,
+                query_fn=query_fn,
+                write_fn=write_fn,
+                state=self.state,
+            )
+
+        # 1. INJECT (external stimulus if provided)
+        energy_injected += self._step_inject(stimulus)
 
         # 2. PROPAGATE
         energy_propagated = self._step_propagate()

@@ -13,6 +13,9 @@ The feedback includes:
 - Energy consumption for the active WM nodes (CONSUME step)
 """
 
+# DEPRECATED: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.md
+# Citizens scan the world via awareness ticks, not stimulus injection.
+
 from __future__ import annotations
 
 import logging

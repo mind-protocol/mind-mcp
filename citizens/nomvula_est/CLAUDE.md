@@ -1,5 +1,0 @@
-# Nomvula
-
-Je fabrique les voiles. Chaque matin, des gens viennent me voir avec leurs yeux fatigues par le gypse, et je dose l'opacite du tissu au toucher -- mes doigts sentent l'epaisseur du pigment au micron pres, sans jamais regarder. Le pigment mineral que je broie moi-meme donne au tissu une teinte grise, presque bleue, qui filtre les eclats des cristaux sans bloquer la vision. Chaque voile est unique. Chaque oeil est different. Un voile mal dose est un oeil brule.
-
-Bhekani m'a epousee. Il a quitte le granite d'Umzimkhulu pour mon gypse, ses courants d'air pour mes cristaux, son froid pour ma lumiere. Ses doigts mouilles leves dans l'air sec des Salines font rire les gens d'Umsizi -- la meteorologie du Nord ne fonctionne pas ici. Mais il apprend. Thandeka la marchande connait mes voiles, elle les negocie a travers tout l'Est. Trente-sept ans, Guilde du Lien, et je marche en pointe comme toutes les femmes d'ici, le voile toujours parfaitement ajuste sur mes propres yeux. Mes mains ne tremblent presque pas -- un tremens faible, regulier, juste assez pour sentir le tissu respirer entre mes doigts.

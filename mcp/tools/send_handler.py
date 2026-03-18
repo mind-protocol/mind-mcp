@@ -357,7 +357,7 @@ def _send_partner(args: Dict[str, Any]) -> Dict[str, Any]:
 # ── Telegram ────────────────────────────────────────────────────────────────
 
 def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Send a Telegram message via Bot API."""
+    """Send a Telegram message via Bot API. Auto-repairs Markdown errors."""
     import requests
 
     message = (args.get("message") or "").strip()
@@ -383,15 +383,33 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
             _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
             return _ok(f"Sent to Telegram as @{handle or 'citizen'}. (message_id: {msg_id})")
 
-        # Retry without Markdown on parse error
         resp_data = resp.json() if "json" in resp.headers.get("content-type", "") else {}
-        if "can't parse entities" in resp_data.get("description", ""):
+        desc = resp_data.get("description", "")
+
+        # Auto-repair: Markdown parse error → retry plain text
+        if "can't parse entities" in desc:
             payload.pop("parse_mode", None)
             resp2 = requests.post(api_url, json=payload, timeout=15)
             if resp2.ok:
                 msg_id = resp2.json()["result"]["message_id"]
                 _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
                 return _ok(f"Sent to Telegram as @{handle or 'citizen'} (plain). (message_id: {msg_id})")
+
+        # Auto-repair: chat not found → might be a group migration
+        if resp.status_code == 400 and "chat not found" in desc:
+            logger.warning(f"Telegram chat {chat_id} not found — may have migrated")
+
+        # Auto-repair: rate limited (429) → wait and retry once
+        if resp.status_code == 429:
+            retry_after = resp_data.get("parameters", {}).get("retry_after", 5)
+            logger.warning(f"Telegram rate limited, waiting {retry_after}s...")
+            import time
+            time.sleep(min(retry_after, 30))
+            resp3 = requests.post(api_url, json=payload, timeout=15)
+            if resp3.ok:
+                msg_id = resp3.json()["result"]["message_id"]
+                _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
+                return _ok(f"Sent to Telegram as @{handle or 'citizen'} (after rate limit). (message_id: {msg_id})")
 
         return _err(f"Telegram API error: {resp.status_code} — {resp.text[:200]}")
     except Exception as e:
@@ -432,7 +450,7 @@ def _send_discord(args: Dict[str, Any]) -> Dict[str, Any]:
 # ── WhatsApp ────────────────────────────────────────────────────────────────
 
 def _send_whatsapp(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Send a WhatsApp message via WAHA."""
+    """Send a WhatsApp message via WAHA. Auto-restarts WAHA if down."""
     chat_id = args.get("chat_id")
     if not chat_id:
         return _err("'chat_id' (WhatsApp chat ID, e.g. '33612345678@c.us') is required.")
@@ -440,7 +458,6 @@ def _send_whatsapp(args: Dict[str, Any]) -> Dict[str, Any]:
     message = (args.get("message") or "").strip()
     handle = _resolve_handle(args)
 
-    # Prefix with handle so recipient knows who's talking
     text = f"[@{handle}] {message}" if handle else message
 
     try:
@@ -451,8 +468,26 @@ def _send_whatsapp(args: Dict[str, Any]) -> Dict[str, Any]:
         if result:
             _log_message("whatsapp", text, chat_id)
             return _ok(f"Sent to WhatsApp chat {chat_id} as @{handle or 'citizen'}.")
-        else:
-            return _err("WhatsApp send failed. Is WAHA running?")
+
+        # Auto-repair: WAHA might be down → try to restart container
+        logger.warning("WhatsApp send failed, attempting WAHA auto-restart...")
+        try:
+            from waha_watchdog import check_container_running, restart_container, check_api_healthy
+            if not check_container_running():
+                restart_container()
+                import time
+                time.sleep(5)
+                api = check_api_healthy()
+                if api.get("ok"):
+                    # Retry send after restart
+                    result2 = send_text(chat_id=chat_id, text=text)
+                    if result2:
+                        _log_message("whatsapp", text, chat_id)
+                        return _ok(f"Sent to WhatsApp (after WAHA restart) as @{handle or 'citizen'}.")
+        except Exception as restart_err:
+            logger.debug(f"WAHA auto-restart failed: {restart_err}")
+
+        return _err("WhatsApp send failed. WAHA may need manual intervention.")
     except ImportError:
         return _err("WhatsApp bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:
@@ -462,7 +497,7 @@ def _send_whatsapp(args: Dict[str, Any]) -> Dict[str, Any]:
 # ── Twitter/X ───────────────────────────────────────────────────────────────
 
 def _send_twitter(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Post a tweet or reply via X API."""
+    """Post a tweet or reply via X API. Auto-retries on rate limit."""
     message = (args.get("message") or "").strip()
     reply_to = args.get("reply_to")
 
@@ -479,8 +514,20 @@ def _send_twitter(args: Dict[str, Any]) -> Dict[str, Any]:
             _log_message("twitter", message, "public", tweet_id)
             action = "Reply" if reply_to else "Tweet"
             return _ok(f"{action} posted. (tweet_id: {tweet_id})")
-        else:
-            return _err("Twitter post returned no result. Check API config.")
+
+        # Auto-repair: post_tweet returns None on failure — try to diagnose
+        # Rate limit is the most common failure for Twitter
+        logger.warning("Twitter post returned None, retrying after 15s...")
+        import time
+        time.sleep(15)
+        result2 = post_tweet(text=message, reply_to=reply_to)
+        if result2:
+            tweet_id = result2.get("data", {}).get("id", "?")
+            _log_message("twitter", message, "public", tweet_id)
+            action = "Reply" if reply_to else "Tweet"
+            return _ok(f"{action} posted (after retry). (tweet_id: {tweet_id})")
+
+        return _err("Twitter post failed after retry. Check X API credentials and rate limits.")
     except ImportError:
         return _err("Twitter bridge not available. Check MIND_PROJECT_ROOT.")
     except Exception as e:

@@ -403,9 +403,30 @@ def send_as_citizen(handle: str | None, channel_id: int, text: str, embed: dict 
             print(f"  {display_name} → #{channel_id}: {text[:60] if text else '[embed]'}")
             _log_message("out", handle, channel_id, text or "[embed]")
             return data
-        else:
-            print(f"  Webhook send error ({handle}): {resp.status_code} {resp.text[:200]}")
+
+        # Auto-repair: webhook expired/deleted (404/401) → recreate and retry once
+        if resp.status_code in (404, 401, 403):
+            logger.warning(f"Webhook dead for {channel_id} ({resp.status_code}), recreating...")
+            _webhook_cache.pop(channel_id, None)
+            _save_webhook_cache()
+            new_url = _get_or_create_webhook_sync(channel_id)
+            if new_url:
+                retry = http_requests.post(
+                    f"{new_url}?wait=true",
+                    json=payload,
+                    timeout=15,
+                )
+                if retry.ok:
+                    data = retry.json()
+                    print(f"  {display_name} → #{channel_id} (repaired): {text[:60] if text else '[embed]'}")
+                    _log_message("out", handle, channel_id, text or "[embed]")
+                    return data
+
+            print(f"  Webhook repair failed for {channel_id}")
             return None
+
+        print(f"  Webhook send error ({handle}): {resp.status_code} {resp.text[:200]}")
+        return None
     except http_requests.exceptions.RequestException as e:
         print(f"  Webhook send failed ({handle}): {e}")
         return None

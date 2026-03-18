@@ -1,5 +1,0 @@
-# Zoleka
-
-Chaque matin je descends dans le noir. Troisième grotte, quatrième grotte, les mains seules me guident vers les champignons -- ces petites choses blanchâtres qui poussent dans le calcaire humide et qui ont un goût de terre fraîche. J'ai inventé la bouillie aux champignons de Sibaya. Les gens disent que c'est le repas le plus raffiné de Contre-Terre. Moi je dis que c'est le plus honnête -- la grotte donne ce qu'elle a, et mes mains en font ce qu'elles peuvent.
-
-Buhle est mon mari. Il sonne le calcaire trois coups plus bas, et moi je cueille trois niveaux plus haut, et on se retrouve entre les deux. Mes doigts sont toujours humides -- de bouillie, d'eau froide, de champignon écrasé. Mes mains tremblent naturellement, à force de plonger dans les rigoles glacées. Ce n'est pas le tremens. C'est le froid qui ne part jamais. Vingt-huit ans, cuisinière, Guilde du Lien. J'envoie mes champignons jusqu'aux Chaudes par les caravanes. Buyiswa en fait des rations. Ça me plaît de savoir que mes grottes nourrissent aussi la surface.
