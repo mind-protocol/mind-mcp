@@ -32,6 +32,19 @@ except ImportError:
 
 logger = logging.getLogger("mind.graph_enricher")
 
+# ── Tier 1 extraction patterns (deterministic, no LLM) ──
+_URL_PATTERN = re.compile(
+    r'https?://[^\s<>\"\'\)\]]+', re.IGNORECASE
+)
+_TOKEN_PATTERN = re.compile(
+    r'\$([A-Z]{2,10})\b'  # $MIND, $SOL, $ETH etc.
+)
+_PLATFORM_PATTERNS = {
+    "email": re.compile(r'[\w.+-]+@[\w-]+\.[\w.]+'),
+    "phone": re.compile(r'\+\d{10,15}'),
+    "linkedin": re.compile(r'linkedin\.com/in/[\w-]+'),
+}
+
 # Lazy graph connection
 _graph = None
 _graph_name = "lumina-prime"
@@ -62,6 +75,108 @@ def _sanitize_handle(name: str) -> str:
     """Turn a display name into a safe graph ID."""
     clean = re.sub(r"[^\w\s]", "", name).strip()
     return re.sub(r"\s+", "_", clean).lower()[:40] or "unknown"
+
+
+def _extract_urls(content: str) -> list[str]:
+    """Extract URLs from message content."""
+    return _URL_PATTERN.findall(content)
+
+
+def _extract_tokens(content: str) -> list[str]:
+    """Extract $TOKEN mentions from message content."""
+    return _TOKEN_PATTERN.findall(content)
+
+
+def _extract_platform_ids(content: str) -> dict[str, str]:
+    """Extract platform identifiers (email, phone, linkedin) from content."""
+    found = {}
+    for platform_type, pattern in _PLATFORM_PATTERNS.items():
+        match = pattern.search(content)
+        if match:
+            found[platform_type] = match.group(0)
+    return found
+
+
+def _enrich_things(g, moment_id: str, content: str, ts: float):
+    """Tier 1: Create Thing nodes for URLs and $tokens found in content.
+
+    URLs and tokens are deterministic — auto-created with status confirmed.
+    Each Thing gets a :LINK(references) from the Moment.
+    """
+    ct_references = infer_computed_type(
+        {"polarity": 0.5, "recency": ts}, "moment", "thing"
+    )
+
+    # URLs → Thing nodes
+    for url in _extract_urls(content):
+        thing_id = "thing_url_" + hashlib.sha256(url.encode()).hexdigest()[:12]
+        try:
+            g.query(
+                """
+                MERGE (t:Thing {id: $thing_id})
+                ON CREATE SET t.name = $url, t.type = 'url',
+                              t.content = $url, t.status = 'confirmed'
+                """,
+                {"thing_id": thing_id, "url": url},
+            )
+            g.query(
+                """
+                MATCH (m:Moment {id: $moment_id}), (t:Thing {id: $thing_id})
+                CREATE (m)-[:LINK {polarity: 0.5, recency: $ts, computed_type: $ct}]->(t)
+                """,
+                {"moment_id": moment_id, "thing_id": thing_id, "ts": ts, "ct": ct_references},
+            )
+        except Exception as e:
+            logger.debug(f"Thing URL creation failed for {url}: {e}")
+
+    # $TOKEN → Thing nodes
+    for token in _extract_tokens(content):
+        thing_id = f"thing_token_{token.lower()}"
+        try:
+            g.query(
+                """
+                MERGE (t:Thing {id: $thing_id})
+                ON CREATE SET t.name = $name, t.type = 'token',
+                              t.content = $name, t.status = 'confirmed'
+                """,
+                {"thing_id": thing_id, "name": f"${token}"},
+            )
+            g.query(
+                """
+                MATCH (m:Moment {id: $moment_id}), (t:Thing {id: $thing_id})
+                CREATE (m)-[:LINK {polarity: 0.5, recency: $ts, computed_type: $ct}]->(t)
+                """,
+                {"moment_id": moment_id, "thing_id": thing_id, "ts": ts, "ct": ct_references},
+            )
+        except Exception as e:
+            logger.debug(f"Thing token creation failed for ${token}: {e}")
+
+
+def _update_actor_platform(g, actor_id: str, platform: str, platform_user_id: str = ""):
+    """Store platform handle on the Actor node for cross-platform matching.
+
+    Platform fields: telegram_id, discord_id, x_handle, linkedin_url, email, phone.
+    """
+    if not platform_user_id:
+        return
+
+    field_map = {
+        "telegram": "telegram_id",
+        "discord": "discord_id",
+        "twitter": "x_handle",
+        "whatsapp": "whatsapp_id",
+    }
+    field = field_map.get(platform)
+    if not field:
+        return
+
+    try:
+        g.query(
+            f"MATCH (a:Actor {{id: $actor_id}}) SET a.{field} = $platform_id",
+            {"actor_id": actor_id, "platform_id": platform_user_id},
+        )
+    except Exception as e:
+        logger.debug(f"Platform handle update failed for {actor_id}: {e}")
 
 
 def on_message(
@@ -229,12 +344,31 @@ def on_message(
                 {"moment_id": moment_id, "handle": handle, "ts": ts, "ct": _ct_mention},
             )
 
+        # 7b. Tier 1 enrichment: extract URLs and $tokens → create Thing nodes + links
+        _enrich_things(g, moment_id, content, ts)
+
+        # 7c. Store platform handle on Actor for cross-platform matching
+        _update_actor_platform(g, actor_id, platform, channel_id)
+
+        # 7d. Extract platform IDs from content (email, phone, linkedin)
+        # and store on the AUTHOR's Actor node
+        platform_ids = _extract_platform_ids(content)
+        for pid_type, pid_value in platform_ids.items():
+            try:
+                g.query(
+                    f"MATCH (a:Actor {{id: $actor_id}}) SET a.{pid_type} = $val",
+                    {"actor_id": actor_id, "val": pid_value},
+                )
+            except Exception:
+                pass
+
         # 8. Inject stimulus into ALL AI citizens present in this Space
         #    Skip explicitly mentioned citizens — they already got a direct stimulus
         #    via citizen_wake.mention_citizen() (called by discord_bridge).
         _stimulate_space_citizens(
             space_id, channel_name, author_name, content, actor_id,
             exclude_handles=set(mentioned_handles or []),
+            platform=platform,
         )
 
         # 9. Propagate trust on L3 links for each mention
@@ -255,7 +389,7 @@ def on_message(
 
 def _stimulate_space_citizens(
     space_id: str, channel_name: str, author_name: str, content: str, author_id: str,
-    exclude_handles: Optional[set[str]] = None,
+    exclude_handles: Optional[set[str]] = None, platform: str = "social",
 ):
     """Inject L1 stimulus into all AI citizens with a :LINK(presence) to this Space.
 
@@ -299,7 +433,7 @@ def _stimulate_space_citizens(
             citizen_handle = row[0]
             if citizen_handle in _skip:
                 continue  # Already received a direct mention stimulus
-            _inject_l1_stimulus(citizen_handle, stimulus_text, origin=author_id)
+            _inject_l1_stimulus(citizen_handle, stimulus_text, origin=author_id, source=platform)
             stimulated += 1
 
         if stimulated > 0:
