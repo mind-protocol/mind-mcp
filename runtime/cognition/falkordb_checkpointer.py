@@ -91,23 +91,72 @@ class FalkorDBBrainCheckpointer:
         """Check if enough time has passed for a checkpoint."""
         if not self._connected:
             return False
-        return (
-            time.time() - self._last_checkpoint > CHECKPOINT_INTERVAL
-            and (self._dirty_nodes or self._dirty_links)
-        )
+        return time.time() - self._last_checkpoint > CHECKPOINT_INTERVAL
 
-    def checkpoint(self, state: CitizenCognitiveState):
-        """Flush ALL nodes and links to FalkorDB.
+    def sync_external_nodes(self, state: CitizenCognitiveState):
+        """Detect nodes added externally (graph_write, scripts) and merge into state.
 
-        Previously only flushed explicitly marked dirty nodes, but
-        the tick runner modifies node energies/weights in-memory without
-        calling mark_dirty(). Result: ticks ran but nothing persisted.
+        The in-memory CitizenCognitiveState can diverge from FalkorDB when
+        nodes are added via graph_write or direct Cypher without going through
+        the tick runner. This method re-scans FalkorDB and adds missing nodes.
 
-        Fix: flush everything. 220 nodes × 1 upsert = ~220 queries
-        every 5 minutes. Acceptable for brain-sized graphs.
+        Called periodically alongside checkpoint (every CHECKPOINT_INTERVAL).
         """
         if not self._connected:
             return
+
+        try:
+            # Count nodes in FalkorDB vs in-memory
+            result = self._graph.query("MATCH (n:Node) RETURN n.id, n.node_type, n.type, n.content, n.weight, n.energy, n.synthesis")
+            if not result.result_set:
+                return
+
+            in_memory_ids = set(state.nodes.keys())
+            added = 0
+
+            for row in result.result_set:
+                node_id = row[0]
+                if node_id in in_memory_ids:
+                    continue
+
+                # New node found in FalkorDB but not in memory — add it
+                try:
+                    nt_str = row[1] or row[2] or "concept"
+                    try:
+                        nt = NodeType(nt_str)
+                    except ValueError:
+                        nt = NodeType.CONCEPT
+
+                    node = Node(
+                        id=node_id,
+                        node_type=nt,
+                        content=row[3] or node_id,
+                        weight=float(row[4] or 0.1),
+                        energy=float(row[5] or 0.0),
+                    )
+                    node.synthesis = row[6] or ""
+                    state.nodes[node_id] = node
+                    added += 1
+                except Exception:
+                    continue
+
+            if added > 0:
+                logger.info(f"Synced {added} external nodes for {self.citizen_handle} ({len(state.nodes)} total)")
+
+        except Exception as e:
+            logger.debug(f"External node sync failed for {self.citizen_handle}: {e}")
+
+    def checkpoint(self, state: CitizenCognitiveState):
+        """Flush ALL nodes and links to FalkorDB + sync externally added nodes.
+
+        1. Sync: detect nodes added via graph_write/scripts (not in memory)
+        2. Flush: write all in-memory state to FalkorDB
+        """
+        if not self._connected:
+            return
+
+        # Sync external nodes first (graph_write, session_to_graph, etc.)
+        self.sync_external_nodes(state)
 
         flushed_nodes = 0
         flushed_links = 0
