@@ -320,6 +320,18 @@ class Dispatcher:
             except ImportError:
                 pass
 
+            # Attach L3 query function for exteroception (scanning the world)
+            try:
+                from falkordb import FalkorDB
+                _db = FalkorDB(host="localhost", port=6379)
+                _l3 = _db.select_graph("lumina-prime")
+                def _query_l3(cypher, params):
+                    r = _l3.query(cypher, params)
+                    return r.result_set if r.result_set else []
+                state._l3_query_fn = _query_l3
+            except Exception:
+                pass  # exteroception degrades gracefully without L3
+
             runner = L1CognitiveTickRunner(state)
             router = StimulusRouter(citizen_handle)
 
