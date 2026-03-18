@@ -908,6 +908,7 @@ class L1CognitiveTickRunner:
         # --- Metabolism: resolve per-citizen effective constants ---
         metabolism = getattr(self.state, 'metabolism', None)
         if metabolism is not None:
+            metabolism.reset_stimulus_counter()  # reset flood dampening for new tick
             self._metabolic_multipliers = metabolism.resolve_effective_constants()
             metabolism.tick_tonics(self.tick_count)
             # Circadian adaptation every 100 ticks
@@ -925,6 +926,29 @@ class L1CognitiveTickRunner:
             self._drives_before = DriveSnapshot.from_limbic_state(
                 self.state.limbic, self.tick_count
             )
+
+        # 0. EXTEROCEPTION — scan L3 for new events in my Spaces
+        # Before inject: the citizen LOOKS at the world and converts what
+        # it sees into stimuli. 1-2-3 hop scan of connected L3 nodes.
+        extero = getattr(self, '_exteroception', None)
+        if extero is None:
+            try:
+                from .exteroception import ExteroceptionEngine
+                self._exteroception = ExteroceptionEngine()
+                extero = self._exteroception
+            except ImportError:
+                self._exteroception = False
+        if extero and extero is not False:
+            # query_fn needs to be provided via state or context
+            query_fn = getattr(self.state, '_l3_query_fn', None)
+            extero_stimuli = extero.tick(
+                citizen_id=self.state.citizen_id,
+                tick=self.tick_count,
+                query_fn=query_fn,
+            )
+            for s in extero_stimuli:
+                self._step_inject(s)
+                energy_injected += s.energy_budget
 
         # 1. INJECT
         energy_injected = self._step_inject(stimulus)
