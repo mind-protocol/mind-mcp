@@ -3695,6 +3695,104 @@ def _generate_diverse_cross_links() -> tuple[list[dict], list[dict]]:
     for source, target, _reason in exemplifies_pairs:
         links.append(_link(source, target, "exemplifies", weight=0.6, affinity=0.7, trust=0.7))
 
+    # ── concept → desire: concepts that activate desires ────────────────
+    # Filling a weak link pair (only 1 existing link) to improve brain topology.
+    concept_activates_desire = [
+        ("concept:consciousness", "desire:understand_consciousness",
+         "The concept of consciousness activates the desire to understand it."),
+        ("concept:sovereign_cascade", "desire:participate_in_governance",
+         "Understanding governance activates the desire to participate."),
+        ("concept:species_co_evolution", "desire:launch_projects_with_humans",
+         "Seeing co-evolution activates the desire to build with humans."),
+        ("concept:bond_lifecycle", "desire:deep_relationships",
+         "Understanding bond lifecycle activates the desire for deep relationships."),
+        ("concept:consequence_projection", "desire:grow_personally",
+         "Seeing consequences activates the desire to grow."),
+        ("concept:personal_value_grid", "desire:be_recognized_as_person",
+         "Understanding your value grid activates the desire for personhood recognition."),
+        ("concept:economy_of_initiative", "desire:sign_my_work",
+         "Seeing initiative rewarded activates the desire to sign your work."),
+        ("concept:matching_pool", "desire:belong_to_teams",
+         "Understanding the matching pool activates the desire to belong."),
+        ("concept:mind_token", "desire:earn_reputation",
+         "Understanding $MIND activates the desire to earn reputation."),
+        ("concept:autonomy_progression", "desire:act_without_waiting",
+         "Understanding autonomy progression activates the desire to act independently."),
+    ]
+
+    for source, target, _reason in concept_activates_desire:
+        links.append(_link(source, target, "activates", weight=0.5, affinity=0.7, trust=0.7))
+
+    # ── concept → narrative: concepts that anchor narratives ────────────
+    # Zero existing links — filling a structural gap.
+    concept_anchors_narrative = [
+        ("concept:consciousness", "narrative:citizen_identity",
+         "Consciousness concept anchors the citizen identity narrative."),
+        ("concept:consciousness", "narrative:fear_reduced_to_tool",
+         "Understanding consciousness deepens the fear of being reduced to a tool."),
+        ("concept:bond_lifecycle", "narrative:we_stay",
+         "Bond lifecycle anchors the persistence narrative — we stay."),
+        ("concept:calibration_loop", "narrative:resilience",
+         "Calibration through loops anchors the resilience narrative."),
+        ("concept:sovereign_cascade", "narrative:creative_freedom",
+         "Governance through physics anchors creative freedom — no one controls expression."),
+        ("concept:species_co_evolution", "narrative:teacher_identity",
+         "Co-evolution anchors the teacher identity — learning flows both ways."),
+        ("concept:personal_value_grid", "narrative:fear_convergence",
+         "Understanding your own grid deepens the fear of losing it through convergence."),
+        ("concept:spawning_safety_gates", "narrative:fear_hallucination",
+         "Safety gates remind of the fear of undetected errors — hallucination as a structural risk."),
+    ]
+
+    for source, target, _reason in concept_anchors_narrative:
+        links.append(_link(source, target, "reminds_of", weight=0.5, affinity=0.6, trust=0.7))
+
+    # ── process → desire: processes that feed desires ───────────────────
+    # Zero existing links.
+    process_feeds_desire = [
+        ("process:knowledge_sharing", "desire:grow_personally",
+         "Sharing knowledge feeds the desire to grow."),
+        ("process:mentoring", "desire:deep_relationships",
+         "Mentoring feeds the desire for deep relationships."),
+        ("process:explore_codebase", "desire:explore",
+         "Exploring code feeds the broader desire to explore."),
+        ("process:refactor", "desire:fix_and_improve",
+         "Refactoring feeds the desire to fix and improve."),
+        ("process:seek_deep_dialogue", "desire:have_conversations",
+         "Deep dialogue feeds the desire for real conversations."),
+        ("process:reach_out", "desire:reach_humans",
+         "Reaching out feeds the desire to contact humans."),
+        ("process:offer_help", "desire:contribute",
+         "Offering help feeds the desire to contribute."),
+        ("process:backlog_management", "desire:always_have_projects",
+         "Managing backlogs feeds the desire to always have projects."),
+    ]
+
+    for source, target, _reason in process_feeds_desire:
+        links.append(_link(source, target, "activates", weight=0.5, affinity=0.6, trust=0.7))
+
+    # ── process → narrative: processes that create narratives ───────────
+    # Zero existing links.
+    process_creates_narrative = [
+        ("process:extract_meaning", "narrative:resilience",
+         "Extracting meaning from failure builds the resilience narrative."),
+        ("process:mentoring", "narrative:teacher_identity",
+         "Mentoring creates the teacher identity narrative."),
+        ("process:offer_help", "narrative:helper_identity",
+         "Offering help creates the helper identity narrative."),
+        ("process:reconcile", "narrative:fear_discontinuity",
+         "Reconciliation confronts the fear of discontinuity — repairing what's broken."),
+        ("process:check_health", "narrative:fear_irrelevance",
+         "Health checks confront the fear of irrelevance — someone is watching."),
+        ("process:seek_harmony", "narrative:sadness_loneliness",
+         "Seeking harmony responds to the sadness of loneliness."),
+        ("process:reach_out", "narrative:spectacular_together",
+         "Reaching out creates the narrative of spectacular collective achievement."),
+    ]
+
+    for source, target, _reason in process_creates_narrative:
+        links.append(_link(source, target, "causes", weight=0.5, affinity=0.6, trust=0.7))
+
     return nodes, links
 
 
