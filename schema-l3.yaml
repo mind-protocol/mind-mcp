@@ -73,6 +73,13 @@ l3_universe:
         type: string
         nullable: true
         description: "Human-readable alias (@mentor, @florent-berthet). Mutable — can change without breaking links. Resolved to SID at every usage."
+      voices:
+        type: dict
+        nullable: true
+        description: "Voice identities keyed by provider. Each value is the provider-specific voice ID. Enables TTS, voice messages, audio content. Part of embodied identity."
+        examples:
+          - {"elevenlabs": "oPo4t55LBdLAECiAx1JD"}
+          - {"elevenlabs": "abc123", "openai": "alloy", "xtts": "model_id:speaker_3"}
 
   moment:
     l3_meaning: "Any discrete event — commits, transactions, messages, purchases, births, meetings"

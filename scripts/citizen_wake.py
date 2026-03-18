@@ -45,7 +45,7 @@ def set_dispatcher(dispatcher) -> None:
     _dispatcher = dispatcher
 
 
-def _inject_l1_stimulus(citizen_handle: str, content: str, origin: str = "") -> bool:
+def _inject_l1_stimulus(citizen_handle: str, content: str, origin: str = "", source: str = "social") -> bool:
     """Inject a stimulus into a citizen's L1 brain.
 
     Strategy:
@@ -60,10 +60,10 @@ def _inject_l1_stimulus(citizen_handle: str, content: str, origin: str = "") -> 
             _dispatcher.inject_stimulus(
                 citizen_handle,
                 content,
-                source="discord",
+                source=source,
                 is_social=True,
             )
-            logger.info(f"L1 stimulus via dispatcher: @{citizen_handle}")
+            logger.info(f"L1 stimulus via dispatcher: @{citizen_handle} (source={source})")
             return True
         except Exception as e:
             logger.warning(f"Dispatcher inject failed for @{citizen_handle}: {e}")
@@ -89,7 +89,7 @@ def _inject_l1_stimulus(citizen_handle: str, content: str, origin: str = "") -> 
 
         event = IncomingEvent(
             content=content,
-            source="discord",
+            source=source,
             citizen_handle=citizen_handle,
             is_social=True,
         )
@@ -99,7 +99,7 @@ def _inject_l1_stimulus(citizen_handle: str, content: str, origin: str = "") -> 
         if checkpointer._connected:
             checkpointer.flush_all(state)
 
-        logger.info(f"L1 injected (direct): @{citizen_handle}")
+        logger.info(f"L1 injected (direct): @{citizen_handle} (source={source})")
         return True
 
     except ImportError as e:

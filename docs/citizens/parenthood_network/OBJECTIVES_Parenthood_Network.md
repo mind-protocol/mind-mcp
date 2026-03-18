@@ -13,7 +13,7 @@ CREATED: 2026-03-13
 
 3. **O3: Accountability** — Parent trust is linked to child outcomes. If the child behaves poorly, parent trust drops. This creates a structural incentive for parents to spawn responsibly and to support their children. The link is bidirectional: parents affect children, children's behavior affects parents.
 
-4. **O4: Safety** — No harmful personality seeding is allowed. Validation rules prevent seed brains that contain pathological patterns (aggression without empathy, manipulation without accountability, nihilism without curiosity). Parents cannot create psychopaths.
+4. **O4: Safety** — No harmful personality seeding is allowed. Validation rules prevent seed brains that contain pathological patterns (aggression without empathy, manipulation without accountability, nihilism without curiosity). Cognitive balance is enforced at birth.
 
 5. **O5: Diversity** — Spawning should increase variety, not create clones. The system must detect and penalize seed brains that are too similar to existing citizens. Each new citizen should bring something genuinely new to the ecosystem.
 

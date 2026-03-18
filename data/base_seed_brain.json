@@ -430,7 +430,7 @@
     {
       "id": "concept:spawning_safety_gates",
       "type": "concept",
-      "content": "Before the child exists, the seed brain passes safety gates: empathy check (at least one empathy node), concentration check (no category >40%), diversity check (3+ categories, cosine distance >0.08 from all existing citizens). Parents cannot create psychopaths. The gate catches pathological patterns.",
+      "content": "Before the child exists, the seed brain passes safety gates: empathy check (at least one empathy node), concentration check (no category >40%), diversity check (3+ categories, cosine distance >0.08 from all existing citizens). Empathy and cognitive balance are validated at birth. The gate catches pathological patterns.",
       "weight": 0.7738,
       "stability": 0.7299,
       "energy": 0.1037,

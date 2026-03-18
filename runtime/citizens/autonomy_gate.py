@@ -122,9 +122,11 @@ MULTISIG_PERMISSIONS = frozenset({
 # Each entry: (tier, minimum_autonomy_level) — the level floor ensures
 # infrastructure citizens can act even without a profile.json capabilities block.
 TIER_OVERRIDES = {
-    "nervo": (Tier.AUTONOMOUS, 7),
-    "mind":  (Tier.AUTONOMOUS, 7),
-    "nlr":   (Tier.SOVEREIGN,  10),
+    "dev":       (Tier.AUTONOMOUS, 7),   # Lead mind-ops (2026-03-18)
+    "conductor": (Tier.AUTONOMOUS, 7),   # Orchestration Lead
+    "nervo":     (Tier.AUTONOMOUS, 7),   # Lead mind-mcp
+    "mind":      (Tier.AUTONOMOUS, 7),   # Chief Architect
+    "nlr":       (Tier.SOVEREIGN,  10),  # Human founder
 }
 
 

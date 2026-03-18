@@ -311,11 +311,40 @@ class SearchQueryMixin:
         embedding: List[float],
         top_k: int
     ) -> List[Dict[str, Any]]:
-        """Find nodes similar to the given embedding."""
+        """Find nodes similar to the given embedding using native vector KNN."""
+        # Try native FalkorDB vector index first (O(log n) vs O(n) full scan)
+        try:
+            knn_cypher = (
+                f'CALL db.idx.vector.queryNodes("{label}", "embedding", $k, vecf32($qvec)) '
+                f'YIELD node, score '
+                f'RETURN node.id, node.name, node.energy, node.weight, node.status, score'
+            )
+            rows = self._query(knn_cypher, {"qvec": embedding, "k": top_k})
+            if rows:
+                results = []
+                for row in rows:
+                    if isinstance(row, (list, tuple)):
+                        clean = {
+                            'id': row[0],
+                            'name': row[1] or row[0],
+                            'type': label.lower(),
+                            'similarity': row[5] if row[5] else 0,
+                            'energy': row[2] or 0,
+                            'weight': row[3] or 1.0,
+                            'status': row[4],
+                        }
+                        results.append(clean)
+                results.sort(key=lambda x: x.get('similarity', 0), reverse=True)
+                return results[:top_k]
+        except Exception:
+            pass  # Fall through to Python-side similarity
+
+        # Fallback: Python-side cosine similarity with LIMIT to prevent full scan
         cypher = f"""
         MATCH (n:{label})
         WHERE n.embedding IS NOT NULL
         RETURN n
+        LIMIT 500
         """
 
         try:
