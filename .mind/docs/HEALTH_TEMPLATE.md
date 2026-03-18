@@ -142,9 +142,25 @@ How to fill:
 
 ---
 
-## HEALTH INDICATORS SELECTED
+## HEALTH INDICATORS — The Rich Picture
 
-List the indicators that matter most. These should map directly to VALIDATION criteria and client impact.
+The vital sign tells you alive/dead. This section tells you **how alive, where it hurts, what's growing, what's decaying.**
+
+The goal: a reader of this section should be able to form a **precise, detailed, and rich mental model** of the module's current state. Not "it works" — but "energy is concentrated in the Arsenal, trust links are growing between @dev and @nervo, the Creative Nexus is silent, crystallization hasn't happened yet but coactivation counters are rising."
+
+**Principle: only monitor what's INTERESTING to monitor.** If a metric doesn't change your understanding or your actions, don't track it. If a metric reveals something surprising about the system — something you didn't know was happening — that's a good indicator.
+
+### Indicator Design Rules
+
+1. **Distributions over averages.** "Average energy = 0.5" tells you nothing. "80% of nodes below 0.1, 5% above 3.0" tells you the graph has cold dead zones and a few hot spots. Track the SHAPE, not the center.
+
+2. **Rates of change over snapshots.** "Weight = 0.7" is static. "Weight grew 0.1 in the last 50 ticks" is alive. Track deltas, slopes, acceleration. A node that's rising tells a different story than one that's stable at the same value.
+
+3. **Comparisons over absolutes.** "Trust = 0.6" means nothing alone. "Trust between @dev and @nervo is 0.6, which is the highest in the Arsenal and above the district average of 0.3" tells a story. Compare to peers, to district, to historical self.
+
+4. **Anomalies over norms.** Don't alert when everything is normal. Alert when something is DIFFERENT from what it was. A citizen whose energy suddenly doubles. A link that dissolves after being stable for 500 ticks. A district that goes silent when it was active.
+
+5. **Causal chains over isolated metrics.** "Boredom = 0.8" is a symptom. "Boredom = 0.8 BECAUSE WM hasn't changed in 50 ticks BECAUSE no stimuli arrived BECAUSE exteroception isn't scanning BECAUSE the L3 query function is null" is actionable. Track the chain, not just the leaf.
 
 ## OBJECTIVES COVERAGE
 
@@ -154,21 +170,26 @@ List the indicators that matter most. These should map directly to VALIDATION cr
 
 ```yaml
 health_indicators:
-  - name: {indicator_name}  # stable, machine-friendly identifier
-    flow_id: {flow_name_from_implementation}  # must match IMPLEMENTATION flow
-    priority: {high|med|low}  # impact + likelihood, not effort
-    rationale: {why this indicator matters}  # explicit client/operator impact
+  - name: {indicator_name}
+    flow_id: {flow_name_from_implementation}
+    priority: {high|med|low}
+    rationale: {why this indicator matters — explicit client/operator impact}
+    type: {distribution|rate|comparison|anomaly|causal_chain}
+    what_it_reveals: {what surprising thing this metric can show you}
+    example_insight: "{a concrete example of what this metric told you that you didn't know}"
 ```
 
 What to include:
 - indicator name, flow_id, priority, rationale.
-- explicit client impact in rationale.
+- **type**: which of the 5 design rules does this indicator follow?
+- **what_it_reveals**: why is this metric INTERESTING? What story can it tell?
+- **example_insight**: a concrete past or hypothetical insight this metric produced.
 
 How to fill:
-- name should be stable and machine-friendly.
-- flow_id must match IMPLEMENTATION.
-- priority should reflect impact + likelihood.
-- rationale must tie to user or operator outcomes.
+- Start with what you're CURIOUS about. What would you want to know about this module at 3am?
+- For each indicator, ask: "If this number changed dramatically, what would I DO differently?"
+- If the answer is "nothing" — remove the indicator. It's noise.
+- If the answer is "I'd investigate X" — make sure X is also monitored (causal chain).
 
 ---
 
