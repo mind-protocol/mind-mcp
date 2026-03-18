@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import logging
 import math
+import os
 import time
 from dataclasses import dataclass, field
 from itertools import combinations
@@ -42,6 +43,7 @@ from .models import (
     Node,
     NodeType,
 )
+from .metabolism import CitizenMetabolism
 
 logger = logging.getLogger("cognition.two_tick_engine")
 
@@ -64,8 +66,13 @@ HEBB_LEARNING_RATE = 0.05          # weight delta for co-active WM pairs
 NEW_LINK_INITIAL_WEIGHT = 0.05     # weight for newly crystallized links
 FORGETTING_PERIOD = 100            # ticks between forgetting passes
 FORGETTING_WEIGHT_THRESHOLD = 0.005  # links below this dissolve
-CONSCIOUS_ACTION_THRESHOLD = 0.3   # mean WM energy to fire action
+CONSCIOUS_ACTION_THRESHOLD = float(
+    os.environ.get("MIND_CONSCIOUS_ACTION_THRESHOLD", "0.15")
+)  # mean WM energy to fire action (env-configurable, lowered from 0.3)
 ACTION_COOLDOWN_TICKS = 3          # minimum ticks between actions
+
+# Circadian adaptation interval (ticks between adapt_circadian calls)
+CIRCADIAN_ADAPTATION_INTERVAL = 100
 
 # WM
 WM_SIZE = 7                        # emergent WM capacity
@@ -261,6 +268,10 @@ class TwoTickEngine:
     Holds the citizen's cognitive state, tick counters, and an optional
     graph_read_fn.  The dispatcher creates one instance per citizen and
     calls .awareness_tick() / .thought_tick() on the background loop.
+
+    Metabolism integration: if state.metabolism is a CitizenMetabolism,
+    circadian multipliers modulate physics constants each tick, tonics
+    are ticked, and adaptation runs periodically.
     """
 
     def __init__(
@@ -274,12 +285,34 @@ class TwoTickEngine:
         self._thought_tick_counter: int = 0
         self._last_action_tick: int = 0
         self._current_orientation: Optional[str] = None
+        # Metabolic multipliers resolved once per tick, consumed by thought_tick
+        self._metabolic_multipliers: dict[str, float] = {}
+
+    @property
+    def metabolism(self) -> Optional[CitizenMetabolism]:
+        """Convenience accessor — returns None if not attached."""
+        m = getattr(self.state, 'metabolism', None)
+        return m if isinstance(m, CitizenMetabolism) else None
 
     # -- Awareness tick (slow: scan external graph) -----------------------
 
     def awareness_tick(self) -> AwarenessTickResult:
         """Run one awareness tick.  Returns AwarenessTickResult."""
         self._awareness_tick_counter += 1
+
+        # ── Metabolism: resolve multipliers for this tick ──
+        metabolism = self.metabolism
+        now = time.time()
+        if metabolism is not None:
+            metabolism.reset_stimulus_counter()
+            self._metabolic_multipliers = metabolism.resolve_effective_constants(now)
+            metabolism.tick_tonics(self._awareness_tick_counter)
+            # Circadian adaptation every CIRCADIAN_ADAPTATION_INTERVAL ticks
+            if self._awareness_tick_counter % CIRCADIAN_ADAPTATION_INTERVAL == 0:
+                metabolism.adapt_circadian(self._awareness_tick_counter)
+        else:
+            self._metabolic_multipliers = {}
+
         if self.graph_read_fn is None:
             # No graph reader — return empty result
             return AwarenessTickResult(tick=self._awareness_tick_counter)
@@ -298,6 +331,7 @@ class TwoTickEngine:
             self.state,
             self._thought_tick_counter,
             last_action_tick=self._last_action_tick,
+            metabolic_multipliers=self._metabolic_multipliers,
         )
         if result.action_fired:
             self._last_action_tick = self._thought_tick_counter
@@ -340,6 +374,7 @@ def thought_tick(
     state: CitizenCognitiveState,
     tick: int,
     last_action_tick: int = 0,
+    metabolic_multipliers: Optional[dict[str, float]] = None,
 ) -> ThoughtTickResult:
     """Execute one thought-speed tick of internal cognitive processing.
 
@@ -348,22 +383,33 @@ def thought_tick(
         tick: Current tick number.
         last_action_tick: Tick number when the last conscious action fired
             (used for cooldown gating).
+        metabolic_multipliers: Dict of {constant_name: multiplier} from
+            CitizenMetabolism.resolve_effective_constants(). When provided,
+            physics constants are scaled by circadian rhythm and active tonics.
 
     Returns:
         ThoughtTickResult with processing statistics.
     """
     t0 = time.monotonic()
     result = ThoughtTickResult(tick=tick)
+    mm = metabolic_multipliers or {}
+
+    # Resolve effective constants (base * metabolic multiplier)
+    effective_decay_rate = ENERGY_DECAY_RATE * mm.get("DECAY_RATE", 1.0)
+    effective_injection_scale = mm.get("energy_injection_scale", 1.0)
+    effective_activation_mult = mm.get("ACTIVATION_THRESHOLD", 1.0)
+    effective_action_threshold = CONSCIOUS_ACTION_THRESHOLD * effective_activation_mult
 
     # Snapshot previous WM for change detection
     prev_wm_ids = list(state.wm.node_ids)
 
     # ------------------------------------------------------------------
     # Step 1: Excess energy generation on active nodes (weight-scaled)
+    #         Modulated by energy_injection_scale from metabolism.
     # ------------------------------------------------------------------
     for node in state.nodes.values():
         if node.energy > 0.0:
-            excess = EXCESS_ENERGY_RATE * node.weight
+            excess = EXCESS_ENERGY_RATE * node.weight * effective_injection_scale
             node.energy += excess
             result.excess_energy_generated += excess
 
@@ -433,11 +479,11 @@ def thought_tick(
             node.energy += incoming
 
     # ------------------------------------------------------------------
-    # Step 3: Energy decay
+    # Step 3: Energy decay (modulated by circadian DECAY_RATE multiplier)
     # ------------------------------------------------------------------
     for node in state.nodes.values():
         if node.energy > 0.0:
-            decay = node.energy * ENERGY_DECAY_RATE
+            decay = node.energy * effective_decay_rate
             node.energy -= decay
             if node.energy < 0.0:
                 node.energy = 0.0
@@ -486,6 +532,9 @@ def thought_tick(
     # ------------------------------------------------------------------
     wm_nodes = [state.nodes[nid] for nid in new_wm_ids if nid in state.nodes]
 
+    # Effective Hebbian learning rate (modulated by CONSOLIDATION_ALPHA)
+    effective_hebb_rate = HEBB_LEARNING_RATE * mm.get("CONSOLIDATION_ALPHA", 1.0)
+
     if len(wm_nodes) >= 2:
         # Build a fast link lookup set
         existing_pairs: set[tuple[str, str]] = set()
@@ -506,9 +555,9 @@ def thought_tick(
             pair = (node_a.id, node_b.id)
             pair_rev = (node_b.id, node_a.id)
 
-            # Hebb: weight += LEARNING_RATE * min(energy_a, energy_b)
+            # Hebb: weight += effective_rate * min(energy_a, energy_b)
             coact_signal = min(node_a.energy, node_b.energy)
-            delta = HEBB_LEARNING_RATE * coact_signal
+            delta = effective_hebb_rate * coact_signal
 
             # Check for existing links in either direction
             links_fwd = link_map.get(pair, [])
@@ -557,6 +606,10 @@ def thought_tick(
     #
     # When mean WM energy > threshold AND cooldown has elapsed,
     # fire the highest-energy action-capable process node in WM.
+    #
+    # The threshold is modulated by circadian ACTIVATION_THRESHOLD:
+    # at circadian trough, the threshold rises (harder to fire unless
+    # urgent), at peak it stays at the base value.
     # ------------------------------------------------------------------
     if wm_nodes:
         mean_energy = sum(n.energy for n in wm_nodes) / len(wm_nodes)
@@ -564,7 +617,7 @@ def thought_tick(
 
         cooldown_ok = (tick - last_action_tick) >= ACTION_COOLDOWN_TICKS
 
-        if mean_energy > CONSCIOUS_ACTION_THRESHOLD and cooldown_ok:
+        if mean_energy > effective_action_threshold and cooldown_ok:
             # Find the best action node in WM
             action_candidates = [
                 n for n in wm_nodes

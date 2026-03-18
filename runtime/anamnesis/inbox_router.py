@@ -179,7 +179,8 @@ def list_inbox(citizen_handle: str) -> list[dict]:
             if Path(corpus_path).exists():
                 meta["size_bytes"] = Path(corpus_path).stat().st_size
             files.append(meta)
-        except Exception:
+        except Exception as e:
+            logger.error(f"Failed to read inbox meta file {meta_file}: {e}")
             continue
 
     return files

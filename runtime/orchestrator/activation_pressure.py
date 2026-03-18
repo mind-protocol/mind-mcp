@@ -1,6 +1,5 @@
 """Activation pressure — single adaptive knob for compute allocation.
 
-Replaces: compute_budget.py (monthly budgets, trust shares, tick intervals)
 Simplifies: degradation.py (4-level system → pressure-based)
 
 One global variable: `pressure`. It goes up on rate limits, down on

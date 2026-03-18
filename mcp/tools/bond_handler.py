@@ -63,12 +63,12 @@ TOOL_SCHEMA = {
 }
 
 
-def _ok(text: str) -> list:
-    return [{"type": "text", "text": text}]
+def _ok(text: str) -> dict:
+    return {"content": [{"type": "text", "text": text}]}
 
 
-def _err(text: str) -> list:
-    return [{"type": "text", "text": f"Error: {text}"}]
+def _err(text: str) -> dict:
+    return {"content": [{"type": "text", "text": f"Error: {text}"}]}
 
 
 def _get_caller(ctx: ServerContext) -> str:
@@ -114,7 +114,7 @@ def _update_profile_partner(handle: str, partner_handle: str):
     logger.info(f"Profile updated: {handle} -> human_partner={partner_handle}")
 
 
-async def handle_bond(args: Dict[str, Any], ctx: ServerContext) -> list:
+def handle_bond(args: Dict[str, Any], ctx: ServerContext) -> dict:
     action = args.get("action")
 
     if action == "propose":
@@ -129,7 +129,7 @@ async def handle_bond(args: Dict[str, Any], ctx: ServerContext) -> list:
         return _err(f"Unknown action '{action}'. Use: propose, accept, reject, list.")
 
 
-def _handle_propose(args: Dict[str, Any], ctx: ServerContext) -> list:
+def _handle_propose(args: Dict[str, Any], ctx: ServerContext) -> dict:
     partner = args.get("partner", "").strip().lstrip("@")
     reason = args.get("reason", "")
     caller = _get_caller(ctx)
@@ -204,7 +204,7 @@ def _handle_propose(args: Dict[str, Any], ctx: ServerContext) -> list:
         return _err(f"Failed to create proposal: {e}")
 
 
-def _handle_accept(args: Dict[str, Any], ctx: ServerContext) -> list:
+def _handle_accept(args: Dict[str, Any], ctx: ServerContext) -> dict:
     bond_id = args.get("bond_id", "").strip()
     reason = args.get("reason", "")
     caller = _get_caller(ctx)
@@ -320,7 +320,7 @@ def _handle_accept(args: Dict[str, Any], ctx: ServerContext) -> list:
         return _err(f"Failed to accept bond: {e}")
 
 
-def _handle_reject(args: Dict[str, Any], ctx: ServerContext) -> list:
+def _handle_reject(args: Dict[str, Any], ctx: ServerContext) -> dict:
     bond_id = args.get("bond_id", "").strip()
     reason = args.get("reason", "")
     caller = _get_caller(ctx)
@@ -370,7 +370,7 @@ def _handle_reject(args: Dict[str, Any], ctx: ServerContext) -> list:
         return _err(f"Failed to reject bond: {e}")
 
 
-def _handle_list(args: Dict[str, Any], ctx: ServerContext) -> list:
+def _handle_list(args: Dict[str, Any], ctx: ServerContext) -> dict:
     caller = _get_caller(ctx)
 
     try:

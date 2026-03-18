@@ -28,12 +28,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from runtime.infrastructure.orchestration import Orchestrator
 from runtime.moment_graph import MomentTraversal, MomentQueries, MomentSurface
 from runtime.physics.graph import GraphQueries, GraphOps, add_mutation_listener
 from runtime.infrastructure.api.moments import create_moments_router
 from runtime.infrastructure.api.playthroughs import create_playthroughs_router
-from runtime.infrastructure.api.tempo import create_tempo_router
 from runtime.infrastructure.api.graphs import create_graphs_router
 
 # =============================================================================
@@ -142,8 +140,6 @@ def create_app(
         allow_headers=["*"],
     )
 
-    # Per-playthrough orchestrators
-    _orchestrators: Dict[str, Orchestrator] = {}
     _debug_sse_clients: list = []  # list of queues for debug/mutation events
     _playthroughs_dir = Path(playthroughs_dir)
     _graph_queries: Optional[GraphQueries] = None
@@ -159,20 +155,6 @@ def create_app(
                 logger.debug(f"Could not enqueue SSE event: {e}")
 
     add_mutation_listener(_mutation_event_handler)
-
-    def get_orchestrator(playthrough_id: str) -> Orchestrator:
-        """Get or create orchestrator for a playthrough."""
-        if playthrough_id not in _orchestrators:
-            # Use playthrough_id as graph name (each playthrough has its own graph)
-            pt_graph_name = playthrough_id if playthrough_id.startswith("pt_") else graph_name
-            _orchestrators[playthrough_id] = Orchestrator(
-                playthrough_id=playthrough_id,
-                graph_name=pt_graph_name,
-                host=host,
-                port=port,
-                playthroughs_dir=playthroughs_dir
-            )
-        return _orchestrators[playthrough_id]
 
     def get_graph_queries() -> GraphQueries:
         """Get graph queries instance for default graph."""
@@ -227,15 +209,6 @@ def create_app(
     )
     app.include_router(playthroughs_router, prefix="/api")
 
-    # Mount the tempo API router for game speed control
-    # Endpoints: POST /api/tempo/speed, GET /api/tempo/{id}, POST /api/tempo/input
-    tempo_router = create_tempo_router(
-        host=host,
-        port=port,
-        playthroughs_dir=playthroughs_dir
-    )
-    app.include_router(tempo_router, prefix="/api")
-
     # Mount the graphs API router for generic graph management
     # Endpoints: POST /api/graph/create, DELETE /api/graph/{name}, GET /api/graph
     graphs_router = create_graphs_router()
@@ -252,7 +225,6 @@ def create_app(
         details = {
             "graph_read": "ok",
             "graph_write": "ok",
-            "orchestrators": len(_orchestrators)
         }
         errors: Dict[str, str] = {}
 
@@ -285,53 +257,6 @@ def create_app(
     # =========================================================================
     # PLAYTHROUGH ENDPOINTS
     # =========================================================================
-
-    @app.post("/api/playthrough")
-    async def create_playthrough(request: NewPlaythroughRequest):
-        """
-        Create a new playthrough.
-
-        Sets up playthrough directory for mutations and world injections.
-        Player psychology tracked in narrator's conversation context.
-        Story notes live in the graph (narrative.narrator_notes).
-        """
-        import uuid
-        playthrough_id = f"pt_{uuid.uuid4().hex[:8]}"
-        playthrough_dir = _playthroughs_dir / playthrough_id
-        playthrough_dir.mkdir(parents=True, exist_ok=True)
-
-        # Create mutations directory
-        (playthrough_dir / "mutations").mkdir(exist_ok=True)
-
-        # Initialize orchestrator
-        get_orchestrator(playthrough_id)
-
-        return {
-            "playthrough_id": playthrough_id,
-            "drive": request.drive,
-            "companion": request.companion,
-            "status": "created"
-        }
-
-    @app.post("/api/action")
-    async def player_action(request: ActionRequest):
-        """
-        Full game loop: narrator -> tick -> flips -> world runner.
-
-        This is the main endpoint for player actions after the initial
-        instant-response click path (/api/moment/click).
-        """
-        try:
-            orchestrator = get_orchestrator(request.playthrough_id)
-            result = orchestrator.process_action(
-                player_action=request.action,
-                player_id=request.player_id,
-                player_location=request.location
-            )
-            return result
-        except Exception as e:
-            logger.error(f"Action processing failed: {e}")
-            raise HTTPException(status_code=500, detail=str(e))
 
     @app.get("/api/playthrough/{playthrough_id}")
     async def get_playthrough(playthrough_id: str):

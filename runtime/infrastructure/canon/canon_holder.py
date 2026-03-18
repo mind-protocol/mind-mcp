@@ -473,12 +473,12 @@ class CanonHolder:
         # Update status
         update_query = """
         MATCH (m:Moment {id: $id})
-        SET m.status =, m.tick_resolved = $tick
+        SET m.status = $status, m.tick_resolved = $tick
         RETURN m.id
         """
         self.graph_queries.query(
             update_query,
-            params={"id": moment_id, "tick": current_tick}
+            params={"id": moment_id, "status": "interrupted", "tick": current_tick}
         )
 
         # Create supersedes link if specified
@@ -558,13 +558,13 @@ class CanonHolder:
         # Update old moment
         update_old = """
         MATCH (m:Moment {id: $id})
-        SET m.status =,
+        SET m.status = $status,
             m.tick_resolved = $tick,
             m.energy = $haunting
         """
         self.graph_queries.query(
             update_old,
-            params={"id": moment_id, "tick": current_tick, "haunting": energy_haunting}
+            params={"id": moment_id, "status": "overridden", "tick": current_tick, "haunting": energy_haunting}
         )
 
         # Add redirected energy to new moment
@@ -681,7 +681,7 @@ class CanonHolder:
             create_query,
             params={
                 "recall_id": recall_id,
-                "content": recall_text,
+                "text": recall_text,
                 "tone": moment_data.get("tone", "reflective"),
                 "emotions": moment_data.get("emotions", []),
                 "weight": (moment_data.get("weight", 1.0) or 1.0) * 0.7,  # Recalls have reduced weight

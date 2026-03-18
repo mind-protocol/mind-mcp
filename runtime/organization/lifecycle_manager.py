@@ -394,8 +394,8 @@ class OrgManager:
         try:
             if row[2]:
                 content = json.loads(row[2]) if isinstance(row[2], str) else row[2]
-        except (json.JSONDecodeError, TypeError):
-            pass
+        except (json.JSONDecodeError, TypeError) as e:
+            logger.error(f"Failed to parse organization content for {org_narrative_id}: {e}")
 
         hall_space_id = self._find_hall_space(narrative_id)
         founder_id = content.get("founder", "unknown")

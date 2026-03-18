@@ -361,12 +361,12 @@ def _build_partner_cache():
         return
     _partner_cache_built = True
 
-    if not CITIZENS_DIR.exists():
+    if not _WORLD_CITIZENS.exists():
         return
 
     # Step 1: collect all human profiles with telegram IDs
     human_tg_ids: dict[str, str] = {}  # handle → telegram_id
-    for d in CITIZENS_DIR.iterdir():
+    for d in _WORLD_CITIZENS.iterdir():
         if not d.is_dir() or d.name.startswith("."):
             continue
         profile_path = d / "profile.json"
@@ -394,7 +394,7 @@ def _build_partner_cache():
             continue
 
     # Step 2: find AI citizens with human_partner set → reverse map
-    for d in CITIZENS_DIR.iterdir():
+    for d in _WORLD_CITIZENS.iterdir():
         if not d.is_dir() or d.name.startswith("."):
             continue
         profile_path = d / "profile.json"
@@ -458,10 +458,10 @@ def _resolve_citizen_tg(handle: str) -> Optional[str]:
 def _get_all_citizens() -> list[dict]:
     """List all citizens with available info."""
     citizens = []
-    if not CITIZENS_DIR.exists():
+    if not _WORLD_CITIZENS.exists():
         return citizens
 
-    for d in sorted(CITIZENS_DIR.iterdir()):
+    for d in sorted(_WORLD_CITIZENS.iterdir()):
         if not d.is_dir() or d.name.startswith("."):
             continue
         info = {"handle": d.name, "dir": str(d)}
@@ -1123,7 +1123,7 @@ def _process_voice_call_buffer(chat_id: str):
             f.write(f"[{ts}] @human: {full_text}\n")
 
         # Show typing
-        _api_post("sendChatAction", chat_id=chat_id, action="record_voice")
+        send_typing(chat_id)
 
         # Run claude -p in citizen's directory
         citizen = call["citizen"]
@@ -1317,7 +1317,8 @@ def _resolve_handle_from_tg(user_id: str) -> str | None:
             # Also check top-level telegram_id
             if str(data.get("telegram_id", "")) == str(user_id):
                 return data.get("id", data.get("handle", pf.parent.name))
-        except Exception:
+        except Exception as e:
+            logger.error(f"[TelegramBridge] Failed to read citizen profile {pf}: {e}")
             continue
     return None
 

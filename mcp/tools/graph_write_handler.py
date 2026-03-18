@@ -277,6 +277,24 @@ def handle_graph_write(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, An
     if not ctx.graph_ops:
         return _err("No graph connection available.")
 
+    # ── Schema validation — enforce invariants before any write ──
+    try:
+        from runtime.schema.validation import validate_node
+        node_dict = {
+            "type": subtype,
+            "weight": weight,
+            "energy": energy,
+            "media": args.get("media", {}),
+            "drives": args.get("drives", {}),
+            "stress": args.get("stress"),
+        }
+        vr = validate_node(node_dict, layer="l1")
+        if not vr.valid:
+            error_msgs = "; ".join(f"[{e.invariant}] {e.message}" for e in vr.errors)
+            return _err(f"Schema validation failed: {error_msgs}")
+    except ImportError:
+        pass  # validation module not yet available — proceed without
+
     try:
         # Compute embedding
         embedding = None

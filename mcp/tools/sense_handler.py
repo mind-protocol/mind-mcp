@@ -406,8 +406,8 @@ def _get_dispatcher(ctx=None):
         import sys
         if "home_server" in sys.modules:
             return sys.modules["home_server"]._state.get("dispatcher")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"[Sense] Failed to resolve dispatcher from home_server: {e}")
 
     return None
 

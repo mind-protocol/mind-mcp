@@ -4,33 +4,17 @@ Graph Physics Engine
 Energy flow, decay, pressure, and flip detection.
 The living world simulation that runs without LLM.
 
-Usage:
-    from runtime.physics import GraphTickV1_2
-
-    tick = GraphTickV1_2()
-    result = tick.tick()
-
-v1.6.1 Additions:
+Modules:
     - link_scoring: Link score formula for SubEntity traversal
     - flow: Forward/backward coloring for embedding propagation
     - crystallization: Narrative creation from exploration
     - synthesis: Grammar floats <-> phrases conversion
     - exploration: Async SubEntity coroutine runner
-
-v1.8 Additions:
-    - Query vs Intention separation (query=WHAT, intention=WHY)
-
-v2.1 Additions:
-    - Removed IntentionType enum from subentity - intention is now semantic via embedding
-    - IntentionType moved to cluster_presentation (for presentation filtering only)
-    - Fixed INTENTION_WEIGHT constant (0.25) replaces INTENTION_WEIGHTS dict
-
-v1.9 Additions:
     - cluster_presentation: Transform raw clusters to readable presentations
     - synthesis_unfold: Compact synthesis to prose conversion
+    - nature: YAML-based semantic to physics
 """
 
-from .tick_v1_2 import GraphTickV1_2
 from .constants import *
 from .link_scoring import (
     cosine_similarity,
@@ -137,22 +121,9 @@ from .nature import (
     get_translations,
     reload_nature,
     _get_all_verbs,
-    # Backwards compatibility
-    get_vocab_reference,
-    get_vocab_compact,
-    reload_vocab,
 )
 
-# Backwards compatibility alias
-default_floats = get_defaults
-
-# Backwards compatibility alias
-GraphTick = GraphTickV1_2
-
 __all__ = [
-    # Core tick
-    'GraphTick',
-    'GraphTickV1_2',
     # Link scoring (v1.6.1)
     'cosine_similarity',
     'max_cosine_against_set',
@@ -249,8 +220,4 @@ __all__ = [
     'translate',
     'get_translations',
     'reload_nature',
-    # Backwards compatibility
-    'get_vocab_reference',
-    'get_vocab_compact',
-    'reload_vocab',
 ]

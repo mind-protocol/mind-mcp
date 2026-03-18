@@ -47,30 +47,13 @@ class SubscribeRequest(BaseModel):
 async def receive_stimulus(req: StimulusRequest):
     """Receive a cross-org stimulus query.
 
-    Another citizen home sends a natural language query.
-    We search our public nodes and return matches.
+    NOTE: Stimulus concept eliminated per DECISION_Two_Tick_Cognitive_Architecture.
+    This endpoint returns 410 Gone. Cross-org queries now route through subcall.
     """
-    try:
-        from runtime.membrane import get_stimulus_handler
-        handler = get_stimulus_handler()
-        if not handler:
-            raise HTTPException(
-                status_code=503,
-                detail="Stimulus handler not initialized (graph not connected)",
-            )
-
-        result = handler.handle_query(
-            query=req.query,
-            from_org=req.from_org,
-            top_k=req.top_k,
-        )
-        return result
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.exception(f"Stimulus handling failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    raise HTTPException(
+        status_code=410,
+        detail="Stimulus endpoint removed — use subcall for cross-org queries",
+    )
 
 
 @router.get("/ping/{handle}")

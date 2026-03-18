@@ -11,7 +11,6 @@ DOCS: docs/security/space_encryption/HEALTH_Space_Encryption.md (Space Encryptio
 from .energy_conservation import EnergyConservationChecker
 from .no_negative import NoNegativeEnergyChecker
 from .link_state import LinkStateChecker
-from .tick_integrity import TickIntegrityChecker
 from .moment_lifecycle import MomentLifecycleChecker
 
 # v1.6.1 SubEntity checkers
@@ -39,7 +38,6 @@ __all__ = [
     "EnergyConservationChecker",
     "NoNegativeEnergyChecker",
     "LinkStateChecker",
-    "TickIntegrityChecker",
     "MomentLifecycleChecker",
     # v1.6.1 SubEntity checkers
     "SubEntityTreeChecker",

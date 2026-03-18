@@ -562,7 +562,8 @@ def score_citizens(
                     "reasons": reasons,
                 })
 
-        except Exception:
+        except Exception as e:
+            logger.error(f"[AutoSubcall] Citizen scoring failed for {cid}: {e}")
             continue
 
     # Narrative proximity (citizens linked to same hot narratives)
@@ -760,7 +761,8 @@ def auto_subcall(
                 citizen["resonance_nodes"] = nodes
                 resonated.append(citizen)
                 resonance_data[citizen["id"]] = nodes
-        except Exception:
+        except Exception as e:
+            logger.error(f"[AutoSubcall] Resonance scan failed for citizen {citizen.get('id')}: {e}")
             continue
 
     if not resonated:

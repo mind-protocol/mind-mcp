@@ -382,7 +382,8 @@ def _safe_query(query_fn, cypher, params):
     try:
         result = query_fn(cypher, params)
         return result if result else []
-    except Exception:
+    except Exception as e:
+        logger.error(f"Sense query failed — cypher={cypher!r} params={params!r}: {e}")
         return []
 
 

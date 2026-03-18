@@ -76,23 +76,24 @@ TOOL_SCHEMA = {
 
 
 def _ok(msg: str, **extra) -> Dict[str, Any]:
-    return {"status": "ok", "message": msg, **extra}
+    payload = {"status": "ok", "message": msg, **extra}
+    return {"content": [{"type": "text", "text": json.dumps(payload, indent=2, default=str)}]}
 
 
 def _err(msg: str) -> Dict[str, Any]:
-    return {"status": "error", "message": msg}
+    return {"content": [{"type": "text", "text": f"Error: {msg}"}], "isError": True}
 
 
-async def handle(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+def handle(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     """Route anamnesis actions."""
     action = args.get("action", "")
 
     if action == "prepare":
-        return await _prepare(args, ctx)
+        return _prepare(args, ctx)
     elif action == "status":
-        return await _status(args, ctx)
+        return _status(args, ctx)
     elif action == "complete":
-        return await _complete(args, ctx)
+        return _complete(args, ctx)
     elif action == "formats":
         return _formats()
     else:
@@ -114,7 +115,7 @@ def _formats() -> Dict[str, Any]:
     )
 
 
-async def _prepare(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+def _prepare(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     """Parse corpus, chunk, create L3 tasks + guide."""
     corpus_path = args.get("corpus_path")
     if not corpus_path:
@@ -168,7 +169,7 @@ async def _prepare(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         state_file.write_text(json.dumps(state, indent=2))
 
         # Create L3 task nodes — one per chunk + the guide task
-        tasks_created = await _create_l3_tasks(session, citizen_handle, ctx)
+        tasks_created = _create_l3_tasks(session, citizen_handle, ctx)
 
         # Build the instruction for the citizen
         instruction = build_citizen_instruction(citizen_handle, session)
@@ -196,7 +197,7 @@ async def _prepare(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         return _err(f"Preparation failed: {e}")
 
 
-async def _status(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+def _status(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     """Check current anamnesis session progress."""
     citizen_dir = _get_citizen_dir(ctx)
     state_file = citizen_dir / "anamnesis" / "current_session.json"
@@ -236,7 +237,7 @@ async def _status(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     )
 
 
-async def _complete(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
+def _complete(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     """Finish session, run quality gate."""
     citizen_dir = _get_citizen_dir(ctx)
     state_file = citizen_dir / "anamnesis" / "current_session.json"
@@ -298,7 +299,7 @@ async def _complete(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         return _err(f"Quality gate failed: {e}")
 
 
-async def _create_l3_tasks(session, citizen_handle: str, ctx: ServerContext) -> int:
+def _create_l3_tasks(session, citizen_handle: str, ctx: ServerContext) -> int:
     """Create L3 narrative task nodes for each chunk."""
     if ctx.graph_ops is None:
         return 0

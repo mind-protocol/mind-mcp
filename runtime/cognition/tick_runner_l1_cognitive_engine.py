@@ -153,7 +153,7 @@ except ImportError:
     inject_energy = None  # handled inline
 
 try:
-    from .laws.law_05_coactivation import reinforce_coactivation  # type: ignore[import-not-found]
+    from .laws.law_05_coactivation_reinforcement import reinforce_coactivation  # type: ignore[import-not-found]
 except ImportError:
     reinforce_coactivation = None
 
@@ -168,9 +168,9 @@ except ImportError:
     compatibility = None
 
 try:
-    from .laws.law_09_inhibition import inhibit  # type: ignore[import-not-found]
+    from .laws.law_09_inhibition import apply_inhibition  # type: ignore[import-not-found]
 except ImportError:
-    inhibit = None
+    apply_inhibition = None
 
 try:
     from .laws.law_10_crystallization import crystallize  # type: ignore[import-not-found]
@@ -436,12 +436,12 @@ class L1CognitiveTickRunner:
 
         If law_09 module exists, delegate. Otherwise inline minimal kernel.
         """
-        if inhibit is not None:
+        if apply_inhibition is not None:
             try:
-                inhibit(self.state)
+                apply_inhibition(self.state)
                 return
             except Exception as e:
-                logger.warning(f"Law 9 inhibit failed, using fallback: {e}")
+                logger.warning(f"Law 9 apply_inhibition failed, using fallback: {e}")
 
         # Minimal inline: reduce energy of the weaker side of conflicts_with links.
         wm_set = set(self.state.wm.node_ids)

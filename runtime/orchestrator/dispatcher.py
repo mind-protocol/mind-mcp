@@ -47,15 +47,9 @@ try:
 except ImportError:
     TWO_TICK_AVAILABLE = False
 
-# Fallback: try legacy L1 if two-tick not yet deployed
-try:
-    from runtime.cognition.models import CitizenCognitiveState as _LegacyState
-    from runtime.cognition.tick_runner_l1_cognitive_engine import L1CognitiveTickRunner
-    from runtime.cognition.stimulus_router import StimulusRouter, IncomingEvent
-    from runtime.cognition.wm_prompt_serializer import serialize_wm_to_prompt as _legacy_serialize
-    LEGACY_L1_AVAILABLE = True
-except ImportError:
-    LEGACY_L1_AVAILABLE = False
+# Legacy L1 tick runner has been DELETED (2026-03-19).
+# Two-tick engine is the only engine. Stimulus injection via Law 1 energy injection.
+LEGACY_L1_AVAILABLE = False
 
 logger = logging.getLogger("orchestrator.dispatcher")
 
@@ -104,10 +98,9 @@ class Dispatcher:
             except Exception as e:
                 logger.warning(f"Graph reader creation failed: {e}")
 
-        # Citizen engine instances (two-tick or legacy)
+        # Citizen engine instances (two-tick only)
         self._citizen_engines: dict = {}
         self._citizen_states: dict = {}
-        self._citizen_routers: dict = {}
 
     def start(self):
         """Start the dispatch loop in a background thread."""
@@ -211,10 +204,8 @@ class Dispatcher:
         try:
             if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
                 engine.awareness_tick()
-            elif LEGACY_L1_AVAILABLE and isinstance(engine, L1CognitiveTickRunner):
-                engine.run_tick()  # No stimulus — background tick
         except Exception as e:
-            logger.debug(f"Awareness tick failed for {handle}: {e}")
+            logger.warning(f"Awareness tick failed for {handle}: {e}")
 
     def _thought_tick(self, handle: str) -> tuple[bool, bool]:
         """Run thought tick. Returns (wm_changed, action_fired)."""
@@ -229,16 +220,9 @@ class Dispatcher:
                     getattr(result, 'wm_changed', False),
                     getattr(result, 'action_fired', False),
                 )
-            elif LEGACY_L1_AVAILABLE and isinstance(engine, L1CognitiveTickRunner):
-                # Legacy: check last tick result for action_emitted
-                result = engine.run_tick()
-                return (
-                    True,  # Legacy doesn't track wm_changed
-                    getattr(result, 'action_emitted', False),
-                )
             return False, False
         except Exception as e:
-            logger.debug(f"Thought tick failed for {handle}: {e}")
+            logger.warning(f"Thought tick failed for {handle}: {e}")
             return False, False
 
     def _fire_conscious_action(self, handle: str):
@@ -253,13 +237,10 @@ class Dispatcher:
         if hasattr(engine, '_current_orientation'):
             orientation = engine._current_orientation
 
-        serialize_fn = serialize_wm_to_prompt if TWO_TICK_AVAILABLE else (
-            _legacy_serialize if LEGACY_L1_AVAILABLE else None
-        )
-        if not serialize_fn:
+        if not TWO_TICK_AVAILABLE:
             return
 
-        wm_prompt = serialize_fn(state, orientation)
+        wm_prompt = serialize_wm_to_prompt(state, orientation)
 
         request = {
             "text": wm_prompt,
@@ -334,13 +315,10 @@ class Dispatcher:
         if hasattr(engine, '_current_orientation'):
             orientation = engine._current_orientation
 
-        serialize_fn = serialize_wm_to_prompt if TWO_TICK_AVAILABLE else (
-            _legacy_serialize if LEGACY_L1_AVAILABLE else None
-        )
-        if not serialize_fn:
+        if not TWO_TICK_AVAILABLE:
             return ""
 
-        return serialize_fn(state, orientation)
+        return serialize_wm_to_prompt(state, orientation)
 
     # ── Collect Completed Futures ──────────────────────────────────────────
 
@@ -380,30 +358,25 @@ class Dispatcher:
 
         if TWO_TICK_AVAILABLE:
             state = CitizenCognitiveState(citizen_id=citizen_handle)
+
+            # Attach metabolism (circadian rhythm, tonics, adaptation)
+            try:
+                from runtime.cognition.metabolism import CitizenMetabolism
+                state.metabolism = CitizenMetabolism()
+                logger.debug(f"Metabolism attached for {citizen_handle} "
+                             f"(peak={state.metabolism.peak_hour:.1f}h, "
+                             f"tz=UTC{state.metabolism.timezone_offset:+.0f})")
+            except Exception as e:
+                logger.warning(f"Metabolism init failed for {citizen_handle}: {e}")
+
             self._attach_l3(state)
             engine = TwoTickEngine(state, graph_read_fn=self._graph_read_fn)
             self._citizen_states[citizen_handle] = state
             self._citizen_engines[citizen_handle] = engine
             logger.info(f"Two-tick engine initialized for {citizen_handle}")
 
-        elif LEGACY_L1_AVAILABLE:
-            state = _LegacyState(citizen_id=citizen_handle)
-
-            # Attach metabolism
-            try:
-                from runtime.cognition.metabolism import CitizenMetabolism
-                state.metabolism = CitizenMetabolism()
-            except ImportError:
-                pass
-
-            self._attach_l3(state)
-            runner = L1CognitiveTickRunner(state)
-            router = StimulusRouter(citizen_handle)
-
-            self._citizen_states[citizen_handle] = state
-            self._citizen_engines[citizen_handle] = runner
-            self._citizen_routers[citizen_handle] = router
-            logger.info(f"Legacy L1 engine initialized for {citizen_handle}")
+        else:
+            logger.error(f"No engine available for {citizen_handle} — TWO_TICK_AVAILABLE={TWO_TICK_AVAILABLE}")
 
     def _attach_l3(self, state):
         """Attach L3 graph query/write functions to a cognitive state."""
@@ -428,25 +401,28 @@ class Dispatcher:
     def inject_stimulus(self, citizen_handle: str, content: str,
                         source: str = "external", is_social: bool = False,
                         is_failure: bool = False, is_progress: bool = False):
-        """Inject a stimulus into a citizen's engine. Called by bridges."""
+        """Inject a stimulus into a citizen's two-tick engine.
+
+        Called by bridges when external events arrive (messages, mentions, etc.).
+        Injects energy into the citizen's L1 graph via Law 1 (energy injection),
+        then triggers an immediate awareness tick to process the stimulus.
+
+        TODO(task#1): Wire actual Law 1 energy injection for two-tick engine.
+        Currently logs and triggers awareness tick only.
+        """
         self._ensure_citizen_engine(citizen_handle)
 
-        if LEGACY_L1_AVAILABLE:
-            router = self._citizen_routers.get(citizen_handle)
-            if router:
-                event = IncomingEvent(
-                    content=content,
-                    source=source,
-                    citizen_handle=citizen_handle,
-                    is_social=is_social,
-                    is_failure=is_failure,
-                    is_progress=is_progress,
-                )
-                stimulus = router.route(event)
-                if stimulus:
-                    runner = self._citizen_engines.get(citizen_handle)
-                    if runner and isinstance(runner, L1CognitiveTickRunner):
-                        runner.run_tick(stimulus=stimulus)
+        if TWO_TICK_AVAILABLE:
+            engine = self._citizen_engines.get(citizen_handle)
+            if engine and isinstance(engine, TwoTickEngine):
+                logger.info(f"Stimulus for {citizen_handle} from {source}: {content[:80]}")
+                # Trigger immediate awareness tick to pick up the stimulus
+                try:
+                    engine.awareness_tick()
+                except Exception as e:
+                    logger.warning(f"Stimulus awareness tick failed for {citizen_handle}: {e}")
+        else:
+            logger.warning(f"No engine available for stimulus injection to {citizen_handle}")
 
     def bulk_load_citizen_engines(self, citizen_handles: list[str]):
         """Pre-load engines at boot for all citizens."""
@@ -458,8 +434,7 @@ class Dispatcher:
             except Exception as e:
                 logger.warning(f"Failed to load engine for {handle}: {e}")
 
-        engine_type = "two-tick" if TWO_TICK_AVAILABLE else "legacy-L1"
-        logger.info(f"Engines: {loaded}/{len(citizen_handles)} loaded ({engine_type})")
+        logger.info(f"Engines: {loaded}/{len(citizen_handles)} loaded (two-tick)")
 
     # ── Public API ─────────────────────────────────────────────────────────
 

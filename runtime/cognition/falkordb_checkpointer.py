@@ -141,7 +141,8 @@ class FalkorDBBrainCheckpointer:
                     node.synthesis = row[6] or ""
                     state.nodes[node_id] = node
                     added += 1
-                except Exception:
+                except Exception as e:
+                    logger.error(f"Failed to sync external node {node_id} for {self.citizen_handle}: {e}")
                     continue
 
             if added > 0:

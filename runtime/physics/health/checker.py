@@ -8,7 +8,6 @@ Usage:
     python -m mind.physics.health.checker energy_balance
     python -m mind.physics.health.checker no_negative
     python -m mind.physics.health.checker link_ratio
-    python -m mind.physics.health.checker tick_order
     python -m mind.physics.health.checker moment_states
 
 Options:
@@ -35,7 +34,6 @@ from .checkers import (
     EnergyConservationChecker,
     NoNegativeEnergyChecker,
     LinkStateChecker,
-    TickIntegrityChecker,
     MomentLifecycleChecker,
 )
 
@@ -53,8 +51,6 @@ CHECKERS = {
     "no_negative": NoNegativeEnergyChecker,
     "link_ratio": LinkStateChecker,
     "link_state": LinkStateChecker,  # alias
-    "tick_order": TickIntegrityChecker,
-    "tick_integrity": TickIntegrityChecker,  # alias
     "moment_states": MomentLifecycleChecker,
     "moment_lifecycle": MomentLifecycleChecker,  # alias
 }
@@ -148,7 +144,6 @@ def run_all_checks(
         "energy_conservation": EnergyConservationChecker,
         "no_negative": NoNegativeEnergyChecker,
         "link_state": LinkStateChecker,
-        "tick_integrity": TickIntegrityChecker,
         "moment_lifecycle": MomentLifecycleChecker,
     }
 

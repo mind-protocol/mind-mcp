@@ -163,7 +163,8 @@ def _parse_identity_md(path: Path) -> Optional[dict]:
     """
     try:
         text = path.read_text(encoding="utf-8", errors="replace")
-    except OSError:
+    except OSError as e:
+        logger.error(f"Failed to read identity markdown {path}: {e}")
         return None
 
     identity: dict = {"_source": str(path)}
@@ -406,7 +407,8 @@ def _load_behaviors() -> dict:
         with open(config_path) as f:
             cfg = yaml.safe_load(f) or {}
         return cfg.get("behaviors", {})
-    except Exception:
+    except Exception as e:
+        logger.error(f"Failed to load behavior config from {config_path}: {e}")
         return {}
 
 

@@ -642,7 +642,8 @@ def _create_subcall_moment(
                         "ts": now_ts,
                     },
                 )
-            except Exception:
+            except Exception as e:
+                logger.error(f"[Subcall] Failed to link responder {resp_id} to moment {moment_id}: {e}")
                 continue
 
         logger.info(
@@ -677,7 +678,8 @@ def _find_target_actor_id(handle: str, graph_ops) -> Optional[str]:
             if result:
                 row = result[0]
                 return row[0] if isinstance(row, (list, tuple)) else row.get("a.id", candidate)
-        except Exception:
+        except Exception as e:
+            logger.error(f"[Subcall] Actor resolution query failed for candidate '{candidate}': {e}")
             continue
     # Last resort: fuzzy match on name
     try:
@@ -763,7 +765,8 @@ def _query_resonance(
                         {"target": target_actor_id, "qvec": query_embedding, "k": top_k * 2},
                     )
                     all_vector_results.extend(knn)
-                except Exception:
+                except Exception as e:
+                    logger.error(f"[Subcall] Vector KNN search failed for label={label}, target={target_actor_id}: {e}")
                     continue
 
             # Sort by score descending (FalkorDB KNN returns similarity, not distance)
@@ -1602,7 +1605,8 @@ def _discover_random(
                     if trust is not None and trust >= min_trust:
                         actor["trust"] = trust
                         filtered.append(actor)
-                except Exception:
+                except Exception as e:
+                    logger.error(f"[Subcall] Trust query failed for actor {actor.get('id')}: {e}")
                     continue
             all_actors = filtered
 
@@ -1963,7 +1967,8 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                         # Resolve citizen profile pic
                         citizen["image_uri"] = _resolve_actor_image(citizen["id"], ctx.graph_ops)
                         resonated.append(citizen)
-                except Exception:
+                except Exception as e:
+                    logger.error(f"[Subcall] Resonance query failed for citizen {citizen.get('id')}: {e}")
                     continue
 
             if not resonated:
