@@ -166,7 +166,7 @@ class FalkorDBBrainCheckpointer:
             "id": node.id,
             "name": node.content[:100] if node.content else node.id,
             "node_type": node.node_type.value if isinstance(node.node_type, NodeType) else str(node.node_type),
-            "type": getattr(node, 'type', None) or "",
+            "type": node.node_type.value if isinstance(node.node_type, NodeType) else str(node.node_type),
             "weight": node.weight,
             "energy": node.energy,
             "stability": getattr(node, 'stability', 0.5),
