@@ -234,7 +234,7 @@ NodeBase:
       items: float
       length: 3
       nullable: true
-      description: "Spherical coordinates [r, theta, phi]. r = distance from center (weight-based: heavy nodes closer to core). theta = azimuthal angle [0, 2pi] (zone determines sector). phi = polar angle [0, pi] (verticality within zone). Pre-computed by spatial mapper from barycentrique formula. Renderers convert to cartesian: x=r*sin(phi)*cos(theta), y=r*cos(phi), z=r*sin(phi)*sin(theta)."
+      description: "World position [x, y, z]. x/z = barycentrique weighted by zone affinities (7 fixed attractors + hash dispersion). y = abstraction level (Creative Nexus high, Arsenal low, actors above, things below). Pre-computed by spatial mapper, damped at 0.95 for smooth transitions. See: docs/city-architecture/spatial-mapping/ALGORITHM_Spatial_Mapping.md"
     zone_id:
       type: string
       nullable: true
@@ -843,4 +843,4 @@ invariants:
   - "Concept images inherit from medoid via Law 10 crystallization — no generation needed"
   - "Desire images generated on traversal only when energy > threshold AND media.image is null"
   - "media dict is extensible — adding a modality requires no schema migration (v2.3)"
-  - "Spherical position [r, theta, phi] pre-computed by spatial mapper, not per-tick (v2.3)"
+  - "Cartesian position [x, y, z] pre-computed by spatial mapper, not per-tick. Y = abstraction (v2.3)"

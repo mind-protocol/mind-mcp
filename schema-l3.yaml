@@ -105,17 +105,17 @@ l3_universe:
 
   # --- Spatial Positioning (v2.3) ---
   #
-  # All L3 nodes carry position [r, theta, phi] in spherical coordinates.
-  # r = distance from Radiant Core (weight-inversed: heavier = closer)
-  # theta = azimuthal angle (zone sector: each of 7 districts owns a 51.4° arc)
-  # phi = polar angle (height: verticality within zone)
+  # All L3 nodes carry position [x, y, z] in world cartesian coordinates.
+  # x/z = barycentrique of 7 zone attractors weighted by affinity
+  # y   = abstraction level (Creative Nexus=high, Arsenal=low)
   #
   # Pre-computed by the spatial mapper using barycentrique formula:
   #   position(n) = Σ(affinity(n, d) × centroid(d)) / Σ(affinity(n, d))
-  # Then converted to spherical.
+  # With hash-based dispersion within clusters and type-based y offset.
   #
   # Updated periodically (not per-tick — positions change slowly).
-  # Renderers read position directly and convert to cartesian for display.
+  # Damped at 0.95 for smooth visual transitions (~2s migration).
+  # See: docs/city-architecture/spatial-mapping/ALGORITHM_Spatial_Mapping.md
 
   # --- Visual Assets at L3 (v2.2) ---
   #
