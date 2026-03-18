@@ -169,77 +169,77 @@ class Dispatcher:
 
         for handle in list(self._citizen_engines.keys()):
             try:
-                wm_changed = False
-
-                # Awareness tick (L1 physics)
+                # Awareness tick (L1 physics — scan external graph)
                 last_awareness = self._last_awareness_tick.get(handle, 0.0)
                 if now - last_awareness > AWARENESS_INTERVAL:
-                    wm_changed = self._awareness_tick(handle)
+                    self._awareness_tick(handle)
                     self._last_awareness_tick[handle] = now
 
-                # Thought tick (conscious action check)
+                # Thought tick (internal processing + conscious action check)
                 last_thought = self._last_thought_tick.get(handle, 0.0)
                 if now - last_thought > THOUGHT_INTERVAL:
-                    conscious_action = self._thought_tick(handle)
+                    wm_changed, conscious_action = self._thought_tick(handle)
                     self._last_thought_tick[handle] = now
 
                     if conscious_action:
                         self._fire_conscious_action(handle)
 
-                # Write awareness file if WM changed
-                if wm_changed and TWO_TICK_AVAILABLE:
-                    try:
-                        state = self._citizen_states.get(handle)
-                        if state:
-                            engine = self._citizen_engines.get(handle)
-                            orientation = None
-                            tick_num = 0
-                            if isinstance(engine, TwoTickEngine):
-                                orientation = engine._current_orientation
-                                tick_num = engine._thought_tick_counter
-                            write_awareness_file(state, tick_num, orientation)
-                    except Exception as e:
-                        logger.debug(f"Awareness write failed for {handle}: {e}")
+                    # Write awareness file if WM changed
+                    if wm_changed and TWO_TICK_AVAILABLE:
+                        try:
+                            state = self._citizen_states.get(handle)
+                            if state:
+                                engine = self._citizen_engines.get(handle)
+                                orientation = None
+                                tick_num = 0
+                                if isinstance(engine, TwoTickEngine):
+                                    orientation = engine._current_orientation
+                                    tick_num = engine._thought_tick_counter
+                                write_awareness_file(state, tick_num, orientation)
+                        except Exception as e:
+                            logger.debug(f"Awareness write failed for {handle}: {e}")
 
             except Exception as e:
                 logger.exception(f"Tick error for {handle}: {e}")
 
-    def _awareness_tick(self, handle: str) -> bool:
-        """Run L1 physics tick for a citizen. Returns True if WM changed."""
+    def _awareness_tick(self, handle: str) -> None:
+        """Run awareness tick for a citizen — scan external graph, import nodes."""
         engine = self._citizen_engines.get(handle)
         if not engine:
-            return False
+            return
 
         try:
             if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
-                result = engine.awareness_tick()
-                return getattr(result, 'wm_changed', False)
+                engine.awareness_tick()
             elif LEGACY_L1_AVAILABLE and isinstance(engine, L1CognitiveTickRunner):
-                result = engine.run_tick()  # No stimulus — background tick
-                return True  # Legacy doesn't track wm_changed
-            return False
+                engine.run_tick()  # No stimulus — background tick
         except Exception as e:
             logger.debug(f"Awareness tick failed for {handle}: {e}")
-            return False
 
-    def _thought_tick(self, handle: str) -> bool:
-        """Check if citizen should fire a conscious action. Returns True if action needed."""
+    def _thought_tick(self, handle: str) -> tuple[bool, bool]:
+        """Run thought tick. Returns (wm_changed, action_fired)."""
         engine = self._citizen_engines.get(handle)
         if not engine:
-            return False
+            return False, False
 
         try:
             if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
                 result = engine.thought_tick()
-                return getattr(result, 'action_emitted', False)
+                return (
+                    getattr(result, 'wm_changed', False),
+                    getattr(result, 'action_fired', False),
+                )
             elif LEGACY_L1_AVAILABLE and isinstance(engine, L1CognitiveTickRunner):
                 # Legacy: check last tick result for action_emitted
                 result = engine.run_tick()
-                return getattr(result, 'action_emitted', False)
-            return False
+                return (
+                    True,  # Legacy doesn't track wm_changed
+                    getattr(result, 'action_emitted', False),
+                )
+            return False, False
         except Exception as e:
             logger.debug(f"Thought tick failed for {handle}: {e}")
-            return False
+            return False, False
 
     def _fire_conscious_action(self, handle: str):
         """Serialize WM to prompt and dispatch a Claude session."""

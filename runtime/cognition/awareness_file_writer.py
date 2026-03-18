@@ -64,9 +64,16 @@ def _resolve_citizens_dir() -> Path:
         return submodule_citizens
 
     # Standalone layout: mind-mcp alongside a world repo (e.g. lumina-prime)
-    # Check for sibling dirs with a citizens/ subdirectory
+    # Use L3_GRAPH / FALKORDB_GRAPH as hint for the world repo name
     workspace = _MIND_MCP_ROOT.parent
-    for sibling in workspace.iterdir():
+    graph_hint = os.environ.get("L3_GRAPH", os.environ.get("FALKORDB_GRAPH", ""))
+    if graph_hint:
+        hinted = workspace / graph_hint / "citizens"
+        if hinted.is_dir():
+            return hinted
+
+    # Fallback: scan sibling dirs for one with citizens/
+    for sibling in sorted(workspace.iterdir()):
         if sibling.is_dir() and sibling.name != "mind-mcp":
             candidate = sibling / "citizens"
             if candidate.is_dir():

@@ -12,6 +12,7 @@ Autonomy model:
 
 import json
 import logging
+import os
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -21,16 +22,67 @@ logger = logging.getLogger("citizens.identity")
 _audit_logger = logging.getLogger("citizens.autonomy.audit")
 
 # Default: citizens/ at project root
-# Can be overridden via set_citizens_dir()
+# Can be overridden via set_citizens_dir() or CITIZENS_DIR / WORLD_ROOT env vars
 _citizens_dir: Optional[Path] = None
+
+# mind-mcp project root
+_PROJECT_ROOT: Path = Path(__file__).resolve().parent.parent.parent
 
 
 def get_citizens_dir() -> Path:
-    """Return the citizens base directory."""
+    """Return the citizens base directory.
+
+    Resolution priority:
+      1. Explicit override via set_citizens_dir()
+      2. CITIZENS_DIR env var
+      3. WORLD_ROOT env var / citizens
+      4. Submodule layout: mind-mcp at {world_repo}/.mind/mind-mcp/ -> ../../citizens
+      5. Sibling world repo with citizens/ (standalone layout)
+      6. Fallback: mind-mcp/citizens/ (local)
+    """
     if _citizens_dir is not None:
         return _citizens_dir
-    # Default: citizens/ at project root (where citizen directories live)
-    return Path(__file__).resolve().parent.parent.parent / "citizens"
+
+    if os.environ.get("CITIZENS_DIR"):
+        return Path(os.environ["CITIZENS_DIR"])
+    if os.environ.get("WORLD_ROOT"):
+        return Path(os.environ["WORLD_ROOT"]) / "citizens"
+
+    # Submodule layout: mind-mcp at {world_repo}/.mind/mind-mcp/
+    submodule_citizens = _PROJECT_ROOT.parent.parent / "citizens"
+    if submodule_citizens.is_dir():
+        # Verify it has actual citizen dirs (not just a stray folder)
+        has_citizens = any(
+            (d / "CLAUDE.md").exists()
+            for d in submodule_citizens.iterdir()
+            if d.is_dir()
+        )
+        if has_citizens:
+            return submodule_citizens
+
+    # Standalone layout: look for sibling world repo with citizens/
+    # Use L3_GRAPH / FALKORDB_GRAPH as hint for the world repo name
+    workspace = _PROJECT_ROOT.parent
+    graph_hint = os.environ.get("L3_GRAPH", os.environ.get("FALKORDB_GRAPH", ""))
+    if graph_hint:
+        hinted = workspace / graph_hint / "citizens"
+        if hinted.is_dir():
+            return hinted
+
+    for sibling in sorted(workspace.iterdir()):
+        if sibling.is_dir() and sibling.name != "mind-mcp":
+            candidate = sibling / "citizens"
+            if candidate.is_dir():
+                has_citizens = any(
+                    (d / "CLAUDE.md").exists()
+                    for d in candidate.iterdir()
+                    if d.is_dir()
+                )
+                if has_citizens:
+                    return candidate
+
+    # Fallback: local citizens/ dir
+    return _PROJECT_ROOT / "citizens"
 
 
 def set_citizens_dir(path: Path) -> None:
