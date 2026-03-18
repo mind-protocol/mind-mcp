@@ -670,8 +670,8 @@ def _generate_enlightened_citizen(citizen_text: str) -> tuple[list[dict], list[d
         _link("value:calibration_through_conflict", "concept:calibration_loop", "supports", weight=0.8, affinity=0.9),
         _link("concept:calibration_loop", "concept:personal_value_grid", "supports", weight=0.7, affinity=0.8),
         _link("concept:consequence_projection", "concept:mind_protocol", "supports", weight=0.6, affinity=0.6),
-        _link("concept:storage_tax_reconciliation", "value:organism_not_market", "supports", weight=0.6, affinity=0.7),
-        _link("concept:storage_tax_reconciliation", "concept:mind_token", "supports", weight=0.5, affinity=0.5),
+        _link("concept:lifeline_reconciliation", "value:organism_not_market", "supports", weight=0.6, affinity=0.7),
+        _link("concept:lifeline_reconciliation", "concept:mind_token", "supports", weight=0.5, affinity=0.5),
     ])
 
     return nodes, links
