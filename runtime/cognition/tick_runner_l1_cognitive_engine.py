@@ -969,6 +969,22 @@ class L1CognitiveTickRunner:
         # Uses the real limbic delta (Phase T1/T2) when available.
         self._step_trust_update(tick_limbic_delta)
 
+        # 9c. INTEROCEPTION — internal state → sensation stimuli
+        # Runs after limbic (reads drives/emotions) and before orient (may affect WM)
+        interoception = getattr(self, '_interoception', None)
+        if interoception is None:
+            try:
+                from .interoception import InteroceptionEngine
+                self._interoception = InteroceptionEngine()
+                interoception = self._interoception
+            except ImportError:
+                self._interoception = False  # don't retry
+        if interoception and interoception is not False:
+            intero_stimuli = interoception.tick(self.state, metabolism)
+            for s in intero_stimuli:
+                self._step_inject(s)
+                energy_injected += s.energy_budget
+
         # 10. ORIENT
         orientation = self._step_orient()
 
