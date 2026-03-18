@@ -11,8 +11,11 @@ DOCS: docs/cli/core/PATTERNS_Why_CLI_Over_Copy.md
 """
 
 import json
+import logging
 import re
 from collections import Counter
+
+logger = logging.getLogger(__name__)
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Optional, Dict, Any
@@ -280,8 +283,8 @@ def find_module_docs(target_dir: Path, file_path: Path) -> Optional[Path]:
                         resolved = (target_dir / docs_ref).resolve()
                     if resolved.exists():
                         return resolved
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Skipped DOCS marker parsing in {file_path}: {e}")  # lint:ignore silent_failure — graceful degradation
 
     # Fallback: try to match file path to docs structure
     # e.g., mind/cli.py -> docs/mind/cli/

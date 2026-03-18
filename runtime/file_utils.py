@@ -8,8 +8,11 @@ Contains:
 """
 
 import fnmatch
+import logging
 from pathlib import Path
 from typing import List, Set
+
+logger = logging.getLogger(__name__)
 
 from .core_utils import IGNORED_EXTENSIONS
 
@@ -30,8 +33,8 @@ def parse_gitignore(gitignore_path: Path) -> List[str]:
                     patterns.append(line.rstrip('/') + "/**")
                 else:
                     patterns.append(line)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Skipped reading .gitignore at {gitignore_path}: {e}")  # lint:ignore silent_failure — graceful degradation
 
     return patterns
 

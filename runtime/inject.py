@@ -762,8 +762,8 @@ def _inject_node(
             # Changed - will need new embedding
             needs_embedding = generate_embedding
 
-    except Exception:
-        pass  # Node doesn't exist
+    except Exception as e:
+        logger.debug(f"Node lookup skipped (likely new node): {e}")  # lint:ignore silent_failure — graceful degradation
 
     # Generate embedding
     if needs_embedding and node.get("synthesis"):
@@ -846,8 +846,8 @@ def _inject_link(
                 _, verb, _ = parse_nature(nature)
                 if verb:
                     link["verb"] = verb
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Skipped verb extraction from nature: {e}")  # lint:ignore silent_failure — graceful degradation
 
     # Default verb
     verb = link.get("verb", "linked")

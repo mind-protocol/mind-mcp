@@ -400,8 +400,8 @@ class ClusterMetrics:
                 )
                 if result:
                     return f"{result[0]['nt']}.{result[0]['t']}"
-            except:
-                pass
+            except Exception as e:
+                logger.debug(f"Skipped graph lookup for node type {node_id}: {e}")  # lint:ignore silent_failure — graceful degradation
 
         # Infer from ID pattern
         id_lower = node_id.lower()
@@ -748,8 +748,8 @@ def score_cluster_command(
         try:
             from runtime.physics.graph.graph_ops import GraphOps
             graph_ops = GraphOps(graph_name=graph_name)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Error initializing GraphOps for cluster scoring: {e}")
 
     metrics = ClusterMetrics(graph_ops)
     return metrics.score_cluster(node_ids, link_defs)

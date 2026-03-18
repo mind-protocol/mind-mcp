@@ -10,9 +10,12 @@ Provides:
 - Color-coded output for quick visual scanning
 """
 
+import logging
 import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
+
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 
 # Try to import yaml, fall back gracefully
@@ -664,8 +667,8 @@ def _get_dashboard_data(project_dir: Path) -> Dict[str, Any]:
                     "severity": severity or "error",
                 })
 
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Error fetching dashboard alerts: {e}")
 
     return dashboard
 

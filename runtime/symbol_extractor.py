@@ -932,8 +932,8 @@ class DocsLinker:
             for doc_file in docs_path.rglob(pattern):
                 try:
                     narratives[str(doc_file.relative_to(self.base_path))] = doc_file.read_text(encoding='utf-8')
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Skipped reading narrative doc {doc_file}: {e}")  # lint:ignore silent_failure — graceful degradation
 
         return narratives
 

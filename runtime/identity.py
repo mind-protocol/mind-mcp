@@ -5,9 +5,12 @@ Detects and normalizes citizen IDs from environment, cwd, or config.
 Used by MCP tool handlers that need to know which citizen is acting.
 """
 
+import logging
 import os
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 def normalize_citizen_id(handle: str) -> str:
@@ -116,8 +119,8 @@ def resolve_actor_id(
                 )
                 if result and result[0]:
                     return result[0][0]
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error resolving owner from graph: {e}")
 
         return "unknown"
 

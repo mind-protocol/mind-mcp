@@ -148,8 +148,8 @@ class GraphQuery:
             results = self.graph._query(query, {'id': node_id})
             if results:
                 return self._node_from_result(results[0]['n'])
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Error fetching node {node_id}: {e}")
 
         return None
 
@@ -197,8 +197,8 @@ class GraphQuery:
                 if key not in ctx.neighbors:
                     ctx.neighbors[key] = []
                 ctx.neighbors[key].append(target)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Error fetching outgoing links for {node_id}: {e}")
 
         # Get incoming links
         in_query = """
@@ -224,8 +224,8 @@ class GraphQuery:
                 if key not in ctx.neighbors:
                     ctx.neighbors[key] = []
                 ctx.neighbors[key].append(source)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Error fetching incoming links for {node_id}: {e}")
 
         return ctx
 
@@ -450,8 +450,8 @@ def query_command(
         try:
             from runtime.physics.graph.graph_ops import GraphOps
             graph_ops = GraphOps(graph_name=graph_name)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Error initializing GraphOps for CLI query: {e}")
 
     query = GraphQuery(graph_ops)
 

@@ -15,10 +15,13 @@ Usage:
 
 import asyncio
 import json
+import logging
 import sys
 from dataclasses import asdict
 from pathlib import Path
 from typing import Optional, Dict, Any, List
+
+logger = logging.getLogger(__name__)
 
 from runtime.physics.exploration import (
     ExplorationRunner,
@@ -125,8 +128,8 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                 result = graph.query(f"MATCH (n {{id: '{node_id}'}}) RETURN n")
                 if result.result_set:
                     return _node_to_dict(result.result_set[0][0])
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Error fetching node {node_id}: {e}")
             return None
 
         async def get_node_embedding(node_id: str) -> Optional[List[float]]:
@@ -200,8 +203,8 @@ def get_graph_interface(graph_name: Optional[str] = None) -> GraphInterface:
                 if result.result_set:
                     rel, from_id, to_id = result.result_set[0]
                     return _rel_to_dict(rel, from_id, to_id)
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Error fetching link {link_id}: {e}")
             return None
 
         async def get_link_embedding(link_id: str) -> Optional[List[float]]:

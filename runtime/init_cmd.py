@@ -193,8 +193,8 @@ def _update_root_claude_md(target_dir: Path, mode: str = None) -> None:
                 config = yaml.safe_load(config_file.read_text())
                 config["system_prompt_mode"] = mode
                 config_file.write_text(yaml.dump(config, default_flow_style=False))
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Error writing system_prompt_mode to config: {e}")
 
     content = _build_root_claude_section(target_dir)
 
@@ -230,8 +230,8 @@ def _build_root_claude_section(target_dir: Path = None) -> str:
                 import yaml
                 config = yaml.safe_load(config_file.read_text())
                 mode = config.get("system_prompt_mode", "project-team")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Skipped reading system_prompt_mode from config: {e}")  # lint:ignore silent_failure — graceful degradation
 
     # Load template
     templates_dir = Path(__file__).parent.parent / "templates" / "system_prompts"
@@ -261,8 +261,8 @@ def _build_root_claude_section(target_dir: Path = None) -> str:
             )
             if result.returncode == 0:
                 github_url = result.stdout.strip()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Skipped git remote URL detection: {e}")  # lint:ignore silent_failure — graceful degradation
 
     # Project structure (top 2 levels)
     project_structure = ""
@@ -278,8 +278,8 @@ def _build_root_claude_section(target_dir: Path = None) -> str:
                 lines = sorted(result.stdout.strip().split("\n"))
                 rel_lines = [str(Path(l).relative_to(target_dir)) for l in lines if l]
                 project_structure = "\n".join(rel_lines[:20])
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Skipped project structure discovery: {e}")  # lint:ignore silent_failure — graceful degradation
 
     # Team roster (from citizens/ or .mind/actors/)
     team_roster = ""
@@ -696,8 +696,8 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
             disabled = [k for k, v in _behaviors.items() if not v]
             if disabled:
                 print(f"  Behaviors disabled: {', '.join(disabled)}")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error loading behaviors from config: {e}")
 
     # Note: VIEWs are deprecated - replaced by agents, skills, and protocols
 
