@@ -51,18 +51,60 @@ _seen_message_ids: dict[str, float] = {}
 # ── WAHA API ─────────────────────────────────────────────────────────────────
 
 def _waha_headers() -> dict:
-    """Build WAHA API headers."""
+    """Build WAHA API headers. Uses X-Api-Key for local WAHA containers."""
     headers = {"Content-Type": "application/json"}
     if WAHA_API_KEY:
-        headers["Authorization"] = f"Bearer {WAHA_API_KEY}"
+        headers["X-Api-Key"] = WAHA_API_KEY
     return headers
 
 
+def _resolve_chat_id_to_lid(chat_id: str) -> str:
+    """Resolve a phone-based chat_id to LID format if needed.
+
+    WAHA WEBJS engine requires LID (Linked ID) for sending.
+    First checks cache, then queries WAHA /api/contacts/check-exists.
+    Falls back to original chat_id if resolution fails.
+    """
+    if not chat_id.endswith("@c.us"):
+        return chat_id  # groups or already LID format
+
+    # Check LID cache (reverse: phone → LID)
+    cache = _load_lid_cache()
+    for lid, phone in cache.items():
+        if phone.replace("+", "").replace("@c.us", "") in chat_id:
+            logger.debug(f"LID cache hit: {chat_id} → {lid}")
+            return lid
+
+    # Query WAHA to check if contact exists and get LID
+    try:
+        phone = chat_id.replace("@c.us", "")
+        resp = requests.get(
+            f"{WAHA_URL}/api/contacts/check-exists",
+            headers=_waha_headers(),
+            params={"phone": phone, "session": WAHA_SESSION},
+            timeout=10,
+        )
+        if resp.status_code == 200:
+            data = resp.json()
+            lid = data.get("chatId") or data.get("id") or data.get("lid")
+            if lid and lid != chat_id:
+                _cache_lid(lid, phone)
+                logger.info(f"LID resolved: {chat_id} → {lid}")
+                return lid
+    except Exception as e:
+        logger.debug(f"LID resolution query failed: {e}")
+
+    return chat_id
+
+
 def send_message(chat_id: str, text: str) -> dict | None:
-    """Send a text message via WAHA."""
+    """Send a text message via WAHA. Resolves LID automatically."""
     if not WAHA_URL:
         logger.error("WAHA_URL not configured")
         return None
+
+    # Resolve phone to LID if needed (WAHA WEBJS requirement)
+    resolved_id = _resolve_chat_id_to_lid(chat_id)
 
     try:
         resp = requests.post(
@@ -70,7 +112,7 @@ def send_message(chat_id: str, text: str) -> dict | None:
             headers=_waha_headers(),
             json={
                 "session": WAHA_SESSION,
-                "chatId": chat_id,
+                "chatId": resolved_id,
                 "text": text,
             },
             timeout=15,
@@ -79,6 +121,22 @@ def send_message(chat_id: str, text: str) -> dict | None:
             _log_message(chat_id, text, "outbound")
             return resp.json()
         else:
+            # If LID failed, retry with original chat_id
+            if resolved_id != chat_id:
+                logger.info(f"LID send failed, retrying with original: {chat_id}")
+                resp = requests.post(
+                    f"{WAHA_URL}/api/sendText",
+                    headers=_waha_headers(),
+                    json={
+                        "session": WAHA_SESSION,
+                        "chatId": chat_id,
+                        "text": text,
+                    },
+                    timeout=15,
+                )
+                if resp.status_code == 200:
+                    _log_message(chat_id, text, "outbound")
+                    return resp.json()
             logger.warning(f"WAHA sendText failed {resp.status_code}: {resp.text[:200]}")
             return None
     except Exception as e:
