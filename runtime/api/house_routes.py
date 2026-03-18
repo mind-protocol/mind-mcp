@@ -101,8 +101,8 @@ async def house_state():
                     "created": data.get("created", ""),
                     "updated": data.get("updated", ""),
                 })
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not read neuron file {yf}: {e}")
         result["presence"]["active_sessions"] = max(
             result["presence"]["active_sessions"],
             len([n for n in result["neurons"] if n["status"] in ("busy", "spawning")])
@@ -195,8 +195,8 @@ async def house_state_v2():
                         "purpose": (data.get("purpose") or "")[:80],
                         "created": data.get("created_at", ""),
                     })
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not read neuron file {yf}: {e}")
 
     # --- Hallway: Last 20 journal events (non-noise) ---
     journal_entries = _read_jsonl_tail(STATE_DIR / "journal.jsonl", 100)
@@ -288,8 +288,8 @@ async def house_info():
         citizens = list_available_citizens()
         citizen_count = len(citizens)
         citizen_handles = [c["handle"] for c in citizens]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not list citizens for house info: {e}")
 
     return {
         "home_id": home_id,

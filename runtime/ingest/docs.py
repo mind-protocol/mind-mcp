@@ -371,8 +371,8 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                     {"code_id": code_id, "code_name": Path(ref_path).name, "doc_id": doc_id}
                 )
                 stats["links_created"] += 1
-            except Exception:
-                pass  # Skip on error
+            except Exception as e:
+                logger.warning(f"Failed to create IMPL link {code_id} -> {doc_id}: {e}")
 
     def create_doc_reference_links(doc_id: str, content: str, doc_path: Path):
         """Create REFERENCES links to other docs this doc links to."""
@@ -410,8 +410,8 @@ def ingest_docs_to_graph(target_dir: Path, graph_ops) -> Dict[str, int]:
                     {"src_id": doc_id, "target_id": target_doc_id, "target_name": Path(ref_path).stem}
                 )
                 stats["links_created"] += 1
-            except Exception:
-                pass  # Skip on error
+            except Exception as e:
+                logger.warning(f"Failed to create reference link {doc_id} -> {target_doc_id}: {e}")
 
     # Create root docs space
     ensure_space("space:docs", "docs", "root")

@@ -190,9 +190,9 @@ def get_database_adapter(
 def clear_adapter_cache() -> None:
     """Clear all cached adapter instances."""
     global _instances
-    for adapter in _instances.values():
+    for key, adapter in _instances.items():
         try:
             adapter.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Error closing database adapter {key}: {e}")
     _instances = {}

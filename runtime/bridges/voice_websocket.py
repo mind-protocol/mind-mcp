@@ -380,5 +380,5 @@ async def voice_ws_handler(ws):
             logger.warning(f"Voice WS error: {e}")
         try:
             await ws.close()
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Error closing voice WS: {e}")

@@ -72,8 +72,8 @@ class ApplyOperationsMixin:
             rows = self._query(cypher)
             if rows and rows[0] and rows[0][0]:
                 return rows[0][0]
-        except:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not get node name for {node_id}: {e}")
         return node_id
 
     def _generate_link_embedding(self, from_id: str, link_type: str, to_id: str, notes: str = None) -> List[float]:

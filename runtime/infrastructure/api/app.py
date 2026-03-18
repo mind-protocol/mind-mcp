@@ -155,8 +155,8 @@ def create_app(
         for queue in _debug_sse_clients:
             try:
                 queue.put_nowait(event)
-            except:
-                pass  # Queue full or closed
+            except Exception as e:
+                logger.debug(f"Could not enqueue SSE event: {e}")
 
     add_mutation_listener(_mutation_event_handler)
 

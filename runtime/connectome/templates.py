@@ -4,9 +4,12 @@ Connectome Template Expansion
 Expands {references} in connectome values using collected session data.
 """
 
+import logging
 import re
 from typing import Any, Dict, Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 # Pattern for {reference} or {reference|filter}
@@ -131,8 +134,8 @@ def expand_template(
             elif filter_expr in FILTERS:
                 try:
                     value = FILTERS[filter_expr](value if value is not None else "")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Template filter '{filter_expr}' failed on ref '{ref}': {e}")
 
         return str(value) if value is not None else ""
 

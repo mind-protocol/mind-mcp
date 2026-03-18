@@ -42,8 +42,9 @@ def get_playthrough_graph_name(playthrough_id: str) -> str:
         try:
             data = yaml.safe_load(player_file.read_text())
             return data.get("graph_name", playthrough_id)
-        except Exception:
-            pass
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Could not read player.yaml for {playthrough_id}: {e}")
     # Fallback to playthrough_id as graph name
     return playthrough_id
 

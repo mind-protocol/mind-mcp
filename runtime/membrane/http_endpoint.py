@@ -98,8 +98,8 @@ async def membrane_ping(handle: str):
         result = graph.query("MATCH (n) RETURN count(n)")
         if result.result_set:
             brain_nodes = result.result_set[0][0]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not query brain for {handle}: {e}")
 
     has_keys = (keys_dir / handle / "solana_private_key.json").exists() or \
                (keys_dir / handle / "rsa_private_key.pem").exists()

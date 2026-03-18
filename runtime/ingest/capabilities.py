@@ -259,8 +259,8 @@ def _generate_synthesis(md_file: Path, doc_type: str, cap_name: str) -> str:
             if len(desc) > 200:
                 desc = desc[:197] + "..."
             return f"{doc_type} {cap_name} — {desc}"
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not generate synthesis for {md_file}: {e}")
     return f"{doc_type} {cap_name}"
 
 
@@ -280,8 +280,8 @@ def _extract_procedure_reference(skill_file: Path) -> str:
         match = re.search(r"procedure:\s*(PROCEDURE_\w+)", content)
         if match:
             return match.group(1)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not extract procedure ref from {skill_file}: {e}")
     return ""
 
 
@@ -292,6 +292,6 @@ def _extract_task_references(skill_file: Path) -> List[str]:
         match = re.search(r"used_by:.*?tasks:(.*?)(?:\n\w|\n##|\Z)", content, re.DOTALL)
         if match:
             return re.findall(r"-\s*(TASK_\w+)", match.group(1))
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not extract task refs from {skill_file}: {e}")
     return []

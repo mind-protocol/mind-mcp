@@ -66,8 +66,8 @@ def _get_stored_seed_hash(graph, citizen_id: str) -> str:
         )
         if result.result_set and result.result_set[0][0]:
             return result.result_set[0][0]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not read seed hash for {citizen_id}: {e}")
     return ""
 
 

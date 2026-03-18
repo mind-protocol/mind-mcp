@@ -336,8 +336,8 @@ class SearchQueryMixin:
                         results.append(clean)
                 results.sort(key=lambda x: x.get('similarity', 0), reverse=True)
                 return results[:top_k]
-        except Exception:
-            pass  # Fall through to Python-side similarity
+        except Exception as e:
+            logger.debug(f"KNN search failed, falling back to Python-side similarity: {e}")
 
         # Fallback: Python-side cosine similarity with LIMIT to prevent full scan
         cypher = f"""
@@ -513,8 +513,8 @@ class SearchQueryMixin:
                 for emotion in EMOTION_NAMES:
                     try:
                         emotion_embeddings[emotion] = embed_fn(emotion)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Could not embed emotion '{emotion}': {e}")
 
             for row in rows:
                 source_id = row[0]
@@ -532,7 +532,8 @@ class SearchQueryMixin:
                 if isinstance(target_embedding, str):
                     try:
                         target_embedding = json.loads(target_embedding)
-                    except:
+                    except Exception as e:
+                        logger.debug(f"Could not parse embedding for {target_id}: {e}")
                         continue
 
                 # Compute semantic similarity

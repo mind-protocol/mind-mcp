@@ -447,8 +447,8 @@ def create_playthroughs_router(
                 try:
                     tempo_data = json.loads(tempo_file.read_text())
                     current_tick = tempo_data.get("tick", 0)
-                except:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Could not read tempo state: {e}")
 
             # Create embedding function (use None for now - embeddings are optional)
             def dummy_embed(text: str):

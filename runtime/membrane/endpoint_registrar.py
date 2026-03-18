@@ -47,8 +47,8 @@ def detect_repo_name() -> str:
             # Extract repo name from URL: "...github.com/user/repo.git" -> "repo"
             url = result.stdout.strip()
             return url.split("/")[-1].replace(".git", "")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not detect repo name from git: {e}")
     # Fallback: directory name
     return Path.cwd().name
 
@@ -185,8 +185,8 @@ class EndpointRegistrar:
                 },
             )
             logger.info(f"Deregistered endpoint: {self.endpoint_id}")
-        except Exception:
-            pass  # Best effort on shutdown
+        except Exception as e:
+            logger.warning(f"Endpoint deregistration failed for {self.endpoint_id}: {e}")
 
     def heartbeat(self):
         """Update last_heartbeat timestamp (call periodically)."""
@@ -201,8 +201,8 @@ class EndpointRegistrar:
                     "now": datetime.now(timezone.utc).isoformat(),
                 },
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Heartbeat failed for {self.endpoint_id}: {e}")
 
 
 # Singleton

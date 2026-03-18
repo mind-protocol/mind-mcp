@@ -76,8 +76,8 @@ def _check_dimension_mismatch(current_dim: int) -> None:
             )
     except EmbeddingConfigError:
         raise
-    except Exception:
-        pass  # Silently ignore config read errors
+    except Exception as e:
+        logger.debug(f"Could not read embedding config for dimension check: {e}")
 
 
 def get_embedding_service(provider: str = None, check_config: bool = True) -> EmbeddingProvider:

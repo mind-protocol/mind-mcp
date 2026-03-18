@@ -52,8 +52,8 @@ def _check_know_all_citizens() -> bool:
             with open(config_path) as f:
                 cfg = yaml.safe_load(f) or {}
             return cfg.get("behaviors", {}).get("know_all_citizens", True)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not read know_all_citizens config: {e}")
     return True
 
 

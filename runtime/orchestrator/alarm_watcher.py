@@ -151,8 +151,8 @@ class AlarmWatcher:
             logger.info(f"Alarm dropped for DORMANT @{handle}: {alarm_id}")
             try:
                 _log_audit(handle, "alarm_fire", "alarm", tier, level, GateResult.DENY, "DORMANT citizen")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not log audit for DORMANT alarm drop @{handle}: {e}")
             return
 
         # Determine mode based on tier

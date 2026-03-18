@@ -129,8 +129,8 @@ def escalate(error_msg: Optional[str] = None, notify_fn=None):
                 _state["last_degradation_notif"] = time.time()
                 try:
                     notify_fn(f"Running in degraded mode (level {_state['level']}). Responses may be slower.")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Degradation notification failed: {e}")
 
 
 def attempt_recovery(notify_fn=None):
@@ -156,8 +156,8 @@ def attempt_recovery(notify_fn=None):
         if _state["level"] == 0 and notify_fn:
             try:
                 notify_fn("Back to normal operation.")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Recovery notification failed: {e}")
 
 
 def check_deadlock(notify_fn=None):
@@ -190,8 +190,8 @@ def check_deadlock(notify_fn=None):
             if notify_fn:
                 try:
                     notify_fn("Back to normal (idle auto-recovery).")
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.warning(f"Idle recovery notification failed: {e}")
         return
 
     # Path 1: minimal deadlock recovery
@@ -223,8 +223,8 @@ def check_deadlock(notify_fn=None):
     if notify_fn:
         try:
             notify_fn(f"Auto-recovered from MINIMAL deadlock ({stuck_minutes:.0f}min). Reset to THROTTLED.")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Deadlock recovery notification failed: {e}")
 
 
 def is_in_backoff() -> bool:

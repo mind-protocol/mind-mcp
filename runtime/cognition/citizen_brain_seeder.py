@@ -439,6 +439,38 @@ def generate_citizen_brain(
     drive_adjustments: dict[str, dict] = {}
 
     if identity:
+        # SID propagation — inject SID into the brain's actor node
+        # The SID lives in L4 (mind_protocol graph) and must be mirrored in L1
+        sid = identity.get("sid") or identity.get("spawning", {}).get("sid")
+        if sid:
+            overlay_nodes.append({
+                "id": f"identity:sid:{citizen_handle}",
+                "type": "concept",
+                "subtype": "identity",
+                "name": f"SID: {sid}",
+                "energy": 0.2,
+                "weight": 3.0,
+                "stability": 0.95,
+            })
+            logger.debug(f"SID {sid[:8]}... propagated to brain for {citizen_handle}")
+
+        # Org membership propagation — so the brain knows its orgs
+        orgs = identity.get("orgs", [])
+        if not orgs:
+            org = identity.get("organization") or identity.get("org_membership")
+            if org:
+                orgs = [org]
+        for org_name in orgs:
+            org_id = org_name.lower().replace(" ", "-") if isinstance(org_name, str) else str(org_name)
+            overlay_nodes.append({
+                "id": f"org:{org_id}",
+                "type": "org_membership",
+                "name": org_name if isinstance(org_name, str) else str(org_name),
+                "node_type": "thing",
+                "energy": 0.3,
+                "weight": 2.0,
+            })
+
         # Role-specific processes
         role = identity.get("role", "")
         if role:

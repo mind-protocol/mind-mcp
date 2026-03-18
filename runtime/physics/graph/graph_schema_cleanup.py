@@ -103,8 +103,8 @@ def cleanup_invalid_nodes(
     try:
         result = gq._query("MATCH (n) RETURN count(n)")
         report.nodes_checked = result[0][0] if result else 0
-    except:
-        pass
+    except Exception as e:
+        logger.warning(f"Could not count total nodes: {e}")
 
     if dry_run:
         logger.info(f"Dry run: would delete {report.nodes_invalid} invalid nodes")

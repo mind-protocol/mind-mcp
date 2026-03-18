@@ -636,8 +636,8 @@ def process_update(update: dict) -> bool:
                 if "text" in mime or file_name.endswith((".txt", ".md", ".py", ".json", ".csv")):
                     try:
                         doc_text = doc_path.read_text(errors="replace")[:5000]
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.warning(f"Failed to read document text {file_name}: {e}")
                 try:
                     doc_path.unlink()
                 except OSError:

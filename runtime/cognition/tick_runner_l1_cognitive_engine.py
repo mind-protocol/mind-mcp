@@ -14,7 +14,10 @@ independently.
 
 from __future__ import annotations
 
+import logging
 import time
+
+logger = logging.getLogger(__name__)
 from dataclasses import dataclass, field
 from typing import Optional
 
@@ -333,8 +336,8 @@ class L1CognitiveTickRunner:
             try:
                 result = inject_energy(self.state, stimulus, self.tick_count)
                 return getattr(result, "energy_injected", stimulus.energy_budget)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Law 1 inject_energy failed, using fallback: {e}")
 
         # Minimal kernel fallback: distribute budget to targeted nodes.
         energy_injected = 0.0
@@ -403,8 +406,8 @@ class L1CognitiveTickRunner:
             try:
                 reinforce_coactivation(self.state)
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Law 5 reinforce_coactivation failed, using fallback: {e}")
 
         # Minimal inline Hebb: strengthen links between WM-active nodes.
         wm_set = set(self.state.wm.node_ids)
@@ -433,8 +436,8 @@ class L1CognitiveTickRunner:
             try:
                 inhibit(self.state)
                 return
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Law 9 inhibit failed, using fallback: {e}")
 
         # Minimal inline: reduce energy of the weaker side of conflicts_with links.
         wm_set = set(self.state.wm.node_ids)
@@ -483,8 +486,8 @@ class L1CognitiveTickRunner:
             try:
                 result = forget(self.state, self.tick_count)
                 return getattr(result, "links_dissolved", 0)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Law 7 forget failed, using fallback: {e}")
 
         # Minimal inline forgetting kernel.
         links_dissolved = 0
@@ -982,7 +985,7 @@ class L1CognitiveTickRunner:
                 if cryst_result.crystallized:
                     crystallizations = 1
             except Exception as e:
-                pass  # crystallization failure is non-fatal
+                logger.debug(f"Law 10 crystallization non-fatal error: {e}")
 
         # 9. LIMBIC (drives, boredom, frustration, desire, impulse — Laws 13-17)
         self._step_limbic(stimulus)

@@ -105,8 +105,8 @@ def _detect_json_export_format(path: Path) -> Optional[str]:
         if '"messages"' in start or '"conversations"' in start:
             return "auto"
 
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not detect JSON export format for {path}: {e}")
 
     return None
 

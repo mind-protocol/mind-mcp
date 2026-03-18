@@ -283,8 +283,8 @@ def _build_profile_section(profile: dict, handle: str) -> str:
                         other_org = other.get("identity", {}).get("organization")
                         if other_org == my_org:
                             colleagues.append(d.name)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Could not scan colleagues for @{handle}: {e}")
 
     rel_lines = []
     if partner:

@@ -128,8 +128,8 @@ def _is_under_pressure() -> bool:
         if queue_file.exists():
             depth = sum(1 for _ in open(queue_file, "r"))
             return depth > 50
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not check queue pressure: {e}")
     return False
 
 

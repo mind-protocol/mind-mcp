@@ -18,7 +18,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional, Callable
 
-from runtime.orchestrator.account_balancer import init as init_accounts, status_line as accounts_status
+from runtime.orchestrator.account_balancer import (
+    init as init_accounts,
+    status_line as accounts_status,
+    proactive_refresh as refresh_accounts,
+)
 from runtime.orchestrator.claude_invoker import invoke_claude, invoke_degraded
 from runtime.orchestrator.compute_budget import ComputeBudget
 from runtime.orchestrator.message_queue import pop_queue_item, enqueue, queue_size
@@ -51,6 +55,7 @@ NEURON_CLEANUP_INTERVAL = 60  # seconds between neuron cleanups
 NEURON_RELAUNCH_INTERVAL = 30  # seconds between relaunch checks
 HEALTH_CHECK_INTERVAL = 10  # seconds between degradation checks
 PHYSICS_TICK_INTERVAL = 60  # seconds — adaptive per citizen arousal state (see ALGORITHM_L1_Wiring)
+ACCOUNT_REFRESH_INTERVAL = 1800  # seconds — proactive token refresh (30 min, actual gating in balancer)
 
 # Suppress infrastructure errors from reaching users
 SUPPRESS_PATTERNS = [
@@ -101,6 +106,7 @@ class Dispatcher:
         self._last_health_check = 0.0
         self._last_physics_tick = 0.0
         self._last_first_boot_check = 0.0
+        self._last_account_refresh = 0.0
 
         # L1 Cognitive Engine per-citizen instances
         self._citizen_engines: dict[str, L1CognitiveTickRunner] = {} if L1_AVAILABLE else {}
@@ -173,6 +179,14 @@ class Dispatcher:
         if now - self._last_health_check > HEALTH_CHECK_INTERVAL:
             degradation.check_deadlock(notify_fn=self.notify_callback)
             self._last_health_check = now
+
+        # Proactive token refresh — keeps accounts alive before they expire
+        if now - self._last_account_refresh > ACCOUNT_REFRESH_INTERVAL:
+            try:
+                refresh_accounts(notify_fn=self.notify_callback)
+            except Exception as e:
+                logger.debug(f"Account refresh check: {e}")
+            self._last_account_refresh = now
 
         # First-boot registration for newly spawned citizens (every 30s)
         if now - self._last_first_boot_check > 30.0:
@@ -329,8 +343,8 @@ class Dispatcher:
                     r = _l3.query(cypher, params)
                     return r.result_set if r.result_set else []
                 state._l3_query_fn = _query_l3
-            except Exception:
-                pass  # exteroception degrades gracefully without L3
+            except Exception as e:
+                logger.debug(f"L3 graph not available for exteroception: {e}")
 
             runner = L1CognitiveTickRunner(state)
             router = StimulusRouter(citizen_handle)

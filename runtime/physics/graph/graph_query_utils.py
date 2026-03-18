@@ -91,8 +91,8 @@ def extract_node_props(node, system_fields: set = None) -> Optional[Dict[str, An
             if key in clean and isinstance(clean[key], str):
                 try:
                     clean[key] = json.loads(clean[key])
-                except:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Could not parse JSON field '{key}': {e}")
 
         return clean
 

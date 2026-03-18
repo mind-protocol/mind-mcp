@@ -221,8 +221,8 @@ class ProcedureValidator:
             if results:
                 row = results[0]
                 return row['node_type'] == parts[0] and row['type'] == parts[1]
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Node existence check failed for {root_id}: {e}")
 
         return False
 
@@ -358,8 +358,8 @@ class ProcedureValidator:
                     validation = self.validate_cluster(cluster_type, node_id)
                     if not validation.valid:
                         incomplete.append(validation)
-            except:
-                pass
+            except Exception as e:
+                logger.warning(f"Incomplete cluster search failed for {cluster_type}: {e}")
 
         return incomplete
 
@@ -381,8 +381,8 @@ def validate_cluster_command(
         try:
             from runtime.physics.graph.graph_ops import GraphOps
             graph_ops = GraphOps(graph_name=graph_name)
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not connect to graph '{graph_name}': {e}")
 
     validator = ProcedureValidator(graph_ops)
     return validator.validate_cluster(cluster_type, root_node_id)

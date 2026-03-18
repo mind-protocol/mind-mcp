@@ -229,8 +229,8 @@ def _list_org_citizens(org_id: str) -> list[dict]:
                             "name": c.get("name", handle),
                             "status": "data",
                         })
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Could not read citizens data from {data_path}: {e}")
             break
 
     return citizens
@@ -257,8 +257,8 @@ def _ping_citizen(handle: str) -> bool:
                     return True
             except Exception:
                 continue
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not ping citizen {handle}: {e}")
     return False
 
 
@@ -283,8 +283,8 @@ def _has_brain(handle: str) -> bool:
                     return True
             except Exception:
                 continue
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not check brain for {handle}: {e}")
     return False
 
 
@@ -310,6 +310,6 @@ def _has_keys(handle: str) -> bool:
         )
         if result.result_set and result.result_set[0][0]:
             return True
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Could not check L4 keys for {handle}: {e}")
     return False

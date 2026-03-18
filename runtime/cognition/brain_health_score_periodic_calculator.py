@@ -25,11 +25,14 @@ Usage:
 from __future__ import annotations
 
 import json
+import logging
 import math
 import time
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 _PROJECT_ROOT = Path(__file__).parent.parent.parent
 _CITIZENS_DIR = _PROJECT_ROOT / "citizens"
@@ -219,8 +222,8 @@ def compute_all_scores() -> dict:
             ctx = bridge.get_prompt_context(handle)
             if ctx:
                 live_bridge_data[handle] = ctx
-    except Exception:
-        pass  # Bridge not available, use disk data
+    except Exception as e:
+        logger.debug(f"L1 bridge not available for live data, using disk: {e}")
 
     for citizen_dir in sorted(_CITIZENS_DIR.iterdir()):
         if not citizen_dir.is_dir():

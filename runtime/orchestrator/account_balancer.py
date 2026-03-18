@@ -7,23 +7,30 @@ Account dirs: ~/.claude-accounts/{a,b,...}/.claude/.credentials.json
 Each dir is a minimal HOME with just the .claude/ credentials.
 Shared config (settings.json) is symlinked from the real home.
 
-Round-robins Claude Code calls across multiple Max accounts.
+Includes proactive token refresh: when a token expires within
+REFRESH_THRESHOLD_S, runs `claude auth status` to trigger OAuth
+refresh before the token dies. Alerts when manual re-login needed.
 """
 
 import json
 import os
+import subprocess
 import time
 import threading
 import logging
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Callable
 
 logger = logging.getLogger("orchestrator.accounts")
 
 ACCOUNTS_DIR = Path.home() / ".claude-accounts"
+REFRESH_THRESHOLD_S = 7200  # 2 hours — attempt refresh when less than this remains
+REFRESH_CHECK_INTERVAL_S = 1800  # 30 minutes between refresh sweeps
 _lock = threading.Lock()
 _counter = 0
 _account_slots: list[dict] = []
+_last_refresh_check = 0.0
+_alerted_accounts: set[str] = set()  # accounts we already alerted about (avoid spam)
 
 
 def _discover_accounts() -> list[dict]:
@@ -249,8 +256,111 @@ def refresh_credentials(account_id: str):
                     try:
                         data = json.loads(creds_path.read_text())
                         oauth = data.get("claudeAiOauth", {})
-                        a["expired"] = oauth.get("expiresAt", 0) < time.time() * 1000
+                        exp_ms = oauth.get("expiresAt", 0)
+                        a["_expires_at_ms"] = exp_ms
+                        a["expired"] = exp_ms < time.time() * 1000
                         a["tier"] = oauth.get("rateLimitTier", "unknown")
                     except (json.JSONDecodeError, OSError):
                         pass
                 break
+
+
+def _reread_expiry(account: dict) -> int:
+    """Re-read token expiry from disk (catches manual re-logins)."""
+    try:
+        data = json.loads(Path(account["creds_path"]).read_text())
+        exp_ms = data.get("claudeAiOauth", {}).get("expiresAt", 0)
+        with _lock:
+            account["_expires_at_ms"] = exp_ms
+            account["expired"] = exp_ms < time.time() * 1000
+        return exp_ms
+    except (json.JSONDecodeError, OSError):
+        return account.get("_expires_at_ms", 0)
+
+
+def proactive_refresh(notify_fn: Optional[Callable] = None):
+    """Monitor all accounts and alert when tokens need manual re-login.
+
+    Claude Code refreshes its own OAuth tokens internally during API calls.
+    Our job is to:
+    1. Detect when a token is expiring or expired
+    2. Re-read credentials from disk (catches manual re-logins)
+    3. Alert Nicolas when manual `claude auth login` is needed
+    4. Auto-clear alerts when a re-login is detected
+
+    Call periodically from the dispatcher tick loop.
+    """
+    global _last_refresh_check
+
+    now = time.time()
+    if now - _last_refresh_check < REFRESH_CHECK_INTERVAL_S:
+        return
+    _last_refresh_check = now
+
+    if not _account_slots:
+        init()
+    if not _account_slots:
+        return
+
+    now_ms = int(now * 1000)
+    threshold_ms = int((now + REFRESH_THRESHOLD_S) * 1000)
+    healthy = 0
+
+    for account in _account_slots:
+        account_id = account["id"]
+
+        # Re-read from disk — catches manual re-logins
+        exp_ms = _reread_expiry(account)
+
+        # Healthy — token valid beyond threshold
+        if exp_ms > threshold_ms:
+            if account_id in _alerted_accounts:
+                logger.info(f"Account {account_id} recovered (re-login detected)")
+                _alerted_accounts.discard(account_id)
+            healthy += 1
+            continue
+
+        # Expiring soon — warn but don't alert yet (Claude auto-refreshes during use)
+        if exp_ms > now_ms:
+            remaining_min = (exp_ms - now_ms) / 60000
+            # Only log if under 30 min — the token may auto-refresh during normal use
+            if remaining_min < 30:
+                logger.warning(f"Account {account_id} expires in {remaining_min:.0f}min")
+            continue
+
+        # Expired — alert once
+        if account_id not in _alerted_accounts:
+            _alerted_accounts.add(account_id)
+            msg = (
+                f"Claude account '{account_id}' token expired. "
+                f"Re-login: HOME={account['home']} claude auth login"
+            )
+            logger.error(msg)
+            if notify_fn:
+                try:
+                    notify_fn(f"[account-balancer] {msg}")
+                except Exception as e:
+                    logger.warning(f"Failed to send alert: {e}")
+
+    logger.info(f"Account health: {healthy}/{len(_account_slots)} healthy ({accounts_healthy_line()})")
+
+
+def accounts_healthy_line() -> str:
+    """Short health summary for logs."""
+    if not _account_slots:
+        return "no accounts"
+    parts = []
+    now_ms = int(time.time() * 1000)
+    for a in _account_slots:
+        exp = a.get("_expires_at_ms", 0)
+        if exp > now_ms:
+            remaining_h = (exp - now_ms) / 3600000
+            parts.append(f"{a['id']}:{remaining_h:.1f}h")
+        else:
+            parts.append(f"{a['id']}:EXPIRED")
+    return " ".join(parts)
+
+
+def clear_alert(account_id: str):
+    """Clear the alert flag for an account (after manual re-login)."""
+    _alerted_accounts.discard(account_id)

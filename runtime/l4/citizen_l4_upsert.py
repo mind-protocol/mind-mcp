@@ -403,8 +403,8 @@ def _manage_partner_task(graph, citizen_id, handle, human_partner, now_s):
         # Has partner — delete task if it exists
         try:
             graph.query("MATCH (t {id: $tid}) DETACH DELETE t", {"tid": task_id})
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not delete partner task for {handle}: {e}")
         return
 
     # Check if task already exists
@@ -477,8 +477,8 @@ def _manage_registration_task(
         try:
             graph.query("MATCH (t {id: $tid}) DETACH DELETE t", {"tid": task_id})
             logger.debug(f"Registration task resolved for @{handle}")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not delete registration task for {handle}: {e}")
         return
 
     content = (
@@ -613,8 +613,8 @@ def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
                     wallet_address = base58.b58encode(pk_bytes).decode()
                 except ImportError:
                     wallet_address = base64.b32encode(pk_bytes).decode().rstrip("=")[:44]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not read wallet for {handle}: {e}")
     else:
         # Generate new wallet
         try:
@@ -692,8 +692,8 @@ def _ensure_citizen_keys(handle: str, keys_base_dir: str = "") -> tuple:
             ).decode()
             rsa_pub_path.write_text(pub_pem)
             rsa_public_pem = pub_pem
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Could not derive RSA public key for {handle}: {e}")
 
     # Airdrop initial $MIND allocation if wallet was just created
     if wallet_address and not wallet_path_existed:
