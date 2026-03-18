@@ -695,7 +695,19 @@ def init_protocol(target_dir: Path, force: bool = False, clear_graph: bool = Fal
     agents_content = _build_agents_addition(templates_path)
     _update_or_add_section(agents_md, agents_content, "# mind")
 
-    # ── 3. Copy skills into .claude/skills ────────────────────────────
+    # ── 3. Create business/SYNC_Project.md (default call file) ─────────
+    business_dir = target_dir / "business"
+    business_dir.mkdir(exist_ok=True)
+    sync_project = business_dir / "SYNC_Project.md"
+    if not sync_project.exists():
+        sync_project.write_text(
+            f"# {target_dir.name} — Project State\n\n"
+            f"```\nLAST_UPDATED: —\nSTATUS: initialized\n```\n\n"
+            f"---\n\n## Call Log\n\n"
+        )
+        print(f"✓ Created: {sync_project}")
+
+    # ── 4. Copy skills into .claude/skills ────────────────────────────
     mind_mcp_root = Path(__file__).parent.parent
     claude_skills_src = mind_mcp_root / ".claude" / "skills"
     if claude_skills_src.exists():

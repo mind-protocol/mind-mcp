@@ -55,8 +55,21 @@ def handle_call_file_watcher(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
     path_str = args.get("path", "").strip()
     message = args.get("message", "").strip()
 
+    # Default: business/SYNC_Project.md in the repo root
     if not path_str:
-        return _err("'path' is required.")
+        cwd = Path.cwd()
+        # Walk up to find business/SYNC_Project.md
+        search = cwd
+        for _ in range(10):
+            candidate = search / "business" / "SYNC_Project.md"
+            if candidate.exists():
+                path_str = str(candidate)
+                break
+            if search.parent == search:
+                break
+            search = search.parent
+        if not path_str:
+            return _err("No path given and business/SYNC_Project.md not found.")
 
     path = Path(path_str)
     if not path.is_absolute():
