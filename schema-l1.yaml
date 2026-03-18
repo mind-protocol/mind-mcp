@@ -276,6 +276,36 @@ NodeBase:
       type: dict
       nullable: true
       description: "Per-node overrides on the style: color tint, scale adjustments, ornament toggles. Allows customization within a style without creating a new asset. Example: {tint: '#ff9900', ornament: 'lens', glow_color: '#3b82f6'}."
+
+    # === Custom Senses (v2.3) ===
+    # Custom perception channels are Thing nodes in L3, linked via →perceives_with→.
+    # Not stored on NodeBase — stored as graph links. Documented here for schema reference.
+    #
+    # Thing(type=sense):
+    #   content: YAML filter definition (declarative) or description
+    #   media.code.uri: Python script URI (programmatic) — optional
+    #   →created_by→ Actor (author/credit)
+    #
+    # Actor →perceives_with→ Thing(type=sense)
+    #   = "I use this sense channel"
+    #
+    # The exteroception engine scans the citizen's perceives_with links
+    # and executes each sense as an additional channel alongside the
+    # built-in channels (interoception, proprioception, exteroception).
+    #
+    # Sense YAML format:
+    #   name: string                    # human-readable
+    #   source: narrative|moment|actor|thing|space  # what node type to scan
+    #   scan: spaces_i_am_in|all|specific_space_id  # where to scan
+    #   filter:                         # conditions (all must match)
+    #     {field}: "> N" | "< N" | "contains X"
+    #   keywords: [string]              # synthesis keyword match
+    #   stimulus:
+    #     template: "Alert: {node.name}" # natural language with {node.*} interpolation
+    #     energy: float                 # stimulus energy budget
+    #     source: string                # source tag for the stimulus
+    #   refractory_ticks: int           # min ticks between firings
+    #   priority: int                   # channel priority (higher = fires first)
     zone_id:
       type: string
       nullable: true
