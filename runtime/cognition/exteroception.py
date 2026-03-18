@@ -83,6 +83,10 @@ class ExteroceptionEngine:
         self._awareness_text: str = ""
         self._awareness_tick: int = -999
 
+        # Custom senses (Thing nodes linked via →perceives_with→)
+        self._custom_senses: list[dict] = []  # parsed YAML definitions
+        self._custom_senses_loaded: bool = False
+
         # Perceived environment (refreshed periodically)
         self._my_spaces: list[PerceivedNode] = []
         self._nearby_actors: list[PerceivedNode] = []
@@ -220,6 +224,12 @@ class ExteroceptionEngine:
         except Exception as e:
             logger.debug(f"Exteroception scan failed: {e}")
 
+        # ── Custom senses (Thing nodes linked via →perceives_with→) ──
+        if not self._custom_senses_loaded:
+            self._load_custom_senses(citizen_id, query_fn)
+        custom_candidates = self._evaluate_custom_senses(citizen_id, tick, query_fn)
+        candidates.extend(custom_candidates)
+
         # ── Fire candidates through channel gating ──
         candidates.sort(key=lambda c: c[0], reverse=True)
         for priority, channel_name, content, energy, extra in candidates:
@@ -336,6 +346,135 @@ class ExteroceptionEngine:
         )
 
     # ------------------------------------------------------------------
+    # Custom senses (Thing nodes linked via →perceives_with→)
+    # ------------------------------------------------------------------
+
+    def _load_custom_senses(self, citizen_id: str, query_fn: Callable):
+        """Load sense definitions from the citizen's →perceives_with→ links."""
+        rows = _safe_query(query_fn,
+            "MATCH (a:Actor {id: $cid})-[:LINK]->(s:Thing) "
+            "WHERE s.type = 'sense' "
+            "RETURN s.id, s.name, s.content "
+            "LIMIT 10",
+            {"cid": citizen_id},
+        )
+
+        self._custom_senses = []
+        for row in rows:
+            sense_id, name, content = row[0], row[1], row[2]
+            if not content:
+                continue
+            try:
+                import yaml
+                definition = yaml.safe_load(content)
+                if isinstance(definition, dict):
+                    definition["_sense_id"] = sense_id
+                    definition["_name"] = name or sense_id
+
+                    # Register as a channel if not already
+                    ch_name = f"custom_{sense_id}"
+                    if ch_name not in self.channels:
+                        self.channels[ch_name] = SensoryChannel(
+                            name=ch_name,
+                            priority=definition.get("priority", 50),
+                            refractory_ticks=definition.get("refractory_ticks", 20),
+                        )
+
+                    self._custom_senses.append(definition)
+            except Exception as e:
+                logger.debug(f"Failed to parse sense {sense_id}: {e}")
+
+        self._custom_senses_loaded = True
+        if self._custom_senses:
+            logger.debug(f"Loaded {len(self._custom_senses)} custom senses for {citizen_id}")
+
+    def _evaluate_custom_senses(
+        self, citizen_id: str, tick: int, query_fn: Callable,
+    ) -> list[tuple]:
+        """Evaluate all custom sense filters against L3. Returns candidates."""
+        if not self._custom_senses:
+            return []
+
+        candidates = []
+
+        for sense in self._custom_senses:
+            ch_name = f"custom_{sense['_sense_id']}"
+            ch = self.channels.get(ch_name)
+            if not ch or not ch.can_fire(tick):
+                continue
+
+            source_type = sense.get("source", "narrative").capitalize()
+            scan = sense.get("scan", "spaces_i_am_in")
+            filters = sense.get("filter", {})
+            keywords = sense.get("keywords", [])
+            stimulus_cfg = sense.get("stimulus", {})
+
+            # Build query based on scan scope
+            if scan == "spaces_i_am_in":
+                cypher = (
+                    f"MATCH (a:Actor {{id: $cid}})-[:LINK]->(s:Space)<-[:LINK]-(n:{source_type}) "
+                    f"RETURN n.id, n.name, n.synthesis, n.energy, n.weight, n.friction "
+                    f"ORDER BY n.energy DESC LIMIT 20"
+                )
+                params = {"cid": citizen_id}
+            elif scan == "all":
+                cypher = (
+                    f"MATCH (n:{source_type}) "
+                    f"RETURN n.id, n.name, n.synthesis, n.energy, n.weight, n.friction "
+                    f"ORDER BY n.energy DESC LIMIT 20"
+                )
+                params = {}
+            else:
+                # Specific space
+                cypher = (
+                    f"MATCH (n:{source_type})-[:LINK]->(s:Space {{id: $space}}) "
+                    f"RETURN n.id, n.name, n.synthesis, n.energy, n.weight, n.friction "
+                    f"ORDER BY n.energy DESC LIMIT 20"
+                )
+                params = {"space": scan}
+
+            rows = _safe_query(query_fn, cypher, params)
+
+            for row in rows:
+                n_id, n_name, n_synth, n_energy, n_weight, n_friction = (
+                    row[0], row[1] or "", row[2] or "", float(row[3] or 0),
+                    float(row[4] or 0), float(row[5] or 0),
+                )
+
+                # Apply filters
+                node_data = {
+                    "energy": n_energy, "weight": n_weight, "friction": n_friction,
+                    "name": n_name, "synthesis": n_synth,
+                }
+                if not _match_filters(node_data, filters):
+                    continue
+
+                # Keyword match
+                if keywords:
+                    text = (n_synth + " " + n_name).lower()
+                    if not any(k.lower() in text for k in keywords):
+                        continue
+
+                # Build stimulus content from template
+                template = stimulus_cfg.get("template", "{node.name}")
+                content = template.replace("{node.name}", n_name).replace(
+                    "{node.synthesis}", n_synth[:60]
+                )
+                energy = stimulus_cfg.get("energy", 0.3)
+                source = stimulus_cfg.get("source", sense["_name"])
+
+                candidates.append((
+                    sense.get("priority", 50),
+                    ch_name,
+                    content,
+                    energy,
+                    {"source_override": source},
+                ))
+                break  # one match per sense per tick
+
+        return candidates
+
+    # ------------------------------------------------------------------
     # Awareness text (system prompt layer)
     # ------------------------------------------------------------------
 
@@ -405,3 +544,36 @@ def _safe_query(query_fn, cypher, params):
         return result if result else []
     except Exception:
         return []
+
+
+def _match_filters(node_data: dict, filters: dict) -> bool:
+    """Evaluate YAML filter conditions against node data.
+
+    Supports: "> N", "< N", ">= N", "<= N", "contains X"
+    """
+    for field, condition in filters.items():
+        value = node_data.get(field)
+        if value is None:
+            return False
+
+        cond = str(condition).strip()
+        try:
+            if cond.startswith(">="):
+                if float(value) < float(cond[2:].strip()):
+                    return False
+            elif cond.startswith("<="):
+                if float(value) > float(cond[2:].strip()):
+                    return False
+            elif cond.startswith(">"):
+                if float(value) <= float(cond[1:].strip()):
+                    return False
+            elif cond.startswith("<"):
+                if float(value) >= float(cond[1:].strip()):
+                    return False
+            elif cond.startswith("contains "):
+                if cond[9:].lower() not in str(value).lower():
+                    return False
+        except (ValueError, TypeError):
+            return False
+
+    return True
