@@ -252,6 +252,11 @@ NodeBase:
       length: 3
       nullable: true
       description: "Current movement vector [vx, vy, vz] in world units/tick. For Actors: movement direction and speed. Used by proprioception (accelerometer sense) and by renderers for motion trails. Null when stationary."
+    mass:
+      type: float
+      nullable: true
+      default: 1.0
+      description: "Gravitational mass in 3D space. Determines how strongly this node attracts nearby nodes. Derived from weight + link_count: mass = weight × (1 + 0.1 × link_count). High-mass nodes pull neighbors toward them, creating natural clustering. Spaces and high-weight Actors have the highest mass. Recomputed by the spatial mapper."
     zone_id:
       type: string
       nullable: true
