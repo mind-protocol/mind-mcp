@@ -236,9 +236,58 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.warning(f"Alarm watcher failed to start: {e}")
 
+    # Phase 5: Start WAHA watchdog (bridge health monitor)
+    _waha_watchdog_task = None
+    if _whatsapp_bridge:
+        try:
+            import asyncio
+            from scripts.waha_watchdog import check_container_running, check_api_healthy, restart_container, _load_state, _save_state, notify_discord
+            from datetime import datetime as _dt
+
+            async def _waha_watchdog_loop():
+                """Background task: check WAHA health every 5 min, auto-restart if down."""
+                while True:
+                    await asyncio.sleep(300)  # 5 minutes
+                    try:
+                        state = _load_state()
+                        state["last_check"] = _dt.now().isoformat()
+
+                        if not check_container_running():
+                            logger.warning("WAHA watchdog: container DOWN, restarting...")
+                            state["restart_count"] = state.get("restart_count", 0) + 1
+                            if restart_container():
+                                api = check_api_healthy()
+                                if api["ok"] and api["status"] == "WORKING":
+                                    state["status"] = "recovered"
+                                    notify_discord(f"WAHA auto-recovered (restart #{state['restart_count']})")
+                                else:
+                                    state["status"] = "needs_qr"
+                                    notify_discord(f"WAHA restarted but needs QR scan. @dev check.")
+                            else:
+                                state["status"] = "restart_failed"
+                                notify_discord("WAHA restart FAILED. WhatsApp DOWN. @dev urgent.")
+                        else:
+                            api = check_api_healthy()
+                            if api["ok"] and api["status"] == "WORKING":
+                                state["status"] = "healthy"
+                            elif api.get("status") == "SCAN_QR_CODE":
+                                state["status"] = "needs_qr"
+                                notify_discord("WAHA needs QR scan. WhatsApp disconnected.")
+
+                        _save_state(state)
+                    except Exception as e:
+                        logger.debug(f"WAHA watchdog tick error: {e}")
+
+            _waha_watchdog_task = asyncio.create_task(_waha_watchdog_loop())
+            logger.info("WAHA watchdog started (5min interval, in event loop)")
+        except Exception as e:
+            logger.warning(f"WAHA watchdog failed to start: {e}")
+
     yield
 
     logger.info("Shutting down Mind Home Server")
+    if _waha_watchdog_task:
+        _waha_watchdog_task.cancel()
     if _alarm_watcher:
         _alarm_watcher.stop()
     if _telegram_bridge:
