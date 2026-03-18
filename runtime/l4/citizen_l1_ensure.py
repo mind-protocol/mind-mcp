@@ -236,12 +236,6 @@ def upsert_l1(handle, citizen_data=None, citizens_dir=None):
     return action
 
 
-# Keep old name for backwards compat
-def seed_l1(handle, citizen_data=None, citizens_dir=None):
-    """Legacy wrapper — calls upsert_l1."""
-    return upsert_l1(handle, citizen_data, citizens_dir) != "error"
-
-
 def ensure_keypair(handle):
     """Generate RSA keypair for citizen if not exists. Returns public key PEM."""
     keys_dir = KEYS_BASE / handle

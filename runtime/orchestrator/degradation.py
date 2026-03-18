@@ -7,16 +7,114 @@ Levels:
   3 = minimal     (MAX_PARALLEL → 1, OpenAI fallback)
 
 4-level resilience system with auto-recovery and degradation management.
+Notifications are sent via Telegram when degradation level changes.
 """
 
+import os
 import time
 import logging
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Callable
 
 from runtime.orchestrator.account_balancer import all_accounts_exhausted
 
 logger = logging.getLogger("orchestrator.degradation")
+
+# ── Default Notification Function ──────────────────────────────────────────
+# Registered at boot by the dispatcher. Used as fallback when callers
+# (e.g. claude_invoker) don't pass notify_fn explicitly.
+
+_default_notify_fn: Optional[Callable] = None
+
+
+def set_notify_fn(fn: Callable):
+    """Register a default notification function for degradation alerts.
+
+    Called once at dispatcher startup. All escalate/recovery/deadlock calls
+    will use this function when no explicit notify_fn is passed.
+    """
+    global _default_notify_fn
+    _default_notify_fn = fn
+    logger.info("Degradation notify_fn registered")
+
+
+def _resolve_notify_fn(explicit: Optional[Callable] = None) -> Optional[Callable]:
+    """Return the explicit notify_fn if provided, else the registered default."""
+    return explicit if explicit is not None else _default_notify_fn
+
+
+def build_telegram_notify_fn() -> Optional[Callable]:
+    """Build a notify function that sends Telegram alerts.
+
+    Uses TELEGRAM_ALERT_CHAT_ID or NICOLAS_CHAT_ID env vars for the target.
+    Returns None if no bot token or chat ID is configured.
+    Gracefully handles Telegram being unavailable — logs and moves on.
+    """
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    alert_chat_id = (
+        os.environ.get("TELEGRAM_ALERT_CHAT_ID")
+        or os.environ.get("TELEGRAM_NOTIFICATIONS_CHAT_ID")
+        or os.environ.get("NICOLAS_CHAT_ID", "")
+    )
+
+    if not bot_token:
+        logger.warning("TELEGRAM_BOT_TOKEN not set — degradation alerts disabled")
+        return None
+
+    if not alert_chat_id:
+        logger.warning(
+            "No alert chat ID configured (set TELEGRAM_ALERT_CHAT_ID or NICOLAS_CHAT_ID) "
+            "— degradation alerts disabled"
+        )
+        return None
+
+    def _notify(message: str):
+        """Send a degradation alert to Telegram. Never raises."""
+        import requests as _requests
+
+        level_names = {0: "normal", 1: "throttled", 2: "degraded", 3: "minimal"}
+        level = _state.get("level", 0)
+        level_name = level_names.get(level, "unknown")
+        error_count = _state.get("error_count", 0)
+        last_error = _state.get("last_error", "N/A")
+
+        # Build rich alert message
+        severity = "INFO" if level <= 1 else ("WARNING" if level == 2 else "CRITICAL")
+        alert_text = (
+            f"[{severity}] Degradation Alert\n"
+            f"Level: {level} ({level_name})\n"
+            f"Errors: {error_count}\n"
+            f"Last error: {last_error or 'N/A'}\n"
+            f"Max parallel: {get_effective_max_parallel()}\n\n"
+            f"{message}"
+        )
+
+        # Truncate to Telegram limit
+        if len(alert_text) > 4000:
+            alert_text = alert_text[:3997] + "..."
+
+        logger.info(f"Sending degradation alert to Telegram chat {alert_chat_id}: {message}")
+
+        try:
+            url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+            resp = _requests.post(
+                url,
+                json={"chat_id": alert_chat_id, "text": alert_text},
+                timeout=10,
+            )
+            if resp.ok:
+                logger.info("Degradation alert sent successfully")
+            else:
+                logger.warning(
+                    f"Degradation alert failed (HTTP {resp.status_code}): "
+                    f"{resp.text[:200]}"
+                )
+        except Exception as e:
+            # Graceful degradation of the degradation system itself
+            logger.warning(f"Degradation alert send failed (Telegram unavailable): {e}")
+
+    logger.info(f"Telegram degradation alerts configured (chat_id={alert_chat_id})")
+    return _notify
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
@@ -94,7 +192,11 @@ def detect_rate_limit_error(stderr: str, stdout: str = "") -> bool:
 
 
 def escalate(error_msg: Optional[str] = None, notify_fn=None):
-    """Escalate degradation level based on consecutive errors."""
+    """Escalate degradation level based on consecutive errors.
+
+    notify_fn: explicit callback. Falls back to registered default if None.
+    """
+    resolved_notify = _resolve_notify_fn(notify_fn)
     thresholds = DEGRADATION_THRESHOLDS
 
     _state["error_count"] += 1
@@ -123,21 +225,29 @@ def escalate(error_msg: Optional[str] = None, notify_fn=None):
             f"— parallel={get_effective_max_parallel()}, backoff={backoff_seconds}s"
         )
 
-        if _state["level"] >= 2 and notify_fn:
+        if _state["level"] >= 2 and resolved_notify:
             last_notif = _state.get("last_degradation_notif", 0)
             if time.time() - last_notif > 1800:
                 _state["last_degradation_notif"] = time.time()
                 try:
-                    notify_fn(f"Running in degraded mode (level {_state['level']}). Responses may be slower.")
+                    resolved_notify(
+                        f"Escalated {old_level} -> {_state['level']} ({level_names[_state['level']]}). "
+                        f"Error: {error_msg or 'unknown'}. "
+                        f"Responses may be slower."
+                    )
                 except Exception as e:
                     logger.warning(f"Degradation notification failed: {e}")
 
 
 def attempt_recovery(notify_fn=None):
-    """Check if we can step down from degradation after successful requests."""
+    """Check if we can step down from degradation after successful requests.
+
+    notify_fn: explicit callback. Falls back to registered default if None.
+    """
     if _state["level"] == 0:
         return
 
+    resolved_notify = _resolve_notify_fn(notify_fn)
     _state["recovery_tests"] += 1
 
     if _state["recovery_tests"] >= DEGRADATION_THRESHOLDS["recovery_tests_needed"]:
@@ -153,9 +263,9 @@ def attempt_recovery(notify_fn=None):
         level_names = {0: "normal", 1: "throttled", 2: "degraded", 3: "minimal"}
         logger.info(f"RECOVERY: {old_level} → {_state['level']} ({level_names[_state['level']]})")
 
-        if _state["level"] == 0 and notify_fn:
+        if _state["level"] == 0 and resolved_notify:
             try:
-                notify_fn("Back to normal operation.")
+                resolved_notify("Back to normal operation. All systems recovered.")
             except Exception as e:
                 logger.warning(f"Recovery notification failed: {e}")
 
@@ -166,9 +276,13 @@ def check_deadlock(notify_fn=None):
     Two paths:
     1. MINIMAL (level 3) >30min: force-reset to THROTTLED
     2. ANY level >0 with no errors for AUTO_RECOVERY_IDLE_SECONDS: step down
+
+    notify_fn: explicit callback. Falls back to registered default if None.
     """
     if _state["level"] == 0:
         return
+
+    resolved_notify = _resolve_notify_fn(notify_fn)
 
     # Path 2: idle recovery
     if all_accounts_exhausted():
@@ -187,9 +301,9 @@ def check_deadlock(notify_fn=None):
         if _state["level"] == 0:
             _state["since"] = None
             _state["last_error"] = None
-            if notify_fn:
+            if resolved_notify:
                 try:
-                    notify_fn("Back to normal (idle auto-recovery).")
+                    resolved_notify("Back to normal (idle auto-recovery).")
                 except Exception as e:
                     logger.warning(f"Idle recovery notification failed: {e}")
         return
@@ -220,9 +334,9 @@ def check_deadlock(notify_fn=None):
 
     logger.warning(f"DEADLOCK RECOVERY: MINIMAL for {stuck_minutes:.0f}min → reset to THROTTLED")
 
-    if notify_fn:
+    if resolved_notify:
         try:
-            notify_fn(f"Auto-recovered from MINIMAL deadlock ({stuck_minutes:.0f}min). Reset to THROTTLED.")
+            resolved_notify(f"Auto-recovered from MINIMAL deadlock ({stuck_minutes:.0f}min). Reset to THROTTLED.")
         except Exception as e:
             logger.warning(f"Deadlock recovery notification failed: {e}")
 

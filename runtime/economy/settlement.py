@@ -171,7 +171,7 @@ def run_settlement_epoch(
         impact_result = run_impact_cycle()
         logger.info(f"Impact cycle: {impact_result}")
     except Exception as e:
-        logger.debug(f"Impact cycle skipped: {e}")
+        logger.warning(f"Impact cycle skipped: {e}")
 
     # Update last epoch time
     global _last_epoch_time
@@ -277,7 +277,7 @@ def _settle_from_dispatcher_engines(dispatcher) -> dict[str, float]:
                 rewards[handle] = reward
 
         except Exception as e:
-            logger.debug(f"Engine settlement failed for {handle}: {e}")
+            logger.warning(f"Engine settlement failed for {handle}: {e}")
 
     return rewards
 

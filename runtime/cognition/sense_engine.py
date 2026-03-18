@@ -250,7 +250,7 @@ class SenseEngine:
                         except (json.JSONDecodeError, TypeError):
                             pass
             except Exception as e:
-                logger.debug(f"Failed to parse sense {sense_id}: {e}")
+                logger.warning(f"Failed to parse sense definition {sense_id}: {e}")
 
         self._loaded = True
         if self._sense_definitions:
@@ -346,7 +346,7 @@ class SenseEngine:
                 },
             )
         except Exception as e:
-            logger.debug(f"Failed to update L3 sense node {sense_id}: {e}")
+            logger.warning(f"Failed to update L3 sense node {sense_id}: {e}")
 
     def _update_l1_mirror(self, sense_id: str, sense_state: SenseState, cog_state):
         """Create or update an L1 concept node that mirrors the sense."""

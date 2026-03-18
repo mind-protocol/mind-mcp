@@ -149,7 +149,7 @@ class FalkorDBBrainCheckpointer:
                 logger.info(f"Synced {added} external nodes for {self.citizen_handle} ({len(state.nodes)} total)")
 
         except Exception as e:
-            logger.debug(f"External node sync failed for {self.citizen_handle}: {e}")
+            logger.warning(f"External node sync failed for {self.citizen_handle}: {e}")
 
     def checkpoint(self, state: CitizenCognitiveState):
         """Flush ALL nodes and links to FalkorDB + sync externally added nodes.

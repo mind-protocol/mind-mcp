@@ -91,8 +91,8 @@ def _get_since_id() -> Optional[str]:
     try:
         if SINCE_ID_FILE.exists():
             return SINCE_ID_FILE.read_text().strip() or None
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning(f"Since ID file read failed: {e}")
     return None
 
 
@@ -277,8 +277,8 @@ def _log_mention(tweet_id, username, name, text, created_at, is_reply):
         }
         with open(MENTIONS_LOG, "a") as f:
             f.write(json.dumps(entry) + "\n")
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning(f"Mention log write failed: {e}")
 
 
 # ── Polling loop ─────────────────────────────────────────────────────────────

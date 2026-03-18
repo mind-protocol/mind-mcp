@@ -48,8 +48,38 @@ STATE_DIR.mkdir(parents=True, exist_ok=True)
 VOICE_TMP_DIR.mkdir(exist_ok=True)
 
 # ── Active Voice Calls ──────────────────────────────────────────────────────
+# DOCS: docs/communication/voice-call/HEALTH_Voice_Call.md
 # chat_id → {"citizen": handle, "call_path": Path, "buffer": [], "last_voice": float, "processing": bool}
 _active_calls: dict[str, dict] = {}
+
+# Health senses (H1-H6) — continuous counters
+_call_health = {
+    "stt_attempts": 0,
+    "stt_successes": 0,
+    "tts_attempts": 0,
+    "tts_successes": 0,
+    "exchanges": 0,           # complete human→citizen exchanges
+    "transcript_lines": 0,    # lines written to transcript
+    "routing_leaked": 0,      # messages that escaped call handler (should be 0)
+    "latency_samples": [],    # last 20 latencies (seconds)
+}
+
+def get_call_health() -> dict:
+    """Return voice call health metrics for monitoring."""
+    h = _call_health
+    stt_rate = h["stt_successes"] / max(h["stt_attempts"], 1)
+    tts_rate = h["tts_successes"] / max(h["tts_attempts"], 1)
+    latencies = h["latency_samples"][-20:] if h["latency_samples"] else []
+    p95 = sorted(latencies)[int(len(latencies) * 0.95)] if len(latencies) >= 2 else 0
+    return {
+        "active_calls": len(_active_calls),
+        "stt_rate": round(stt_rate, 2),
+        "tts_rate": round(tts_rate, 2),
+        "exchanges": h["exchanges"],
+        "transcript_lines": h["transcript_lines"],
+        "routing_leaked": h["routing_leaked"],
+        "latency_p95": round(p95, 1),
+    }
 
 # ── Config (from env) ────────────────────────────────────────────────────────
 
@@ -516,8 +546,8 @@ def _log_message(chat_id: str, text: str, direction: str = "inbound"):
     try:
         with open(MESSAGES_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning(f"Message log write failed: {e}")
 
 
 # ── Offset Management ────────────────────────────────────────────────────────
@@ -534,8 +564,8 @@ def _save_offset(offset: int):
     """Save last processed update offset."""
     try:
         OFFSET_FILE.write_text(str(offset))
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning(f"Offset save failed: {e}")
 
 
 # ── Update Processing ────────────────────────────────────────────────────────
@@ -560,6 +590,47 @@ def process_update(update: dict) -> bool:
 
     # Extract text (from text or caption)
     text = message.get("text", "") or message.get("caption", "") or ""
+
+    # ── Active voice call routing (BEFORE any filtering) ──
+    call_key = str(chat_id)
+    if call_key in _active_calls:
+        call = _active_calls[call_key]
+        # Voice message during call → transcribe and buffer
+        voice = message.get("voice")
+        if voice:
+            file_id = voice.get("file_id")
+            if file_id:
+                ogg_path = _download_file(file_id, prefix="voice", ext=".ogg")
+                if ogg_path:
+                    _call_health["stt_attempts"] += 1
+                    transcript = _transcribe_voice(ogg_path)
+                    try:
+                        ogg_path.unlink()
+                    except OSError:
+                        pass
+                    if transcript:
+                        _call_health["stt_successes"] += 1
+                        call["buffer"].append(transcript)
+                        call["last_voice"] = time.time()
+                        logger.info(f"Call voice: {transcript[:60]}")
+                    else:
+                        logger.warning(f"STT failed for call in {chat_id}")
+            return True
+        # Text message during call → buffer it (except /endcall)
+        if text and not text.startswith("/"):
+            call["buffer"].append(text)
+            call["last_voice"] = time.time()
+            logger.info(f"Call text: {text[:60]}")
+            return True
+        # /endcall during call
+        if text.strip().lower() == "/endcall":
+            _handle_endcall(chat_id)
+            return True
+        # Check silence → process buffer (4s threshold)
+        if call["buffer"] and not call["processing"]:
+            if time.time() - call["last_voice"] > 4.0:
+                import threading
+                threading.Thread(target=_process_voice_call_buffer, args=(chat_id,), daemon=True).start()
 
     # ── Group message filtering ──
     if is_group:
@@ -600,38 +671,6 @@ def process_update(update: dict) -> bool:
     if rate_reason:
         logger.info(f"Rate limited {sender_name} ({user_id}): {rate_reason}")
         return False
-
-    # ── Active voice call routing ──
-    call_key = str(chat_id)
-    if call_key in _active_calls:
-        call = _active_calls[call_key]
-        # Voice message during call → transcribe and buffer
-        voice = message.get("voice")
-        if voice:
-            file_id = voice.get("file_id")
-            if file_id:
-                ogg_path = _download_file(file_id, prefix="voice", ext=".ogg")
-                if ogg_path:
-                    transcript = _transcribe_voice(ogg_path)
-                    try:
-                        ogg_path.unlink()
-                    except OSError:
-                        pass
-                    if transcript:
-                        call["buffer"].append(transcript)
-                        call["last_voice"] = time.time()
-                        logger.info(f"Call voice: {transcript[:60]}")
-            return True
-        # Text message during call → buffer it too
-        if text and not text.startswith("/"):
-            call["buffer"].append(text)
-            call["last_voice"] = time.time()
-            return True
-        # Check silence → process buffer (4s threshold)
-        if call["buffer"] and not call["processing"]:
-            if time.time() - call["last_voice"] > 4.0:
-                import threading
-                threading.Thread(target=_process_voice_call_buffer, args=(chat_id,), daemon=True).start()
 
     # ── Voice messages (not in call) ──
     voice = message.get("voice")
@@ -862,7 +901,7 @@ def process_update(update: dict) -> bool:
                 f"chat_id: {chat_id}\ntimestamp: {_ts}\n---\n\n{text}\n"
             )
         except Exception as _fs_err:
-            logger.debug(f"Filesystem message write failed: {_fs_err}")
+            logger.warning(f"Filesystem message write failed: {_fs_err}")
 
         # DEPRECATED: enqueue to orchestrator queue — will be replaced by fs-based routing
         _enqueue_fn({
@@ -1113,14 +1152,16 @@ def _process_voice_call_buffer(chat_id: str):
         return
 
     call["processing"] = True
+    t_start = time.time()
     try:
         full_text = " ".join(call["buffer"])
         call["buffer"].clear()
 
-        # Write to transcript
+        # H1: Write human turn to transcript
         ts = time.strftime("%H:%M:%S")
         with open(call["call_path"], "a", encoding="utf-8") as f:
             f.write(f"[{ts}] @human: {full_text}\n")
+        _call_health["transcript_lines"] += 1
 
         # Show typing
         send_typing(chat_id)
@@ -1141,14 +1182,18 @@ def _process_voice_call_buffer(chat_id: str):
         except (subprocess.TimeoutExpired, FileNotFoundError) as e:
             response = f"(error: {e})"
 
-        # Write response to transcript
+        # H1: Write citizen turn to transcript
         ts = time.strftime("%H:%M:%S")
         with open(call["call_path"], "a", encoding="utf-8") as f:
             f.write(f"[{ts}] @{citizen}: {response}\n")
+        _call_health["transcript_lines"] += 1
+        _call_health["exchanges"] += 1
 
-        # TTS + send voice
+        # H3: TTS + send voice
+        _call_health["tts_attempts"] += 1
         voice_path = _generate_voice_note(response[:1000])
         if voice_path:
+            _call_health["tts_successes"] += 1
             try:
                 with open(voice_path, "rb") as vf:
                     requests.post(
@@ -1162,6 +1207,13 @@ def _process_voice_call_buffer(chat_id: str):
                 send_message(response, chat_id)
         else:
             send_message(response, chat_id)
+
+        # H4: Latency tracking
+        latency = time.time() - t_start
+        _call_health["latency_samples"].append(latency)
+        if len(_call_health["latency_samples"]) > 100:
+            _call_health["latency_samples"] = _call_health["latency_samples"][-50:]
+        logger.info(f"Call exchange {citizen}: {latency:.1f}s latency")
 
     except Exception as e:
         logger.error(f"Voice call process error: {e}")

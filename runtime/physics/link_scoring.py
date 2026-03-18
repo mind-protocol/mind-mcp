@@ -22,36 +22,13 @@ DOCS: docs/physics/ALGORITHM_Physics.md (v1.7.2 SubEntity section)
 """
 
 from typing import List, Dict, Any, Optional, Tuple
-from math import sqrt
 
 
 # =============================================================================
 # COSINE SIMILARITY
 # =============================================================================
 
-def cosine_similarity(a: List[float], b: List[float]) -> float:
-    """
-    Calculate cosine similarity between two embedding vectors.
-
-    Args:
-        a: First embedding vector
-        b: Second embedding vector
-
-    Returns:
-        Cosine similarity in [-1, 1] range.
-        Returns 0.0 if either vector is empty or zero-norm.
-    """
-    if not a or not b or len(a) != len(b):
-        return 0.0
-
-    dot = sum(x * y for x, y in zip(a, b))
-    norm_a = sqrt(sum(x * x for x in a))
-    norm_b = sqrt(sum(x * x for x in b))
-
-    if norm_a == 0.0 or norm_b == 0.0:
-        return 0.0
-
-    return dot / (norm_a * norm_b)
+from runtime.utils import cosine_similarity  # canonical impl
 
 
 def max_cosine_against_set(

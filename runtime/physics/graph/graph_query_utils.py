@@ -9,7 +9,6 @@ DOCS: None yet (extracted during monolith split)
 
 import json
 import logging
-import numpy as np
 from typing import Dict, Any, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -33,13 +32,7 @@ SEARCH_EXCLUDE_FIELDS = {
 }
 
 
-def cosine_similarity(a: List[float], b: List[float]) -> float:
-    """Calculate cosine similarity between two vectors."""
-    a = np.array(a)
-    b = np.array(b)
-    if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
-        return 0.0
-    return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+from runtime.utils import cosine_similarity  # canonical impl
 
 
 def extract_node_props(node, system_fields: set = None) -> Optional[Dict[str, Any]]:

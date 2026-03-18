@@ -7,7 +7,6 @@ Same interface as local GraphQueries - embedding-based semantic search.
 
 import json
 import logging
-import math
 from typing import List, Dict, Any, Optional, Callable
 
 from .config import MEMBRANE_HOST, MEMBRANE_PORT, MEMBRANE_GRAPH
@@ -18,16 +17,7 @@ logger = logging.getLogger(__name__)
 _membrane_queries: Optional["MembraneQueries"] = None
 
 
-def _cosine_similarity(a: List[float], b: List[float]) -> float:
-    """Compute cosine similarity between two vectors."""
-    if not a or not b or len(a) != len(b):
-        return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
-    norm_a = math.sqrt(sum(x * x for x in a))
-    norm_b = math.sqrt(sum(x * x for x in b))
-    if norm_a == 0 or norm_b == 0:
-        return 0.0
-    return dot / (norm_a * norm_b)
+from runtime.utils import cosine_similarity as _cosine_similarity  # canonical impl
 
 
 class MembraneQueries:

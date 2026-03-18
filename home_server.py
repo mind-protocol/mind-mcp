@@ -700,6 +700,16 @@ async def orchestrator_status():
     return dispatcher.get_status()
 
 
+@app.get("/api/call/health")
+async def call_health():
+    """Voice call health metrics (H1-H6)."""
+    try:
+        from runtime.bridges.telegram_bridge import get_call_health
+        return get_call_health()
+    except Exception as e:
+        return {"error": str(e)}
+
+
 # ── Hot update — git pull + restart without Docker rebuild ──────────────────
 
 @app.post("/api/update")

@@ -128,16 +128,7 @@ def _mean(values: list[float]) -> float:
     return sum(values) / len(values)
 
 
-def _cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Compute cosine similarity between two vectors."""
-    if not a or not b or len(a) != len(b):
-        return 0.0
-    dot = sum(x * y for x, y in zip(a, b))
-    mag_a = math.sqrt(sum(x * x for x in a))
-    mag_b = math.sqrt(sum(x * x for x in b))
-    if mag_a < 1e-9 or mag_b < 1e-9:
-        return 0.0
-    return dot / (mag_a * mag_b)
+from runtime.utils import cosine_similarity as _cosine_similarity  # canonical impl
 
 
 # --- Priority 1 Detectors ---

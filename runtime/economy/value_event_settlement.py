@@ -11,9 +11,12 @@ See: docs/economy/metabolic/ALGORITHM_Metabolic_Economy.md  §F5, §SETTLEMENT
 
 from __future__ import annotations
 
+import logging
 import time
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
+
+logger = logging.getLogger("economy.value_event_settlement")
 
 
 # ---------------------------------------------------------------------------
@@ -263,5 +266,9 @@ def _validate_contributor_weights(
         # Normalize — the graph physics module is the source of truth;
         # we correct here defensively but the inconsistency should be
         # investigated upstream.
+        logger.warning(
+            f"Contributor weights sum to {total:.4f}, expected 1.0 — normalizing. "
+            f"Investigate upstream source."
+        )
         for i, (entity_id, weight) in enumerate(contributors):
             contributors[i] = (entity_id, weight / total)

@@ -123,11 +123,6 @@ def _generate_mcp_config_file(target_dir: Path, mind_root: Path) -> None:
     print(f"✓ Created: {mcp_json}")
 
 
-def _escape_marker_tokens(content: str) -> str:
-    """No-op — marker system removed. Kept for API compatibility."""
-    return content
-
-
 def _copy_skills(skills_src: Path, target_dir: Path) -> None:
     if not skills_src.exists():
         return
@@ -384,7 +379,7 @@ def _build_system_prompt(templates_path: Path, model: str = "claude") -> str:
     else:
         combined = system_content
 
-    return _escape_marker_tokens(combined)
+    return combined
 
 
 def _build_claude_addition(templates_path: Path) -> str:

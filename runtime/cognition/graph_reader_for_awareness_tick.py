@@ -37,7 +37,7 @@ logger = logging.getLogger("cognition.graph_reader")
 
 _FALKORDB_HOST = os.environ.get("FALKORDB_HOST", "localhost")
 _FALKORDB_PORT = int(os.environ.get("FALKORDB_PORT", "6379"))
-_FALKORDB_GRAPH = os.environ.get("FALKORDB_GRAPH", "lumina")
+_FALKORDB_GRAPH = os.environ.get("FALKORDB_GRAPH", "lumina-prime")
 
 # Scan window: nodes with activity more recent than this are included
 # even if their energy is below the threshold.

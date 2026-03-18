@@ -93,7 +93,7 @@ def _resolve_chat_id_to_lid(chat_id: str) -> str:
                 logger.info(f"LID resolved: {chat_id} → {lid}")
                 return lid
     except Exception as e:
-        logger.debug(f"LID resolution query failed: {e}")
+        logger.warning(f"LID resolution query failed: {e}")
 
     return chat_id
 
@@ -158,8 +158,8 @@ def _load_lid_cache() -> dict:
     try:
         if LID_CACHE_FILE.exists():
             return json.loads(LID_CACHE_FILE.read_text())
-    except (json.JSONDecodeError, OSError):
-        pass
+    except (json.JSONDecodeError, OSError) as e:
+        logger.warning(f"LID cache load failed: {e}")
     return {}
 
 
@@ -167,8 +167,8 @@ def _save_lid_cache(cache: dict):
     """Save LID → phone number cache."""
     try:
         LID_CACHE_FILE.write_text(json.dumps(cache, indent=2))
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning(f"LID cache save failed: {e}")
 
 
 def _resolve_lid(lid: str) -> Optional[str]:
@@ -330,7 +330,7 @@ def process_webhook(payload: dict) -> bool:
         # The orchestrator's smart_route handles partner routing for the response
         # No duplicate routing logic needed here
     except Exception as e:
-        logger.debug(f"Graph enrichment/stimulus failed: {e}")
+        logger.warning(f"Graph enrichment/stimulus failed: {e}")
 
     # 3. Route to orchestrator queue (for response generation)
     if _enqueue_fn:
@@ -351,7 +351,7 @@ def process_webhook(payload: dict) -> bool:
                 f"chat_id: {chat_id}\ntimestamp: {_ts}\n---\n\n{text}\n"
             )
         except Exception as _fs_err:
-            logger.debug(f"Filesystem message write failed: {_fs_err}")
+            logger.warning(f"Filesystem message write failed: {_fs_err}")
 
         # DEPRECATED: enqueue to orchestrator queue — will be replaced by fs-based routing
         _enqueue_fn({
@@ -385,8 +385,8 @@ def _log_message(chat_id: str, text: str, direction: str = "inbound"):
     try:
         with open(MESSAGES_FILE, "a") as f:
             f.write(json.dumps(entry) + "\n")
-    except OSError:
-        pass
+    except OSError as e:
+        logger.warning(f"Message log write failed: {e}")
 
 
 # ── FastAPI Router ───────────────────────────────────────────────────────────

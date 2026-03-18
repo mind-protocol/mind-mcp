@@ -215,7 +215,7 @@ def _status(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             graph_name = f"brain_{citizen_handle}"
             # Count moment nodes created in this session
             from falkordb import FalkorDB
-            db = FalkorDB(host="localhost", port=6379)
+            db = FalkorDB(host=os.environ.get("FALKORDB_HOST", "localhost"), port=int(os.environ.get("FALKORDB_PORT", "6379")))
             g = db.select_graph(graph_name)
             result = g.query(
                 f"MATCH (n {{anamnesis_session: '{state['session_id']}'}}) "

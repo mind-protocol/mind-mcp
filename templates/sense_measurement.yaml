@@ -1,0 +1,114 @@
+# ══════════════════════════════════════════════════════════════════════
+# MEASUREMENT SENSE TEMPLATE — Mind Protocol
+# ══════════════════════════════════════════════════════════════════════
+#
+# Use this template for periodic measurement senses that track metrics
+# over time, compute correlations, and update objective node weights.
+#
+# Unlike filter senses (sense_health_signal.yaml) which produce stimuli,
+# measurement senses produce Observations with rolling state — they
+# LEARN what correlates with good/bad outcomes.
+#
+# Evaluated by SenseEngine (runtime/cognition/sense_engine.py)
+# every eval_interval ticks.
+#
+# ══════════════════════════════════════════════════════════════════════
+
+# --- Identity ---
+# node.id:   "thing:sense:{scope}:{slug}"
+# node.name: human-readable measurement name
+
+# --- Measurement Definition (stored in node.content) ---
+
+# How often to evaluate (in ticks)
+# Guidelines:
+#   10-20  = high-frequency (performance, latency)
+#   50     = standard (most health metrics)
+#   100    = low-frequency (growth, trends)
+eval_interval: 50
+
+# Whether to create/update an L1 concept node mirroring this sense
+# If true: carrier citizen gains an L1 concept node with rolling
+# score, insights, and variable diffs between good/bad observations.
+# This lets the citizen THINK about the measurement, not just react.
+internalize: true
+
+# Variables to measure — returned by the Cypher query
+# Names must match the RETURN clause of measure_query
+variables:
+  - "{{variable_1}}"
+  - "{{variable_2}}"
+
+# Outcomes to track — boolean or numeric results from the query
+# Used to compute rolling score and correlations
+outcomes:
+  - "{{outcome_1}}"
+
+# How to compute the sense score from outcomes
+# Options:
+#   first_outcome  — use the first outcome value directly
+#   mean_outcomes  — average all outcomes
+score: "first_outcome"
+
+# Cypher query that measures the variables and outcomes
+# MUST return exactly the columns listed in variables + outcomes
+# Keep queries fast (< 50ms). Use LIMIT. Avoid full scans.
+measure_query: |
+  MATCH (n:{{NodeType}}) WHERE n.{{condition}}
+  WITH count(n) AS {{variable_1}},
+       avg(n.{{field}}) AS {{variable_2}}
+  RETURN {{variable_1}}, {{variable_2}},
+         CASE WHEN {{variable_1}} > {{threshold}} THEN 1 ELSE 0 END AS {{outcome_1}}
+  LIMIT 1
+
+# --- Linked Objective ---
+# The objective narrative node whose weight this sense modulates.
+# When score is high → objective weight grows (proving it's achieved).
+# When score drops → objective weight decays (regression detected).
+#
+# linked_objective: "narrative:obj:{{objective_slug}}"
+
+# --- Carrier ---
+# Which citizen carries this sense (via PERCEIVES_WITH link)
+#
+# carrier: "{{citizen_handle}}"
+
+# ══════════════════════════════════════════════════════════════════════
+# WIRING CHECKLIST
+# ══════════════════════════════════════════════════════════════════════
+#
+# □ Thing(type=sense) created with this YAML as .content
+# □ Carrier citizen linked via PERCEIVES_WITH
+# □ Objective narrative linked via CONTRIBUTES_TO
+# □ measure_query tested manually:
+#     redis-cli GRAPH.QUERY {graph} "{your_query}"
+# □ SenseEngine picks it up (check sense(layer="senses") output)
+# □ Rolling score appears after eval_interval ticks
+#
+# ══════════════════════════════════════════════════════════════════════
+# EXAMPLE: Track work output rate
+# ══════════════════════════════════════════════════════════════════════
+#
+# eval_interval: 50
+# internalize: true
+# variables: ["deliverable_count", "ack_rate"]
+# outcomes: ["output_healthy"]
+# score: "first_outcome"
+# measure_query: |
+#   MATCH (m:Moment)
+#   WHERE m.subtype IN ['commit', 'document', 'analysis']
+#     AND m.created_at_s > timestamp() - 86400
+#   WITH count(m) AS deliverable_count
+#   OPTIONAL MATCH (m:Moment)-[:link]->(a:Actor)
+#   WHERE a.subtype = 'human'
+#   WITH deliverable_count,
+#        CASE WHEN count(a) > 0
+#          THEN toFloat(count(a)) / deliverable_count
+#          ELSE 0.0 END AS ack_rate
+#   RETURN deliverable_count, ack_rate,
+#          CASE WHEN deliverable_count >= 3 AND ack_rate > 0.2
+#            THEN 1 ELSE 0 END AS output_healthy
+#   LIMIT 1
+#
+# linked_objective: "narrative:obj:work_produces_value"
+# carrier: "conductor"

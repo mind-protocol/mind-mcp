@@ -222,7 +222,7 @@ class ExteroceptionEngine:
                         f"I'm in {space.name}", 0.1, {}))
 
         except Exception as e:
-            logger.debug(f"Exteroception scan failed: {e}")
+            logger.warning(f"Exteroception scan failed for {citizen_id}: {e}")
 
         # ── Custom senses (Thing nodes linked via →perceives_with→) ──
         if not self._custom_senses_loaded:
@@ -382,7 +382,7 @@ class ExteroceptionEngine:
 
                     self._custom_senses.append(definition)
             except Exception as e:
-                logger.debug(f"Failed to parse sense {sense_id}: {e}")
+                logger.warning(f"Failed to parse custom sense definition {sense_id}: {e}")
 
         self._custom_senses_loaded = True
         if self._custom_senses:

@@ -145,13 +145,11 @@ Error: {e}"""
     # DUPLICATE DETECTION
     # =========================================================================
 
-    def _cosine_similarity(self, a: List[float], b: List[float]) -> float:
+    @staticmethod
+    def _cosine_similarity(a: List[float], b: List[float]) -> float:
         """Calculate cosine similarity between two vectors."""
-        a = np.array(a)
-        b = np.array(b)
-        if np.linalg.norm(a) == 0 or np.linalg.norm(b) == 0:
-            return 0.0
-        return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
+        from runtime.utils import cosine_similarity
+        return cosine_similarity(a, b)
 
     def _find_similar_nodes(
         self,

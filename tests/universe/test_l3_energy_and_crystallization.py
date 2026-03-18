@@ -37,7 +37,7 @@ from runtime.physics.l3_macro_crystallization import (
     crystallize,
     validate_crystallization_preserves_weight,
 )
-from runtime.universe.constants_l3_physics import (
+from runtime.universe.constants import (
     L3_PROPAGATION_THRESHOLD,
     L3_DECAY_RATE,
     L3_RECENCY_DECAY,

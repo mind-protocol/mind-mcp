@@ -822,25 +822,7 @@ class SubEntity:
 # LINK SCORING (v1.6.1)
 # =============================================================================
 
-def cosine_similarity(a: Optional[List[float]], b: Optional[List[float]]) -> float:
-    """
-    Compute cosine similarity between two vectors.
-
-    Returns 0.0 if either vector is None or empty.
-    """
-    if not a or not b:
-        return 0.0
-    if len(a) != len(b):
-        return 0.0
-
-    dot = sum(x * y for x, y in zip(a, b))
-    norm_a = sum(x * x for x in a) ** 0.5
-    norm_b = sum(x * x for x in b) ** 0.5
-
-    if norm_a == 0 or norm_b == 0:
-        return 0.0
-
-    return dot / (norm_a * norm_b)
+from runtime.utils import cosine_similarity  # canonical impl
 
 
 def compute_self_novelty(

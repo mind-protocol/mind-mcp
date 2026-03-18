@@ -275,20 +275,20 @@ def main():
 
     if args.once:
         scores = run_once()
-        print(f"Computed {len(scores)} brain scores:")
+        logger.info(f"Computed {len(scores)} brain scores")
         for handle, s in sorted(scores.items(), key=lambda x: -x[1]["brain_power"]):
-            print(f"  @{handle:20s}  BP={s['brain_power']:3d}  neurons={s['neurons']:4d}  health={s['health_status']}")
+            logger.info(f"  @{handle:20s}  BP={s['brain_power']:3d}  neurons={s['neurons']:4d}  health={s['health_status']}")
         return
 
-    print(f"Brain score daemon: interval={args.interval}s")
+    logger.info(f"Brain score daemon: interval={args.interval}s")
     while True:
         try:
             scores = run_once()
             ts = datetime.now().strftime("%H:%M:%S")
             active = [h for h, s in scores.items() if s["brain_power"] > 0]
-            print(f"  [{ts}] {len(scores)} scores computed, {len(active)} active brains")
+            logger.info(f"[{ts}] {len(scores)} scores computed, {len(active)} active brains")
         except Exception as e:
-            print(f"  Error: {e}")
+            logger.warning(f"Brain score computation failed: {e}")
         time.sleep(args.interval)
 
 

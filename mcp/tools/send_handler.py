@@ -212,7 +212,7 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                     try:
                         sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
                         from falkordb import FalkorDB
-                        g = FalkorDB(host="localhost", port=6379).select_graph("lumina-prime")
+                        g = FalkorDB(host=os.environ.get("FALKORDB_HOST", "localhost"), port=int(os.environ.get("FALKORDB_PORT", "6379"))).select_graph(os.environ.get("L3_GRAPH", "lumina_prime"))
                         r = g.query(
                             "MATCH (a:Actor {id: $h})-[r:AT]->(s:Space) "
                             "WHERE s.platform = 'discord' "
@@ -237,7 +237,7 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         # 2. @narrative_id — resolve linked actors, broadcast
         try:
             from falkordb import FalkorDB
-            g = FalkorDB(host="localhost", port=6379).select_graph("lumina-prime")
+            g = FalkorDB(host=os.environ.get("FALKORDB_HOST", "localhost"), port=int(os.environ.get("FALKORDB_PORT", "6379"))).select_graph(os.environ.get("L3_GRAPH", "lumina_prime"))
             nr = g.query(
                 """
                 MATCH (n:Narrative)

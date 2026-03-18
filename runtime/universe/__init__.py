@@ -2,13 +2,12 @@
 Universe Graph Module
 
 Implements the L3 universe graph: Spaces, HAS_ACCESS resolution,
-organizations (Narratives), moment perception routing, and universe bootstrap.
+organizations (Narratives), and universe bootstrap.
 
 Architecture:
 - SpaceManager: Space CRUD, containment hierarchy (ALG-4)
 - AccessResolver: HAS_ACCESS resolution with hierarchy inheritance (ALG-1)
 - OrgManager: Organization lifecycle as Narrative + hall Space (ALG-7)
-- MomentPerceptionRouter: Route moments to accessing actors (ALG-5)
 - UniverseBootstrap: Universe initialization and migration
 
 All classes depend on DatabaseAdapter (runtime/infrastructure/database/).
@@ -35,15 +34,12 @@ from .organization_lifecycle_manager import (
     OrganizationInfo,
     OrgError,
 )
-from .moment_perception_router import (
-    MomentPerceptionRouter,
-)
 from .universe_bootstrap_and_metadata import (
     UniverseBootstrap,
     UniverseMetadata,
     BootstrapError,
 )
-from .constants_l3_physics import (
+from .constants import (
     L3_PROPAGATION_THRESHOLD,
     L3_DECAY_RATE,
     L3_RECENCY_DECAY,
@@ -73,8 +69,6 @@ __all__ = [
     "OrgManager",
     "OrganizationInfo",
     "OrgError",
-    # Moment perception
-    "MomentPerceptionRouter",
     # Universe bootstrap
     "UniverseBootstrap",
     "UniverseMetadata",

@@ -1,0 +1,160 @@
+# ══════════════════════════════════════════════════════════════════════
+# HEALTH SENSE TEMPLATE — Mind Protocol
+# ══════════════════════════════════════════════════════════════════════
+#
+# Use this template to create a health sense that monitors a specific
+# system property and alerts its carrier citizen when degradation occurs.
+#
+# A health sense is a Thing(type=sense) node in L3, linked to a carrier
+# citizen via PERCEIVES_WITH. The exteroception engine evaluates it
+# every tick and produces stimuli that enter the citizen's awareness.
+#
+# TWO TIERS:
+#   1. Filter Sense (this template) — declarative YAML, per-tick evaluation
+#   2. Measurement Sense — Cypher-based, periodic, with correlation analysis
+#      (see sense_measurement.yaml template)
+#
+# CREATION:
+#   1. Copy this template
+#   2. Fill in the fields below
+#   3. Create as Thing(type=sense) in L3 graph (content = this YAML)
+#   4. Link carrier citizen → Thing via PERCEIVES_WITH
+#   5. Link Thing → objective narrative via CONTRIBUTES_TO
+#   6. Engine auto-discovers on next tick
+#
+# ══════════════════════════════════════════════════════════════════════
+
+# --- Identity ---
+# These become node properties, not part of the YAML content
+# node.id:   "sense:{scope}:{slug}"          e.g. "sense:lp:voice_ids_complete"
+# node.name: "Sense: {Human Readable Name}"  e.g. "Sense: All Citizens Have Voice IDs"
+
+# --- Filter Definition (stored in node.content) ---
+
+# Human-readable name shown in awareness reports
+name: "{{sense_name}}"
+
+# What node type to scan for anomalies
+# Options: narrative | moment | actor | thing | space
+source: "{{node_type}}"
+
+# Where to scan
+# Options:
+#   spaces_i_am_in  — only spaces the carrier citizen is linked to
+#   all              — entire L3 graph (use sparingly — expensive)
+#   {space_id}       — specific space ID
+scan: "{{scan_scope}}"
+
+# Conditions that must ALL match for the sense to fire
+# Operators: "> N", "< N", ">= N", "<= N", "= N", "contains X"
+# Fields: any node property (energy, weight, stability, subtype, name, synthesis...)
+filter:
+  "{{field_1}}": "{{operator}} {{value}}"
+  # "{{field_2}}": "{{operator}} {{value}}"
+
+# Optional: keyword match against (synthesis + " " + name)
+# All keywords must appear for a match (AND logic)
+keywords:
+  - "{{keyword_1}}"
+  # - "{{keyword_2}}"
+
+# What stimulus to produce when the sense fires
+stimulus:
+  # Template string with {node.*} interpolation
+  # Available: {node.name}, {node.id}, {node.synthesis}, {node.energy}, {node.weight}
+  template: "HEALTH ALERT: {{description}} — {node.name}"
+
+  # How much energy this stimulus injects into the carrier's WM
+  # Range: 0.1 (gentle) to 1.0 (emergency)
+  # Guidelines:
+  #   0.3-0.4 = informational (graph integrity, deprecated code)
+  #   0.5-0.6 = important (silent failures, disk usage)
+  #   0.7-0.8 = critical (bridge down, metabolism disconnected)
+  #   0.9-1.0 = emergency (MCP unreachable, data loss)
+  energy: 0.6
+
+  # Source tag for tracing (appears in stimulus metadata)
+  source: "health_{{slug}}"
+
+# Minimum ticks between firings (prevents alert storms)
+# Guidelines:
+#   10-20  = high-frequency checks (errors, message failures)
+#   50     = medium (disk, performance)
+#   100    = low-frequency (integrity, deprecated code)
+refractory_ticks: 50
+
+# Priority for attention competition (1-100, higher = wins)
+# Guidelines:
+#   5-6  = background monitoring
+#   7-8  = important health signals
+#   9-10 = critical infrastructure
+priority: 7
+
+# ══════════════════════════════════════════════════════════════════════
+# WIRING CHECKLIST
+# ══════════════════════════════════════════════════════════════════════
+#
+# After creating the sense node, verify:
+#
+# □ Thing(type=sense) node exists with this YAML as .content
+# □ Carrier citizen linked via PERCEIVES_WITH
+#     MATCH (a:Actor {id: $carrier}), (t:Thing {id: $sense_id})
+#     MERGE (a)-[r:link]->(t)
+#     SET r.type = 'PERCEIVES_WITH', r.weight = 1.0, r.permanence = 0.9
+#
+# □ Objective narrative linked via CONTRIBUTES_TO
+#     MATCH (t:Thing {id: $sense_id}), (o:Narrative {id: $objective_id})
+#     MERGE (t)-[r:link]->(o)
+#     SET r.type = 'CONTRIBUTES_TO', r.weight = 0.8
+#
+# □ Engine picks it up on next tick (check sense() MCP tool output)
+#
+# □ Sense appears in carrier's awareness when condition is met
+#
+# ══════════════════════════════════════════════════════════════════════
+# EXAMPLES
+# ══════════════════════════════════════════════════════════════════════
+#
+# Example 1: Detect citizens without voice IDs
+#   name: voice_id_completeness
+#   source: actor
+#   scan: all
+#   filter:
+#     voices: "= null"
+#     subtype: "contains CITIZEN"
+#   keywords: [voice, elevenlabs, null]
+#   stimulus:
+#     template: "ALERT: {node.name} has no voice ID. TTS will crash."
+#     energy: 0.7
+#     source: health_voice_ids
+#   refractory_ticks: 50
+#   priority: 8
+#
+# Example 2: Detect silent failures in handlers
+#   name: silent_failure_rate
+#   source: moment
+#   scan: all
+#   filter:
+#     subtype: "contains error"
+#     energy: "> 0.3"
+#   keywords: [return None, bare except, silent]
+#   stimulus:
+#     template: "ALERT: Silent failure in {node.name}."
+#     energy: 0.6
+#     source: health_silent_failures
+#   refractory_ticks: 20
+#   priority: 7
+#
+# Example 3: Monitor bridge health
+#   name: whatsapp_bridge_health
+#   source: moment
+#   scan: all
+#   filter:
+#     subtype: "contains bridge"
+#   keywords: [whatsapp, timeout, disconnected]
+#   stimulus:
+#     template: "ALERT: WhatsApp bridge down. Track A blocked."
+#     energy: 0.8
+#     source: health_whatsapp_bridge
+#   refractory_ticks: 20
+#   priority: 9

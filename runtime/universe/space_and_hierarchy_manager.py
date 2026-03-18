@@ -24,7 +24,7 @@ from typing import Dict, Any, List, Optional
 
 from runtime.infrastructure.database.adapter import DatabaseAdapter
 
-from .constants_l3_physics import (
+from .constants import (
     CONTAINMENT_HIERARCHY,
     CONTAINMENT_PERMANENCE,
     CONTAINMENT_DEFAULT_WEIGHT,

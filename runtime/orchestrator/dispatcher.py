@@ -35,6 +35,7 @@ from runtime.orchestrator.session_tracker import (
     enforce_neuron_cap,
 )
 from runtime.orchestrator import degradation
+from runtime.orchestrator.first_boot_registrar import check_and_register_new_citizens
 
 # L1 Cognitive Engine integration
 try:
@@ -43,6 +44,7 @@ try:
     from runtime.cognition.wm_prompt_serializer import serialize_wm_to_prompt
     from runtime.cognition.models import CitizenCognitiveState
     from runtime.cognition.graph_reader_for_awareness_tick import create_graph_read_fn
+    from runtime.cognition.action_seed import ensure_action_nodes
     TWO_TICK_AVAILABLE = True
 except ImportError:
     TWO_TICK_AVAILABLE = False
@@ -53,13 +55,15 @@ LEGACY_L1_AVAILABLE = False
 
 logger = logging.getLogger("orchestrator.dispatcher")
 
-# ── Constants ───────────────────────────────────────────────────────────────
+# ── Constants (env-configurable per VALIDATION_Tick_System.md) ──────────────
 
 NEURON_CLEANUP_INTERVAL = 60     # seconds between neuron cleanups
 HEALTH_CHECK_INTERVAL = 10       # seconds between degradation checks
 ACCOUNT_REFRESH_INTERVAL = 1800  # seconds — proactive token refresh (30 min)
-AWARENESS_INTERVAL = 60          # seconds — L1 physics tick per citizen
-THOUGHT_INTERVAL = 300           # seconds — conscious action check per citizen
+AWARENESS_INTERVAL = int(os.environ.get("MIND_AWARENESS_INTERVAL", "60"))
+THOUGHT_INTERVAL = int(os.environ.get("MIND_THOUGHT_INTERVAL", "300"))
+BASE_LOOP_INTERVAL = int(os.environ.get("MIND_BASE_LOOP_INTERVAL", "5"))
+FIRST_BOOT_CHECK_INTERVAL = 30   # seconds — scan for new citizen .first_boot.json
 
 # Suppress infrastructure errors from reaching users
 SUPPRESS_PATTERNS = [
@@ -84,6 +88,7 @@ class Dispatcher:
         self._last_cleanup = 0.0
         self._last_health_check = 0.0
         self._last_account_refresh = 0.0
+        self._last_first_boot_check = 0.0
 
         # Per-citizen tick timestamps
         self._last_awareness_tick: dict[str, float] = {}
@@ -106,6 +111,21 @@ class Dispatcher:
         """Start the dispatch loop in a background thread."""
         if self._running:
             return
+
+        # Wire degradation alerting — builds Telegram notify_fn from env vars
+        # and registers it as the default for all escalate/recovery/deadlock calls.
+        try:
+            notify_fn = degradation.build_telegram_notify_fn()
+            if notify_fn:
+                degradation.set_notify_fn(notify_fn)
+                self._notify_fn = notify_fn
+            else:
+                self._notify_fn = None
+                logger.warning("Degradation alerting disabled — no Telegram config")
+        except Exception as e:
+            self._notify_fn = None
+            logger.warning(f"Degradation alerting setup failed: {e}")
+
         self._running = True
         self._thread = threading.Thread(target=self._run_loop, daemon=True, name="orchestrator")
         self._thread.start()
@@ -134,11 +154,12 @@ class Dispatcher:
             except Exception as e:
                 logger.exception(f"Tick error: {e}")
 
-            time.sleep(5)  # base loop interval
+            time.sleep(BASE_LOOP_INTERVAL)
 
     def _maintenance(self):
         """Periodic housekeeping: neuron cleanup, health check, account refresh."""
         now = time.time()
+        notify = getattr(self, '_notify_fn', None)
 
         if now - self._last_cleanup > NEURON_CLEANUP_INTERVAL:
             cleanup_old_neurons()
@@ -146,19 +167,31 @@ class Dispatcher:
             self._last_cleanup = now
 
         if now - self._last_health_check > HEALTH_CHECK_INTERVAL:
-            degradation.check_deadlock(notify_fn=None)
+            degradation.check_deadlock(notify_fn=notify)
             self._last_health_check = now
 
         if now - self._last_account_refresh > ACCOUNT_REFRESH_INTERVAL:
             try:
-                refresh_accounts(notify_fn=None)
+                refresh_accounts(notify_fn=notify)
             except Exception as e:
                 logger.debug(f"Account refresh check: {e}")
             self._last_account_refresh = now
 
+        if now - self._last_first_boot_check > FIRST_BOOT_CHECK_INTERVAL:
+            try:
+                registered = check_and_register_new_citizens()
+                if registered:
+                    logger.info(f"First-boot registered: {registered}")
+            except Exception as e:
+                logger.warning(f"First-boot check failed: {e}")
+            self._last_first_boot_check = now
+
     def _tick_all_citizens(self):
         """For each citizen, check tick intervals and run appropriate ticks."""
         now = time.time()
+        awareness_count = 0
+        thought_count = 0
+        action_count = 0
 
         for handle in list(self._citizen_engines.keys()):
             try:
@@ -167,15 +200,18 @@ class Dispatcher:
                 if now - last_awareness > AWARENESS_INTERVAL:
                     self._awareness_tick(handle)
                     self._last_awareness_tick[handle] = now
+                    awareness_count += 1
 
                 # Thought tick (internal processing + conscious action check)
                 last_thought = self._last_thought_tick.get(handle, 0.0)
                 if now - last_thought > THOUGHT_INTERVAL:
                     wm_changed, conscious_action = self._thought_tick(handle)
                     self._last_thought_tick[handle] = now
+                    thought_count += 1
 
                     if conscious_action:
                         self._fire_conscious_action(handle)
+                        action_count += 1
 
                     # Write awareness file if WM changed
                     if wm_changed and TWO_TICK_AVAILABLE:
@@ -194,6 +230,13 @@ class Dispatcher:
 
             except Exception as e:
                 logger.exception(f"Tick error for {handle}: {e}")
+
+        # Log tick summary (only when something happened)
+        if awareness_count or thought_count:
+            logger.info(
+                f"Tick cycle: {awareness_count} awareness, {thought_count} thought, "
+                f"{action_count} actions fired ({len(self._citizen_engines)} engines)"
+            )
 
     def _awareness_tick(self, handle: str) -> None:
         """Run awareness tick for a citizen — scan external graph, import nodes."""
@@ -270,7 +313,7 @@ class Dispatcher:
         voice_text = request.get("voice_text", "")[:80]
 
         # Inject cognitive context if not already present
-        if citizen_handle != "_system" and (TWO_TICK_AVAILABLE or LEGACY_L1_AVAILABLE):
+        if citizen_handle != "_system" and TWO_TICK_AVAILABLE:
             metadata = request.get("metadata") or {}
             if "cognitive_context" not in metadata:
                 wm_context = self._get_citizen_wm_context(citizen_handle)
@@ -370,6 +413,13 @@ class Dispatcher:
                 logger.warning(f"Metabolism init failed for {citizen_handle}: {e}")
 
             self._attach_l3(state)
+
+            # Seed core action nodes before first tick (Law 17: impulse needs targets)
+            try:
+                ensure_action_nodes(state)
+            except Exception as e:
+                logger.warning(f"Action seed failed for {citizen_handle}: {e}")
+
             engine = TwoTickEngine(state, graph_read_fn=self._graph_read_fn)
             self._citizen_states[citizen_handle] = state
             self._citizen_engines[citizen_handle] = engine

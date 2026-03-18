@@ -2155,3 +2155,11 @@
 {"ts": "2026-03-18T19:55:23.188500Z", "citizen": "dev", "tool": "call", "permission": "communicate", "tier": 3, "level": 7, "result": "ALLOW", "reason": "always_allowed"}
 {"ts": "2026-03-18T23:03:51.255605Z", "citizen": "dragon_slayer", "tool": "sense", "permission": "read_code", "tier": 2, "level": 1, "result": "ALLOW", "reason": "permitted"}
 {"ts": "2026-03-18T23:03:56.482345Z", "citizen": "dragon_slayer", "tool": "graph_query", "permission": "read_code", "tier": 2, "level": 1, "result": "ALLOW", "reason": "always_allowed"}
+{"ts": "2026-03-18T23:21:50.480006Z", "citizen": "mentor", "tool": "sense", "permission": "read_code", "tier": 2, "level": 6, "result": "ALLOW", "reason": "permitted"}
+{"ts": "2026-03-18T23:22:03.093219Z", "citizen": "mentor", "tool": "graph_query", "permission": "read_code", "tier": 2, "level": 6, "result": "ALLOW", "reason": "always_allowed"}
+{"ts": "2026-03-18T23:22:05.241393Z", "citizen": "mentor", "tool": "subcall", "permission": "read_code", "tier": 2, "level": 6, "result": "ALLOW", "reason": "always_allowed"}
+{"ts": "2026-03-18T23:22:37.831124Z", "citizen": "mentor", "tool": "graph_write", "permission": "write_code", "tier": 2, "level": 6, "result": "ALLOW", "reason": "permitted"}
+{"ts": "2026-03-18T23:22:42.192399Z", "citizen": "mentor", "tool": "graph_write", "permission": "write_code", "tier": 2, "level": 6, "result": "ALLOW", "reason": "permitted"}
+{"ts": "2026-03-18T23:22:46.793171Z", "citizen": "mentor", "tool": "graph_write", "permission": "write_code", "tier": 2, "level": 6, "result": "ALLOW", "reason": "permitted"}
+{"ts": "2026-03-18T23:29:50.436526Z", "citizen": "pitch", "tool": "sense", "permission": "read_code", "tier": 2, "level": 5, "result": "ALLOW", "reason": "permitted"}
+{"ts": "2026-03-18T23:30:40.473450Z", "citizen": "pitch", "tool": "call", "permission": "communicate", "tier": 2, "level": 5, "result": "ALLOW", "reason": "always_allowed"}

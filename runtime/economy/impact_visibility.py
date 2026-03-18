@@ -49,7 +49,7 @@ def _get_graph():
         logger.info(f"Impact visibility connected to {_GRAPH_NAME}")
         return _graph
     except Exception as e:
-        logger.debug(f"Impact visibility: graph unavailable — {e}")
+        logger.warning(f"Impact visibility: graph unavailable — {e}")
         return None
 
 
@@ -156,7 +156,7 @@ def _detect_mentions(g, handle: str, cutoff: float) -> list[ImpactEvent]:
                 metadata={"count": len(mentioners)},
             ))
     except Exception as e:
-        logger.debug(f"Mention detection failed for @{handle}: {e}")
+        logger.warning(f"Mention detection failed for @{handle}: {e}")
     return events
 
 
@@ -193,7 +193,7 @@ def _detect_replies(g, handle: str, cutoff: float) -> list[ImpactEvent]:
                 metadata={"reply_count": len(repliers)},
             ))
     except Exception as e:
-        logger.debug(f"Reply detection failed for @{handle}: {e}")
+        logger.warning(f"Reply detection failed for @{handle}: {e}")
     return events
 
 
@@ -232,7 +232,7 @@ def _detect_reactions(g, handle: str, cutoff: float) -> list[ImpactEvent]:
                 metadata={"reaction_count": total_reactions},
             ))
     except Exception as e:
-        logger.debug(f"Reaction detection failed for @{handle}: {e}")
+        logger.warning(f"Reaction detection failed for @{handle}: {e}")
     return events
 
 
@@ -263,7 +263,7 @@ def _detect_interactions(g, handle: str, cutoff: float) -> list[ImpactEvent]:
                 metadata={"new_contacts": len(new_contacts)},
             ))
     except Exception as e:
-        logger.debug(f"Interaction detection failed for @{handle}: {e}")
+        logger.warning(f"Interaction detection failed for @{handle}: {e}")
     return events
 
 
@@ -334,7 +334,7 @@ def _detect_cascades(g, handle: str, cutoff: float) -> list[ImpactEvent]:
                     },
                 ))
     except Exception as e:
-        logger.debug(f"Cascade detection failed for @{handle}: {e}")
+        logger.warning(f"Cascade detection failed for @{handle}: {e}")
     return events
 
 

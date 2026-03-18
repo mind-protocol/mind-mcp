@@ -107,20 +107,7 @@ class InjectionResult:
 # Helpers
 # ---------------------------------------------------------------------------
 
-def cosine_similarity(a: list[float], b: list[float]) -> float:
-    """Cosine similarity between two vectors using numpy.
-
-    Returns 0.0 if either vector is zero-length or all-zeros.
-    """
-    va = np.asarray(a, dtype=np.float64)
-    vb = np.asarray(b, dtype=np.float64)
-    if va.size == 0 or vb.size == 0:
-        return 0.0
-    norm_a = np.linalg.norm(va)
-    norm_b = np.linalg.norm(vb)
-    if norm_a == 0.0 or norm_b == 0.0:
-        return 0.0
-    return float(np.dot(va, vb) / (norm_a * norm_b))
+from runtime.utils import cosine_similarity  # canonical impl
 
 
 def _clamp(value: float, lo: float, hi: float) -> float:

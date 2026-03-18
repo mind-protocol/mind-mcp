@@ -44,6 +44,8 @@ from .models import (
     NodeType,
 )
 from .metabolism import CitizenMetabolism
+from .laws.law_13_to_18_limbic_engine import update_limbic
+from .laws.law_17_impulse import accumulate_impulses
 
 logger = logging.getLogger("cognition.two_tick_engine")
 
@@ -404,6 +406,21 @@ def thought_tick(
     prev_wm_ids = list(state.wm.node_ids)
 
     # ------------------------------------------------------------------
+    # Step 0: Limbic engine — update all 8 drives, emotions, boredom,
+    #         solitude, frustration (Laws 13-18).
+    #         Runs BEFORE energy generation so drives are responsive to
+    #         current graph state and can influence WM selection this tick.
+    # ------------------------------------------------------------------
+    try:
+        limbic_result = update_limbic(state, tick)
+        logger.debug(
+            f"Limbic tick #{tick}: desires_ignited={limbic_result.desires_ignited} "
+            f"impulses={limbic_result.action_impulses_accumulated}"
+        )
+    except Exception as e:
+        logger.warning(f"Limbic engine failed on tick #{tick}: {e}")
+
+    # ------------------------------------------------------------------
     # Step 1: Excess energy generation on active nodes (weight-scaled)
     #         Modulated by energy_injection_scale from metabolism.
     # ------------------------------------------------------------------
@@ -490,11 +507,33 @@ def thought_tick(
             result.energy_decayed += decay
 
     # ------------------------------------------------------------------
-    # Step 4: WM selection — top N nodes by energy (emergent)
+    # Step 4: WM selection — top N nodes by drive-weighted salience
+    #
+    # Instead of pure energy ranking, salience includes a drive bonus:
+    #   salience = energy * (1.0 + drive_bonus)
+    # where drive_bonus is the mean of (drive.intensity * node.drive_affinity)
+    # across all drives, capped at 0.5 so energy still dominates.
+    # This pulls high-affinity nodes into WM when drives are elevated.
     # ------------------------------------------------------------------
+    def _compute_salience(node: Node) -> float:
+        """Compute drive-weighted salience for WM selection (Law 4)."""
+        if node.energy <= 0.0:
+            return 0.0
+        drive_bonus = 0.0
+        drives = state.limbic.drives
+        if drives:
+            total_affinity = 0.0
+            for drive_name, drive in drives.items():
+                aff = node.drive_affinity.get(drive_name, 0.0) if node.drive_affinity else 0.0
+                total_affinity += drive.intensity * aff
+            drive_bonus = total_affinity / len(drives)
+        # Cap drive_bonus at 0.5 so energy still dominates selection
+        drive_bonus = min(drive_bonus, 0.5)
+        return node.energy * (1.0 + drive_bonus)
+
     active_nodes = sorted(
         state.nodes.values(),
-        key=lambda n: n.energy,
+        key=_compute_salience,
         reverse=True,
     )
     new_wm_ids = [n.id for n in active_nodes[:WM_SIZE] if n.energy > 0.0]
@@ -523,6 +562,22 @@ def thought_tick(
         state.wm.stability_ticks = 0
     else:
         state.wm.stability_ticks += 1
+
+    # ------------------------------------------------------------------
+    # Step 4b: Impulse accumulation (Law 17) — action nodes accumulate
+    #          energy under sustained drive pressure.
+    #          Runs after WM selection so action nodes that gain enough
+    #          impulse energy can enter WM on the next tick.
+    # ------------------------------------------------------------------
+    try:
+        impulses_accumulated, _actions_checked = accumulate_impulses(state)
+        if impulses_accumulated > 0:
+            logger.debug(
+                f"Impulse accumulation tick #{tick}: "
+                f"{impulses_accumulated} actions gained energy"
+            )
+    except Exception as e:
+        logger.warning(f"Impulse accumulation failed on tick #{tick}: {e}")
 
     # ------------------------------------------------------------------
     # Step 5: Hebbian crystallization of co-active WM pairs
@@ -607,9 +662,16 @@ def thought_tick(
     # When mean WM energy > threshold AND cooldown has elapsed,
     # fire the highest-energy action-capable process node in WM.
     #
-    # The threshold is modulated by circadian ACTIVATION_THRESHOLD:
-    # at circadian trough, the threshold rises (harder to fire unless
-    # urgent), at peak it stays at the base value.
+    # The threshold is modulated by:
+    # 1. Circadian ACTIVATION_THRESHOLD (metabolism): at circadian trough,
+    #    the threshold rises (harder to fire unless urgent).
+    # 2. Arousal (limbic): high arousal (panic) → lower threshold → easier
+    #    to fire; low arousal (idle) → higher threshold → conserves compute.
+    #
+    # Arousal formula: effective_threshold = base / max(0.5, arousal + 0.5)
+    #   - arousal ~0.0 (idle):  threshold / 0.5 = 2x threshold (hard to fire)
+    #   - arousal ~0.5 (flow):  threshold / 1.0 = 1x threshold (normal)
+    #   - arousal ~1.0 (panic): threshold / 1.5 = 0.67x threshold (easy to fire)
     # ------------------------------------------------------------------
     if wm_nodes:
         mean_energy = sum(n.energy for n in wm_nodes) / len(wm_nodes)
@@ -617,7 +679,11 @@ def thought_tick(
 
         cooldown_ok = (tick - last_action_tick) >= ACTION_COOLDOWN_TICKS
 
-        if mean_energy > effective_action_threshold and cooldown_ok:
+        # Arousal-modulated threshold: high arousal lowers it, low arousal raises it
+        arousal = state.limbic.arousal
+        arousal_modulated_threshold = effective_action_threshold / max(0.5, arousal + 0.5)
+
+        if mean_energy > arousal_modulated_threshold and cooldown_ok:
             # Find the best action node in WM
             action_candidates = [
                 n for n in wm_nodes

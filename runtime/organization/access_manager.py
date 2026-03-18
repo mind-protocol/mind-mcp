@@ -27,7 +27,7 @@ from typing import Dict, Any, List, Optional
 
 from runtime.infrastructure.database.adapter import DatabaseAdapter
 
-from .constants_l3_physics import (
+from .constants import (
     HAS_ACCESS_MEMBER_HIERARCHY,
     HAS_ACCESS_MEMBER_PERMANENCE,
     HAS_ACCESS_MEMBER_TRUST,

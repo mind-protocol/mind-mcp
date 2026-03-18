@@ -87,17 +87,7 @@ def parse_action_command(command_string: str) -> ActionCommand:
 # ---------------------------------------------------------------------------
 
 
-def _cosine_similarity(a: List[float], b: List[float]) -> float:
-    """Cosine similarity. Returns 0.0 on degenerate input."""
-    if not a or not b or len(a) != len(b):
-        return 0.0
-    a_arr = np.asarray(a, dtype=np.float64)
-    b_arr = np.asarray(b, dtype=np.float64)
-    norm_a = np.linalg.norm(a_arr)
-    norm_b = np.linalg.norm(b_arr)
-    if norm_a == 0.0 or norm_b == 0.0:
-        return 0.0
-    return float(np.dot(a_arr, b_arr) / (norm_a * norm_b))
+from runtime.utils import cosine_similarity as _cosine_similarity  # canonical impl
 
 
 def compute_context_match(
