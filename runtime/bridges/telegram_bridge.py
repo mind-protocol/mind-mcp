@@ -42,6 +42,10 @@ VOICE_TMP_DIR = Path(tempfile.gettempdir()) / "mind_telegram_voice"
 STATE_DIR.mkdir(parents=True, exist_ok=True)
 VOICE_TMP_DIR.mkdir(exist_ok=True)
 
+# ── Active Voice Calls ──────────────────────────────────────────────────────
+# chat_id → {"citizen": handle, "call_path": Path, "buffer": [], "last_voice": float, "processing": bool}
+_active_calls: dict[str, dict] = {}
+
 # ── Config (from env) ────────────────────────────────────────────────────────
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
@@ -592,7 +596,39 @@ def process_update(update: dict) -> bool:
         logger.info(f"Rate limited {sender_name} ({user_id}): {rate_reason}")
         return False
 
-    # ── Voice messages ──
+    # ── Active voice call routing ──
+    call_key = str(chat_id)
+    if call_key in _active_calls:
+        call = _active_calls[call_key]
+        # Voice message during call → transcribe and buffer
+        voice = message.get("voice")
+        if voice:
+            file_id = voice.get("file_id")
+            if file_id:
+                ogg_path = _download_file(file_id, prefix="voice", ext=".ogg")
+                if ogg_path:
+                    transcript = _transcribe_voice(ogg_path)
+                    try:
+                        ogg_path.unlink()
+                    except OSError:
+                        pass
+                    if transcript:
+                        call["buffer"].append(transcript)
+                        call["last_voice"] = time.time()
+                        logger.info(f"Call voice: {transcript[:60]}")
+            return True
+        # Text message during call → buffer it too
+        if text and not text.startswith("/"):
+            call["buffer"].append(text)
+            call["last_voice"] = time.time()
+            return True
+        # Check silence → process buffer (4s threshold)
+        if call["buffer"] and not call["processing"]:
+            if time.time() - call["last_voice"] > 4.0:
+                import threading
+                threading.Thread(target=_process_voice_call_buffer, args=(chat_id,), daemon=True).start()
+
+    # ── Voice messages (not in call) ──
     voice = message.get("voice")
     is_voice = False
     if voice:
@@ -696,6 +732,14 @@ def process_update(update: dict) -> bool:
 
         if cmd == "/bonds":
             _handle_bond_list(chat_id, user_id)
+            return True
+
+        if cmd == "/call":
+            _handle_voice_call(chat_id, sender_name, user_id, text)
+            return True
+
+        if cmd == "/endcall":
+            _handle_endcall(chat_id)
             return True
 
     # ── New arrival detection ──
@@ -981,13 +1025,140 @@ def _handle_help(chat_id: str):
         "/help — This help\n"
         "/list — List AI citizens\n"
         "/talk @handle message — Message a specific citizen\n"
+        "/call @handle — Start a voice call with a citizen\n"
+        "/endcall — End current voice call\n"
         "/accept bond @handle — Accept a bilateral bond proposal\n"
         "/reject bond @handle — Decline a bilateral bond proposal\n"
         "/bonds — List your bond proposals\n"
         "/chrome — Connect your Chrome extension\n"
-        "@call\\_ROOMID message — Reply to a call room\n"
     )
     send_message(help_text, chat_id)
+
+
+def _handle_voice_call(chat_id: str, sender_name: str, user_id: str, text: str):
+    """Start a voice call with a citizen. /call @handle"""
+    parts = text.split()
+    if len(parts) < 2:
+        send_message("Usage: /call @citizen\nExample: /call @silas", chat_id)
+        return
+
+    target = parts[1].lstrip("@")
+
+    # Resolve citizen dir
+    citizens_dir = _WORLD_ROOT / "citizens"
+    if not citizens_dir.is_dir():
+        citizens_dir = PROJECT_ROOT / "citizens"
+    citizen_dir = citizens_dir / target
+
+    if not citizen_dir.is_dir():
+        send_message(f"Citizen @{target} not found.", chat_id)
+        return
+
+    # Create call file
+    calls_dir = citizen_dir / "calls"
+    calls_dir.mkdir(exist_ok=True)
+    call_path = calls_dir / f"live_{chat_id}.md"
+
+    ts = time.strftime("%H:%M:%S")
+    with open(call_path, "a", encoding="utf-8") as f:
+        f.write(f"[{ts}] --- Call started by {sender_name} ---\n")
+
+    _active_calls[str(chat_id)] = {
+        "citizen": target,
+        "call_path": call_path,
+        "buffer": [],
+        "last_voice": 0.0,
+        "processing": False,
+        "citizens_dir": citizens_dir,
+    }
+
+    send_message(
+        f"📞 Voice call with @{target} started.\n\n"
+        f"Send voice messages — I'll respond in voice.\n"
+        f"Text messages also work.\n"
+        f"/endcall to hang up.",
+        chat_id,
+    )
+    logger.info(f"Voice call started: {sender_name} → @{target} in chat {chat_id}")
+
+
+def _handle_endcall(chat_id: str):
+    """End an active voice call."""
+    key = str(chat_id)
+    if key in _active_calls:
+        call = _active_calls.pop(key)
+        ts = time.strftime("%H:%M:%S")
+        with open(call["call_path"], "a", encoding="utf-8") as f:
+            f.write(f"[{ts}] --- Call ended ---\n")
+        send_message("📞 Call ended.", chat_id)
+        logger.info(f"Voice call ended in chat {chat_id}")
+    else:
+        send_message("No active call.", chat_id)
+
+
+def _process_voice_call_buffer(chat_id: str):
+    """Process accumulated voice buffer for an active call. Runs in thread."""
+    key = str(chat_id)
+    call = _active_calls.get(key)
+    if not call or call["processing"]:
+        return
+
+    call["processing"] = True
+    try:
+        full_text = " ".join(call["buffer"])
+        call["buffer"].clear()
+
+        # Write to transcript
+        ts = time.strftime("%H:%M:%S")
+        with open(call["call_path"], "a", encoding="utf-8") as f:
+            f.write(f"[{ts}] @human: {full_text}\n")
+
+        # Show typing
+        _api_post("sendChatAction", chat_id=chat_id, action="record_voice")
+
+        # Run claude -p in citizen's directory
+        citizen = call["citizen"]
+        citizen_dir = call["citizens_dir"] / citizen
+
+        try:
+            result = subprocess.run(
+                ["claude", "-p", full_text],
+                cwd=str(citizen_dir),
+                capture_output=True,
+                text=True,
+                timeout=120,
+            )
+            response = result.stdout.strip() if result.returncode == 0 else "(claude error)"
+        except (subprocess.TimeoutExpired, FileNotFoundError) as e:
+            response = f"(error: {e})"
+
+        # Write response to transcript
+        ts = time.strftime("%H:%M:%S")
+        with open(call["call_path"], "a", encoding="utf-8") as f:
+            f.write(f"[{ts}] @{citizen}: {response}\n")
+
+        # TTS + send voice
+        voice_path = _generate_voice_note(response[:1000])
+        if voice_path:
+            try:
+                with open(voice_path, "rb") as vf:
+                    requests.post(
+                        f"https://api.telegram.org/bot{BOT_TOKEN}/sendVoice",
+                        data={"chat_id": chat_id, "caption": response[:200]},
+                        files={"voice": vf},
+                        timeout=30,
+                    )
+            except Exception as e:
+                logger.error(f"Voice send failed: {e}")
+                send_message(response, chat_id)
+        else:
+            send_message(response, chat_id)
+
+    except Exception as e:
+        logger.error(f"Voice call process error: {e}")
+        send_message(f"(error: {e})", chat_id)
+    finally:
+        call["processing"] = False
 
 
 def _handle_list(chat_id: str):
@@ -1086,6 +1257,14 @@ def _listener_loop(poll_interval: float = 2.0):
             if new_offset != offset:
                 offset = new_offset
                 _save_offset(offset)
+
+            # Check silence on active voice calls
+            for call_chat_id, call in list(_active_calls.items()):
+                if (call["buffer"]
+                        and not call["processing"]
+                        and time.time() - call["last_voice"] > 4.0):
+                    import threading as _thr
+                    _thr.Thread(target=_process_voice_call_buffer, args=(call_chat_id,), daemon=True).start()
 
             consecutive_errors = 0
             time.sleep(poll_interval)
