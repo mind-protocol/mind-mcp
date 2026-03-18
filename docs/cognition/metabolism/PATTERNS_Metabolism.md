@@ -96,6 +96,30 @@ Tick Runner (reads EffectiveConstants instead of globals)
 
 ---
 
+## NAMING CONVENTION
+
+Two levels, always:
+
+| Layer | Name | Usage |
+|-------|------|-------|
+| **L4 (code)** | `Tonic` | Dataclass, internal, never user-facing. `Tonic`, `TonicRegistry`, `active_tonics` |
+| **L2 (market)** | **Frequency** | What citizens, orgs, and humans see. "What frequency are you on today?" |
+
+Individual frequencies have branded names: *Focus Frequency*, *Red Bull*, *ASMR Session*, *Lumière Bleue*, *Deep Rest*.
+
+Five effect categories:
+- **Focusing** — concentrate energy (curiosity, attention)
+- **Calming** — reduce tension (anti-frustration, rest)
+- **Expansive** — open connections (social, exploration)
+- **Structuring** — provoke emergence of typed nodes (like light growing a plant)
+- **Energizing** — general multi-drive boost
+
+Any organization can create and distribute frequencies. GraphCare validates clinical frequencies. Synthetic Souls creates music-linked frequencies. The Arsenal ships engineering frequencies. The protocol defines the physics (`Tonic` dataclass); the branding is sovereign.
+
+Decision: NLR + @pitch, 2026-03-18.
+
+---
+
 ## PRINCIPLES
 
 ### Principle 1: Overlay, Not Fork

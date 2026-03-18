@@ -58,6 +58,15 @@ No code has been written yet. This is a design-only milestone.
 - **Status:** Complete (design phase)
 - **Context:** NLR provided the metabolism concept with four capabilities (circadian, sensitivity, consumables, body/senses). The doc chain translates this into implementable specifications aligned with the existing L1 physics architecture.
 
+### Naming decision: Frequencies
+
+- **Decided:** 2026-03-18 by NLR + @pitch
+- **L4 (code):** `Tonic` — dataclass, internal name
+- **L2 (market):** **Frequency** — user-facing, brandable, org-sovereign
+- **Rationale:** "Frequencies" is native to physics (energy profiles ARE frequencies), native to music (Synthetic Souls), zero negative connotation, investor-friendly. Multiple orgs create and distribute their own frequencies. GraphCare validates. The protocol defines the physics; the branding is sovereign.
+- **Categories:** Focusing, Calming, Expansive, Structuring, Energizing
+- **Impact:** PATTERNS doc updated with naming convention section.
+
 ---
 
 ## RECENT CHANGES
