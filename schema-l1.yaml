@@ -158,15 +158,75 @@ NodeBase:
       dimensions: 1536
       description: "embed(synthesis), updated on drift"
 
-    # === Visual Memory (v2.2) ===
+    # === Multimodal Media (v2.3) ===
+    # Replaces image_uri/image_embedding from v2.2.
+    # Extensible: adding a modality = adding a key. No schema migration.
+    # Each modality: URI for storage, embedding for physics participation.
+    # NEVER inline binary data in FalkorDB.
+    media:
+      type: dict
+      nullable: true
+      description: "Multimodal attachments. Key = modality string, value = JSON object with uri + embedding + metadata. Extensible without schema changes."
+      structure:
+        "{modality}":
+          uri:
+            type: string
+            required: true
+            description: "Object storage URI (S3/R2/local). NEVER base64."
+          embedding:
+            type: vector
+            nullable: true
+            description: "Modality-specific embedding for physics participation. CLIP for images, CLAP for audio, etc."
+          meta:
+            type: dict
+            nullable: true
+            description: "Modality-specific metadata (duration_s, format, dimensions, etc.)"
+      supported_modalities:
+        image:
+          embedding_model: "CLIP / SigLIP"
+          dimensions: 768
+          coherence_key: "Sim_vis"
+          weight: 0.25
+          status: CANONICAL
+          examples: ["POV screenshot (moments)", "profile pic (actors)", "generated vision (desires)", "medoid (concepts via Law 10)"]
+        audio:
+          embedding_model: "CLAP / AudioCLIP"
+          dimensions: 512
+          coherence_key: "Sim_audio"
+          weight: 0.10
+          status: DESIGNING
+          meta_fields: ["duration_s", "type (speech|music|ambient|effect)"]
+        video:
+          embedding_model: "LanguageBind / VideoCLIP"
+          dimensions: 768
+          coherence_key: "Sim_video"
+          weight: 0.05
+          status: PROPOSED
+          meta_fields: ["duration_s", "fps", "resolution"]
+        geometry:
+          embedding_model: "ULIP / PointBERT"
+          dimensions: 512
+          coherence_key: "Sim_3d"
+          weight: 0.05
+          status: PROPOSED
+          meta_fields: ["format (gltf|glb|obj)", "lod_levels", "vertex_count"]
+      backward_compat: |
+        Legacy image_uri/image_embedding fields are read-only shims:
+          image_uri     → media.image.uri
+          image_embedding → media.image.embedding
+        Code that reads image_uri gets media.image.uri transparently.
+        Code that writes image_uri is deprecated — use media dict.
+    # Legacy fields (v2.2 backward compat — read-only, see media dict)
     image_uri:
       type: string
       nullable: true
-      description: "URI to image in object storage (S3/R2/local bucket). NEVER base64. Source depends on node type: POV screenshot (moments), profile pic (actors), generated vision (desires), medoid (concepts via Law 10)."
+      deprecated: true
+      description: "DEPRECATED v2.3 — use media.image.uri. Read-only shim for backward compatibility."
     image_embedding:
       type: vector
       nullable: true
-      description: "CLIP/SigLIP embedding of the image. Lives in same latent space as text embeddings. Used by Law 8 (compatibility) for visual similarity and by Sim_vis in coherence formula."
+      deprecated: true
+      description: "DEPRECATED v2.3 — use media.image.embedding. Read-only shim for backward compatibility."
 
     # === Spatial (v2.3) ===
     position:
@@ -500,15 +560,32 @@ working_memory:
   context_vector: "Mean embedding of current WM members — the situation model"
 
   coherence_formula: |
-    # v2.2: Added Sim_vis (visual similarity) — images participate in WM selection
-    Coh = (0.25 * Sim_vec) + (0.25 * Sim_vis) + (0.40 * Sim_lex) - (0.10 * Δ_affect)
-    # Sim_vec: cosine(stimulus_embedding, context_vector) — semantic similarity
-    # Sim_vis: cosine(stimulus_image_embedding, node.image_embedding) — visual similarity (CLIP/SigLIP space)
-    # Sim_lex: exact/fuzzy match of stimulus against active node names — dominant for servoing
-    # Δ_affect: |valence(stimulus) - mean_valence(WM)| — emotional incongruence penalty
+    # v2.3: Multimodal coherence — each modality is a bonus term
+    Coh = w_text * Sim_text + Σ(w_mod * Sim_mod) + w_lex * Sim_lex - w_affect * Δ_affect
     #
-    # Fallback (Law 8): when image_embedding unavailable, redistribute:
-    #   Coh = (0.30 * Sim_vec) + (0.50 * Sim_lex) - (0.20 * Δ_affect)
+    # Fixed weights:
+    #   w_lex    = 0.40   (lexical match — dominant for servoing)
+    #   w_affect = 0.10   (emotional incongruence penalty)
+    #
+    # Dynamic weights (redistribute when modalities missing):
+    #   w_text   = base 0.25, absorbs weight from missing modalities
+    #   w_mod    = per-modality weight from media.supported_modalities
+    #     image:    0.25 (CLIP, mature)
+    #     audio:    0.10 (CLAP, developing)
+    #     video:    0.05 (LanguageBind, early)
+    #     geometry: 0.05 (ULIP, early)
+    #
+    # When a modality is unavailable on either node, its weight
+    # redistributes proportionally to w_text.
+    #
+    # Sim_text:  cosine(stimulus_embedding, context_vector) — semantic
+    # Sim_vis:   cosine(media.image.embedding, node.media.image.embedding) — visual
+    # Sim_audio: cosine(media.audio.embedding, node.media.audio.embedding) — auditory
+    # Sim_lex:   exact/fuzzy match of stimulus against active node names
+    # Δ_affect:  |valence(stimulus) - mean_valence(WM)| — emotional penalty
+    #
+    # Fallback (no media at all):
+    #   Coh = (0.50 * Sim_text) + (0.40 * Sim_lex) - (0.10 * Δ_affect)
 
   structural_spaces:
     self_model: "Sub-graph describing: who I am, what I value, what I want, what I can do"
@@ -583,9 +660,9 @@ physics_laws:
     description: "Recurring co-activation patterns form new hub nodes — zero LLM"
     key: "Type from majority rule, content from centroid+medoid, bidirectional links"
     visual_extension: |
-      Image Medoid (v2.2): crystallized node inherits image_uri and image_embedding
-      from the medoid — the moment whose image_embedding is geometrically closest
-      to the cluster centroid. No image generation needed for concepts.
+      Image Medoid (v2.3): crystallized node inherits media.image from the medoid —
+      the moment whose media.image.embedding is geometrically closest to the
+      cluster centroid. No image generation needed for concepts.
 
   L11_orientation_selection:
     function: ACT
@@ -623,7 +700,7 @@ physics_laws:
     includes: "Impulse accumulation on action nodes under sustained drive pressure"
     visual_extension: |
       Desire Image Generation (v2.2): during subentity traversal, if a desire node
-      has energy > IMAGE_GENERATION_THRESHOLD (0.4) AND image_uri IS NULL,
+      has energy > IMAGE_GENERATION_THRESHOLD (0.4) AND media.image IS NULL,
       trigger image generation: self profile pic as reference + desire content +
       neighbor images → micro-agent prompt → generate → store URI + embedding.
       Ensures active aspirations have a visual target for active inference.
@@ -645,8 +722,8 @@ physics_laws:
     description: "Forward-facing sub-graphs for micro-planning and light simulation"
     status: deferred
     visual_extension: |
-      Visual Prediction Error (v2.2): active desire.image_embedding vs current POV
-      image_embedding → cosine_distance = prediction_error. Drives frustration (Law 16)
+      Visual Prediction Error (v2.3): active desire media.image.embedding vs current POV
+      media.image.embedding → cosine_distance = prediction_error. Drives frustration (Law 16)
       when error > 0, satisfaction when error ≈ 0. Pure geometry in FalkorDB.
 
   L21_horizontal_membrane:
@@ -760,8 +837,10 @@ invariants:
   - "Stability grows from regularity (low coefficient of variation), not frequency"
   - "Structural links (contains, abstracts) are protected from forgetting"
   - "Vocabulary is bidirectional — same grammar for input and output"
-  - "Images stored as URIs in object storage — NEVER base64 in FalkorDB (v2.2)"
-  - "Image embeddings (CLIP/SigLIP) are first-class physics participants via Sim_vis in coherence (v2.2)"
-  - "Flashbulb Vision is fail-loud but NEVER blocks inference or tick execution (v2.2)"
-  - "Concept images inherit from medoid via Law 10 crystallization — no generation needed (v2.2)"
-  - "Desire images generated on traversal only when energy > threshold AND image_uri is null (v2.2)"
+  - "Media stored as URIs in object storage — NEVER inline binary in FalkorDB (v2.3)"
+  - "Media embeddings (CLIP, CLAP, etc.) are first-class physics participants via multimodal coherence (v2.3)"
+  - "Flashbulb Vision is fail-loud but NEVER blocks inference or tick execution"
+  - "Concept images inherit from medoid via Law 10 crystallization — no generation needed"
+  - "Desire images generated on traversal only when energy > threshold AND media.image is null"
+  - "media dict is extensible — adding a modality requires no schema migration (v2.3)"
+  - "Spherical position [r, theta, phi] pre-computed by spatial mapper, not per-tick (v2.3)"
