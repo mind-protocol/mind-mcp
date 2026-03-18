@@ -13,11 +13,62 @@ import asyncio
 import json
 import logging
 import random
+import time
 from typing import Any, Dict, List, Optional
 
 from mcp.tools.context import ServerContext
 
 logger = logging.getLogger("mind.graph_query")
+
+
+def _record_query_gap(query: str, actor_id: str, ctx: ServerContext):
+    """Record an empty query result as a gap marker in the L3 graph.
+
+    When a query returns nothing, it means the graph lacks knowledge
+    about this topic. Gap markers accumulate energy logarithmically —
+    the 20th failure for the same topic is not 20x as urgent as the first.
+
+    Gap markers can be used to prioritize knowledge acquisition.
+    L7 (forgetting) handles cleanup of stale gaps nobody cares about.
+    """
+    import hashlib
+    import math
+
+    gap_id = "gap_" + hashlib.sha256(query.lower().strip().encode()).hexdigest()[:12]
+
+    try:
+        # MERGE: if the gap already exists, increment its energy (logarithmic)
+        ctx.graph_queries._query(
+            """
+            MERGE (g:Narrative {id: $gap_id})
+            ON CREATE SET
+                g.name = $name,
+                g.type = 'gap',
+                g.content = $query,
+                g.synthesis = $synthesis,
+                g.energy = 0.3,
+                g.weight = 0.1,
+                g.hit_count = 1,
+                g.first_asked_by = $actor_id,
+                g.created_at_s = $ts
+            ON MATCH SET
+                g.energy = g.energy + 0.3 / (1 + log(g.hit_count + 1)),
+                g.hit_count = g.hit_count + 1,
+                g.last_asked_by = $actor_id,
+                g.updated_at_s = $ts
+            """,
+            {
+                "gap_id": gap_id,
+                "name": f"Knowledge gap: {query[:80]}",
+                "query": query,
+                "synthesis": f"The graph has no knowledge about: {query}. Asked by {actor_id}.",
+                "actor_id": actor_id,
+                "ts": int(time.time()),
+            },
+        )
+        logger.debug(f"Gap recorded: {gap_id} for query '{query[:60]}'")
+    except Exception as e:
+        logger.debug(f"Gap recording failed: {e}")
 
 
 TOOL_SCHEMA = {
@@ -299,6 +350,7 @@ def _try_fast_path(query: str, actor_id: str, ctx: ServerContext) -> Optional[st
                         lines.append(f"- **{r[1]}** (id={r[0]}, type={r[2]})")
                     return "\n".join(lines)
                 else:
+                    _record_query_gap(query, actor_id, ctx)
                     return f"No {label} nodes found matching '{search_term}' in the graph."
             break
 
@@ -403,6 +455,7 @@ async def _ask_single(
         )
 
         if not result.found_narratives:
+            _record_query_gap(query, actor_id, ctx)
             return "No relevant narratives found."
 
         # Parse intention type
