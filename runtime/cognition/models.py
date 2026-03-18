@@ -333,6 +333,7 @@ class CitizenCognitiveState:
     nodes: dict[str, Node] = field(default_factory=dict)
     links: list[Link] = field(default_factory=list)
     limbic: LimbicState = field(default_factory=LimbicState)
+    metabolism: object = None  # CitizenMetabolism (lazy import to avoid circular)
     wm: WorkingMemory = field(default_factory=WorkingMemory)
     tick_count: int = 0
     consciousness_level: ConsciousnessLevel = ConsciousnessLevel.FULL

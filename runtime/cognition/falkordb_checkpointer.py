@@ -128,6 +128,9 @@ class FalkorDBBrainCheckpointer:
         self._dirty_links.clear()
         self._last_checkpoint = time.time()
 
+        # Persist metabolism (adaptive peak_hour must survive restarts)
+        self._save_metabolism(state)
+
         if flushed_nodes or flushed_links:
             logger.info(
                 f"Checkpoint {self.citizen_handle}: "
@@ -313,6 +316,9 @@ class FalkorDBBrainCheckpointer:
                 link.stability = float(row[10] or 0.5)
                 state.links.append(link)
 
+            # Restore metabolism (circadian adaptation survives restarts)
+            self._load_metabolism(state)
+
             logger.info(
                 f"Brain loaded for {self.citizen_handle}: "
                 f"{len(state.nodes)} nodes, {len(state.links)} links"
@@ -323,6 +329,64 @@ class FalkorDBBrainCheckpointer:
             logger.exception(f"Failed to load brain state for {self.citizen_handle}: {e}")
             return None
 
+    # ------------------------------------------------------------------
+    # Metabolism persistence
+    # ------------------------------------------------------------------
+
+    def _save_metabolism(self, state: CitizenCognitiveState):
+        """Persist metabolism state as a __metabolism__ node in the brain graph."""
+        metabolism = getattr(state, 'metabolism', None)
+        if metabolism is None or not self._connected:
+            return
+
+        import json
+        data = json.dumps({
+            "timezone_offset": metabolism.timezone_offset,
+            "peak_hour": metabolism.peak_hour,
+            "sensitivity": metabolism.sensitivity,
+            "last_adaptation_tick": metabolism.last_adaptation_tick,
+        })
+
+        try:
+            self._graph.query(
+                "MERGE (m:Meta {id: '__metabolism__'}) "
+                "SET m.data = $data, m.updated_at = $ts",
+                {"data": data, "ts": int(time.time())},
+            )
+        except Exception as e:
+            logger.warning(f"Metabolism save failed for {self.citizen_handle}: {e}")
+
+    def _load_metabolism(self, state: CitizenCognitiveState):
+        """Restore metabolism state from the __metabolism__ node."""
+        if not self._connected:
+            return
+
+        try:
+            result = self._graph.query(
+                "MATCH (m:Meta {id: '__metabolism__'}) RETURN m.data"
+            )
+            if result.result_set and result.result_set[0][0]:
+                import json
+                from .metabolism import CitizenMetabolism
+                data = json.loads(result.result_set[0][0])
+                state.metabolism = CitizenMetabolism(
+                    timezone_offset=data.get("timezone_offset", 1.0),
+                    peak_hour=data.get("peak_hour", 14.0),
+                    sensitivity=data.get("sensitivity", {}),
+                    last_adaptation_tick=data.get("last_adaptation_tick", 0),
+                )
+                logger.info(
+                    f"Metabolism restored for {self.citizen_handle}: "
+                    f"peak={state.metabolism.peak_hour:.1f}h, "
+                    f"tz=UTC{state.metabolism.timezone_offset:+.0f}"
+                )
+            else:
+                # No saved metabolism — create default (Paris)
+                from .metabolism import CitizenMetabolism
+                state.metabolism = CitizenMetabolism()
+        except Exception as e:
+            logger.warning(f"Metabolism load failed for {self.citizen_handle}: {e}")
+
     def flush_all(self, state: CitizenCognitiveState):
         """Flush entire state to FalkorDB (used on shutdown)."""
         if not self._connected:
@@ -331,4 +395,5 @@ class FalkorDBBrainCheckpointer:
         self._dirty_nodes = set(state.nodes.keys())
         self._dirty_links = {f"{l.source_id}_{l.target_id}" for l in state.links}
         self.checkpoint(state)
+        self._save_metabolism(state)
         logger.info(f"Full flush for {self.citizen_handle}: {len(state.nodes)}n, {len(state.links)}l")
