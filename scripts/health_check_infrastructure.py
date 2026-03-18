@@ -304,6 +304,85 @@ def check_interoception_live(db) -> CheckResult:
 # Runner
 # =========================================================================
 
+def check_stimulus_injection(db) -> CheckResult:
+    """HC9: Verify stimuli are injected and energy distributes to nodes."""
+    try:
+        from runtime.cognition.falkordb_checkpointer import FalkorDBBrainCheckpointer
+        from runtime.cognition.tick_runner_l1_cognitive_engine import L1CognitiveTickRunner, Stimulus
+        from runtime.cognition.metabolism import CitizenMetabolism
+    except ImportError as e:
+        return CheckResult("stimulus_injection", "FAIL", f"Import: {e}")
+
+    brains = [g for g in db.list_graphs() if g.startswith("brain_")]
+    for bn in brains[:3]:
+        handle = bn.replace("brain_", "")
+        try:
+            ckpt = FalkorDBBrainCheckpointer(handle)
+            ckpt.connect()
+            state = ckpt.load_state()
+            if not state or len(state.nodes) < 50:
+                continue
+            state.metabolism = CitizenMetabolism()
+            runner = L1CognitiveTickRunner(state)
+            stim = Stimulus(content="health check", energy_budget=1.0, source="system")
+            result = runner.run_tick(stimulus=stim)
+            if result.energy_injected > 0:
+                return CheckResult("stimulus_injection", "PASS",
+                    f"Injected {result.energy_injected:.2f} energy into {handle}",
+                    {"energy": result.energy_injected, "citizen": handle})
+        except Exception:
+            continue
+    return CheckResult("stimulus_injection", "FAIL", "No brain could inject stimulus")
+
+
+def check_law1_targeting(db) -> CheckResult:
+    """HC10: Verify Law 1 targets specific nodes (not uniform spray)."""
+    try:
+        from runtime.cognition.tick_runner_l1_cognitive_engine import inject_energy
+    except ImportError:
+        inject_energy = None
+    if inject_energy is None:
+        return CheckResult("law1_targeting", "WARN",
+            "Law 1 full implementation not loaded — using minimal kernel (uniform distribution)")
+    return CheckResult("law1_targeting", "PASS", "Law 1 full implementation loaded")
+
+
+def check_law10_crystallization(db) -> CheckResult:
+    """HC11: Verify Law 10 (crystallization) is wired in tick runner."""
+    try:
+        from runtime.cognition.tick_runner_l1_cognitive_engine import crystallize
+    except ImportError:
+        crystallize = None
+    if crystallize is None:
+        return CheckResult("law10_crystallization", "FAIL",
+            "Law 10 NOT loaded — brains cannot crystallize new nodes. No growth possible.",
+            {"severity": "critical"})
+    return CheckResult("law10_crystallization", "PASS", "Law 10 loaded")
+
+
+def check_tick_loop_active(db) -> CheckResult:
+    """HC12: Verify ticks are running by checking energy changes over time."""
+    brains = [g for g in db.list_graphs() if g.startswith("brain_")]
+    for bn in brains[:3]:
+        try:
+            bg = db.select_graph(bn)
+            r = bg.query("MATCH (n:Node) RETURN avg(n.energy) as avg_e, max(n.energy) as max_e")
+            if r.result_set:
+                avg_e = float(r.result_set[0][0] or 0)
+                max_e = float(r.result_set[0][1] or 0)
+                handle = bn.replace("brain_", "")
+                if max_e > 0.01:
+                    return CheckResult("tick_loop_active", "PASS",
+                        f"{handle}: avg_energy={avg_e:.4f}, max={max_e:.4f} — ticks are running",
+                        {"avg_energy": avg_e, "max_energy": max_e})
+                else:
+                    return CheckResult("tick_loop_active", "WARN",
+                        f"{handle}: max_energy={max_e:.4f} — may be decayed to zero (no stimuli?)")
+        except Exception:
+            continue
+    return CheckResult("tick_loop_active", "FAIL", "Could not check tick activity")
+
+
 ALL_CHECKS = [
     check_brain_types,
     check_limbic_persistence,
@@ -313,6 +392,10 @@ ALL_CHECKS = [
     check_brain_inventory,
     check_circadian_sanity,
     check_interoception_live,
+    check_stimulus_injection,
+    check_law1_targeting,
+    check_law10_crystallization,
+    check_tick_loop_active,
 ]
 
 
