@@ -36,8 +36,8 @@ def _load_state() -> dict:
     try:
         if STATE_FILE.exists():
             return json.loads(STATE_FILE.read_text())
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Failed to load watchdog state from {STATE_FILE}: {e}")
     return {"last_check": None, "status": "unknown", "downtime_start": None, "restart_count": 0, "incidents": []}
 
 def _save_state(state: dict):

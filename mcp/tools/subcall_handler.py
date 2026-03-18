@@ -237,10 +237,10 @@ def _enrich_query(query: str, ctx: ServerContext) -> str:
                     )
                     if remote.returncode == 0 and remote.stdout.strip():
                         parts.append(f"[git: {remote.stdout.strip()}]")
-                except Exception:
-                    pass
-    except Exception:
-        pass
+                except Exception as e:
+                    logger.debug(f"Git remote URL fetch failed: {e}")
+    except Exception as e:
+        logger.debug(f"Work context detection failed: {e}")
 
     # 2. Add active Claude tasks / TODO list
     try:
@@ -260,10 +260,11 @@ def _enrich_query(query: str, ctx: ServerContext) -> str:
                             task_str = "; ".join(tasks[:5])  # top 5 tasks
                             parts.append(f"[tasks: {task_str}]")
                             break
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"Task file parsing failed: {e}")
                     continue
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Task detection failed: {e}")
 
     return " ".join(parts)
 
@@ -280,8 +281,8 @@ def _resolve_actor_image(actor_id: str, graph_ops) -> Optional[str]:
         if result:
             row = result[0]
             return row[0] if isinstance(row, (list, tuple)) else row.get("a.image_uri")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Actor image resolution failed for {actor_id}: {e}")
     return None
 
 
@@ -403,8 +404,8 @@ def _build_stimulus_cluster(
                         "image_uri": row.get("m.image_uri"),
                         "_is_current_moment": True,
                     })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Current moment lookup failed for {caller_id}: {e}")
 
     # ── Step 2: Build the cluster segments ──
 
@@ -687,8 +688,8 @@ def _find_target_actor_id(handle: str, graph_ops) -> Optional[str]:
         if result:
             row = result[0]
             return row[0] if isinstance(row, (list, tuple)) else row.get("a.id")
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Fuzzy actor resolution failed for {handle}: {e}")
     return None
 
 
@@ -1444,8 +1445,8 @@ def _format_resonance(
                 from datetime import datetime, timezone
                 dt = datetime.fromtimestamp(int(last_ts), tz=timezone.utc)
                 lines.append(f"  Last activity: {dt.strftime('%Y-%m-%d %H:%M UTC')}")
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Last activity timestamp conversion failed: {e}")
 
         # Emotional state
         emo_parts = []

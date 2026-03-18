@@ -120,8 +120,8 @@ def send_as_citizen(handle: str, channel_id: int, text: str) -> Optional[Dict[st
                     mentioned_handles=mentioned,
                     direction="out",
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Graph enrichment for outbound message failed: {e}")
 
             return result
         else:
@@ -264,8 +264,8 @@ def start_bot():
                     original_content=original.content or "",
                     reply_content=message.content,
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Reply detection failed for message {message.id}: {e}")
 
         # ── Citation detection ──
         _handle_citations(message)
@@ -287,8 +287,8 @@ def start_bot():
                 reactor_name=user.display_name,
                 emoji=str(reaction.emoji),
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Reaction enrichment failed: {e}")
 
     _client = client
     _loop = asyncio.new_event_loop()
@@ -334,8 +334,8 @@ def _handle_inbound(message):
             mentioned_handles=mentioned,
             direction="in",
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Inbound message graph enrichment failed: {e}")
 
 
 def _handle_citations(message):
@@ -367,10 +367,10 @@ def _handle_citations(message):
                         original_content=embed.description or "",
                         reply_content=content,
                     )
-                except Exception:
-                    pass
-    except Exception:
-        pass
+                except Exception as e:
+                    logger.debug(f"Embed citation enrichment failed: {e}")
+    except Exception as e:
+        logger.debug(f"Citation embed iteration failed: {e}")
 
     # ── Markdown quote citations (lines starting with '> ') ──
     try:
@@ -394,10 +394,10 @@ def _handle_citations(message):
                         original_content=quoted_text,
                         reply_content=non_quote_text or content,
                     )
-                except Exception:
-                    pass
-    except Exception:
-        pass
+                except Exception as e:
+                    logger.debug(f"Markdown quote citation enrichment failed: {e}")
+    except Exception as e:
+        logger.debug(f"Markdown quote parsing failed: {e}")
 
 
 # ── Logging helpers ──────────────────────────────────────────────────────

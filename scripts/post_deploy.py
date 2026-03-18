@@ -174,7 +174,8 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
                             active += 1
                         else:
                             pending += 1
-                    except Exception:
+                    except Exception as e:
+                        log("3_report", f"  Failed to parse profile for {d.name}: {e}", level="WARN")
                         pending += 1
                 else:
                     no_profile += 1
@@ -193,8 +194,8 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
                     p = json.loads(profile_f.read_text())
                     if p.get("status") == "pending_confirmation":
                         newborns.append(d.name)
-                except Exception:
-                    pass
+                except Exception as e:
+                    log("3_report", f"  Failed to check newborn status for {d.name}: {e}", level="WARN")
 
         status_line = "ALL OK" if not errors else f"{len(errors)} ERRORS"
 
@@ -297,8 +298,8 @@ def step_3_deploy_report(org_id: str, announce_result: dict, citizen_count: int,
                             {"mid": moment_id, "cid": cid},
                         )
                     log("3_report", f"    Naissance de @{nb}")
-                except Exception:
-                    pass
+                except Exception as e:
+                    log("3_report", f"    Failed to link newborn @{nb}: {e}", level="WARN")
 
         # If errors, create a fix task and assign it to best available citizen
         if errors:

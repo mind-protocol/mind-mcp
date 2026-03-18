@@ -221,8 +221,8 @@ async def _status(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                 f"RETURN count(n) as c"
             )
             completed = result.result_set[0][0] if result.result_set else 0
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to count anamnesis session nodes: {e}")
 
     return _ok(
         f"Anamnesis session {state['session_id']}",

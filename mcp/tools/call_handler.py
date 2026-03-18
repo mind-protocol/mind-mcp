@@ -366,8 +366,8 @@ def handle_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                 "message": message[:200],
                 "timestamp": ts_iso,
             })
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Place server notification failed for call {room_id}: {e}")
 
         # 6. Wake target citizen (inject, spawn, or Telegram)
         wake_status = _notify_target(

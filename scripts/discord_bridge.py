@@ -27,6 +27,7 @@ Handle auto-detection: MIND_HANDLE env → MIND_ACTOR env → CWD in citizens/ �
 Channel: by ID (number) or name (string, e.g. "general").
 """
 
+import logging
 import os
 import sys
 import json
@@ -38,6 +39,8 @@ import requests as http_requests
 from datetime import datetime
 from pathlib import Path
 from dotenv import load_dotenv
+
+logger = logging.getLogger("mind.discord_bridge")
 
 import discord
 from discord import Webhook
@@ -183,8 +186,8 @@ def _enrich_mentions(text: str) -> str:
             for row in _r.result_set:
                 if row[0] and row[1]:
                     _mention_cache[row[0].lower()] = f"{row[1]} **@{row[0]}**"
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"L4 emoji cache pre-load failed: {e}")
 
     def _replace_mention(match):
         handle = match.group(1).lower()
@@ -366,8 +369,8 @@ def send_as_citizen(handle: str | None, channel_id: int, text: str, embed: dict 
                     f"profile(action='update', {missing[0]}='...') pour que ton travail te soit reconnu.",
                     origin="system",
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Profile completeness stimulus failed for {handle}: {e}")
 
     payload = {"username": display_name[:80]}  # Discord 80-char limit on webhook username
     if text:
@@ -490,8 +493,8 @@ def _log_message(direction: str, author: str, channel_id: int, content: str):
             mentioned_handles=mentioned,
             direction=direction,
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Graph enrichment for message failed: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -1097,8 +1100,8 @@ def _resolve_group_mention(name: str) -> set[str]:
                         if row[0]:
                             handles.add(row[0])
                     break
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"L3 group mention resolution failed for {name}: {e}")
 
     return handles
 
@@ -1113,8 +1116,8 @@ def _pick_citizen_for_message(content: str) -> str | None:
         if ai_citizens:
             import random
             return random.choice(ai_citizens)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Citizen picker failed: {e}")
     return None
 
 
@@ -1181,8 +1184,8 @@ async def _handle_inbound(message: discord.Message):
                     if target_handle is None:
                         target_handle = possible_handle
                     continue
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Narrative mention resolution failed for {possible_handle}: {e}")
 
         # 4. Org/universe group mention
         group_handles = _resolve_group_mention(possible_handle)
@@ -1284,8 +1287,8 @@ async def _handle_inbound(message: discord.Message):
                 original_content=original.content or "",
                 reply_content=content,
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Reply graph enrichment failed: {e}")
 
     # If a routing alias was used (not a specific citizen), acknowledge
     if target_handle and target_handle not in mentioned_handles and _is_routing_alias(target_handle):
@@ -1405,8 +1408,8 @@ async def on_reaction_add(reaction, user):
             reactor_name=user.display_name,
             emoji=str(reaction.emoji),
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Reaction graph enrichment failed: {e}")
 
 
 @client.event
@@ -1425,8 +1428,8 @@ async def on_guild_channel_pins_update(channel, last_pin):
             author_handle=latest.author.name.lower().replace(" ", "_") if latest.author else "unknown",
             ts=latest.created_at.timestamp() if latest.created_at else 0,
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Pin enrichment failed for channel {channel.id}: {e}")
 
 
 # ---------------------------------------------------------------------------

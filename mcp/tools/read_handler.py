@@ -209,8 +209,8 @@ def _list_telegram_channels() -> Dict[str, Any]:
                 entry["member_count"] = chat_data.get("member_count")
                 if info.get("thread_id"):
                     entry["thread_id"] = info["thread_id"]
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Telegram chat metadata fetch failed for {cid}: {e}")
 
         results.append(entry)
 
@@ -252,7 +252,7 @@ def _list_discord_channels() -> Dict[str, Any]:
         return _err("Discord bot token not found in .env")
 
     # Load channel map for guild ID
-    channel_map_path = Path("/home/mind-protocol/manemus/shrine/state/discord_channel_map.json")
+    channel_map_path = STATE_DIR / "discord_channel_map.json"
     guild_id = "985825810667667487"  # AutonomousAIs default
 
     headers = {"Authorization": f"Bot {bot_token}"}
@@ -366,8 +366,8 @@ def _read_discord_api(args: Dict[str, Any]) -> Dict[str, Any]:
             try:
                 from graph_enricher import on_read
                 on_read("discord", str(channel_id), str(channel_id), handle)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Discord read graph enrichment failed: {e}")
 
         lines = [f"**Discord channel {channel_id}** ({len(messages)} messages):"]
         lines.append("")

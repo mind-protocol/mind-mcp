@@ -160,8 +160,8 @@ def _notify_place_server(place_id: str, event_data: Dict[str, Any]) -> None:
             url, data=data, headers={"Content-Type": "application/json"},
         )
         urllib.request.urlopen(req, timeout=2)
-    except Exception:
-        pass  # Non-blocking, best-effort
+    except Exception as e:
+        logger.debug(f"Place server notification failed for {place_id}: {e}")
 
 
 # ---------------------------------------------------------------------------
@@ -850,8 +850,8 @@ def _place_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                             "ts": created_at,
                         },
                     )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Access grant failed for member {member_id}: {e}")
 
         # If any member lacks a public key, downgrade space to public so
         # everyone can still speak/listen without encrypted keys.
@@ -863,8 +863,8 @@ def _place_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
                     "MATCH (s:Space {id: $id}) SET s.visibility = 'public'",
                     {"id": call_id},
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Visibility downgrade failed for space {call_id}: {e}")
 
         # Create a Moment announcing the call
         moment_id = f"moment_{uuid.uuid4().hex[:12]}"
@@ -899,8 +899,8 @@ def _place_call(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         for participant in participants:
             try:
                 _notify_participant(participant, actor_id, call_id, call_name, ctx)
-            except Exception:
-                pass  # Best effort
+            except Exception as e:
+                logger.debug(f"Participant notification failed for {participant}: {e}")
 
         lines = [
             f"Call started: {call_name}",
@@ -953,8 +953,8 @@ def _notify_participant(
                 url, data=data, headers={"Content-Type": "application/json"},
             )
             urllib.request.urlopen(req, timeout=2)
-    except Exception:
-        pass  # Best effort — participant can still join manually
+    except Exception as e:
+        logger.debug(f"Call invitation notification failed for {participant_id}: {e}")
 
 
 def _place_grant_access(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
@@ -1175,8 +1175,8 @@ def _place_revoke_access(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, 
             "DELETE r",
             {"target_id": target_actor_id, "place_id": place_id},
         )
-    except Exception:
-        pass  # Best effort — revokee may not be present
+    except Exception as e:
+        logger.debug(f"AT link removal failed for {target_actor_id} in {place_id}: {e}")
 
     # ------------------------------------------------------------------
     # Step 4: Generate new space key

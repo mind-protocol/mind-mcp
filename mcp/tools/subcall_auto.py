@@ -732,8 +732,8 @@ def auto_subcall(
     if embed_fn:
         try:
             query_embedding = embed_fn(query)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Query embedding computation failed: {e}")
 
     from mcp.tools.subcall_handler import _query_resonance
 
@@ -855,8 +855,8 @@ def auto_subcall(
                 try:
                     dt = datetime.fromtimestamp(created, tz=timezone.utc)
                     meta_parts.append(dt.strftime("%Y-%m-%d"))
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Timestamp conversion failed for {created}: {e}")
             if valence is not None:
                 mood = "positive" if valence > 0.2 else "negative" if valence < -0.2 else "neutral"
                 meta_parts.append(f"mood={mood}")

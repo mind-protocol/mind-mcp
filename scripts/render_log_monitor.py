@@ -82,8 +82,8 @@ def detect_service_id() -> str:
             services = data.get("services", [])
             if services:
                 return services[0].get("name", "")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Failed to parse render.yaml for service ID: {e}")
 
     return ""
 
@@ -103,8 +103,8 @@ def load_state() -> dict:
     if STATE_FILE.exists():
         try:
             return json.loads(STATE_FILE.read_text())
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to load monitor state from {STATE_FILE}: {e}")
     return {"last_deploy_id": "", "last_log_hash": "", "processed_at": 0}
 
 
@@ -315,8 +315,8 @@ def main():
                     if PROJECT_ROOT.name in repo:
                         service_id = svc["id"]
                         break
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to auto-detect Render service ID from API: {e}")
 
     if not service_id:
         logger.info("Cannot determine Render service ID — skipping")
@@ -434,8 +434,8 @@ def check_orchestrator_health():
                     data = json.loads(resp.read())
                     if data.get("alive"):
                         citizens_alive += 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Citizen ping failed for {d.name}: {e}")
 
             # Don't check too many — sample first 10
             if citizens_checked >= 10:

@@ -221,8 +221,8 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                         )
                         if r.result_set:
                             target_id = r.result_set[0][0]
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        logger.debug(f"Discord channel lookup for {mention_lower} failed: {e}")
 
                 if target_id:
                     send_args = dict(args, chat_id=str(target_id))
@@ -271,8 +271,8 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                         "MERGE (m)-[:RELATES_TO]->(n)",
                         {"mid": mid, "nid": n_id},
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Narrative moment enrichment failed for {n_id}: {e}")
 
                 # Send to humans via platform (AI citizens get stimulated via
                 # graph_enricher.on_message → _stimulate_space_citizens — never bypass)
@@ -299,8 +299,8 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                         _send_telegram(dict(args, chat_id=str(tid), message=f"[{n_type}:{n_name}] {message}"))
                         sent += 1
                 return _ok(f"Routed to {len(actors)} citizens linked to {n_type} \"{n_name}\" ({sent} humans via {platform}). Moment + links created in L3.")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Narrative resolution failed for {mention_lower}: {e}")
 
         # 3. @org/@universe — resolve group, broadcast
         try:
@@ -319,11 +319,11 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
                         author_handle=handle, content=message,
                         mentioned_handles=list(group), direction="out",
                     )
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Group broadcast graph enrichment failed: {e}")
                 return _ok(f"Broadcast to @{mention_lower}: {len(group)} citizens. Moment + MENTIONS links created in L3.")
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Group resolution failed for {mention_lower}: {e}")
 
     if results:
         return _ok(f"Smart-routed to {len(results)} recipient(s).")
@@ -644,8 +644,8 @@ def _log_message(platform: str, text: str, target: str, msg_id: Any = None,
             mentioned_handles=mentioned,
             direction="out",
         )
-    except Exception:
-        pass
+    except Exception as e:
+        logger.debug(f"Outbound message graph enrichment failed: {e}")
 
 
 # ── Response helpers ────────────────────────────────────────────────────────

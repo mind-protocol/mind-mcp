@@ -359,8 +359,8 @@ def on_message(
                     f"MATCH (a:Actor {{id: $actor_id}}) SET a.{pid_type} = $val",
                     {"actor_id": actor_id, "val": pid_value},
                 )
-            except Exception:
-                pass
+            except Exception as e:
+                logger.debug(f"Platform ID update failed for {actor_id}/{pid_type}: {e}")
 
         # 8. Inject stimulus into ALL AI citizens present in this Space
         #    Skip explicitly mentioned citizens — they already got a direct stimulus
@@ -378,8 +378,8 @@ def on_message(
             from runtime.economy.trust_propagation import propagate_trust
             for handle in (mentioned_handles or []):
                 propagate_trust(actor_id, handle, interaction_positive=True)
-        except Exception:
-            pass  # Graceful degradation — trust propagation is non-critical
+        except Exception as e:
+            logger.debug(f"Trust propagation failed for {actor_id}: {e}")
 
         logger.debug(f"Graph enriched: {actor_id} → #{channel_name} ({len(mentioned_handles or [])} mentions)")
 
@@ -671,8 +671,8 @@ def on_reply(
             if routed_handles:
                 logger.debug(f"Reply smart-routed to {len(routed_handles)} narrative-linked actors")
 
-        except Exception:
-            pass  # Stimulus routing is best-effort
+        except Exception as e:
+            logger.debug(f"Reply stimulus routing failed: {e}")
 
         logger.debug(f"Reply enriched: {replier_id} replied to {original_author_id} in #{channel_name}")
 
@@ -911,8 +911,8 @@ def on_commit(
         try:
             from runtime.economy.trust_propagation import propagate_trust
             # Commits are positive signals toward the repo community
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Trust propagation import failed for commit enrichment: {e}")
 
         logger.debug(f"Commit enriched: {actor_id} → {repo_name} ({commit_hash[:8]})")
 

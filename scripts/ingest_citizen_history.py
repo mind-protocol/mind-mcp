@@ -12,12 +12,15 @@ Usage:
 """
 
 import json
+import logging
 import os
 import re
 import subprocess
 import sys
 import time
 from pathlib import Path
+
+logger = logging.getLogger("mind.ingest_citizen_history")
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 sys.path.insert(0, str(Path(__file__).parent))
@@ -98,8 +101,8 @@ def ingest_git_commits(handle: str, repos: list[str] = None):
                         branch="main",
                     )
                     total += 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to ingest commits for {handle} in {repo_name} (pattern={pattern}): {e}")
 
     print(f"  Commits: {total} ingested across {len(repos)} repos")
     return total
@@ -157,8 +160,8 @@ def ingest_works(handle: str):
             )
 
             total += 1
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to ingest work file {f}: {e}")
 
     print(f"  Works: {total} files ingested from {works_dir}")
     return total
@@ -209,8 +212,8 @@ def link_to_narratives(handle: str, narrative_ids: list[str]):
                 """,
                 {"h": handle, "nid": nid},
             )
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"Failed to link {handle} to narrative {nid}: {e}")
 
     print(f"  Narratives: linked to {len(narrative_ids)}")
 
