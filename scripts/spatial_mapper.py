@@ -56,45 +56,46 @@ TYPE_Y_OFFSET = {
 # Attraction profiles (from ALGORITHM_Spatial_Mapping.md)
 ZONE_ATTRACTIONS = {
     "radiant_core": {
-        "node_type": {"actor": 0.4, "narrative": 0.3},
-        "subtype": {"vision": 0.9, "mission": 0.7, "role": 0.6, "fact": 0.3},
-        "dimensions": {"weight": 0.5, "stability": 0.3, "self_relevance": 0.4},
-        "keywords": ["governance", "council", "identity", "foundation", "decision"],
+        "node_type": {"actor": 0.6, "narrative": 0.2},
+        "subtype": {"vision": 0.9, "mission": 0.7, "role": 0.8, "framework": 0.5},
+        "dimensions": {"weight": 0.5, "stability": 0.4, "self_relevance": 0.5},
+        "keywords": ["governance", "council", "identity", "foundation", "decision", "protocol", "principle", "citizen"],
     },
     "innovation_fields": {
-        "node_type": {"thing": 0.2, "narrative": 0.3},
-        "subtype": {"project": 0.8, "initiative": 0.7},
-        "dimensions": {"novelty_affinity": 0.5, "energy": 0.3, "recency": 0.3},
-        "keywords": ["prototype", "experiment", "build", "test", "forge"],
+        "node_type": {"narrative": 0.2},
+        "subtype": {"project": 0.8, "initiative": 0.7, "procedure": 0.5},
+        "dimensions": {"novelty_affinity": 0.5, "energy": 0.3, "recency": 0.4},
+        "keywords": ["prototype", "experiment", "design", "test", "new", "proposal", "designing"],
     },
     "towers_of_knowledge": {
-        "node_type": {"thing": 0.4, "narrative": 0.3},
-        "subtype": {"fact": 0.8, "thought": 0.5},
-        "dimensions": {"stability": 0.6, "weight": 0.4},
-        "keywords": ["knowledge", "research", "library", "learn", "analysis"],
+        "node_type": {"thing": 0.3, "narrative": 0.3},
+        "subtype": {"doc": 0.7, "fact": 0.6, "algorithm": 0.5, "pattern": 0.5, "vocabulary": 0.4},
+        "dimensions": {"stability": 0.5, "weight": 0.3},
+        "keywords": ["knowledge", "research", "library", "learn", "analysis", "documentation", "schema", "spec"],
     },
     "data_gardens": {
-        "node_type": {"thing": 0.5, "moment": 0.3},
-        "dimensions": {"energy": -0.4, "recency": -0.3, "stability": -0.2},
-        "keywords": ["data", "health", "growth", "decay", "ecosystem", "garden"],
+        "node_type": {"thing": 0.4, "moment": 0.3},
+        "subtype": {"health": 0.6, "validation": 0.5},
+        "dimensions": {"stability": -0.2},
+        "keywords": ["data", "health", "growth", "decay", "ecosystem", "garden", "metric", "check", "monitor"],
     },
     "creative_nexus": {
-        "node_type": {"narrative": 0.4, "moment": 0.3},
-        "subtype": {"desire": 0.6, "thought": 0.5},
-        "dimensions": {"novelty_affinity": 0.6, "care_affinity": 0.4, "energy": 0.3},
-        "keywords": ["create", "synergy", "collective", "art", "music"],
+        "node_type": {"narrative": 0.3, "moment": 0.2},
+        "subtype": {"desire": 0.6, "thought": 0.4},
+        "dimensions": {"novelty_affinity": 0.5, "care_affinity": 0.4},
+        "keywords": ["create", "synergy", "collective", "art", "music", "soul", "creative", "vision", "story"],
     },
     "arsenal": {
-        "node_type": {"thing": 0.5, "narrative": 0.3},
-        "subtype": {"process": 0.8, "task": 0.6},
-        "dimensions": {"achievement_affinity": 0.5, "goal_relevance": 0.4},
-        "keywords": ["code", "infrastructure", "deploy", "fix", "server", "database"],
+        "node_type": {"thing": 0.4, "narrative": 0.2},
+        "subtype": {"process": 0.7, "task": 0.6, "implementation": 0.6, "behavior": 0.4},
+        "dimensions": {"achievement_affinity": 0.4, "goal_relevance": 0.3},
+        "keywords": ["code", "infrastructure", "deploy", "fix", "server", "database", "runtime", "engine", "script", "handler", "bridge"],
     },
     "resonance_plaza": {
-        "node_type": {"moment": 0.4, "actor": 0.2},
-        "subtype": {"thought": 0.3},
-        "dimensions": {"partner_relevance": 0.6, "care_affinity": 0.5},
-        "keywords": ["community", "music", "social", "broadcast", "resonance"],
+        "node_type": {"moment": 0.5, "actor": 0.3},
+        "subtype": {"thought": 0.3, "template": 0.2},
+        "dimensions": {"partner_relevance": 0.5, "care_affinity": 0.4},
+        "keywords": ["community", "music", "social", "broadcast", "resonance", "discord", "telegram", "message", "channel"],
     },
 }
 
@@ -131,6 +132,14 @@ def compute_affinity(node: dict, zone_name: str) -> float:
     if synthesis and keywords:
         matches = sum(1 for k in keywords if k in synthesis)
         score += KEYWORD_WEIGHT * matches / max(len(keywords), 1)
+
+    # Boost keyword weight for nodes without subtype (most of the 21K Things)
+    if not (node.get("type") or "").strip():
+        score *= 0.5  # reduce base type/subtype contributions
+        # Let keywords dominate for untyped nodes
+        if synthesis and keywords:
+            matches = sum(1 for k in keywords if k in synthesis)
+            score += 0.4 * matches / max(len(keywords), 1)
 
     return max(0.001, score)  # never zero (avoid division by zero)
 
