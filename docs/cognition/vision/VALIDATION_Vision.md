@@ -89,14 +89,16 @@ MUST:   If multiple triggers fire simultaneously, the highest priority trigger w
 NEVER:  Two Moment nodes with media.image created in the same tick for the same citizen
 ```
 
-### V6: Screenshot Reaches the LLM
+### V6: Compressed Screenshot Reaches the LLM
 
-**Why we care:** The entire purpose of vision is to give the citizen visual grounding. If a screenshot is captured, embedded, and stored but never reaches the LLM, the citizen cannot see. The visual pipeline is a dead end. The screenshot must be injected as multimodal context in the citizen's next LLM call.
+**Why we care:** The entire purpose of vision is to give the citizen visual grounding. If a screenshot is captured, embedded, and stored but never reaches the LLM, the citizen cannot see. The visual pipeline is a dead end. The COMPRESSED version of the screenshot must be injected as multimodal context in the citizen's next LLM call.
 
 ```
-MUST:   Every captured screenshot is registered for inclusion in the next LLM prompt assembly
+MUST:   Every captured screenshot's COMPRESSED version is registered for the next LLM prompt assembly
 MUST:   The image appears as multimodal image input (not as a text description or URL reference)
+MUST:   The image sent to LLM is the resized + JPEG compressed version, never the raw screenshot
 NEVER:  Captured screenshot silently dropped between the vision module and the LLM call
+NEVER:  Raw engine screenshot passed to LLM context assembler
 ```
 
 ### V7: Vision Does Not Stall the Tick Loop
@@ -120,6 +122,43 @@ MUST:   Engine render errors are logged with citizen_id, tick, and error details
 MUST:   CLIP inference errors are logged with citizen_id, tick, and error details
 MUST:   Failed captures do NOT reset the periodic timer (retry on next eligible tick)
 NEVER:  Engine or CLIP errors swallowed silently (no try/except: pass)
+```
+
+### V9: LLM Input Image is Compressed (V_COMPRESS)
+
+**Why we care:** Raw engine screenshots are 1080p PNG at ~2MB. Sending these directly to the LLM wastes massive token budget, increases latency, and provides no perceptual benefit over a compressed version. At 60+ citizens, this is the difference between a sustainable system and a ruinous one. This is a hard constraint from NLR — there is no exception.
+
+```
+MUST:   Every image sent to the LLM is resized (256x256 or 512x512) and JPEG compressed (quality 75)
+MUST:   LLM input image size <= 100KB (hard limit)
+MUST:   CLIP embedding is computed on the RESIZED version, not the full-res original
+NEVER:  Raw engine screenshot (~2MB PNG) sent directly to the LLM
+NEVER:  CLIP run on the full-res 1080p image when a resized version is available
+```
+
+### V10: Dual Storage — Full Res in Graph, Compressed to LLM (V_DUAL_STORE)
+
+**Why we care:** The graph is the citizen's permanent visual memory — it must preserve the highest fidelity version for future recall, re-examination, or display. The LLM is the citizen's current perception — it must receive the cheapest version that conveys sufficient information. Mixing these paths (e.g., storing the compressed version in the graph, or sending the full-res to the LLM) breaks either memory quality or token economy.
+
+```
+MUST:   media.image.uri in the Moment node points to the FULL RESOLUTION original
+MUST:   The LLM receives only the RESIZED + JPEG-COMPRESSED version
+MUST:   These are two separate paths through the pipeline — no shared mutable state
+NEVER:  Compressed/resized version stored as media.image.uri (graph gets full-res only)
+NEVER:  Full-res version passed to LLM context assembler
+```
+
+### V11: Resolution Tier Matches Context
+
+**Why we care:** Resolution tiers exist to allocate token budget where it matters most. Normal ticks get 256x256 (cheap, sufficient for ambient awareness). Attention focus, flashbulb, and /look get 512x512 (more detail for what matters). If resolution selection is wrong, citizens either waste tokens on routine vision or miss detail during important moments.
+
+```
+MUST:   Normal periodic ticks use 256x256 resolution for LLM input
+MUST:   Flashbulb captures use 512x512 resolution for LLM input
+MUST:   Attention focus (gaze locked on target) uses 512x512 resolution
+MUST:   When resolution changes (256→512), the citizen sees MORE DETAIL of the same scene
+NEVER:  512x512 used for routine periodic captures with no attention focus or emotional peak
+NEVER:  256x256 used for flashbulb captures
 ```
 
 ---
@@ -146,6 +185,9 @@ NEVER:  Engine or CLIP errors swallowed silently (no try/except: pass)
 | V6 | Screenshot reaches the LLM | CRITICAL |
 | V7 | Vision does not stall the tick loop | CRITICAL |
 | V8 | Render API failure is loud | HIGH |
+| V9 | LLM input image is compressed (V_COMPRESS) | CRITICAL |
+| V10 | Dual storage: full-res in graph, compressed to LLM (V_DUAL_STORE) | CRITICAL |
+| V11 | Resolution tier matches context | HIGH |
 
 ---
 
@@ -157,4 +199,8 @@ NEVER:  Engine or CLIP errors swallowed silently (no try/except: pass)
 
 <!-- @mind:todo V7 timeout values (2000ms render, 1000ms CLIP) are estimates. Need to validate against actual engine and CLIP infrastructure latencies. If real-world p99 latencies are higher, timeouts need adjustment. -->
 
-<!-- @mind:proposition Consider V9: "Visual memory quantity stays bounded." Without a retention policy, visual Moments accumulate indefinitely. A citizen running for 30 days at 6 captures/hour would have ~4320 visual Moments. Should there be a maximum? Or does decay (Law 7) handle this naturally? -->
+<!-- @mind:proposition Consider V12: "Visual memory quantity stays bounded." Without a retention policy, visual Moments accumulate indefinitely. A citizen running for 30 days at 6 captures/hour would have ~4320 visual Moments. Should there be a maximum? Or does decay (Law 7) handle this naturally? -->
+
+<!-- @mind:todo Define acceptance tests for V9 (V_COMPRESS). Test scenario: vision_tick returns a VisionOutput. Assert compressed_image is not None, len(compressed_image) <= 100000 bytes, and llm_resolution is either (256,256) or (512,512). Assert raw_screenshot bytes are NOT passed to register_visual. -->
+
+<!-- @mind:todo Define acceptance tests for V10 (V_DUAL_STORE). Test scenario: after vision_tick, the Moment node's media.image.uri should point to a full-res PNG. The compressed_image in VisionOutput should be JPEG bytes at the LLM resolution. The two should be different sizes and formats. -->

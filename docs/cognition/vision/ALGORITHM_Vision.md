@@ -524,6 +524,18 @@ VisionOutput (screenshot_uri=full-res, compressed_image=JPEG, clip_embedding=fro
 
 **Logic:** `sqrt((a[0]-b[0])^2 + (a[1]-b[1])^2 + (a[2]-b[2])^2)`. Returns 0.0 if either position is None.
 
+### `resize_and_compress(raw_image_bytes, target_size, jpeg_quality=75, max_bytes=100000) -> (PIL.Image, bytes)`
+
+**Purpose:** Resize the raw engine screenshot to target resolution and JPEG-compress for LLM delivery. Returns both the resized PIL image (for CLIP input) and the compressed JPEG bytes (for LLM input).
+
+**Logic:** Lanczos interpolation resize to target_size. JPEG encode at specified quality. If output exceeds max_bytes: retry at quality 60, then reduce resolution one tier. At 256x256 q75 this should never exceed 100KB.
+
+### `select_llm_resolution(is_flashbulb, gaze_locked, is_look_command, config) -> tuple[int, int]`
+
+**Purpose:** Determine which resolution tier to use for this capture based on context.
+
+**Logic:** Flashbulb, attention focus, and /look all return config.llm_resolution_attention (512x512). Normal ticks return config.llm_resolution_normal (256x256).
+
 ### `cosine_similarity(vec_a, vec_b) -> float`
 
 **Purpose:** Compute cosine similarity between two CLIP embeddings.
@@ -547,11 +559,12 @@ VisionOutput (screenshot_uri=full-res, compressed_image=JPEG, clip_embedding=fro
 | `cognition/exteroception` | Read tick events | Event triggers (new_actor_nearby, etc.) |
 | `cognition/interoception` | Read limbic_delta | Flashbulb trigger threshold detection |
 | `cognition/metabolism` | Read circadian phase | (v2) Adjust capture frequency based on sleep/wake state |
-| `3D engine (external)` | `render_from_pov(RenderRequest)` | Screenshot image bytes + optional depth buffer |
-| `CLIP model (external)` | `encode_image(image_bytes)` | 768D float embedding vector |
-| `Object storage` | `upload(path, data, content_type)` | Stored URI for the screenshot |
-| `L1 brain graph` | `create_moment(...)` | Moment node ID with media.image attachment |
-| `LLM context assembler` | `register_visual(citizen_id, image_uri, image_bytes)` | Registration for next multimodal prompt |
+| `3D engine (external)` | `render_from_pov(RenderRequest)` | Raw screenshot at 1080p PNG (~2MB) + optional depth buffer |
+| `Image processing` | `resize(image, target_size)` + `jpeg_compress(image, quality)` | Resized PIL image + compressed JPEG bytes |
+| `CLIP model (external)` | `encode_image(resized_image)` | 768D float embedding vector (from RESIZED, not full-res) |
+| `Object storage` | `upload(path, data, content_type)` | Stored URI for the FULL-RES original |
+| `L1 brain graph` | `create_moment(...)` | Moment node ID with media.image.uri = full-res URI |
+| `LLM context assembler` | `register_visual(citizen_id, compressed_image, llm_resolution)` | Registration for next multimodal prompt (compressed JPEG) |
 
 ---
 
@@ -559,7 +572,9 @@ VisionOutput (screenshot_uri=full-res, compressed_image=JPEG, clip_embedding=fro
 
 <!-- @mind:todo The render_from_pov API contract is not yet defined. The algorithm assumes it returns image bytes and an optional error. Need to define: request schema, response schema, error codes, authentication, rate limits. -->
 
-<!-- @mind:todo Determine whether CLIP inference should be synchronous (blocking the vision tick) or asynchronous (embedding computed later, Moment created without embedding initially). Async would reduce tick latency but complicate change detection (no embedding to compare). -->
+<!-- @mind:todo Determine whether CLIP inference should be synchronous (blocking the vision tick) or asynchronous (embedding computed later, Moment created without embedding initially). Async would reduce tick latency but complicate change detection (no embedding to compare). Note: CLIP now runs on the resized version (256x256 or 512x512), so inference latency is lower than originally estimated. -->
+
+<!-- @mind:todo Benchmark resize+compress latency. Expected ~10ms for Lanczos resize + JPEG encode. Validate on actual hardware. Consider whether Pillow or OpenCV is faster for this pipeline. -->
 
 <!-- @mind:todo Batched CLIP inference. When multiple citizens capture in the same tick, batch their images into a single CLIP call. This is more efficient on GPU but requires coordinating across citizen vision ticks. May need a "vision coordinator" that collects requests and dispatches batches. -->
 
