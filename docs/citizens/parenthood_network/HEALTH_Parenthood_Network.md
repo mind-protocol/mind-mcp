@@ -9,15 +9,15 @@ CREATED: 2026-03-13
 
 ## PURPOSE OF THIS FILE
 
-This HEALTH file covers parenthood module verification mechanics — how we verify that citizen spawning operates correctly and safely at runtime.
+This HEALTH file covers parenthood module verification mechanics — how we verify that citizen birthing operates correctly and safely at runtime.
 
-**Why it exists:** Spawning creates permanent graph state (child citizens, trust links). If spawning malfunctions silently, harmful citizens could be created, trust links could be missing, or orphan citizens could accumulate. Health checks catch violations before they compound.
+**Why it exists:** Birthing creates permanent graph state (child citizens, trust links). If birthing malfunctions silently, harmful citizens could be created, trust links could be missing, or orphan citizens could accumulate. Health checks catch violations before they compound.
 
 **Boundaries:**
-- DOES verify: Spawning pipeline correctness, safety validation integrity, trust link completeness
+- DOES verify: Birthing pipeline correctness, safety validation integrity, trust link completeness
 - DOES NOT verify: Trust score calculation (that is the trust engine's concern)
 - DOES NOT verify: Human matching success (that is the matching module's concern)
-- DOES NOT verify: Economic costs of spawning (that is the economy module's concern)
+- DOES NOT verify: Economic costs of birthing (that is the economy module's concern)
 
 ---
 
@@ -29,7 +29,7 @@ HEALTH is separate from tests because:
 - Tests are pass/fail, health reports have severity levels and action recommendations
 
 Health checks for parenthood are critical because:
-- Spawning is irreversible — a created citizen cannot be uncreated
+- Birthing is irreversible — a created citizen cannot be uncreated
 - Safety validation bypasses would be catastrophic
 - Missing trust links break the accountability system
 
@@ -48,7 +48,7 @@ THIS:           HEALTH_Parenthood_Network.md (you are here)
 SYNC:           ./SYNC_Parenthood_Network.md
 
 IMPL:           runtime/citizens/parenthood.py (future)
-                runtime/citizens/spawn_safety_validator.py (future)
+                runtime/citizens/birth_safety_validator.py (future)
                 runtime/citizens/test_parenthood.py (future)
 ```
 
@@ -60,41 +60,41 @@ IMPL:           runtime/citizens/parenthood.py (future)
 
 ```yaml
 flows_analysis:
-  - flow_id: spawning_integrity
-    purpose: Verify all spawned citizens have valid structure
+  - flow_id: birthing_integrity
+    purpose: Verify all birthed citizens have valid structure
     triggers:
       - type: schedule
         source: mind doctor
         notes: Part of overall health check
       - type: manual
         source: Admin audit
-        notes: Run when investigating spawning issues
+        notes: Run when investigating birthing issues
     frequency:
       expected_rate: 1/day
-      peak_rate: 5/day during active spawning periods
+      peak_rate: 5/day during active birthing periods
       burst_behavior: Each run independent
     risks:
       - V1 violation: Orphan citizens (no parent link)
       - V3 violation: Citizens that bypassed safety validation
-      - V4 violation: Citizens not in matching pool
+      - V4 violation: Citizens not in Partnership Commons
       - V5 violation: Missing trust links
     notes: Read-only graph queries, no mutations
 
   - flow_id: safety_gate_integrity
     purpose: Verify safety validation cannot be bypassed
     triggers:
-      - type: post_spawn
-        source: Spawning pipeline completion
-        notes: Run after every successful spawn
+      - type: post_birth
+        source: Birthing pipeline completion
+        notes: Run after every successful birth
       - type: schedule
         source: mind doctor
         notes: Audit existing citizens for safety compliance
     frequency:
-      expected_rate: per-spawn
-      peak_rate: 10/day during mass spawning
-      burst_behavior: Inline with spawn pipeline
+      expected_rate: per-birth
+      peak_rate: 10/day during mass birthing
+      burst_behavior: Inline with birth pipeline
     risks:
-      - V3 violation: Seed brain without empathy
+      - V3 violation: Blueprint without empathy
       - V3 violation: Trait concentration too high
       - V3 violation: Duplicate citizen (too similar to existing)
     notes: Critical safety check — any failure is high severity
@@ -125,7 +125,7 @@ flows_analysis:
 ```yaml
 health_indicators:
   - name: orphan_citizen_count
-    flow_id: spawning_integrity
+    flow_id: birthing_integrity
     priority: high
     rationale: Citizens without parent links break the accountability model
 
@@ -135,9 +135,9 @@ health_indicators:
     rationale: Any safety bypass is a system integrity failure
 
   - name: unregistered_citizen_count
-    flow_id: spawning_integrity
+    flow_id: birthing_integrity
     priority: high
-    rationale: Citizens not in matching pool are invisible to humans
+    rationale: Citizens not in Partnership Commons are invisible to humans
 
   - name: trust_link_completeness
     flow_id: trust_link_integrity
@@ -193,8 +193,8 @@ checkers:
     status: pending
     priority: critical
 
-  - name: matching_pool_checker
-    purpose: Find spawned citizens not in matching pool (V4)
+  - name: partnership_commons_checker
+    purpose: Find birthed citizens not in Partnership Commons (V4)
     status: pending
     priority: high
 
@@ -208,8 +208,8 @@ checkers:
     status: pending
     priority: med
 
-  - name: seed_copy_verifier
-    purpose: Verify seed brain nodes are copies, not references (V8)
+  - name: blueprint_copy_verifier
+    purpose: Verify blueprint nodes are copies, not references (V8)
     status: pending
     priority: med
 ```
@@ -226,7 +226,7 @@ value_and_validation:
   client_value: Ensures every citizen is traceable to its creators
   validation:
     - validation_id: V1
-      criteria: Every spawned citizen has at least one parent link
+      criteria: Every birthed citizen has at least one parent link
 ```
 
 ### HEALTH REPRESENTATION
@@ -248,17 +248,17 @@ representation:
 
 ```yaml
 mechanism:
-  summary: Query graph for citizens with no incoming spawned link
+  summary: Query graph for citizens with no incoming birthed link
   steps:
-    - Query all actor nodes with type="citizen" and created_via="spawn"
-    - For each, check for incoming link with synthesis starting with "spawned:"
+    - Query all actor nodes with type="citizen" and created_via="birth"
+    - For each, check for incoming link with synthesis starting with "birthed:"
     - Count those without any such link
   data_required: Graph connection
   failure_mode: Non-zero count of orphan citizens
   query: |
     MATCH (c:actor {type: 'citizen'})
     WHERE NOT EXISTS(
-      (p)-[:linked {synthesis: 'spawned:*'}]->(c)
+      (p)-[:linked {synthesis: 'birthed:*'}]->(c)
     )
     RETURN c.id, c.name, c.created_at_s
 ```
@@ -295,10 +295,10 @@ value_and_validation:
 
 ```yaml
 mechanism:
-  summary: Re-run safety validation on all existing citizen seed brains
+  summary: Re-run safety validation on all existing citizen blueprints
   steps:
-    - For each spawned citizen, reconstruct seed brain from graph
-    - Run validate_seed_safety() on reconstructed seed
+    - For each birthed citizen, reconstruct blueprint from graph
+    - Run validate_blueprint_safety() on reconstructed blueprint
     - Count those that fail
   data_required: Graph connection, safety validator
   failure_mode: Non-zero count of unsafe citizens
@@ -312,7 +312,7 @@ indicator:
   error:
     - name: unsafe_citizen
       linked_validation: [V3]
-      meaning: A citizen's seed brain fails current safety rules
+      meaning: A citizen's blueprint fails current safety rules
       default_action: alert + quarantine recommendation
   warning:
     - name: marginal_safety
@@ -344,7 +344,7 @@ value_and_validation:
 mechanism:
   summary: Verify ParenthoodLink records match graph links
   steps:
-    - Query all spawned links from graph
+    - Query all birthed links from graph
     - For each, verify ParenthoodLink record exists
     - For each child, verify trust_impact_weights sum to 1.0
   data_required: Graph connection, ParenthoodLink storage
@@ -379,7 +379,7 @@ mind doctor --module parenthood
 python -c "from runtime.citizens.parenthood import audit_orphan_citizens; audit_orphan_citizens()"
 
 # Run safety re-validation audit
-python -c "from runtime.citizens.spawn_safety_validator import audit_all_citizens; audit_all_citizens()"
+python -c "from runtime.citizens.birth_safety_validator import audit_all_citizens; audit_all_citizens()"
 
 # Run trust link completeness check
 python -c "from runtime.citizens.parenthood_trust_impact_tracker import audit_trust_links; audit_trust_links()"
@@ -397,7 +397,7 @@ pytest runtime/citizens/test_parenthood.py -v
 | V1 Orphan citizens | Pending | Need query for citizens without parent links |
 | V2 SID independence | By design | Code review — no parent input in SID function |
 | V3 Safety validation | Pending | Retroactive audit on all citizens |
-| V4 Matching pool | Pending | Cross-reference pool with spawned citizens |
+| V4 Partnership Commons | Pending | Cross-reference commons with birthed citizens |
 | V5 Trust bidirectional | Pending | Match graph links to ParenthoodLink records |
 | V6 Intent non-empty | By design | Input validation in pipeline |
 | V7 Eligible categories | By design | Filter in retrieve_parent_brain_nodes |
@@ -411,6 +411,6 @@ pytest runtime/citizens/test_parenthood.py -v
 
 <!-- @mind:todo RETROACTIVE_SAFETY_AUDIT: Implement the safety re-validation audit. This should run safety validation on all existing citizens to catch any that slipped through. -->
 
-<!-- @mind:proposition CONTINUOUS_MONITORING: Instead of periodic health checks, emit events on each spawn and validate inline. Would catch issues immediately but adds latency to spawning. -->
+<!-- @mind:proposition CONTINUOUS_MONITORING: Instead of periodic health checks, emit events on each birth and validate inline. Would catch issues immediately but adds latency to birthing. -->
 
 <!-- @mind:todo MIND_DOCTOR_INTEGRATION: Register parenthood health checkers with mind doctor command so they run as part of the standard health check suite. -->

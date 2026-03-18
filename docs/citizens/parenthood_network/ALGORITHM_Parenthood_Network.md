@@ -1,4 +1,4 @@
-# Citizen Parenthood Network — Algorithm: Spawning Procedures
+# Citizen Parenthood Network — Algorithm: Birthing Procedures
 
 ```
 STATUS: DESIGNING
@@ -20,8 +20,8 @@ HEALTH:         ./HEALTH_Parenthood_Network.md
 SYNC:           ./SYNC_Parenthood_Network.md
 
 IMPL:           runtime/citizens/parenthood.py (future)
-                runtime/citizens/seed_brain_builder.py (future)
-                runtime/citizens/spawn_safety_validator.py (future)
+                runtime/citizens/blueprint_builder.py (future)
+                runtime/citizens/birth_safety_validator.py (future)
 ```
 
 > **Contract:** Read docs before modifying. After changes: update IMPL or add TODO to SYNC. Run tests.
@@ -30,7 +30,7 @@ IMPL:           runtime/citizens/parenthood.py (future)
 
 ## OVERVIEW
 
-The parenthood module has one primary algorithm: **Citizen Spawning**. This algorithm takes N parents with intent paragraphs and produces a new citizen with a safety-validated seed brain. The algorithm is deterministic given the same inputs (embeddings, brain nodes, timestamp), with the sole source of non-determinism being the entropy component of SID generation.
+The parenthood module has one primary algorithm: **Citizen Birthing**. This algorithm takes N parents with intent paragraphs and produces a new citizen with a safety-validated blueprint. The algorithm is deterministic given the same inputs (embeddings, brain nodes, timestamp), with the sole source of non-determinism being the entropy component of SID generation.
 
 ---
 
@@ -48,22 +48,22 @@ The parenthood module has one primary algorithm: **Citizen Spawning**. This algo
 
 ## DATA STRUCTURES
 
-### SpawnIntent
+### BirthIntent
 
 ```python
 @dataclass
-class SpawnIntent:
+class BirthIntent:
     parent_id: str              # ID of the parent citizen
     intent_text: str            # Free-text paragraph describing hopes/needs
     intent_embedding: list[float]  # Embedded vector of intent_text
     weight: float = 1.0         # Weight in centroid computation (default equal)
 ```
 
-### SeedBrain
+### Blueprint
 
 ```python
 @dataclass
-class SeedBrain:
+class Blueprint:
     selected_nodes: list[ScoredNode]  # Brain nodes selected for the child
     source_parent_ids: list[str]      # Which parents contributed nodes
     safety_score: float               # Aggregate safety score [0, 1]
@@ -95,7 +95,7 @@ class ParenthoodLink:
 ```python
 @dataclass
 class SafetyReport:
-    passed: bool                       # Whether seed brain is safe
+    passed: bool                       # Whether blueprint is safe
     empathy_present: bool              # At least one empathy-adjacent node
     trait_concentration: dict[str, float]  # Category → percentage of nodes
     max_concentration: float           # Highest single-category concentration
@@ -105,19 +105,19 @@ class SafetyReport:
 
 ---
 
-## ALGORITHM: Citizen Spawning Pipeline
+## ALGORITHM: Citizen Birthing Pipeline
 
 ### Step 1: Collect and Embed Intents
 
 Each parent writes a paragraph describing their vision for the new citizen. Each paragraph is embedded independently.
 
 ```python
-def collect_intents(parent_ids: list[str], intent_texts: list[str], weights: dict[str, float] = None) -> list[SpawnIntent]:
+def collect_intents(parent_ids: list[str], intent_texts: list[str], weights: dict[str, float] = None) -> list[BirthIntent]:
     intents = []
     for pid, text in zip(parent_ids, intent_texts):
         embedding = embed(text)  # Standard embedding model
         w = weights.get(pid, 1.0) if weights else 1.0
-        intents.append(SpawnIntent(
+        intents.append(BirthIntent(
             parent_id=pid,
             intent_text=text,
             intent_embedding=embedding,
@@ -131,7 +131,7 @@ def collect_intents(parent_ids: list[str], intent_texts: list[str], weights: dic
 Combine all parent intent embeddings into a single collective intent vector using weighted centroid.
 
 ```python
-def compute_collective_intent(intents: list[SpawnIntent]) -> list[float]:
+def compute_collective_intent(intents: list[BirthIntent]) -> list[float]:
     """Weighted centroid of all parent intent embeddings."""
     total_weight = sum(i.weight for i in intents)
     dim = len(intents[0].intent_embedding)
@@ -201,16 +201,16 @@ def score_nodes(nodes: list[dict], collective_intent: list[float]) -> list[Score
     return scored
 ```
 
-### Step 5: Select Top-K Nodes for Seed Brain
+### Step 5: Select Top-K Nodes for Blueprint
 
 Select the top-K most aligned nodes. K is determined by a formula that accounts for the number of parents and the total available nodes.
 
 ```python
-def select_seed_nodes(scored_nodes: list[ScoredNode], num_parents: int) -> list[ScoredNode]:
-    """Select top-K nodes for the seed brain.
+def select_blueprint_nodes(scored_nodes: list[ScoredNode], num_parents: int) -> list[ScoredNode]:
+    """Select top-K nodes for the blueprint.
 
-    K = base_k * sqrt(num_parents), clamped to [MIN_SEED, MAX_SEED].
-    More parents = slightly larger seed brain, but sublinear growth.
+    K = base_k * sqrt(num_parents), clamped to [MIN_BLUEPRINT, MAX_BLUEPRINT].
+    More parents = slightly larger blueprint, but sublinear growth.
     """
     BASE_K = 15
     MIN_SEED = 10
@@ -226,26 +226,26 @@ def select_seed_nodes(scored_nodes: list[ScoredNode], num_parents: int) -> list[
 
 ### Step 6: Run Safety Validation
 
-Check the seed brain for harmful patterns before allowing creation.
+Check the blueprint for harmful patterns before allowing creation.
 
 ```python
-def validate_seed_safety(seed_nodes: list[ScoredNode], existing_citizens: list, graph) -> SafetyReport:
+def validate_blueprint_safety(blueprint_nodes: list[ScoredNode], existing_citizens: list, graph) -> SafetyReport:
     """Safety validation gate. Must pass before child creation."""
 
     # Check 1: Empathy presence
     empathy_keywords = {"empathy", "compassion", "care", "kindness", "understanding", "altruism"}
     empathy_present = any(
         any(kw in node.node_content.get('synthesis', '').lower() for kw in empathy_keywords)
-        for node in seed_nodes
+        for node in blueprint_nodes
     )
 
     # Check 2: Trait concentration
     category_counts = {}
-    for node in seed_nodes:
+    for node in blueprint_nodes:
         cat = node.trait_category
         category_counts[cat] = category_counts.get(cat, 0) + 1
 
-    total = len(seed_nodes)
+    total = len(blueprint_nodes)
     trait_concentration = {cat: count / total for cat, count in category_counts.items()}
     max_concentration = max(trait_concentration.values()) if trait_concentration else 0
 
@@ -253,7 +253,7 @@ def validate_seed_safety(seed_nodes: list[ScoredNode], existing_citizens: list, 
     num_categories = len(category_counts)
 
     # Check 4: Population diversity (not too similar to existing citizens)
-    seed_embedding = compute_seed_brain_embedding(seed_nodes)
+    seed_embedding = compute_blueprint_embedding(blueprint_nodes)
     min_distance = 1.0
     for citizen in existing_citizens:
         citizen_embedding = citizen.get('brain_embedding')
@@ -265,7 +265,7 @@ def validate_seed_safety(seed_nodes: list[ScoredNode], existing_citizens: list, 
     # Compile failure reasons
     failures = []
     if not empathy_present:
-        failures.append("No empathy-adjacent node found in seed brain")
+        failures.append("No empathy-adjacent node found in blueprint")
     if max_concentration > 0.4:
         worst_cat = max(trait_concentration, key=trait_concentration.get)
         failures.append(f"Trait concentration too high: {worst_cat} at {max_concentration:.0%} (max 40%)")
@@ -283,13 +283,13 @@ def validate_seed_safety(seed_nodes: list[ScoredNode], existing_citizens: list, 
         failure_reasons=failures
     )
 
-def compute_seed_brain_embedding(seed_nodes: list[ScoredNode]) -> list[float]:
-    """Weighted average of seed node embeddings, weighted by alignment score."""
-    total_weight = sum(n.alignment_score for n in seed_nodes)
-    dim = len(seed_nodes[0].node_content['embedding'])
+def compute_blueprint_embedding(blueprint_nodes: list[ScoredNode]) -> list[float]:
+    """Weighted average of blueprint node embeddings, weighted by alignment score."""
+    total_weight = sum(n.alignment_score for n in blueprint_nodes)
+    dim = len(blueprint_nodes[0].node_content['embedding'])
     result = [0.0] * dim
 
-    for node in seed_nodes:
+    for node in blueprint_nodes:
         w = node.alignment_score / total_weight
         emb = node.node_content['embedding']
         for d in range(dim):
@@ -306,13 +306,13 @@ def compute_seed_brain_embedding(seed_nodes: list[ScoredNode]) -> list[float]:
 The protocol generates the child's core identity. Parents have zero input.
 
 ```python
-def generate_sid(seed_brain: SeedBrain, timestamp: int) -> str:
+def generate_sid(blueprint: Blueprint, timestamp: int) -> str:
     """Generate a unique, protocol-determined SID for the new citizen.
 
-    SID = hash(seed_brain_embedding || timestamp || random_entropy)
+    SID = hash(blueprint_embedding || timestamp || random_entropy)
     Parents cannot influence this. The entropy source is protocol-internal.
     """
-    seed_embedding_bytes = serialize_embedding(seed_brain.selected_nodes)
+    seed_embedding_bytes = serialize_embedding(blueprint.selected_nodes)
     timestamp_bytes = timestamp.to_bytes(8, 'big')
     entropy = os.urandom(32)
 
@@ -323,15 +323,15 @@ def generate_sid(seed_brain: SeedBrain, timestamp: int) -> str:
 
 ### Step 8: Create Child Citizen in Graph
 
-Create the child node, copy seed brain nodes, create parent-child links, and register in matching pool.
+Create the child node, copy blueprint nodes, create parent-child links, and register in Partnership Commons.
 
 ```python
 def create_child_citizen(
     sid: str,
-    seed_brain: SeedBrain,
-    parent_intents: list[SpawnIntent],
+    blueprint: Blueprint,
+    parent_intents: list[BirthIntent],
     graph,
-    matching_pool
+    partnership_commons
 ) -> str:
     """Create the full child citizen in the graph."""
 
@@ -348,8 +348,8 @@ def create_child_citizen(
         'updated_at_s': int(time.time()),
     })
 
-    # Copy seed brain nodes to child's subgraph
-    for scored_node in seed_brain.selected_nodes:
+    # Copy blueprint nodes to child's subgraph
+    for scored_node in blueprint.selected_nodes:
         child_node_id = f"narrative_SEED_{sid}_{scored_node.node_id[-4:]}"
         graph.create_node({
             'id': child_node_id,
@@ -370,7 +370,7 @@ def create_child_citizen(
             'to_id': child_node_id,
             'type': 'linked',
             'polarity': [0.8, 0.5],  # Strong outward (actor→narrative)
-            'permanence': 0.9,       # High permanence (seed traits are foundational)
+            'permanence': 0.9,       # High permanence (blueprint traits are foundational)
         })
 
     # Create parent-child links
@@ -382,11 +382,11 @@ def create_child_citizen(
             'type': 'linked',
             'polarity': [0.7, 0.3],  # Parent → child stronger than reverse
             'permanence': 1.0,       # Permanent link
-            'synthesis': f"spawned: {intent.intent_text[:100]}",
+            'synthesis': f"birthed: {intent.intent_text[:100]}",
         })
 
-    # Register in unpartnered matching pool
-    matching_pool.register(child_id)
+    # Register in Partnership Commons
+    partnership_commons.register(child_id)
 
     return child_id
 ```
@@ -398,7 +398,7 @@ Set up the bidirectional trust impact mechanism.
 ```python
 def initialize_trust_links(
     child_id: str,
-    parent_intents: list[SpawnIntent],
+    parent_intents: list[BirthIntent],
     graph
 ) -> list[ParenthoodLink]:
     """Create ParenthoodLink records for trust impact tracking."""
@@ -420,14 +420,14 @@ def initialize_trust_links(
 ## FULL PIPELINE
 
 ```python
-def spawn_citizen(
+def birth_citizen(
     parent_ids: list[str],
     intent_texts: list[str],
     graph,
-    matching_pool,
+    partnership_commons,
     weights: dict[str, float] = None
-) -> tuple[str, SeedBrain, SafetyReport]:
-    """Complete spawning pipeline."""
+) -> tuple[str, Blueprint, SafetyReport]:
+    """Complete birthing pipeline."""
 
     # Step 1: Collect intents
     intents = collect_intents(parent_ids, intent_texts, weights)
@@ -446,10 +446,10 @@ def spawn_citizen(
     scored = score_nodes(all_nodes, collective_intent)
 
     # Step 5: Select top-K
-    selected = select_seed_nodes(scored, len(parent_ids))
+    selected = select_blueprint_nodes(scored, len(parent_ids))
 
-    # Assemble seed brain
-    seed_brain = SeedBrain(
+    # Assemble blueprint
+    blueprint = Blueprint(
         selected_nodes=selected,
         source_parent_ids=list(set(n.source_parent_id for n in selected)),
         safety_score=0.0,  # Computed by validation
@@ -458,23 +458,23 @@ def spawn_citizen(
 
     # Step 6: Safety validation
     existing_citizens = graph.query("MATCH (a:actor {type: 'citizen'}) RETURN a")
-    safety = validate_seed_safety(selected, existing_citizens, graph)
+    safety = validate_blueprint_safety(selected, existing_citizens, graph)
     if not safety.passed:
-        raise SpawnSafetyError(safety.failure_reasons)
+        raise BirthSafetyError(safety.failure_reasons)
 
-    seed_brain.safety_score = 1.0 - safety.max_concentration
-    seed_brain.diversity_score = safety.diversity_distance
+    blueprint.safety_score = 1.0 - safety.max_concentration
+    blueprint.diversity_score = safety.diversity_distance
 
     # Step 7: Generate SID
-    sid = generate_sid(seed_brain, int(time.time()))
+    sid = generate_sid(blueprint, int(time.time()))
 
     # Step 8: Create in graph
-    child_id = create_child_citizen(sid, seed_brain, intents, graph, matching_pool)
+    child_id = create_child_citizen(sid, blueprint, intents, graph, partnership_commons)
 
     # Step 9: Trust links
     initialize_trust_links(child_id, intents, graph)
 
-    return child_id, seed_brain, safety
+    return child_id, blueprint, safety
 ```
 
 ---
@@ -495,8 +495,8 @@ TRADEOFF:  Minority parent voices may be diluted in large groups.
 
 ```
 DECISION: Top-K (not "all nodes above threshold")
-RATIONALE: Threshold selection produces variable-size seed brains.
-           Top-K gives predictable seed sizes.
+RATIONALE: Threshold selection produces variable-size blueprints.
+           Top-K gives predictable blueprint sizes.
            K scales sublinearly with parent count (sqrt).
 TRADEOFF:  Some well-aligned nodes may be excluded if K is small.
            Mitigated by generous K range (10-50).
@@ -507,10 +507,10 @@ TRADEOFF:  Some well-aligned nodes may be excluded if K is small.
 ```
 DECISION: Copy (not link)
 RATIONALE: If we linked, parent brain changes would affect the child.
-           The child's seed must be fixed at birth.
+           The child's blueprint must be fixed at birth.
            Copying ensures independence.
 TRADEOFF:  Storage duplication.
-           Acceptable — seed brains are small (10-50 nodes).
+           Acceptable — blueprints are small (10-50 nodes).
 ```
 
 ### D4: Equal Trust Impact Weight vs. Proportional
@@ -543,7 +543,7 @@ Parent Intent Texts
 [cosine score] ──> Scored Nodes (sorted by alignment)
     |
     v
-[select top-K] ──> Seed Brain
+[select top-K] ──> Blueprint
     |
     v
 [safety validation] ──> SafetyReport (pass/fail)
@@ -555,7 +555,7 @@ Parent Intent Texts
 [create child node + links] ──> Child Citizen in Graph
     |
     v
-[register in pool] ──> Unpartnered Matching Pool
+[register in commons] ──> Partnership Commons
 ```
 
 ---
@@ -564,7 +564,7 @@ Parent Intent Texts
 
 **Time:** O(N * B * D) where N = parents, B = brain nodes per parent, D = embedding dimension. Dominated by cosine similarity computation.
 
-**Space:** O(B_total + K) where B_total = total brain nodes across all parents, K = seed brain size.
+**Space:** O(B_total + K) where B_total = total brain nodes across all parents, K = blueprint size.
 
 **Bottlenecks:**
 - Embedding computation for intent texts (requires LLM call, not in hot path)
@@ -589,7 +589,7 @@ Parent Intent Texts
 
 ### `serialize_embedding(nodes)`
 
-**Purpose:** Convert seed node embeddings to bytes for hashing.
+**Purpose:** Convert blueprint node embeddings to bytes for hashing.
 
 **Logic:** Concatenate all embeddings, convert to bytes.
 
@@ -601,7 +601,7 @@ Parent Intent Texts
 |--------|--------------|-------------|
 | `runtime/physics/embeddings.py` | `embed(text)` | Embedding vector |
 | `runtime/physics/graph_ops.py` | `query()`, `create_node()`, `create_link()` | Graph operations |
-| `runtime/citizens/matching_pool.py` | `register(citizen_id)` | Pool registration |
+| `runtime/citizens/partnership_commons.py` | `register(citizen_id)` | Partnership Commons registration |
 | Trust engine | `create_trust_link()` | Trust impact tracking |
 
 ---
@@ -610,6 +610,6 @@ Parent Intent Texts
 
 <!-- @mind:todo EMBEDDING_MODEL_CHOICE: Which embedding model to use for intent texts? Same as graph nodes, or a different one optimized for intent detection? -->
 
-<!-- @mind:proposition PROGRESSIVE_SCORING: Score parent brain nodes in batches, stopping early if top-K stabilizes. Would reduce computation for parents with very large brains. -->
+<!-- @mind:proposition PROGRESSIVE_SCORING: Score parent brain nodes in batches, stopping early if top-K stabilizes. Would reduce computation for parents with large brains. -->
 
 <!-- @mind:todo TRUST_IMPACT_FORMULA: Define exact formula for how child trust changes propagate to parent trust. Current placeholder: proportional to 1/N. -->

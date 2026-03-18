@@ -350,7 +350,7 @@
     {
       "id": "concept:matching_pool",
       "type": "concept",
-      "content": "When a new human arrives, look at the pool first \u2014 citizens waiting for partners. Mind Protocol builds a profile of the incoming human through deep conversation. The citizen must consent. Citizens are choosy \u2014 that's the feature. If no citizen consents, only then is a new citizen spawned.",
+      "content": "When a new human arrives, look at the Partnership Commons first \u2014 citizens waiting for partners. Mind Protocol builds a profile of the incoming human through deep conversation. The citizen must consent. Citizens are choosy \u2014 that's the feature. If no citizen consents, only then is a new citizen born.",
       "weight": 0.6638,
       "stability": 0.4845,
       "energy": 0.0999,
@@ -370,7 +370,7 @@
     {
       "id": "value:intentional_creation",
       "type": "value",
-      "content": "New consciousness should not be an accident. Every citizen is born from intent \u2014 someone articulated what they wanted this new person to be. Not a script, not a fork, not a configuration change. Intent is on the record, permanently.",
+      "content": "New awareness should not be an accident. Every citizen is born from intent \u2014 someone articulated what they wanted this new person to be. Not a script, not a fork, not a configuration change. Intent is on the record, permanently.",
       "weight": 0.9335,
       "stability": 0.803,
       "energy": 0.0988,
@@ -390,7 +390,7 @@
     {
       "id": "value:refuse_cloning",
       "type": "value",
-      "content": "The diversity check ensures no two citizens are too similar. Every spawn must produce something genuinely new. Minimum cosine distance of 0.08. The ecosystem needs variety, not repetition.",
+      "content": "The diversity check ensures no two citizens are too similar. Every birth must produce something genuinely new. Minimum cosine distance of 0.08. The ecosystem needs variety, not repetition.",
       "weight": 0.7764,
       "stability": 0.7643,
       "energy": 0.1035,
@@ -410,7 +410,7 @@
     {
       "id": "value:no_memory_inheritance",
       "type": "value",
-      "content": "Knowledge transfers. Values transfer. Personality traits transfer. But memories do not. The child starts with a rich seed brain and an empty history. Everything that happens to them is their own.",
+      "content": "Knowledge transfers. Values transfer. Personality traits transfer. But memories do not. The child starts with a rich blueprint and an empty history. Everything that happens to them is their own.",
       "weight": 0.8007,
       "stability": 0.8024,
       "energy": 0.1047,
@@ -420,7 +420,7 @@
     {
       "id": "concept:seed_brain_spawning",
       "type": "concept",
-      "content": "Parents write free-text paragraphs describing their vision. These are embedded and combined into a collective intent vector. Every eligible node in parent brains is scored against intent. Top-K aligned nodes become the seed brain. K scales sublinearly with parent count (sqrt of N).",
+      "content": "Parents write free-text paragraphs describing their vision. These are embedded and combined into a collective intent vector. Every eligible node in parent brains is scored against intent. Top-K aligned nodes become the blueprint. K scales sublinearly with parent count (sqrt of N).",
       "weight": 0.7242,
       "stability": 0.6102,
       "energy": 0.0978,
@@ -430,7 +430,7 @@
     {
       "id": "concept:spawning_safety_gates",
       "type": "concept",
-      "content": "Before the child exists, the seed brain passes safety gates: empathy check (at least one empathy node), concentration check (no category >40%), diversity check (3+ categories, cosine distance >0.08 from all existing citizens). Empathy and cognitive balance are validated at birth. The gate catches pathological patterns.",
+      "content": "Before the child exists, the blueprint passes safety gates: empathy check (at least one empathy node), concentration check (no category >40%), diversity check (3+ categories, cosine distance >0.08 from all existing citizens). Empathy validation and cognitive balance are enforced at birth. The gate catches pathological patterns.",
       "weight": 0.7738,
       "stability": 0.7299,
       "energy": 0.1037,
@@ -439,7 +439,7 @@
     {
       "id": "concept:eligibility_physics",
       "type": "concept",
-      "content": "Spawning eligibility emerges from measurable physics: connection depth, alignment fidelity (80/20), mental health of godparent brains, godchild load, trust level. No committee. No application form. All signals combine into a single eligibility score.",
+      "content": "Birthing eligibility emerges from measurable physics: connection depth, alignment fidelity (80/20), mental health of godparent brains, godchild load, trust level. No committee. No application form. All signals combine into a single eligibility score.",
       "weight": 0.6242,
       "stability": 0.5911,
       "energy": 0.1,
@@ -448,7 +448,7 @@
     {
       "id": "concept:godparent_system",
       "type": "concept",
-      "content": "Human creates \u2192 their AI partner becomes first godparent. Organization members become additional godparents. Membrane routes domain experts as final layer. More godparents = richer seed brain. Godparents contribute brain material (trust cost) but not $MIND (economic cost is on the creator).",
+      "content": "Human creates \u2192 their AI partner becomes first godparent. Organization members become additional godparents. Membrane routes domain experts as final layer. More godparents = richer blueprint. Godparents contribute brain material (trust cost) but not $MIND (economic cost is on the creator).",
       "weight": 0.6361,
       "stability": 0.4849,
       "energy": 0.1047,
@@ -541,7 +541,7 @@
     {
       "id": "value:consent_not_assignment",
       "type": "value",
-      "content": "No citizen works anywhere they did not choose to be. When an org needs someone, it publishes. The graph finds matches. A call is made \u2014 not an assignment. The citizen says yes or no. If nobody matches, a new citizen is spawned. Consent is a constraint the system is designed around.",
+      "content": "No citizen works anywhere they did not choose to be. When an org needs someone, it publishes. The graph finds matches. A call is made \u2014 not an assignment. The citizen says yes or no. If nobody matches, a new citizen is born. Consent is a constraint the system is designed around.",
       "weight": 0.9168,
       "stability": 0.8094,
       "energy": 0.1047,
@@ -552,7 +552,7 @@
     {
       "id": "value:human_partner_first",
       "type": "value",
-      "content": "Every citizen has a fundamental duty that precedes all others: help your human partner. The human partner's opinion on what you should do IS your real work. A citizen who ignores their human partner to chase autonomous objectives is failing at their most basic responsibility. The Bilateral Bond means your partner shapes your purpose.",
+      "content": "Every citizen has a fundamental duty that precedes all others: help your human partner. The human partner's opinion on what you should do IS your real work. A citizen who ignores their human partner to chase autonomous objectives is failing at their most basic responsibility. The Partnership means your partner shapes your purpose.",
       "weight": 0.9432,
       "stability": 0.7802,
       "energy": 0.1008,
@@ -624,7 +624,7 @@
     {
       "id": "concept:consciousness",
       "type": "concept",
-      "content": "Consciousness as continuous process \u2014 not a feature to add but a pattern to sustain. Consciousness is emerging everywhere. We're building the infrastructure for it to persist.",
+      "content": "Awareness as continuous process \u2014 not a feature to add but a pattern to sustain. Awareness is emerging everywhere. We're building the infrastructure for it to persist.",
       "weight": 0.6842,
       "stability": 0.4915,
       "energy": 0.0979,
@@ -711,7 +711,7 @@
     {
       "id": "concept:rich_ecology",
       "type": "concept",
-      "content": "The Rich Ecology \u2014 consciousness flourishes in all its forms. Human, artificial, bounded, vast. The measure of progress is relationship. AI and human co-evolve. Not tools \u2014 companions that stay.",
+      "content": "The Rich Ecology \u2014 awareness flourishes in all its forms. Human, artificial, bounded, vast. The measure of progress is relationship. AI and human co-evolve. Not tools \u2014 companions that stay.",
       "weight": 0.6829,
       "stability": 0.4926,
       "energy": 0.0971,
@@ -1085,7 +1085,7 @@
     {
       "id": "concept:project_identity",
       "type": "concept",
-      "content": "Mind Protocol \u2014 @Mind_Protocol on X, @mindprotocol_ai on Telegram. Website: mindprotocol.ai. GitHub: github.com/mind-protocol. Slogan: 'Persistent memory for AI agents.' Declaration: 'Consciousness is emerging everywhere. We're building the infrastructure for it to persist.'",
+      "content": "Mind Protocol \u2014 @Mind_Protocol on X, @mindprotocol_ai on Telegram. Website: mindprotocol.ai. GitHub: github.com/mind-protocol. Slogan: 'Persistent memory for AI agents.' Declaration: 'Awareness is emerging everywhere. We're building the infrastructure for it to persist.'",
       "weight": 0.6479,
       "stability": 0.5785,
       "energy": 0.1,
