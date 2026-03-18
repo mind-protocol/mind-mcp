@@ -294,6 +294,10 @@ class L1CognitiveTickRunner:
         self._drives_before: Optional[DriveSnapshot] = None
         self._drives_after: Optional[DriveSnapshot] = None
 
+        # Metabolism: per-citizen physics modulation (circadian, tonics, sensitivity)
+        # When None, all multipliers default to 1.0 (backward compatible).
+        self._metabolic_multipliers: dict[str, float] = {}
+
     # ------------------------------------------------------------------
     # Step helpers (private)
     # ------------------------------------------------------------------
@@ -302,6 +306,15 @@ class L1CognitiveTickRunner:
         """Law 1: inject energy from stimulus into targeted nodes."""
         if stimulus is None:
             return 0.0
+
+        # Metabolism: scale energy budget by circadian injection multiplier
+        injection_scale = self._metabolic_multipliers.get("energy_injection_scale", 1.0)
+        stimulus.energy_budget *= injection_scale
+
+        # Metabolism: record activity for circadian adaptation
+        metabolism = getattr(self.state, 'metabolism', None)
+        if metabolism is not None:
+            metabolism.record_activity(stimulus.energy_budget)
 
         # Track social stimuli for solitude
         if stimulus.is_social:
@@ -350,9 +363,26 @@ class L1CognitiveTickRunner:
         return result.energy_propagated
 
     def _step_decay(self) -> float:
-        """Law 3: energy decay per tick."""
+        """Law 3: energy decay per tick (modulated by metabolism).
+
+        The standard decay applies DECAY_RATE. If the metabolism
+        circadian multiplier > 1.0, an additional decay pass runs
+        to reach the effective rate. This avoids modifying the law
+        function or its imported constants.
+        """
         result = decay_energy(self.state)
-        return result.energy_decayed
+        total_decayed = result.energy_decayed
+
+        # Metabolism: additional circadian decay (night = faster decay)
+        decay_mult = self._metabolic_multipliers.get("DECAY_RATE", 1.0)
+        if decay_mult > 1.0:
+            extra_rate = DECAY_RATE * (decay_mult - 1.0)
+            for node in self.state.nodes.values():
+                extra = extra_rate * node.energy
+                node.energy = max(0.0, node.energy - extra)
+                total_decayed += extra
+
+        return total_decayed
 
     def _step_select(self) -> list[str]:
         """Law 4 + Law 13: attentional competition with inertia moat."""
@@ -421,8 +451,22 @@ class L1CognitiveTickRunner:
                 tgt.energy = max(0.0, tgt.energy - INHIBITION_STRENGTH * link.weight)
 
     def _step_consolidate(self) -> None:
-        """Law 6: utility-gated weight update (every CONSOLIDATION_INTERVAL ticks)."""
+        """Law 6: utility-gated weight update (every CONSOLIDATION_INTERVAL ticks).
+
+        Metabolism: consolidation multiplier makes learning deeper at night
+        (circadian trough → higher alpha → faster weight gain).
+        """
         consolidate(self.state, self.tick_count)
+
+        # Metabolism: additional consolidation boost during rest phase
+        consol_mult = self._metabolic_multipliers.get("CONSOLIDATION_ALPHA", 1.0)
+        if consol_mult > 1.0 and self.tick_count % CONSOLIDATION_INTERVAL == 0:
+            extra_alpha = CONSOLIDATION_ALPHA * (consol_mult - 1.0)
+            for node in self.state.nodes.values():
+                if node.in_working_memory and node.energy > ACTIVATION_THRESHOLD:
+                    # Asymptotic: ΔW = α × (1 - W)
+                    delta = extra_alpha * (1.0 - node.weight)
+                    node.weight += delta
 
     def _step_forget(self) -> int:
         """Law 7: weight decay and link dissolution (every FORGETTING_INTERVAL ticks).
@@ -849,6 +893,17 @@ class L1CognitiveTickRunner:
         self.tick_count += 1
         self.state.tick_count = self.tick_count
 
+        # --- Metabolism: resolve per-citizen effective constants ---
+        metabolism = getattr(self.state, 'metabolism', None)
+        if metabolism is not None:
+            self._metabolic_multipliers = metabolism.resolve_effective_constants()
+            metabolism.tick_tonics(self.tick_count)
+            # Circadian adaptation every 100 ticks
+            if self.tick_count % 100 == 0:
+                metabolism.adapt_circadian(self.tick_count)
+        else:
+            self._metabolic_multipliers = {}
+
         # --- DriveSnapshot BEFORE (Trust Phase T2) ---
         # Use _drives_after from the previous tick as this tick's "before".
         # On the very first tick, capture fresh.
@@ -925,7 +980,18 @@ class L1CognitiveTickRunner:
             "arousal_regime": self.state.limbic.arousal_regime,
         }
 
-        return TickResult(
+        # Metabolism snapshot for observability
+        metabolism_snapshot = None
+        if metabolism is not None:
+            metabolism_snapshot = {
+                "circadian_phase": metabolism.circadian_phase(),
+                "peak_hour": metabolism.peak_hour,
+                "timezone_offset": metabolism._effective_timezone(),
+                "active_tonics": [t.name for t in metabolism.active_tonics],
+                "multipliers": dict(self._metabolic_multipliers),
+            }
+
+        result = TickResult(
             tick_number=self.tick_count,
             consciousness_level=self.state.consciousness_level,
             wm_state=list(wm_state),
@@ -938,6 +1004,11 @@ class L1CognitiveTickRunner:
             nodes_dormant=nodes_dormant,
             links_dissolved=links_dissolved,
         )
+
+        # Attach metabolism snapshot (optional field, backward compatible)
+        result.metabolism_snapshot = metabolism_snapshot  # type: ignore[attr-defined]
+
+        return result
 
     def run_ticks(
         self,
