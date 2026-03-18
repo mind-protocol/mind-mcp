@@ -111,7 +111,7 @@ Three new channel groups make the citizen genuinely self-aware:
 
 **Watch out for:**
 - Do NOT mutate state inside interoception. This is invariant V1 (CRITICAL). Use deepcopy or snapshot comparison in tests.
-- The channel configuration table in ALGORITHM has 22 entries. Implement them all but test the tricky ones first: hysteresis-based channels (emotions that oscillate) and trend-based channels (energy rising/falling).
+- The channel configuration table in ALGORITHM has 34 entries. Implement them all but test the tricky ones first: hysteresis-based channels (emotions that oscillate), trend-based channels (energy rising/falling), zone awareness (aggregation correctness), emotional delta detection (rising vs stable), and context window estimation (graceful degradation).
 - The tick_runner's `run_tick()` method has a specific order. Insert `_step_interoception()` AFTER step 9 (`_step_limbic`) and BEFORE step 10 (`_step_orient`). The interoceptive stimuli should be injected via `_step_inject()` so they participate in the SAME tick's WM competition.
 
 **Open questions I had:**
