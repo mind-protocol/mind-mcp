@@ -168,6 +168,18 @@ NodeBase:
       nullable: true
       description: "CLIP/SigLIP embedding of the image. Lives in same latent space as text embeddings. Used by Law 8 (compatibility) for visual similarity and by Sim_vis in coherence formula."
 
+    # === Spatial (v2.3) ===
+    position:
+      type: array
+      items: float
+      length: 3
+      nullable: true
+      description: "Spherical coordinates [r, theta, phi]. r = distance from center (weight-based: heavy nodes closer to core). theta = azimuthal angle [0, 2pi] (zone determines sector). phi = polar angle [0, pi] (verticality within zone). Pre-computed by spatial mapper from barycentrique formula. Renderers convert to cartesian: x=r*sin(phi)*cos(theta), y=r*cos(phi), z=r*sin(phi)*sin(theta)."
+    zone_id:
+      type: string
+      nullable: true
+      description: "Primary zone/district this node belongs to. Determined by highest affinity score. Null for unpositioned nodes."
+
     # === Provenance (v2.2) ===
     origin_citizen:
       type: string

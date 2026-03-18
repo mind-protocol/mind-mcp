@@ -103,6 +103,20 @@ l3_universe:
     l3_meaning: "Any entity, object, or abstraction — tools, tokens, documents, artifacts, currencies"
     examples: ["$MIND_token", "excalibur_sword", "pull_request_1234", "openai_api_key"]
 
+  # --- Spatial Positioning (v2.3) ---
+  #
+  # All L3 nodes carry position [r, theta, phi] in spherical coordinates.
+  # r = distance from Radiant Core (weight-inversed: heavier = closer)
+  # theta = azimuthal angle (zone sector: each of 7 districts owns a 51.4° arc)
+  # phi = polar angle (height: verticality within zone)
+  #
+  # Pre-computed by the spatial mapper using barycentrique formula:
+  #   position(n) = Σ(affinity(n, d) × centroid(d)) / Σ(affinity(n, d))
+  # Then converted to spherical.
+  #
+  # Updated periodically (not per-tick — positions change slowly).
+  # Renderers read position directly and convert to cartesian for display.
+
   # --- Visual Assets at L3 (v2.2) ---
   #
   # All L3 nodes inherit image_uri and image_embedding from NodeBase (schema-l1.yaml).
