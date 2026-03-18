@@ -266,6 +266,16 @@ NodeBase:
       nullable: true
       default: 1.0
       description: "Gravitational mass in 3D space. Determines how strongly this node attracts nearby nodes. Derived from weight + link_count: mass = weight × (1 + 0.1 × link_count). High-mass nodes pull neighbors toward them, creating natural clustering. Spaces and high-weight Actors have the highest mass. Recomputed by the spatial mapper."
+
+    # === Visual Style (v2.3) ===
+    style_id:
+      type: string
+      nullable: true
+      description: "ID of the style asset applied to this node. Points to a Thing node (type=style) that defines mesh, materials, proportions, ornaments, animations. The style Thing has a link →created_by→ Artist (the creator). Citizens choose their style; Spaces inherit from zone; Things get default. Null = protocol default geometry."
+    style_variant:
+      type: dict
+      nullable: true
+      description: "Per-node overrides on the style: color tint, scale adjustments, ornament toggles. Allows customization within a style without creating a new asset. Example: {tint: '#ff9900', ornament: 'lens', glow_color: '#3b82f6'}."
     zone_id:
       type: string
       nullable: true
