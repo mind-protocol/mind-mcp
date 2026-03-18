@@ -127,13 +127,14 @@ def main():
     start = time.time()
     results = []
 
+    l3_graph = os.environ.get("L3_GRAPH", os.environ.get("UNIVERSE", "lumina-prime"))
     if args.l3_only:
-        graphs = ["lumina_prime"]
+        graphs = [l3_graph]
     elif args.citizen:
         graphs = [f"brain_{args.citizen}"]
     else:
         handles = get_all_citizen_handles()
-        graphs = [f"brain_{h}" for h in handles] + ["lumina_prime"]
+        graphs = [f"brain_{h}" for h in handles] + [l3_graph]
 
     for graph_name in graphs:
         logger.info(f"Processing {graph_name}...")
