@@ -36,15 +36,10 @@ CITIZENS_DIR = MIND_MCP / "citizens"
 sys.path.insert(0, str(MIND_MCP))
 sys.path.insert(0, str(MIND_MCP / "scripts"))
 
-# Phase 1: All 28 Primers. Opened 2026-03-16.
-ACTIVE_FILTER = {
-    # Original 8
-    "conductor", "forge", "dev", "herald", "mentor", "vox", "sentinel", "mind",
-    # Primers wave 2
-    "nervo", "echo", "nova", "lyra", "sync", "rhythm", "harmony", "nexus",
-    "fusion", "pitch", "pixel", "prose", "prism", "genesis", "lucid", "pragma",
-    "prior", "cantor", "corpus", "juris",
-}
+# Phase 2: ALL Lumina Prime citizens. Opened 2026-03-18 by NLR decision.
+# Previously filtered to 28 Primers only (Phase 1, 2026-03-16).
+# Now open to every citizen with a brain in FalkorDB.
+ACTIVE_FILTER = set()  # Empty = no filter = ALL citizens can wake
 
 # Tick state
 _last_tick_ts = time.time() - 3600  # look back 1h on first tick to catch backlog
