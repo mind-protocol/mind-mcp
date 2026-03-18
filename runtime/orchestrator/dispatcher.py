@@ -312,6 +312,14 @@ class Dispatcher:
 
         if citizen_handle not in self._citizen_engines:
             state = CitizenCognitiveState(citizen_id=citizen_handle)
+
+            # Attach metabolism (circadian rhythm, stimulus sensitivity, frequencies)
+            try:
+                from runtime.cognition.metabolism import CitizenMetabolism
+                state.metabolism = CitizenMetabolism()
+            except ImportError:
+                pass
+
             runner = L1CognitiveTickRunner(state)
             router = StimulusRouter(citizen_handle)
 
@@ -319,7 +327,7 @@ class Dispatcher:
             self._citizen_engines[citizen_handle] = runner
             self._citizen_routers[citizen_handle] = router
 
-            logger.info(f"L1 engine initialized for {citizen_handle}")
+            logger.info(f"L1 engine initialized for {citizen_handle} (metabolism: {state.metabolism is not None})")
 
         return self._citizen_engines[citizen_handle]
 
