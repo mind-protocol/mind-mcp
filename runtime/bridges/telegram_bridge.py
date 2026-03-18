@@ -31,7 +31,12 @@ logger = logging.getLogger("bridge.telegram")
 # ── Paths ────────────────────────────────────────────────────────────────────
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-_WORLD_ROOT = Path(__file__).resolve().parent.parent.parent.parent.parent
+
+# Citizens dir — from env or default to lumina-prime
+_WORLD_CITIZENS = Path(os.environ.get(
+    "CITIZENS_DIR",
+    str(PROJECT_ROOT.parent / "lumina-prime" / "citizens")
+))
 STATE_DIR = PROJECT_ROOT / "shrine" / "state"
 CITIZENS_DIR = PROJECT_ROOT / "citizens"
 MESSAGES_FILE = STATE_DIR / "telegram_messages.jsonl"
@@ -849,7 +854,7 @@ def process_update(update: dict) -> bool:
             _sender_handle = username.lower() if username else _sanitize_tg_handle(sender_name)
             _target = target_handle or "mind"
             _ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-            _msg_dir = _WORLD_ROOT / "citizens" / _target / "messages"
+            _msg_dir = _WORLD_CITIZENS / _target / "messages"
             _msg_dir.mkdir(parents=True, exist_ok=True)
             _msg_path = _msg_dir / f"{_ts}_{_sender_handle}.md"
             _msg_path.write_text(
@@ -1036,16 +1041,20 @@ def _handle_help(chat_id: str):
 
 
 def _handle_voice_call(chat_id: str, sender_name: str, user_id: str, text: str):
-    """Start a voice call with a citizen. /call @handle"""
+    """Start a voice call with a citizen. /call @handle or /call (defaults to partner)."""
     parts = text.split()
-    if len(parts) < 2:
-        send_message("Usage: /call @citizen\nExample: /call @silas", chat_id)
-        return
-
-    target = parts[1].lstrip("@")
+    if len(parts) >= 2:
+        target = parts[1].lstrip("@")
+    else:
+        # Default to the human's partner citizen
+        _build_partner_cache()
+        target = _partner_cache.get(str(user_id), "") or _partner_cache.get(str(chat_id), "")
+        if not target:
+            send_message("No partner found. Use: /call @citizen", chat_id)
+            return
 
     # Resolve citizen dir
-    citizens_dir = _WORLD_ROOT / "citizens"
+    citizens_dir = _WORLD_CITIZENS
     if not citizens_dir.is_dir():
         citizens_dir = PROJECT_ROOT / "citizens"
     citizen_dir = citizens_dir / target

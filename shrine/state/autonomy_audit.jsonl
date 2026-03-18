@@ -2153,3 +2153,5 @@
 {"ts": "2026-03-18T19:55:15.880836Z", "citizen": "dev", "tool": "call", "permission": "communicate", "tier": 3, "level": 7, "result": "ALLOW", "reason": "always_allowed"}
 {"ts": "2026-03-18T19:55:20.378022Z", "citizen": "dev", "tool": "call", "permission": "communicate", "tier": 3, "level": 7, "result": "ALLOW", "reason": "always_allowed"}
 {"ts": "2026-03-18T19:55:23.188500Z", "citizen": "dev", "tool": "call", "permission": "communicate", "tier": 3, "level": 7, "result": "ALLOW", "reason": "always_allowed"}
+{"ts": "2026-03-18T23:03:51.255605Z", "citizen": "dragon_slayer", "tool": "sense", "permission": "read_code", "tier": 2, "level": 1, "result": "ALLOW", "reason": "permitted"}
+{"ts": "2026-03-18T23:03:56.482345Z", "citizen": "dragon_slayer", "tool": "graph_query", "permission": "read_code", "tier": 2, "level": 1, "result": "ALLOW", "reason": "always_allowed"}
