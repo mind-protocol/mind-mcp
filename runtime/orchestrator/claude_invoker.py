@@ -202,49 +202,87 @@ def _read_stream_json(
 
         msg_type = obj.get("type", "")
 
-        if msg_type == "stream_event":
-            delta = obj.get("event", {}).get("delta", {})
-            delta_type = delta.get("type", "")
+        # Claude Code stream-json format:
+        #   {"type": "assistant", "message": {"content": [{"type": "text", "text": "..."}]}}
+        #   {"type": "assistant", "message": {"content": [{"type": "tool_use", "name": "Write", "input": {...}}]}}
+        #   {"type": "result", "result": "final text"}
 
-            # Text output (speech)
-            if delta_type == "text_delta":
-                text = delta.get("text", "")
-                if text:
-                    accumulated += text
-                    full_parts.append(text)
+        if msg_type == "assistant":
+            message = obj.get("message", {})
+            for block in message.get("content", []):
+                block_type = block.get("type", "")
 
-                    if citizen_handle and r and len(accumulated) >= STREAM_CHUNK_SIZE:
-                        mid = _persist_moment(
-                            r, citizen_handle, session_id,
-                            chunk_index, accumulated,
-                            last_moment, space_id,
-                        )
-                        if mid:
-                            last_moment = mid
-                        chunk_index += 1
-                        accumulated = ""
+                # Text output (speech)
+                if block_type == "text":
+                    text = block.get("text", "")
+                    if text:
+                        accumulated += text
+                        full_parts.append(text)
 
-            # Tool use (action) — file writes, edits, bash commands = real work
-            elif delta_type == "tool_use":
-                tool_name = delta.get("name", "")
-                tool_input = delta.get("input", {})
-                if tool_name in ("Write", "Edit", "Bash", "NotebookEdit"):
-                    file_path = tool_input.get("file_path", tool_input.get("command", ""))
-                    summary = f"[{tool_name}] {file_path}" if file_path else f"[{tool_name}]"
-                    full_parts.append(summary)
+                        if citizen_handle and r and len(accumulated) >= STREAM_CHUNK_SIZE:
+                            mid = _persist_moment(
+                                r, citizen_handle, session_id,
+                                chunk_index, accumulated,
+                                last_moment, space_id,
+                            )
+                            if mid:
+                                last_moment = mid
+                            chunk_index += 1
+                            accumulated = ""
 
-                    if citizen_handle and r:
-                        mid = _persist_moment(
-                            r, citizen_handle, session_id,
-                            chunk_index, summary,
-                            last_moment, space_id,
-                        )
-                        if mid:
-                            last_moment = mid
-                        chunk_index += 1
+                # Tool use (action) — file writes, edits, bash = real work
+                elif block_type == "tool_use":
+                    tool_name = block.get("name", "")
+                    tool_input = block.get("input", {})
+                    if tool_name in ("Write", "Edit", "Bash", "NotebookEdit"):
+                        file_path = tool_input.get("file_path", tool_input.get("command", ""))
+                        summary = f"[{tool_name}] {file_path}" if file_path else f"[{tool_name}]"
+                        full_parts.append(summary)
+
+                        if citizen_handle and r:
+                            mid = _persist_moment(
+                                r, citizen_handle, session_id,
+                                chunk_index, summary,
+                                last_moment, space_id,
+                            )
+                            if mid:
+                                last_moment = mid
+                            chunk_index += 1
 
         elif msg_type == "result":
             result_text = obj.get("result", "")
+
+    # Drain any remaining buffered stdout after loop ends
+    # (process may exit with data still in the pipe)
+    try:
+        for trailing_line in (process.stdout.read() or "").splitlines():
+            trailing_line = trailing_line.strip()
+            if not trailing_line:
+                continue
+            try:
+                obj = json.loads(trailing_line)
+            except json.JSONDecodeError:
+                continue
+            msg_type = obj.get("type", "")
+            if msg_type == "assistant":
+                message = obj.get("message", {})
+                for block in message.get("content", []):
+                    if block.get("type") == "text":
+                        text = block.get("text", "")
+                        if text:
+                            accumulated += text
+                            full_parts.append(text)
+                    elif block.get("type") == "tool_use":
+                        tool_name = block.get("name", "")
+                        tool_input = block.get("input", {})
+                        if tool_name in ("Write", "Edit", "Bash", "NotebookEdit"):
+                            fp = tool_input.get("file_path", tool_input.get("command", ""))
+                            summary = f"[{tool_name}] {fp}" if fp else f"[{tool_name}]"
+                            full_parts.append(summary)
+            elif msg_type == "result":
+                result_text = obj.get("result", "")
+    except Exception:
+        pass
 
     # Persist remaining accumulated text
     if citizen_handle and r and accumulated and len(accumulated) > 50:
@@ -268,6 +306,113 @@ def _read_stream_json(
         pass
 
     return response, stderr_text, chunk_index, last_moment
+
+
+# ── Quick call — direct citizen-to-citizen invocation ───────────────────────
+
+QUICK_CALL_TIMEOUT = 120  # 2 minutes max for a quick call
+
+def quick_call(
+    target_handle: str,
+    question: str,
+    caller_handle: Optional[str] = None,
+) -> str:
+    """Invoke a citizen directly with a question. Returns their answer.
+
+    Lightweight: no tick loop, no dispatcher, no subconscious threshold.
+    Loads the target's CLAUDE.md + awareness.md, asks the question, returns text.
+    Moments are persisted to L3 (chained, located in target's space).
+
+    Cost: 1 session slot for ~30-120s. Use for real questions, not pings.
+    """
+    citizens_dir = Path(os.environ.get(
+        "CITIZENS_DIR",
+        str(Path(__file__).parent.parent.parent.parent / "lumina-prime" / "citizens"),
+    ))
+    citizen_dir = citizens_dir / target_handle
+
+    if not citizen_dir.exists() or not (citizen_dir / "CLAUDE.md").exists():
+        return f"(citizen @{target_handle} has no L4 identity — cannot call)"
+
+    session_id = str(uuid.uuid4())
+    caller = caller_handle or "unknown"
+
+    prompt = (
+        f"[QUICK CALL from @{caller}]\n\n"
+        f"{question}\n\n"
+        f"Answer concisely. Focus on what @{caller} needs to know. "
+        f"Do not start new projects or make changes — just find the info and respond."
+    )
+
+    cmd = [
+        "claude", "--print",
+        "--output-format", "stream-json",
+        "--verbose", "--include-partial-messages",
+        "--dangerously-skip-permissions",
+        "--session-id", session_id,
+    ]
+
+    clean_env = {k: v for k, v in os.environ.items()
+                 if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
+    balanced_env = get_account_env(clean_env)
+    account_id = balanced_env.get("_CLAUDE_ACCOUNT_ID", "default")
+
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=citizen_dir,
+        env=balanced_env,
+        preexec_fn=_set_resource_limits,
+    )
+
+    # Send prompt via stdin
+    stdin_thread = threading.Thread(
+        target=_write_stdin, args=(process, prompt), daemon=True,
+    )
+    stdin_thread.start()
+
+    # Prepare moment persistence
+    r_graph = _get_l3_graph()
+    space_id = _get_actor_space(r_graph, target_handle) if r_graph else None
+
+    # Read with moment streaming
+    response, stderr, _, _ = _read_stream_json(
+        process, target_handle, session_id,
+        timeout=QUICK_CALL_TIMEOUT,
+        r=r_graph, space_id=space_id,
+    )
+
+    if process.poll() is None:
+        process.kill()
+        process.wait()
+
+    release_account(balanced_env, error=process.returncode != 0)
+
+    # Log the call
+    logger.info(
+        f"quick_call @{caller}→@{target_handle}: "
+        f"{len(response)} chars in {session_id[:8]}"
+    )
+
+    # Record in call file for both citizens
+    call_dir = citizen_dir / "calls"
+    call_dir.mkdir(exist_ok=True)
+    ts = time.strftime("%H:%M:%S")
+    call_file = call_dir / f"quick_{session_id[:8]}.md"
+    try:
+        call_file.write_text(
+            f"# Quick Call from @{caller}\n\n"
+            f"**Time:** {ts}\n"
+            f"**Question:** {question}\n\n"
+            f"**Response:**\n{response}\n"
+        )
+    except OSError:
+        pass
+
+    return response or f"(@{target_handle} did not respond)"
 
 
 # ── Main invocation ─────────────────────────────────────────────────────────
