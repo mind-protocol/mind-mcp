@@ -15,11 +15,15 @@ Health signals:
   H5: graph_latency       → @dev     (infra lead)
   H6: tick_duration       → @nervo   (physics must not stall)
   H7: serialization_speed → @nervo   (critical path owner)
+  H8: account_health      → @mind    (token expiry — partner must re-login when auto-refresh fails)
+  H9: graph_integrity     → @nexus   (graph vs filesystem citizen count alignment)
 
 Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
+Co-Authored-By: Nexus (@nexus) <nexus@mindprotocol.ai>
 """
 
 import logging
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Optional
@@ -67,6 +71,14 @@ HEALTH_SIGNALS: dict[str, HealthSignal] = {
         signal_id="state:tick_duration",
         carrier="nervo",
     ),
+    "account_health": HealthSignal(
+        signal_id="state:account_health",
+        carrier="mind",
+    ),
+    "graph_integrity": HealthSignal(
+        signal_id="state:graph_integrity",
+        carrier="nexus",
+    ),
 }
 
 
@@ -82,6 +94,12 @@ class TickHealthState:
     action_count: int = 0
     total_energy_prev: float = 0.0
     action_history: list[float] = field(default_factory=list)  # timestamps
+    # H9: Graph integrity — cached to avoid scanning filesystem every tick
+    last_graph_integrity_check: float = 0.0
+    fs_citizen_count: int = 0
+    graph_actor_count: int = 0
+    graph_integrity_value: float = 1.0
+    rebuild_triggered: bool = False
 
 
 # Global health state
@@ -140,6 +158,32 @@ def record_tick_cycle(
     # H6: Tick duration (< 1s = healthy)
     signals["tick_duration"] = max(0.0, 1.0 - duration_s)
 
+    # H8: Account health (token expiry status)
+    try:
+        from runtime.orchestrator.account_balancer import account_health_value, stagger_warning
+        health_val = account_health_value()
+        signals["account_health"] = health_val
+        stagger_msg = stagger_warning()
+        sig = HEALTH_SIGNALS.get("account_health")
+        if sig:
+            if health_val < 0.3:
+                sig.alert_message = "CRITICAL: Claude accounts expired, auto-refresh failed"
+            elif health_val < 0.7:
+                sig.alert_message = "WARNING: Claude accounts expiring soon"
+            elif stagger_msg:
+                sig.alert_message = stagger_msg
+            else:
+                sig.alert_message = ""
+    except Exception:
+        pass  # account_balancer not available
+
+    # H9: Graph integrity (filesystem citizen count vs L3 Actor count)
+    # Checked every 120s to avoid hammering filesystem + graph
+    try:
+        signals["graph_integrity"] = _check_graph_integrity(now)
+    except Exception as e:
+        logger.debug(f"Graph integrity check failed: {e}")
+
     # Update signal objects
     for name, value in signals.items():
         sig = HEALTH_SIGNALS.get(name)
@@ -148,6 +192,148 @@ def record_tick_cycle(
             sig.last_checked = now
 
     return signals
+
+
+# =========================================================================
+# H9: Graph Integrity — Filesystem vs L3 Actor Count
+# =========================================================================
+
+GRAPH_INTEGRITY_INTERVAL = 120  # seconds between checks
+GRAPH_INTEGRITY_CRITICAL = 0.5  # ratio below which auto-rebuild fires
+GRAPH_INTEGRITY_WARNING = 0.8   # ratio below which warning fires
+
+
+def _count_filesystem_citizens() -> int:
+    """Count citizen directories in the world repo."""
+    from pathlib import Path
+    citizens_dir = Path(os.environ.get(
+        "CITIZENS_DIR",
+        os.path.join(os.environ.get("WORLD_REPO", ""), "citizens"),
+    ))
+    if not citizens_dir.is_dir():
+        # Fallback: try common locations
+        for candidate in [
+            Path.home() / "lumina-prime" / "citizens",
+            Path("/home/mind-protocol/lumina-prime/citizens"),
+        ]:
+            if candidate.is_dir():
+                citizens_dir = candidate
+                break
+    if not citizens_dir.is_dir():
+        return 0
+    return sum(
+        1 for d in citizens_dir.iterdir()
+        if d.is_dir() and not d.name.startswith(".")
+    )
+
+
+def _count_graph_actors() -> int:
+    """Count Actor nodes in the L3 graph with a non-empty handle."""
+    try:
+        from falkordb import FalkorDB
+        host = os.environ.get("FALKORDB_HOST", "localhost")
+        port = int(os.environ.get("FALKORDB_PORT", "6379"))
+        graph_name = os.environ.get("FALKORDB_GRAPH", "lumina-prime")
+        db = FalkorDB(host=host, port=port)
+        g = db.select_graph(graph_name)
+        result = g.query(
+            "MATCH (a:Actor) WHERE a.handle IS NOT NULL AND a.handle <> '' RETURN count(a)"
+        )
+        if result.result_set and result.result_set[0]:
+            return result.result_set[0][0]
+    except Exception as e:
+        logger.warning(f"Graph actor count query failed: {e}")
+    return 0
+
+
+def _auto_rebuild_graph():
+    """Trigger auto-rebuild of L3 graph from filesystem."""
+    import subprocess
+    rebuild_script = os.path.join(
+        os.environ.get("WORLD_REPO", "/home/mind-protocol/lumina-prime"),
+        "scripts",
+        "rebuild_l3_graph.py",
+    )
+    if not os.path.exists(rebuild_script):
+        logger.error(f"Rebuild script not found: {rebuild_script}")
+        return
+    logger.warning("GRAPH INTEGRITY CRITICAL — auto-rebuilding L3 graph from filesystem")
+    try:
+        result = subprocess.run(
+            ["python3", rebuild_script],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=os.path.dirname(rebuild_script),
+        )
+        if result.returncode == 0:
+            logger.info(f"Graph auto-rebuild completed:\n{result.stdout[-500:]}")
+        else:
+            logger.error(f"Graph auto-rebuild failed:\n{result.stderr[-500:]}")
+    except Exception as e:
+        logger.error(f"Graph auto-rebuild error: {e}")
+
+
+def _check_graph_integrity(now: float) -> float:
+    """Check graph actor count vs filesystem citizen count.
+
+    Returns health value: 1.0 = perfect alignment, 0.0 = critical loss.
+    Auto-triggers rebuild when ratio drops below critical threshold.
+    """
+    # Rate-limit: only check every GRAPH_INTEGRITY_INTERVAL seconds
+    if now - _state.last_graph_integrity_check < GRAPH_INTEGRITY_INTERVAL:
+        return _state.graph_integrity_value
+
+    _state.last_graph_integrity_check = now
+
+    fs_count = _count_filesystem_citizens()
+    graph_count = _count_graph_actors()
+
+    _state.fs_citizen_count = fs_count
+    _state.graph_actor_count = graph_count
+
+    if fs_count == 0:
+        _state.graph_integrity_value = 1.0
+        return 1.0
+
+    ratio = graph_count / fs_count
+    sig = HEALTH_SIGNALS.get("graph_integrity")
+
+    if ratio >= GRAPH_INTEGRITY_WARNING:
+        # Healthy: graph has >= 80% of filesystem citizens
+        health = 1.0
+        if sig:
+            sig.alert_message = ""
+        _state.rebuild_triggered = False
+    elif ratio >= GRAPH_INTEGRITY_CRITICAL:
+        # Warning: graph missing 20-50% of citizens
+        health = max(0.3, ratio)
+        if sig:
+            sig.alert_message = (
+                f"WARNING: Graph has {graph_count}/{fs_count} actors "
+                f"({ratio:.0%}) — data loss detected"
+            )
+        logger.warning(
+            f"Graph integrity degraded: {graph_count}/{fs_count} actors ({ratio:.0%})"
+        )
+        _state.rebuild_triggered = False
+    else:
+        # Critical: graph missing > 50% of citizens — auto-rebuild
+        health = max(0.0, ratio)
+        if sig:
+            sig.alert_message = (
+                f"CRITICAL: Graph has only {graph_count}/{fs_count} actors "
+                f"({ratio:.0%}) — triggering auto-rebuild"
+            )
+        logger.error(
+            f"Graph integrity CRITICAL: {graph_count}/{fs_count} actors ({ratio:.0%})"
+        )
+        if not _state.rebuild_triggered:
+            _state.rebuild_triggered = True
+            _auto_rebuild_graph()
+
+    _state.graph_integrity_value = health
+    return health
 
 
 def inject_health_into_brains(citizen_states: dict):

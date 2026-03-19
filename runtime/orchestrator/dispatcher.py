@@ -28,7 +28,7 @@ from runtime.orchestrator.account_balancer import (
     status_line as accounts_status,
     proactive_refresh as refresh_accounts,
 )
-from runtime.orchestrator.claude_invoker import invoke_claude, invoke_degraded
+from runtime.orchestrator.claude_invoker import invoke_claude, invoke_degraded, invoke_gemini
 from runtime.orchestrator import activation_pressure
 from runtime.orchestrator.session_tracker import (
     write_neuron_profile,
@@ -117,6 +117,9 @@ class Dispatcher:
         self._last_awareness_tick: dict[str, float] = {}
         self._last_thought_tick: dict[str, float] = {}
 
+        # Per-citizen active action guard — prevents 5s check from flooding executor
+        self._citizen_action_active: dict[str, bool] = {}
+
         # Idle pose resolvers — one per citizen
         self._pose_resolvers: dict[str, "IdlePoseResolver"] = {}
 
@@ -133,6 +136,10 @@ class Dispatcher:
         self._citizen_engines: dict = {}
         self._citizen_states: dict = {}
         self._fs_watcher: dict = {}
+
+        # Gemini round-robin counter — every Nth dispatch goes to Gemini
+        self._dispatch_counter: int = 0
+        self._gemini_ratio: int = int(os.environ.get("GEMINI_RATIO", "5"))  # 1 in N goes to Gemini
 
     def start(self):
         """Start the dispatch loop in a background thread."""
@@ -571,7 +578,16 @@ class Dispatcher:
         If action_node_id is provided, the specific action node's content and
         action_command are included in the prompt so the Claude session knows
         exactly what MCP tool to call and why.
+
+        Guard: only one active action per citizen at a time. The 5s readiness
+        check can fire rapidly — without this guard it floods the executor with
+        duplicate actions that all return subconscious responses.
         """
+        # One action at a time per citizen
+        if self._citizen_action_active.get(handle):
+            logger.debug(f"Action skipped for {handle} — already has active session")
+            return
+
         state = self._citizen_states.get(handle)
         if not state:
             return
@@ -628,6 +644,7 @@ class Dispatcher:
             },
         }
 
+        self._citizen_action_active[handle] = True
         self.dispatch(request)
         logger.info(
             f"Conscious action fired for {handle} "
@@ -640,6 +657,19 @@ class Dispatcher:
             action_content or "",
             orientation or "",
         )
+
+    # ── Provider Selection ──────────────────────────────────────────────────
+
+    def _should_use_gemini(self) -> bool:
+        """Round-robin: route 1-in-N dispatches to Gemini CLI.
+
+        GEMINI_RATIO=5 means 1 in 5 sessions goes to Gemini (20%).
+        GEMINI_RATIO=2 means 1 in 2 (50%). GEMINI_RATIO=1 means all Gemini.
+        """
+        self._dispatch_counter += 1
+        if self._gemini_ratio <= 0:
+            return False
+        return (self._dispatch_counter % self._gemini_ratio) == 0
 
     # ── Direct Dispatch ────────────────────────────────────────────────────
 
@@ -682,9 +712,11 @@ class Dispatcher:
         if _SILENCE_AVAILABLE:
             _silence_attempt("invoke_claude")
 
-        # Choose invocation path
+        # Choose invocation path — round-robin Claude/Gemini to spread load
         if degradation.is_degraded():
             invoke_fn = invoke_degraded
+        elif os.environ.get("ENABLE_GEMINI_CLI", "1") == "1" and self._should_use_gemini():
+            invoke_fn = invoke_gemini
         else:
             invoke_fn = invoke_claude
 
@@ -891,6 +923,11 @@ class Dispatcher:
                         duration_s=0.0,
                         output_summary=str(e)[:500],
                     )
+
+            finally:
+                # Release per-citizen action lock so next action can fire
+                if citizen_handle:
+                    self._citizen_action_active.pop(citizen_handle, None)
 
     # ── Citizen Engine Management ──────────────────────────────────────────
 

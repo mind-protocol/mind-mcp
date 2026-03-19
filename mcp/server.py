@@ -97,6 +97,7 @@ from mcp.tools.read_handler import TOOL_SCHEMA as READ_SCHEMA, handle_read
 from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
 from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
 from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
+from mcp.tools.move_handler import TOOL_SCHEMA as MOVE_SCHEMA, handle_move
 from mcp.tools.call_file_watcher import TOOL_SCHEMA as CALL_SCHEMA, handle_call_file_watcher as handle_call
 from mcp.tools.subcall_handler import TOOL_SCHEMA as SUBCALL_SCHEMA, handle_subcall
 from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_profile
@@ -128,8 +129,9 @@ TOOL_SCHEMAS = [
     MEDIA_SCHEMA,
     # ACT (citizen autonomy)
     ALARM_SCHEMA,
-    # ACT (living places)
+    # ACT (living places + spatial)
     PLACE_SCHEMA,
+    MOVE_SCHEMA,
     CALL_SCHEMA,
     SUBCALL_SCHEMA,
     # ACT (identity)
@@ -158,6 +160,7 @@ TOOL_DISPATCH = {
     "media":       (handle_media,       False),
     "alarm":       (handle_alarm,       False),
     "place":       (handle_place,       True),
+    "move":        (handle_move,        True),
     "call":        (handle_call,        True),
     "subcall":     (handle_subcall,     True),
     "profile":     (handle_profile,     True),
@@ -293,16 +296,20 @@ class MindServer:
         """Load L1 engines for all citizens that have brains."""
         if not self.dispatcher:
             return
-        citizens_dir = self.target_dir / "citizens"
+        citizens_env = os.environ.get("CITIZENS_DIR")
+        citizens_dir = Path(citizens_env) if citizens_env else self.target_dir / "citizens"
         if not citizens_dir.exists():
+            logger.warning(f"Citizens dir not found: {citizens_dir}")
             return
         handles = []
         for d in sorted(citizens_dir.iterdir()):
             if not d.is_dir():
                 continue
-            # Citizens with brain files get engines
-            if (d / "brain.json").exists() or (d / "brain_full.json").exists():
-                handles.append(d.name)
+            # All citizens get engines — _ensure_citizen_engine creates fresh
+            # CitizenCognitiveState without needing brain.json. The engine seeds
+            # action nodes and attaches metabolism at construction time.
+            # brain.json is optional (provides pre-loaded graph state).
+            handles.append(d.name)
         if handles:
             self.dispatcher.bulk_load_citizen_engines(handles)
             logger.info(f"L1 engines loaded for {len(handles)} citizens")
@@ -385,32 +392,41 @@ class MindServer:
 
 
 def _kill_previous_instances():
-    """Kill any orphaned MCP server processes from previous sessions.
+    """Kill orphaned MCP server processes — those whose parent is dead (ppid=1).
 
-    Each Claude Code session spawns a new MCP server. When sessions die
+    Each Claude/Gemini session spawns a new MCP server. When sessions die
     (timeout, crash, ctrl+C), the MCP process stays orphaned — eating RAM
-    and causing connection instability. This guard kills all other instances
-    of this server on startup, keeping exactly one alive (us).
+    and causing connection instability. This guard kills only TRUE orphans
+    (ppid=1, meaning their parent process is gone), not active instances
+    serving live Claude or Gemini sessions.
     """
     import subprocess
     my_pid = os.getpid()
     try:
+        # Get PID and PPID for all mcp.server processes
         result = subprocess.run(
-            ["pgrep", "-f", "mcp.server"],
+            ["pgrep", "-f", "mcp.server", "--list-full"],
             capture_output=True, text=True, timeout=5
         )
         for line in result.stdout.strip().split("\n"):
             if not line:
                 continue
-            pid = int(line.strip())
-            if pid != my_pid:
-                try:
+            try:
+                pid = int(line.strip().split()[0])
+            except (ValueError, IndexError):
+                continue
+            if pid == my_pid:
+                continue
+            # Only kill if parent is init (ppid=1) — truly orphaned
+            try:
+                with open(f"/proc/{pid}/stat") as f:
+                    stat = f.read().split()
+                    ppid = int(stat[3])
+                if ppid <= 1:
                     os.kill(pid, 9)
-                    logger.info(f"Killed orphaned MCP server (PID {pid})")
-                except ProcessLookupError:
-                    pass
-                except PermissionError:
-                    pass
+                    logger.info(f"Killed orphaned MCP server (PID {pid}, ppid={ppid})")
+            except (ProcessLookupError, FileNotFoundError, PermissionError):
+                pass
     except Exception as e:
         logger.debug(f"Could not check for orphans: {e}")
 
