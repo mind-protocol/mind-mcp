@@ -38,6 +38,16 @@ from runtime.orchestrator.session_tracker import (
 )
 from runtime.orchestrator import degradation
 from runtime.orchestrator.battle_log import log_action_start, log_action_result
+try:
+    from runtime.orchestrator.silence_counter import (
+        record_attempt as _silence_attempt,
+        record_success as _silence_success,
+        evaluate_all as _silence_evaluate,
+        is_invoke_substantive as _is_substantive,
+    )
+    _SILENCE_AVAILABLE = True
+except ImportError:
+    _SILENCE_AVAILABLE = False
 from runtime.orchestrator.first_boot_registrar import check_and_register_new_citizens
 from runtime.orchestrator.tick_health import record_tick_cycle, inject_health_into_brains
 
@@ -193,6 +203,13 @@ class Dispatcher:
                 self._maintenance()
                 self._tick_all_citizens()
                 self._collect_completed_futures()
+                # Silence sentinel: evaluate all tracked flows
+                if _SILENCE_AVAILABLE:
+                    _silence_evaluate(
+                        pressure=activation_pressure.get_pressure(),
+                        circadian_factor=1.0,  # TODO: read from metabolism when available
+                        inject_fn=self.inject_stimulus if hasattr(self, 'inject_stimulus') else None,
+                    )
             except Exception as e:
                 logger.exception(f"Tick error: {e}")
 
@@ -645,6 +662,10 @@ class Dispatcher:
             },
         )
 
+        # Silence sentinel: record attempt
+        if _SILENCE_AVAILABLE:
+            _silence_attempt("invoke_claude")
+
         # Choose invocation path
         if degradation.is_degraded():
             invoke_fn = invoke_degraded
@@ -814,6 +835,9 @@ class Dispatcher:
                     self._notify_infra_error(citizen_handle, session_id, response[:200])
                 else:
                     activation_pressure.on_success()
+                    # Silence sentinel: record substantive success
+                    if _SILENCE_AVAILABLE and response and _is_substantive(response):
+                        _silence_success("invoke_claude")
 
                 update_neuron_status(session_id, "idle",
                                      sender_id=str(request.get("sender_id", "")))

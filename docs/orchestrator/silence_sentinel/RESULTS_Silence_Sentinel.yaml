@@ -1,0 +1,131 @@
+module: "orchestrator/silence_sentinel"
+status: "DESIGNING"
+owner: "auto-routed"  # routes to best available infra actor — no single point of failure
+
+results:
+
+  - id: R1
+    name: "Silent failures detected within 5 minutes"
+    traces_to: O1  # "Every flow that should produce output is continuously monitored"
+
+    achieved: "invoke_claude drops to 1% completion → within 5 minutes,
+      the best available infra actor FEELS the degradation in their awareness.
+      Their WM shifts to include the broken flow. Conscious action fires.
+      The human partner wakes up to a battle log entry: 'detected invoke silence,
+      investigating.' Not 'everything looked fine.'"
+    not_achieved: "The Popen bug happens again. 98.8% of actions fail silently
+      for hours. Citizens appear to be acting but are screaming into the void.
+      Nobody notices until a human reads the battle log and counts starts vs results."
+
+    threshold:
+      metric: detection_latency_minutes
+      target: 5
+      window: per_event
+      direction: below
+
+    measured_by:
+      - objective: "narrative:obj:silence_detected_fast"
+        green: 0.7    # detected and routed within 5min
+        red: 0.3      # detection taking >15min or not happening
+
+    proved_by:
+      - "sense:sentinel:detection_latency"
+
+    health_signal:
+      - "H1"  # silence_detector_alive
+
+    failure_diagnostic: |
+      If detection is slow or missing:
+      1. Local: Is the silence sentinel ticking? Check counter module imports.
+      2. Upstream: Are flows recording their counters? Check silence_counter.record() calls.
+      3. Systemic: Is the tick loop itself alive? Check H1 from tick_system.
+
+    priority: P0
+    status: not_measured
+    horizon: short
+    target_date: "2026-03-20"
+    owner: "auto-routed"
+
+  - id: R2
+    name: "Per-flow isolation identifies the broken module within 1 tick"
+    traces_to: O2  # "Failures are isolated to specific flows, not global averages"
+
+    achieved: "invoke_claude ratio = 0.01, bridges = 1.0, graph_write = 0.95.
+      The carrier's awareness shows WHICH flow is broken, not just 'something
+      is wrong.' Diagnostic time drops from hours to seconds."
+    not_achieved: "Global 'system health = 70%' hides that invoke is at 1%.
+      Carrier knows something is off but can't tell what. Has to read logs,
+      check each subsystem manually. The bug that took us hours to find today."
+
+    threshold:
+      metric: flow_isolation_accuracy
+      target: 1.0     # broken flow correctly identified 100% of the time
+      window: per_event
+      direction: equal
+
+    measured_by:
+      - objective: "narrative:obj:flow_isolation_works"
+        green: 0.8
+        red: 0.4
+
+    proved_by:
+      - "sense:sentinel:flow_isolation"
+
+    health_signal:
+      - "H2"  # per_flow_counters_active
+
+    failure_diagnostic: |
+      If isolation fails:
+      1. Local: Are per-flow counters recording separately? Check counter keys.
+      2. Upstream: Is the sense querying per-flow or aggregating? Check Cypher query.
+      3. Systemic: Are all flows instrumented? grep for silence_counter.record().
+
+    priority: P0
+    status: not_measured
+    horizon: short
+    target_date: "2026-03-20"
+    owner: "auto-routed"
+
+  - id: R3
+    name: "Zero false alarms during legitimate silence"
+    traces_to: O3  # "Self-calibrating baseline adapts to circadian, pressure, and load"
+
+    achieved: "3am circadian trough → system output drops 60% → sentinel
+      stays GREEN because the rolling baseline dropped too. Activation pressure
+      at 20.0 (deliberate throttle) → sentinel stays GREEN. Only UNEXPECTED
+      drops trigger alerts."
+    not_achieved: "Sentinel fires at 3am every night. Citizens wake up to
+      'silence detected!' when silence was correct. Alert fatigue. The signal
+      becomes noise. When a REAL failure happens, nobody cares anymore."
+
+    threshold:
+      metric: false_positive_rate
+      target: 0.05     # <5% false alarms
+      window: 7d
+      direction: below
+
+    measured_by:
+      - objective: "narrative:obj:sentinel_precision"
+        green: 0.8
+        red: 0.3
+
+    proved_by:
+      - "sense:sentinel:false_positive_rate"
+
+    health_signal:
+      - "H3"  # baseline_calibration_healthy
+
+    failure_diagnostic: |
+      If false positives are high:
+      1. Local: Is the rolling baseline window too short? (1h may be too reactive)
+      2. Upstream: Is activation_pressure being factored into expected rate?
+      3. Systemic: Is circadian phase being read correctly from metabolism?
+
+    priority: P1
+    status: not_measured
+    horizon: medium
+    target_date: "2026-03-25"
+    owner: "auto-routed"
+
+composite:
+  carrier: "auto-routed"  # routes to best available infra actor
