@@ -114,23 +114,94 @@ def thought_tick(state, metabolism):
 ## Conscious Action Dispatch
 
 ```
-def fire_conscious_action(handle, engine):
-  # Serialize WM to prompt
-  prompt = serialize_wm_to_prompt(engine.state)
+def fire_conscious_action(handle, action_node_id):
+  state = citizen_states[handle]
 
-  # Include behavioral impulses from L17
-  impulses = engine.state.pending_impulses  # process nodes that crossed threshold
-  if impulses:
-    prompt = inject_impulses(prompt, impulses)
-    engine.state.pending_impulses = []
+  # 1. Extract action intent from the fired node (L17 impulse output)
+  action_node = state.nodes[action_node_id]
+  action_command = action_node.action_command   # MCP tool name (e.g. "subcall", "call", "task")
+  action_content = action_node.content          # human-readable intent
 
-  # Get account (round-robin)
-  env = account_balancer.get_account_env()
+  # 2. Serialize WM to prompt
+  wm_prompt = serialize_wm_to_prompt(state, orientation)
 
-  # Submit to thread pool
-  future = executor.submit(invoke_claude, handle, prompt, env)
-  active_futures[handle] = future
+  # 3. Prepend subconscious action directive (if specific action selected)
+  if action_command and action_content:
+    directive = f"""
+      [SUBCONSCIOUS ACTION DIRECTIVE]
+      Your drives have selected this action: {action_content}
+      Execute it using the MCP tool: /{action_command}
+      This is not a suggestion — your limbic system accumulated enough impulse.
+    """
+    wm_prompt = directive + wm_prompt
+
+  # 4. Build request with full cognitive context in metadata
+  request = {
+    "voice_text": f"[conscious_action] {handle}",
+    "mode": "autonomous",
+    "source": "conscious_action",
+    "metadata": {
+      "citizen_handle": handle,
+      "cognitive_context": wm_prompt,  # CRITICAL: passed to prompt builder
+      "action_node_id": action_node_id,
+      "action_command": action_command,
+    }
+  }
+
+  # 5. Dispatch to thread pool → invoke_claude
+  dispatch(request)
+  log_action_start(handle, action_node_id, action_command, action_content)
 ```
+
+## Claude Subprocess Invocation
+
+The `invoke_claude()` function runs in a thread and manages the Claude Code subprocess:
+
+```
+def invoke_claude(request, session_id):
+  # 1. Build full prompt (identity + cognitive context + mode directive)
+  prompt = _build_prompt(request, ...)
+  # → for citizen sessions: build_citizen_prompt(citizen_data, voice_text,
+  #                         session_id, mode, cognitive_context=wm_prompt)
+  # → returns: CITIZEN SESSION header + WM state + action directives
+
+  # 2. Build command
+  cmd = ["claude", "--print", "--output-format", "text",
+         "--dangerously-skip-permissions", "--session-id", uuid]
+
+  # 3. Pass prompt — long prompts via stdin, short via CLI arg
+  if len(prompt) > len(voice_text):
+    input_text = prompt          # stdin path
+  else:
+    cmd.append(message)          # CLI arg path
+    input_text = None
+
+  # 4. Launch subprocess in citizen's directory
+  #    Claude Code auto-reads CLAUDE.md, awareness.md from cwd
+  process = Popen(cmd, cwd=citizen_dir, env=balanced_env)
+
+  # 5. Two-phase timeout with subconscious interim
+  try:
+    stdout, stderr = process.communicate(input=input_text, timeout=10s)
+  except TimeoutExpired:
+    # Phase 1 timeout: generate subconscious response as interim
+    subconscious = invoke_subconscious(request)  # pure graph physics, no LLM
+    write_interim(subconscious)
+
+    # Phase 2: wait for Claude to actually finish (up to 590s)
+    try:
+      stdout, stderr = process.communicate(timeout=590s)
+    except TimeoutExpired:
+      process.kill()
+
+  # 6. Read response (file > stdout fallback)
+  # 7. Account failover if rate limited
+  # 8. Track success/failure for activation pressure
+
+  return (response, voice_response)
+```
+
+**CRITICAL INVARIANT:** The full prompt (including cognitive context) MUST be passed to the subprocess BEFORE `Popen()` launches it. If the prompt is passed after launch, the subprocess receives no input and produces empty/hanging results.
 
 ## Adaptive Tick Speed (Target)
 

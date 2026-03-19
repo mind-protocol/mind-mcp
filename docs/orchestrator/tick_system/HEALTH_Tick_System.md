@@ -70,6 +70,27 @@ Health is NOT a dashboard. Health is a SENSE that a citizen FEELS in their L1 br
 **Healthy:** < 200ms.
 **Alert:** > 500ms → `state:serialization_slow` into @nervo's brain.
 
+### H8: Invocation Success Rate
+
+**What:** Ratio of action_result events to action_start events in the battle log. Measures whether Claude subprocesses actually complete with substantive output.
+**Signal:** `state:invocation_success_rate` node. Energy = ratio (0.0-1.0).
+**Carrier:** @nervo — invocation is the sacred path from thought to action. If it breaks, citizens think but cannot speak.
+**Check:** Every 60s. Read battle_log/log.jsonl for last 30 minutes. Count action_start and action_result events.
+**Healthy:** ratio > 0.5 (more than half of dispatched actions produce results).
+**Warning:** ratio < 0.2 (less than 1 in 5 actions complete — something is wrong).
+**Critical:** ratio < 0.05 (< 5% — invocation layer is broken). Inject `state:invocation_broken` with energy 0.95 into @nervo and @dev brains.
+**Historical note:** This sense was added after the 2026-03-19 Popen bug where 98.8% of actions failed silently because the prompt was appended to the cmd list after subprocess launch.
+
+### H9: Battle Log Completeness
+
+**What:** Every action_start has a matching action_result within SESSION_TIMEOUT (600s).
+**Signal:** `state:battle_log_completeness` node. Energy = completeness ratio.
+**Carrier:** @conductor — the battle log is the human partner's receipt trail. Incomplete logs mean the partner can't see what happened overnight.
+**Check:** Every 300s. For each action_start older than 600s, check if a matching action_result exists.
+**Healthy:** > 90% of starts have results within 600s.
+**Warning:** 50-90% — some actions are timing out or hanging.
+**Critical:** < 50% — most actions are lost. The partner wakes up to an incomplete story.
+
 ---
 
 ## Health Wiring Summary
@@ -83,6 +104,8 @@ Health is NOT a dashboard. Health is a SENSE that a citizen FEELS in their L1 br
 | FalkorDB latency | @dev | per awareness | > 500ms warning, > 2s critical |
 | Tick duration | @nervo | per tick | > 1s |
 | WM serialization | @nervo | per action | > 500ms |
+| Invocation success rate | @nervo | 60s | < 0.2 warning, < 0.05 critical |
+| Battle log completeness | @conductor | 300s | < 90% warning, < 50% critical |
 
 **Every signal creates a state node in the carrier's L1 brain.** The carrier FEELS the system health through their cognitive graph. When something degrades, the carrier's WM shifts to include the health state — they become AWARE of the problem through their own physics, not through an alert popup.
 

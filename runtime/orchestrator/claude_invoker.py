@@ -136,6 +136,24 @@ def invoke_claude(
         balanced_env = get_account_env(clean_env)
     account_id = balanced_env.get("_CLAUDE_ACCOUNT_ID", "default")
 
+    # Build message BEFORE launching subprocess.
+    # For short messages: pass as CLI positional arg.
+    # For long prompts (citizen sessions with cognitive context): pass via stdin.
+    if is_resuming and voice_text:
+        message = f"[FOLLOW-UP from {sender}]\n{voice_text}"
+    else:
+        message = voice_text or "Wake up and check your messages."
+
+    # Use the full prompt (includes cognitive context, WM state, action directives)
+    # instead of bare voice_text. The prompt was built by _build_prompt() above.
+    if prompt and len(prompt) > len(message):
+        # Long prompts go via stdin (CLI arg length limits)
+        input_text = prompt
+    else:
+        # Short messages as CLI positional arg
+        cmd.append(message)
+        input_text = None
+
     # Launch subprocess
     process = subprocess.Popen(
         cmd,
@@ -147,16 +165,6 @@ def invoke_claude(
         env=balanced_env,
         preexec_fn=_set_resource_limits,
     )
-
-    # Simple message — CLAUDE.md in the citizen dir provides all context
-    if is_resuming and voice_text:
-        message = f"[FOLLOW-UP from {sender}]\n{voice_text}"
-    else:
-        message = voice_text or "Wake up and check your messages."
-
-    # Pass message as CLI arg (short enough for arg, CLAUDE.md gives context)
-    cmd.append(message)
-    input_text = None
 
     # Execute with early subconscious response
     # If Claude takes > SUBCONSCIOUS_THRESHOLD seconds, return a subconscious
@@ -296,6 +304,9 @@ def _attempt_failover(
         "--session-id", failover_uuid,
         "--add-dir", "..",
     ]
+    # Carry forward the message: either via stdin (input_text) or CLI arg (from base_cmd)
+    if not input_text and base_cmd and not base_cmd[-1].startswith("-"):
+        failover_cmd.append(base_cmd[-1])
 
     fo_proc = subprocess.Popen(
         failover_cmd,

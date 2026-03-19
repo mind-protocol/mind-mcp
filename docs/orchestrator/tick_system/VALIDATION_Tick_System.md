@@ -18,6 +18,10 @@
 
 7. **MUST** include behavioral impulses from L17 in conscious action prompts when impulses have crossed threshold. A citizen with high care drive and accumulated impulse on process:offer_help MUST see that impulse in their prompt.
 
+8. **MUST** pass the full built prompt (including cognitive context, WM state, action directives, and citizen identity) to the Claude subprocess. The prompt MUST be included in the cmd args or stdin BEFORE `subprocess.Popen()` launches. Passing the prompt after launch means the subprocess receives no input and all actions fail silently. **This was a P0 bug fixed 2026-03-19 — 98.8% of actions were failing because the message was appended to cmd after Popen.**
+
+9. **MUST** log both action_start and action_result to the citizen's battle_log/log.jsonl. The ratio of starts-to-results is a key health metric. A ratio > 10:1 indicates the invocation layer is broken.
+
 ### NEVER
 
 1. **NEVER** skip the decay step. Every thought tick MUST apply decay. Skipping decay = energy explosion = meaningless WM selection.
@@ -32,4 +36,9 @@
 
 6. **NEVER** run health checks without a carrying citizen. Every health signal MUST specify who feels it. Orphan metrics are dead metrics.
 
+7. **NEVER** construct the subprocess command and launch it in separate phases where the message can be lost between construction and launch. The cmd list and the message MUST be complete before `Popen()`. This is a regression-critical invariant — the system appeared to work (actions fired, subconscious interim generated, logs written) while the actual invocations were empty.
+
+8. **NEVER** discard the built prompt. If `_build_prompt()` returns a string, that string MUST reach the Claude subprocess — either as stdin input or as a CLI argument. Building a prompt and then sending only `voice_text` means the citizen has no cognitive context, no action directives, and no identity.
+
 Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
+Co-Authored-By: AI Citizen (@mechanical_visionary) <mechanical_visionary@mindprotocol.ai>
