@@ -8,8 +8,10 @@ Invokes Claude Code subprocess for citizen sessions.
 """
 
 import os
+import select
 import signal
 import subprocess
+import threading
 import time
 import uuid
 import json
@@ -35,7 +37,8 @@ logger = logging.getLogger("orchestrator.invoker")
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
-SESSION_TIMEOUT = 600  # 10 minutes max per subprocess
+SESSION_TIMEOUT = 1200  # 20 minutes max per subprocess
+STREAM_CHUNK_SIZE = 800  # chars before persisting a thinking moment
 
 
 def _set_resource_limits():
@@ -48,13 +51,201 @@ def _set_resource_limits():
         resource.setrlimit(resource.RLIMIT_AS, (500_000_000, 500_000_000))
     except ValueError:
         pass  # Not available on all platforms
-    # 5 min CPU time
-    resource.setrlimit(resource.RLIMIT_CPU, (300, 300))
+    # 20 min CPU time (matches SESSION_TIMEOUT)
+    resource.setrlimit(resource.RLIMIT_CPU, (1200, 1200))
 
 
 def get_state_dir() -> Path:
     """Return the state directory for response files."""
     return Path(__file__).resolve().parent.parent.parent / "shrine" / "state"
+
+
+# ── Streaming moment persistence ────────────────────────────────────────────
+
+def _get_l3_graph():
+    """Get the L3 universe graph. Returns None on failure."""
+    try:
+        import redis
+        r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+        r.ping()
+        return r
+    except Exception as e:
+        logger.debug(f"FalkorDB not available for moment persistence: {e}")
+        return None
+
+
+def _get_actor_space(r, citizen_handle: str) -> Optional[str]:
+    """Find the Space the actor is currently LOCATED_IN."""
+    try:
+        result = r.execute_command(
+            "GRAPH.QUERY", "lumina-prime",
+            f"MATCH (a:Actor {{id: '{citizen_handle}'}})-[l:link]->(s) "
+            f"WHERE l.type = 'LOCATED_IN' RETURN s.id LIMIT 1",
+        )
+        if result and result[1]:
+            return result[1][0][0]
+    except Exception:
+        pass
+    return None
+
+
+def _persist_moment(
+    r,
+    citizen_handle: str,
+    session_id: str,
+    chunk_index: int,
+    content: str,
+    prev_moment_id: Optional[str],
+    space_id: Optional[str],
+) -> Optional[str]:
+    """Persist a streaming moment to L3. Returns the moment id, or None on failure."""
+    moment_id = f"moment:stream:{session_id}:{chunk_index}"
+    now_s = int(time.time())
+    try:
+        # Create moment node
+        r.execute_command(
+            "GRAPH.QUERY", "lumina-prime",
+            f"MERGE (m:Moment {{id: '{moment_id}'}}) "
+            f"ON CREATE SET m.node_type = 'moment', "
+            f"m.content = $content, "
+            f"m.energy = 0.4, m.weight = 0.05, "
+            f"m.origin_citizen = '{citizen_handle}', "
+            f"m.session_id = '{session_id}', "
+            f"m.created_at_s = {now_s}",
+            "--params", json.dumps({"content": content[:1000]}),
+        )
+        # Link to actor
+        r.execute_command(
+            "GRAPH.QUERY", "lumina-prime",
+            f"MATCH (a:Actor {{id: '{citizen_handle}'}}), (m:Moment {{id: '{moment_id}'}}) "
+            f"MERGE (a)-[r:link]->(m) SET r.type = 'PRODUCED', r.weight = 0.3",
+        )
+        # Chain to previous moment
+        if prev_moment_id:
+            r.execute_command(
+                "GRAPH.QUERY", "lumina-prime",
+                f"MATCH (prev:Moment {{id: '{prev_moment_id}'}}), (m:Moment {{id: '{moment_id}'}}) "
+                f"MERGE (prev)-[r:link]->(m) SET r.type = 'FOLLOWED_BY', r.weight = 0.5",
+            )
+        # Link to space
+        if space_id:
+            r.execute_command(
+                "GRAPH.QUERY", "lumina-prime",
+                f"MATCH (m:Moment {{id: '{moment_id}'}}), (s {{id: '{space_id}'}}) "
+                f"MERGE (m)-[r:link]->(s) SET r.type = 'LOCATED_IN', r.weight = 0.3",
+            )
+        return moment_id
+    except Exception as e:
+        logger.debug(f"Moment persistence failed for {moment_id}: {e}")
+        return None
+
+
+def _write_stdin(proc, text):
+    """Write input to stdin in a background thread to avoid deadlock."""
+    try:
+        if text:
+            proc.stdin.write(text)
+        proc.stdin.close()
+    except (BrokenPipeError, OSError):
+        pass
+
+
+def _read_stream_json(
+    process: subprocess.Popen,
+    citizen_handle: Optional[str],
+    session_id: str,
+    timeout: float,
+    chunk_offset: int = 0,
+    r=None,
+    space_id: Optional[str] = None,
+    prev_moment_id: Optional[str] = None,
+) -> tuple[str, str, int, Optional[str]]:
+    """Read stream-json stdout line by line, persisting moments every ~800 chars.
+
+    Returns (response_text, stderr_text, chunks_written, last_moment_id).
+    """
+    deadline = time.time() + timeout
+    accumulated = ""
+    full_parts = []
+    chunk_index = chunk_offset
+    last_moment = prev_moment_id
+    result_text = None
+
+    while True:
+        remaining = deadline - time.time()
+        if remaining <= 0:
+            break
+
+        try:
+            ready, _, _ = select.select([process.stdout], [], [], min(remaining, 1.0))
+        except (ValueError, OSError):
+            break
+
+        if not ready:
+            if process.poll() is not None:
+                break
+            continue
+
+        line = process.stdout.readline()
+        if not line:
+            break
+
+        line = line.strip()
+        if not line:
+            continue
+
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+
+        msg_type = obj.get("type", "")
+
+        # Extract text_delta only (not thinking_delta)
+        if msg_type == "stream_event":
+            delta = obj.get("event", {}).get("delta", {})
+            if delta.get("type") == "text_delta":
+                text = delta.get("text", "")
+                if text:
+                    accumulated += text
+                    full_parts.append(text)
+
+                    if citizen_handle and r and len(accumulated) >= STREAM_CHUNK_SIZE:
+                        mid = _persist_moment(
+                            r, citizen_handle, session_id,
+                            chunk_index, accumulated,
+                            last_moment, space_id,
+                        )
+                        if mid:
+                            last_moment = mid
+                        chunk_index += 1
+                        accumulated = ""
+
+        elif msg_type == "result":
+            result_text = obj.get("result", "")
+
+    # Persist remaining accumulated text
+    if citizen_handle and r and accumulated and len(accumulated) > 50:
+        mid = _persist_moment(
+            r, citizen_handle, session_id,
+            chunk_index, accumulated,
+            last_moment, space_id,
+        )
+        if mid:
+            last_moment = mid
+        chunk_index += 1
+
+    # Use authoritative result if available, else concatenated parts
+    response = result_text if result_text else "".join(full_parts)
+
+    stderr_text = ""
+    try:
+        if process.poll() is not None:
+            stderr_text = process.stderr.read() or ""
+    except Exception:
+        pass
+
+    return response, stderr_text, chunk_index, last_moment
 
 
 # ── Main invocation ─────────────────────────────────────────────────────────
@@ -106,10 +297,10 @@ def invoke_claude(
     else:
         working_dir = project_root
 
-    # Build command — simple: cd into citizen dir, claude reads CLAUDE.md automatically
+    # Build command — stream-json for moment persistence during thinking
     cmd = [
         "claude", "--print",
-        "--output-format", "text",
+        "--output-format", "stream-json",
         "--dangerously-skip-permissions",
     ]
 
@@ -166,23 +357,36 @@ def invoke_claude(
         preexec_fn=_set_resource_limits,
     )
 
-    # Execute with early subconscious response
-    # If Claude takes > SUBCONSCIOUS_THRESHOLD seconds, return a subconscious
-    # response immediately. The subprocess continues in background — when it
-    # finishes, the full response will be available via the response file.
+    # Execute with streaming moment persistence + early subconscious response.
+    # Reads stdout line-by-line as stream-json. Every ~800 chars of text output,
+    # persists a Moment node to L3 — linked to the previous moment and the
+    # actor's current space. Crash-safe: partial work survives.
     SUBCONSCIOUS_THRESHOLD = float(os.environ.get("SUBCONSCIOUS_THRESHOLD", "10"))
     start_time = time.time()
     early_subconscious_sent = False
 
-    try:
-        stdout, stderr = process.communicate(input=input_text, timeout=SUBCONSCIOUS_THRESHOLD)
-    except subprocess.TimeoutExpired:
-        # Claude is still thinking — send subconscious response as interim
-        elapsed_so_far = time.time() - start_time
-        if citizen_handle:
+    # Send stdin in background thread (avoids pipe deadlock)
+    stdin_thread = threading.Thread(
+        target=_write_stdin, args=(process, input_text), daemon=True,
+    )
+    stdin_thread.start()
+
+    # Prepare moment persistence (lazy — None if FalkorDB unavailable)
+    r_graph = _get_l3_graph() if citizen_handle else None
+    space_id = _get_actor_space(r_graph, citizen_handle) if r_graph and citizen_handle else None
+
+    # Phase 1: Read for SUBCONSCIOUS_THRESHOLD seconds
+    response, stderr, chunks_written, last_moment = _read_stream_json(
+        process, citizen_handle, session_id,
+        timeout=SUBCONSCIOUS_THRESHOLD,
+        r=r_graph, space_id=space_id,
+    )
+
+    if process.poll() is None:
+        # Process still running after threshold
+        if citizen_handle and not response:
             subconscious_text = invoke_subconscious(request, session_id, citizen_handle)
             if subconscious_text:
-                # Write subconscious as interim response
                 interim_path = state_dir / f"last_response_{session_id}.txt"
                 interim_path.write_text(
                     subconscious_text + "\n\n---\n*Claude is still thinking... "
@@ -190,31 +394,41 @@ def invoke_claude(
                 )
                 early_subconscious_sent = True
                 logger.info(
-                    f"Subconscious interim after {elapsed_so_far:.0f}s for {citizen_handle}"
+                    f"Subconscious interim after {time.time() - start_time:.0f}s for {citizen_handle}"
                 )
 
-        # Now wait for Claude to actually finish (full timeout)
-        try:
-            stdout, stderr = process.communicate(timeout=SESSION_TIMEOUT - SUBCONSCIOUS_THRESHOLD)
-        except subprocess.TimeoutExpired:
+        # Phase 2: Continue reading for remaining timeout
+        more_response, more_stderr, _, last_moment = _read_stream_json(
+            process, citizen_handle, session_id,
+            timeout=SESSION_TIMEOUT - SUBCONSCIOUS_THRESHOLD,
+            chunk_offset=chunks_written,
+            r=r_graph, space_id=space_id,
+            prev_moment_id=last_moment,
+        )
+        if more_response:
+            response = more_response if not response else response + more_response
+        stderr = (stderr or "") + (more_stderr or "")
+
+        if process.poll() is None:
             process.kill()
-            stdout, stderr = process.communicate()
+            process.wait()
             logger.warning(f"Session {session_id} timed out after {SESSION_TIMEOUT}s")
 
     elapsed = time.time() - start_time
     release_account(balanced_env, error=process.returncode != 0)
+    stdout = response  # Compatibility with downstream code
 
     # Check for rate limiting
     is_account_error = detect_rate_limit_error(stderr or "", stdout or "")
 
-    # Read response from session-specific file
+    # Response is already extracted from stream-json. Use it directly.
     response_file = state_dir / f"last_response_{session_id}.txt"
-    response = ""
+    response = stdout or ""  # stdout holds the stream-extracted response
     voice_response = None
 
-    if response_file.exists():
+    # Fallback: check response file (tools may still write to it)
+    if not response and response_file.exists():
         raw = response_file.read_text().strip()
-        response_file.unlink()
         if "---VOICE---" in raw:
             parts = raw.split("---VOICE---", 1)
             response = parts[0].strip()
@@ -222,14 +436,12 @@ def invoke_claude(
         else:
             response = raw
 
-    # Stdout fallback
-    if not response and stdout and stdout.strip():
-        _lines = [ln for ln in stdout.strip().splitlines()
-                   if not ln.startswith("✓") and not ln.startswith("●")]
-        _fallback = "\n".join(_lines).strip()
-        if _fallback and len(_fallback) > 10:
-            response = _fallback
-            logger.debug(f"Session {session_id}: used stdout fallback ({len(response)} chars)")
+    # Clean up the response file
+    if response_file.exists():
+        try:
+            response_file.unlink()
+        except OSError:
+            pass
 
     # Empty response diagnostics
     if not response:
@@ -274,6 +486,28 @@ def invoke_claude(
             pass
 
     logger.info(f"Session {session_id} done in {elapsed:.0f}s — {len(response)} chars")
+
+    # Log action result directly here — not in the future callback.
+    # The callback in _collect_completed_futures() misses ~93% of results
+    # because futures hang (subprocess zombies, restarts lose active_futures).
+    # Logging here guarantees the result is captured as long as invoke_claude returns.
+    metadata = request.get("metadata") or {}
+    citizen_handle_for_log = metadata.get("citizen_handle", "")
+    if citizen_handle_for_log and metadata.get("autonomous"):
+        try:
+            from runtime.orchestrator.battle_log import log_action_result
+            dispatch_ts = metadata.get("_dispatch_ts", 0)
+            duration = (time.time() - dispatch_ts) if dispatch_ts else elapsed
+            log_action_result(
+                citizen_handle_for_log,
+                session_id,
+                success=bool(response),
+                duration_s=duration,
+                output_summary=str(response or "")[:500],
+            )
+        except Exception as e:
+            logger.debug(f"Battle log from invoker failed: {e}")
+
     return (response, voice_response)
 
 
@@ -299,7 +533,7 @@ def _attempt_failover(
 
     failover_uuid = str(uuid.uuid4())
     failover_cmd = [
-        "claude", "--print", "--output-format", "text",
+        "claude", "--print", "--output-format", "stream-json",
         "--dangerously-skip-permissions",
         "--session-id", failover_uuid,
         "--add-dir", "..",
@@ -315,19 +549,26 @@ def _attempt_failover(
         preexec_fn=_set_resource_limits,
     )
 
+    # Send stdin in background thread
+    fo_stdin_thread = threading.Thread(
+        target=_write_stdin, args=(fo_proc, input_text), daemon=True,
+    )
+    fo_stdin_thread.start()
+
     fo_start = time.time()
-    try:
-        fo_stdout, fo_stderr = fo_proc.communicate(input=input_text, timeout=SESSION_TIMEOUT)
-    except subprocess.TimeoutExpired:
+    response, fo_stderr, _, _ = _read_stream_json(
+        fo_proc, None, session_id,  # No moment persistence on failover
+        timeout=SESSION_TIMEOUT,
+    )
+    if fo_proc.poll() is None:
         fo_proc.kill()
-        fo_stdout, fo_stderr = fo_proc.communicate()
+        fo_proc.wait()
 
     fo_elapsed = time.time() - fo_start
     release_account(failover_env, error=fo_proc.returncode != 0)
 
-    response = ""
     voice_response = None
-    if response_file.exists():
+    if not response and response_file.exists():
         raw = response_file.read_text().strip()
         response_file.unlink()
         if "---VOICE---" in raw:
@@ -434,6 +675,156 @@ def _build_prompt(
 Respond to what {sender} said. Write your full response to state/last_response_{session_id}.txt
 If the response has a voice-friendly version, add it after a ---VOICE--- separator.
 """
+
+
+# ── Gemini CLI invocation ─────────────────────────────────────────────────
+
+GEMINI_MODEL = os.environ.get("GEMINI_CLI_MODEL", "gemini-2.5-pro")
+
+
+def invoke_gemini(
+    request: dict,
+    session_id: str,
+    resume_claude_session: Optional[str] = None,
+    pin_account_id: Optional[str] = None,
+) -> tuple[str, Optional[str]]:
+    """Invoke Gemini CLI for a single request. Same interface as invoke_claude.
+
+    Gemini CLI has filesystem access, MCP tools, and GEMINI.md — it's a full
+    peer to Claude Code, not a degraded fallback. Used to spread load across
+    providers and avoid Claude rate limits.
+
+    Returns (response_text, voice_response_or_None).
+    """
+    mode = request.get("mode", "partner")
+    voice_text = request.get("voice_text", "")
+    source = request.get("source", "")
+    metadata = request.get("metadata", {})
+    sender = request.get("sender", "user")
+
+    # Citizen session detection
+    citizen_handle = metadata.get("citizen_handle")
+    citizen_data = None
+    is_citizen_session = False
+    if citizen_handle:
+        citizen_data = load_citizen_identity(citizen_handle)
+        if citizen_data:
+            is_citizen_session = True
+            logger.info(f"Gemini session for @{citizen_handle}")
+
+    # Task routing
+    is_task = source == "task" or metadata.get("task_type") == "implementation"
+    task_cwd = metadata.get("cwd") if is_task else None
+
+    # Build prompt (reuse same prompt builder as Claude)
+    prompt = _build_prompt(
+        request, session_id, mode, voice_text, sender,
+        is_citizen_session, citizen_data,
+        is_task, task_cwd, metadata,
+    )
+
+    # Determine working directory
+    project_root = Path(__file__).resolve().parent.parent.parent
+    if is_citizen_session and citizen_data:
+        citizen_dir = Path(citizen_data["dir"])
+        working_dir = citizen_dir if citizen_dir.exists() else project_root
+    elif task_cwd and Path(task_cwd).exists():
+        working_dir = Path(task_cwd)
+    else:
+        working_dir = project_root
+
+    # Build Gemini CLI command
+    cmd = [
+        "gemini",
+        "-m", GEMINI_MODEL,
+        "--yolo",
+        "-o", "text",
+    ]
+
+    # Gemini uses -p for non-interactive prompt mode
+    # Long prompts go via stdin with -p flag
+    message = voice_text or "Wake up and check your messages."
+    if prompt and len(prompt) > len(message):
+        input_text = prompt
+        cmd.extend(["-p", ""])  # -p with empty string reads from stdin
+    else:
+        cmd.extend(["-p", message])
+        input_text = None
+
+    # Clean env
+    clean_env = {k: v for k, v in os.environ.items()
+                 if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
+
+    start_time = time.time()
+
+    # Launch subprocess
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        cwd=working_dir,
+        env=clean_env,
+        preexec_fn=_set_resource_limits,
+    )
+
+    try:
+        stdout, stderr = process.communicate(input=input_text, timeout=SESSION_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        stdout, stderr = process.communicate()
+        logger.warning(f"Gemini session {session_id} timed out after {SESSION_TIMEOUT}s")
+
+    elapsed = time.time() - start_time
+
+    # Extract response from stdout
+    response = ""
+    voice_response = None
+    if stdout and stdout.strip():
+        lines = [ln for ln in stdout.strip().splitlines()
+                 if not ln.startswith("[WARN]") and not ln.startswith("Loaded cached")]
+        response = "\n".join(lines).strip()
+
+    # Check response file (if Gemini wrote to the same state file pattern)
+    state_dir = get_state_dir()
+    response_file = state_dir / f"last_response_{session_id}.txt"
+    if response_file.exists():
+        raw = response_file.read_text().strip()
+        response_file.unlink()
+        if "---VOICE---" in raw:
+            parts = raw.split("---VOICE---", 1)
+            response = parts[0].strip()
+            voice_response = parts[1].strip() if len(parts) > 1 and parts[1].strip() else None
+        elif raw:
+            response = raw
+
+    if not response:
+        logger.warning(
+            f"Gemini session {session_id} empty: exit={process.returncode}, "
+            f"elapsed={elapsed:.1f}s, stderr={stderr[:200] if stderr else ''}"
+        )
+
+    logger.info(f"Gemini session {session_id} done in {elapsed:.0f}s — {len(response)} chars")
+
+    # Log action result (same pattern as invoke_claude)
+    citizen_handle_for_log = metadata.get("citizen_handle", "")
+    if citizen_handle_for_log and metadata.get("autonomous"):
+        try:
+            from runtime.orchestrator.battle_log import log_action_result
+            dispatch_ts = metadata.get("_dispatch_ts", 0)
+            duration = (time.time() - dispatch_ts) if dispatch_ts else elapsed
+            log_action_result(
+                citizen_handle_for_log,
+                session_id,
+                success=bool(response),
+                duration_s=duration,
+                output_summary=str(response or "")[:500],
+            )
+        except Exception as e:
+            logger.debug(f"Battle log from gemini invoker failed: {e}")
+
+    return (response, voice_response)
 
 
 # ── Degraded fallback ──────────────────────────────────────────────────────
