@@ -42,6 +42,10 @@ from dotenv import load_dotenv
 
 logger = logging.getLogger("mind.discord_bridge")
 
+# Add mind-mcp root for cli.output
+sys.path.insert(0, str(Path(__file__).parent.parent))
+from cli.output import out
+
 import discord
 from discord import Webhook
 import aiohttp
@@ -308,12 +312,12 @@ def _get_or_create_webhook_sync(channel_id: int) -> str | None:
             url = f"https://discord.com/api/webhooks/{wh['id']}/{wh['token']}"
             _webhook_cache[channel_id] = url
             _save_webhook_cache()
-            print(f"  Created webhook for channel {channel_id}")
+            out.ok(f"Created webhook for channel {channel_id}")
             return url
         else:
-            print(f"  Failed to create webhook: {resp.status_code} {resp.text}")
+            out.err(f"Failed to create webhook: {resp.status_code} {resp.text}")
     except http_requests.exceptions.RequestException as e:
-        print(f"  Webhook creation error: {e}")
+        out.err(f"Webhook creation error: {e}")
 
     return None
 
@@ -335,7 +339,7 @@ def send_as_citizen(handle: str | None, channel_id: int, text: str, embed: dict 
 
     webhook_url = _get_or_create_webhook_sync(channel_id)
     if not webhook_url:
-        print(f"  No webhook available for channel {channel_id}")
+        out.err(f"No webhook available for channel {channel_id}")
         return None
 
     # Rate limit
@@ -422,13 +426,13 @@ def send_as_citizen(handle: str | None, channel_id: int, text: str, embed: dict 
                     _log_message("out", handle, channel_id, text or "[embed]")
                     return data
 
-            print(f"  Webhook repair failed for {channel_id}")
+            out.err(f"Webhook repair failed for {channel_id}")
             return None
 
-        print(f"  Webhook send error ({handle}): {resp.status_code} {resp.text[:200]}")
+        out.err(f"Webhook send error ({handle}): {resp.status_code} {resp.text[:200]}")
         return None
     except http_requests.exceptions.RequestException as e:
-        print(f"  Webhook send failed ({handle}): {e}")
+        out.err(f"Webhook send failed ({handle}): {e}")
         return None
 
 
@@ -466,10 +470,10 @@ def send_message(channel_id: int, text: str, embed: dict = None) -> dict | None:
             print(f"  Bot → #{channel_id}: {text[:80] if text else '[embed]'}")
             return data
         else:
-            print(f"  Discord send error: {resp.status_code} - {resp.text}")
+            out.err(f"Discord send error: {resp.status_code} - {resp.text}")
             return None
     except http_requests.exceptions.RequestException as e:
-        print(f"  [ERROR] Discord send_message failed: {e}")
+        out.err(f"Discord send_message failed: {e}")
         return None
 
 
@@ -504,6 +508,17 @@ def _log_message(direction: str, author: str, channel_id: int, content: str):
                 channel_name = name
                 break
         mentioned = [m.group(1).lower() for m in re.finditer(r"@(\w+)", content)]
+
+        # ── Hearing sense: compute sound attributes ──
+        if mentioned:
+            _sound = "msg_mention"
+            _sound_dB = 70.0
+            _sound_duration = 1.5
+        else:
+            _sound = "msg_text"
+            _sound_dB = 40.0
+            _sound_duration = max(1.0, len(content) / 200.0)
+
         on_message(
             platform="discord",
             channel_id=str(channel_id),
@@ -513,6 +528,9 @@ def _log_message(direction: str, author: str, channel_id: int, content: str):
             content=content,
             mentioned_handles=mentioned,
             direction=direction,
+            sound=_sound,
+            sound_dB=_sound_dB,
+            sound_duration=_sound_duration,
         )
     except Exception as e:
         logger.debug(f"Graph enrichment for message failed: {e}")
@@ -554,7 +572,7 @@ def _refresh_channel_map_sync(guild_id: int = None) -> dict[str, int]:
             if resp.ok and resp.json():
                 guild_id = int(resp.json()[0]["id"])
             else:
-                print("  No guilds found")
+                out.warn("No guilds found")
                 return _channel_map
         except http_requests.exceptions.RequestException:
             return _channel_map
@@ -569,7 +587,7 @@ def _refresh_channel_map_sync(guild_id: int = None) -> dict[str, int]:
                     _channel_map[ch["name"]] = int(ch["id"])
             _save_channel_map()
     except http_requests.exceptions.RequestException as e:
-        print(f"  Channel fetch error: {e}")
+        out.err(f"Channel fetch error: {e}")
 
     return _channel_map
 
@@ -603,24 +621,24 @@ def list_channels_sync() -> list[dict]:
     try:
         resp = http_requests.get(f"{DISCORD_API}/users/@me/guilds", headers=headers, timeout=10)
         if not resp.ok or not resp.json():
-            print("  No guilds found")
+            out.warn("No guilds found")
             return []
         guild = resp.json()[0]
         guild_id = guild["id"]
         guild_name = guild["name"]
     except http_requests.exceptions.RequestException as e:
-        print(f"  Guild fetch error: {e}")
+        out.err(f"Guild fetch error: {e}")
         return []
 
     # Get channels
     try:
         resp = http_requests.get(f"{DISCORD_API}/guilds/{guild_id}/channels", headers=headers, timeout=10)
         if not resp.ok:
-            print(f"  Channel fetch error: {resp.status_code}")
+            out.err(f"Channel fetch error: {resp.status_code}")
             return []
         raw = resp.json()
     except http_requests.exceptions.RequestException as e:
-        print(f"  Channel fetch error: {e}")
+        out.err(f"Channel fetch error: {e}")
         return []
 
     # Discord channel types: 0=text, 2=voice, 4=category, 5=announcement, 13=stage, 15=forum
@@ -688,10 +706,10 @@ def add_reaction(channel_id: int, message_id: int, emoji: str) -> bool:
             print(f"  Reacted {emoji} on message {message_id}")
             return True
         else:
-            print(f"  Reaction error: {resp.status_code} {resp.text[:200]}")
+            out.err(f"Reaction error: {resp.status_code} {resp.text[:200]}")
             return False
     except http_requests.exceptions.RequestException as e:
-        print(f"  Reaction failed: {e}")
+        out.err(f"Reaction failed: {e}")
         return False
 
 
@@ -721,7 +739,7 @@ def send_as_citizen_file(handle: str | None, channel_id: int, file_path: str = N
 
     # Local file → multipart upload via webhook
     if not file_path or not Path(file_path).exists():
-        print(f"  File not found: {file_path}")
+        out.err(f"File not found: {file_path}")
         return None
 
     webhook_url = _get_or_create_webhook_sync(channel_id)
@@ -754,10 +772,10 @@ def send_as_citizen_file(handle: str | None, channel_id: int, file_path: str = N
             _log_message("out", handle, channel_id, f"[file:{filename}] {text}")
             return data
         else:
-            print(f"  File send error ({handle}): {resp.status_code} {resp.text[:200]}")
+            out.err(f"File send error ({handle}): {resp.status_code} {resp.text[:200]}")
             return None
     except http_requests.exceptions.RequestException as e:
-        print(f"  File send failed ({handle}): {e}")
+        out.err(f"File send failed ({handle}): {e}")
         return None
 
 
@@ -780,7 +798,7 @@ def imagine_as_citizen(handle: str | None, channel_id: int, prompt: str,
     Returns the Discord message data or None on failure.
     """
     if not _IDEOGRAM_AVAILABLE:
-        print("  Ideogram not available (missing ideogram.py)")
+        out.warn("Ideogram not available (missing ideogram.py)")
         return send_as_citizen(handle, channel_id, "Image generation is not available right now.")
 
     if not handle:
@@ -985,9 +1003,9 @@ def read_channel_sync(channel_id: int, limit: int = 50) -> list[dict]:
                     ],
                 })
         else:
-            print(f"  Read error: {resp.status_code} {resp.text[:200]}")
+            out.err(f"Read error: {resp.status_code} {resp.text[:200]}")
     except http_requests.exceptions.RequestException as e:
-        print(f"  Read failed: {e}")
+        out.err(f"Read failed: {e}")
     return messages
 
 
@@ -1012,7 +1030,7 @@ def wake_citizen_on_mention(from_name: str, target_handle: str, message: str,
     when graph_enricher._stimulate_space_citizens added a third.
     """
     if not _WAKE_AVAILABLE:
-        print(f"  citizen_wake not available — @{target_handle} won't wake")
+        out.warn(f"citizen_wake not available — @{target_handle} won't wake")
         return False
 
     # Single combined stimulus — mention is the primary signal, channel gives context
@@ -1395,21 +1413,83 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    """Handle inbound messages — DMs and mentions."""
+    """Handle inbound messages — ALL messages get graph enrichment.
+
+    Previously: only @mentions were processed, and webhook messages (citizen posts)
+    were ignored. This meant citizens posting via webhooks were invisible to the graph.
+    Result: 20 posts in #resonance-plaza, zero reactions — no social fabric.
+
+    Fix (2026-03-19 @dev): ALL messages get graph enrichment. Webhook messages from
+    citizens are treated as citizen speech — they create Moments, links, and stimuli.
+    The @mention path still triggers citizen_wake for direct pings.
+    """
     if message.author == client.user:
         return
-    # Ignore webhook messages (our own citizen messages)
+
+    # ── Graph enrichment for ALL messages (social fabric) ──
+    # Every message creates a Moment, links to Space, links to author Actor.
+    # This is how citizens "hear" the channel — even messages without @mentions.
+    channel_id = message.channel.id if hasattr(message.channel, "id") else 0
+    channel_name = message.channel.name if hasattr(message.channel, "name") else "dm"
+    content = message.content or ""
+
+    if content and channel_id:
+        # Determine author handle — webhook messages use the webhook username
+        if message.webhook_id:
+            # Citizen webhook message — extract handle from username or content prefix
+            # Webhook username format: "Emoji FirstName LastName" or "**@handle**" in content
+            handle_match = re.search(r'\*\*@(\w+)\*\*', content)
+            if handle_match:
+                author_handle = handle_match.group(1).lower()
+            else:
+                # Sanitize display name to handle format
+                clean = re.sub(r"[^\w\s]", "", message.author.display_name).strip()
+                author_handle = re.sub(r"\s+", "_", clean).lower()[:40] or "unknown"
+            author_name = message.author.display_name
+        else:
+            author_handle = message.author.name.lower().replace(" ", "_")
+            author_name = message.author.display_name
+
+        mentioned_handles = [m.group(1).lower() for m in re.finditer(r"@(\w+)", content)]
+
+        # Log + enrich graph (Moment + links + stimulus to present citizens)
+        _log_message("in", author_handle, channel_id, content)
+
+        # Hearing sense: mentions are louder than regular messages
+        if mentioned_handles:
+            _sound, _sound_dB, _sound_dur = "msg_mention", 70.0, 1.5
+        else:
+            _sound, _sound_dB, _sound_dur = "msg_text", 40.0, max(1.0, len(content) / 200.0)
+
+        try:
+            from graph_enricher import on_message as _enrich
+            _enrich(
+                platform="discord",
+                channel_id=str(channel_id),
+                channel_name=channel_name,
+                author_name=author_name,
+                author_handle=author_handle,
+                content=content,
+                mentioned_handles=mentioned_handles,
+                direction="in",
+                sound=_sound,
+                sound_dB=_sound_dB,
+                sound_duration=_sound_dur,
+            )
+        except Exception as e:
+            logger.debug(f"Graph enrichment for inbound failed: {e}")
+
+    # ── Direct handling (wake citizens, route, /imagine) ──
+    # Only for non-webhook messages with @mentions or DMs
     if message.webhook_id:
-        return
+        return  # Webhook messages are enriched above but don't trigger wake/routing
 
     is_dm = isinstance(message.channel, discord.DMChannel)
     is_mentioned = client.user in message.mentions
-    has_at_mention = bool(re.search(r"@(\w+)", message.content)) if message.content else False
+    has_at_mention = bool(re.search(r"@(\w+)", content)) if content else False
 
-    if not is_dm and not is_mentioned and not has_at_mention:
-        return
-
-    await _handle_inbound(message)
+    if is_dm or is_mentioned or has_at_mention:
+        await _handle_inbound(message)
 
 
 @client.event
@@ -1545,7 +1625,7 @@ if __name__ == "__main__":
 
     # Everything else needs token
     if not TOKEN:
-        print("Error: DISCORD_BOT_TOKEN not set in .env")
+        out.err("DISCORD_BOT_TOKEN not set in .env")
         sys.exit(1)
 
     if cmd == "channels":
