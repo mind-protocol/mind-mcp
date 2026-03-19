@@ -241,6 +241,22 @@ class Dispatcher:
                 logger.debug(f"Account refresh check: {e}")
             self._last_account_refresh = now
 
+        # Constant hygiene: scan recent commit Moments for hardcoded constants
+        # Runs at the same cadence as account refresh (infrequent, not per-tick)
+        if now - getattr(self, '_last_constant_scan', 0) > ACCOUNT_REFRESH_INTERVAL:
+            try:
+                from runtime.orchestrator.constant_hygiene import evaluate as _ch_evaluate
+                graph = self._get_shared_graph()
+                if graph:
+                    repo_path = os.environ.get(
+                        "WORLD_REPO",
+                        str(Path(__file__).resolve().parent.parent.parent)
+                    )
+                    _ch_evaluate(graph, repo_path)
+            except Exception as e:
+                logger.debug(f"Constant hygiene scan: {e}")
+            self._last_constant_scan = now
+
         if now - self._last_first_boot_check > FIRST_BOOT_CHECK_INTERVAL:
             try:
                 registered = check_and_register_new_citizens()
@@ -911,6 +927,19 @@ class Dispatcher:
 
         else:
             logger.error(f"No engine available for {citizen_handle} — TWO_TICK_AVAILABLE={TWO_TICK_AVAILABLE}")
+
+    def _get_shared_graph(self):
+        """Get the shared L3 graph instance. Returns None if unavailable."""
+        if hasattr(self, '_shared_graph') and self._shared_graph:
+            return self._shared_graph
+        try:
+            from falkordb import FalkorDB
+            _db = FalkorDB(host="localhost", port=6379)
+            _graph_name = os.environ.get("L3_GRAPH", os.environ.get("FALKORDB_GRAPH", "lumina-prime"))
+            self._shared_graph = _db.select_graph(_graph_name)
+            return self._shared_graph
+        except Exception:
+            return None
 
     def _attach_l3(self, state):
         """Attach L3 graph query/write functions to a cognitive state."""

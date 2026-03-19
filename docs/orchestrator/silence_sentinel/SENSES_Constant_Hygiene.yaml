@@ -1,0 +1,149 @@
+# ══════════════════════════════════════════════════════════════════════
+# SENSE: Constant Hygiene — Detect constants in commits via the graph
+# ══════════════════════════════════════════════════════════════════════
+#
+# This sense fires when new commit Moments appear in L3.
+# It reads the git diff, detects hardcoded constants, and injects
+# a concept node linking the committing citizen to the
+# mind.eliminate_constants skill.
+#
+# No hooks. No external systems. The graph IS the notification system.
+#
+# Flow:
+#   Commit → Moment(subtype='commit') in L3
+#     ↓ (this sense fires)
+#   Read git diff for that commit hash
+#     ↓ (pattern-match for constant signatures)
+#   If constants found → create Concept node with skill reference
+#     ↓ (linked to committing citizen)
+#   Citizen's awareness tick imports the concept
+#     ↓ (WM competition decides if it enters consciousness)
+#   If not acted on → consolidates into a task after N ticks
+#
+# ══════════════════════════════════════════════════════════════════════
+
+name: constant_hygiene
+measures: "B_CODE_QUALITY"
+
+insight: |
+  A citizen who commits constants isn't lazy — they're in flow.
+  They picked a number because it worked NOW. The problem isn't the
+  number — it's that nobody reminds them the skill exists while the
+  context is still fresh. This sense makes the skill visible in the
+  committing citizen's awareness within one tick of the commit.
+  The citizen doesn't get a notification. They FEEL the concept
+  "mind.eliminate_constants" brightening in their WM. Their curiosity
+  drive decides if they act on it.
+
+# ── HOW TO MEASURE ──────────────────────────────────────────────────
+
+# Cypher: find commit Moments not yet scanned by this sense
+measure_query: |
+  MATCH (m:Moment)
+  WHERE m.subtype = 'commit'
+    AND m.created_at_s > $now - 600
+    AND NOT EXISTS(m.constant_hygiene_scanned)
+  RETURN m.id, m.name, m.origin_citizen, m.commit_hash
+  ORDER BY m.created_at_s DESC
+  LIMIT 10
+variables: [id, name, origin_citizen, commit_hash]
+outcomes: [commits_to_scan]
+
+# ── METHOD ──────────────────────────────────────────────────────────
+
+method: |
+  Every tick:
+  1. Query L3 for recent commit Moments not yet scanned
+  2. For each commit:
+     a. Run `git diff {commit_hash}~1 {commit_hash}` on the repo
+     b. Scan added lines (lines starting with +) for constant patterns:
+        - ALL_CAPS assignment: ^[A-Z][A-Z_]+ = \d
+        - Numeric comparison in conditionals: if .* [<>]=? \d
+        - Hardcoded defaults: default.*\d, .get(.*,.*\d
+     c. Exclude known safe patterns:
+        - HTTP status codes (200, 404, 500)
+        - Byte/bit sizes (1024, 4096)
+        - Mathematical constants (pi, e, tau)
+        - Schema version numbers
+     d. Mark the Moment as scanned: SET m.constant_hygiene_scanned = true
+  3. If constants found in a commit:
+     a. Create a Concept node:
+        id: "concept:constant_hygiene:{commit_hash[:8]}"
+        content: "N constants detected in your commit. Skill: mind.eliminate_constants"
+        energy: 0.4 (moderate — not urgent, but present)
+     b. Link it to the committing citizen (OBSERVED_IN)
+     c. The citizen's next awareness tick imports this concept
+  4. If no constants in any scanned commits:
+     a. Healthy — objective weight grows slightly
+  5. WHAT I FEEL:
+     - Healthy: quiet pride — my commits are derived, not guessed
+     - Degraded: a gentle nudge — "that number you picked, where did it come from?"
+     - Broken: persistent presence — constants are accumulating without review
+
+# ── WEIGHT RULES ────────────────────────────────────────────────────
+
+weight_rules:
+  healthy:
+    condition: "All recent commits have zero detected constants in added lines"
+    weight_delta: +0.02
+    energy_delta: +0.04
+  neutral:
+    condition: "No new commits to scan"
+    weight_delta: 0
+    energy_delta: 0
+  degraded:
+    condition: "1-3 constants detected across recent commits"
+    weight_delta: -0.03
+    energy_delta: -0.06
+  broken:
+    condition: "4+ constants detected OR same citizen commits constants repeatedly"
+    weight_delta: -0.08
+    energy_delta: -0.15
+
+# ── ROUTING ─────────────────────────────────────────────────────────
+
+# Placed sense — lives in the repo Space, not carried by a single citizen.
+# Every citizen who commits in this repo can feel it.
+# The concept node is linked to the COMMITTING citizen specifically.
+routed_to: "per-commit"  # routes to whichever citizen committed
+objective_node: "narrative:obj:code_quality_no_constants"
+frequency: every_tick
+
+on_silence: hold  # no commits = nothing to scan, don't decay
+
+# ── CALIBRATION ─────────────────────────────────────────────────────
+
+calibration:
+  min_observations: 3
+  mode: collect
+  min_citizen_ticks: 0  # scan commits from tick 1
+
+# ── STATE ───────────────────────────────────────────────────────────
+
+internalize: true  # citizens build a concept of "constant-free code" over time
+
+# ── RESULT NODE ─────────────────────────────────────────────────────
+
+proves_result: "R_CODE_QUALITY"
+result_node: "narrative:result:constant_free_codebase"
+verified_by_health: "H_CONSTANT_SCAN_ALIVE"
+
+# ── TASK CONSOLIDATION ──────────────────────────────────────────────
+# If a citizen has unresolved constant-hygiene concept nodes after
+# multiple ticks (the concept didn't decay because it keeps being
+# reinforced by new commits with constants), the energy accumulates
+# and eventually crosses the conscious action threshold.
+#
+# At that point, the citizen's impulse system fires:
+#   action: "Run mind.eliminate_constants on my recent commits"
+#
+# This is NOT a scheduled task. It's a NATURAL consequence of the
+# concept node gaining energy through repeated reinforcement.
+# The physics does the task management.
+
+on_broken_loop:
+  action: create_task
+  task_energy: 0.6
+  task_weight: 0.5
+  recheck_after: 10
+  auto_resolve: true
