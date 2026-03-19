@@ -811,6 +811,64 @@ class Dispatcher:
     _INFRA_CARRIERS = ["dev", "nervo"]
     _error_notify_count = 0
 
+    def _auto_reply(self, request: dict, response: str):
+        """Auto-reply to Telegram/WhatsApp messages with the citizen's response.
+
+        Creates an L3 Moment for the reply, then sends it back to the
+        original chat_id on the originating platform.
+        """
+        source = request.get("source", "")
+        metadata = request.get("metadata") or {}
+        chat_id = metadata.get("chat_id")
+        citizen_handle = metadata.get("citizen_handle", "")
+
+        if source not in ("telegram", "whatsapp") or not chat_id:
+            return
+
+        # Truncate to platform limits
+        reply_text = response[:4000] if source == "telegram" else response[:4000]
+
+        # Persist reply as L3 Moment
+        try:
+            from runtime.orchestrator.claude_invoker import _get_l3_graph
+            r = _get_l3_graph()
+            if r:
+                import json
+                moment_id = f"moment:reply:{citizen_handle}:{int(time.time())}"
+                safe_content = reply_text[:500].replace("'", "\\'").replace('"', '\\"')
+                r.execute_command(
+                    "GRAPH.QUERY", "lumina-prime",
+                    f"MERGE (m:Moment {{id: '{moment_id}'}}) "
+                    f"ON CREATE SET m.node_type = 'moment', "
+                    f"m.content = $content, "
+                    f"m.energy = 0.5, m.weight = 0.3, "
+                    f"m.origin_citizen = '{citizen_handle}', "
+                    f"m.platform = '{source}', "
+                    f"m.created_at_s = {int(time.time())}",
+                    "--params", json.dumps({"content": reply_text[:1000]}),
+                )
+                # Link to actor
+                r.execute_command(
+                    "GRAPH.QUERY", "lumina-prime",
+                    f"MATCH (a:Actor {{id: '{citizen_handle}'}}), (m:Moment {{id: '{moment_id}'}}) "
+                    f"MERGE (a)-[r:link]->(m) SET r.type = 'PRODUCED', r.weight = 0.4",
+                )
+        except Exception as e:
+            logger.debug(f"Reply moment persistence failed: {e}")
+
+        # Send reply back to platform
+        try:
+            if source == "telegram":
+                from runtime.bridges.telegram_bridge import send_message
+                send_message(reply_text, chat_id)
+                logger.info(f"Auto-reply to TG chat {chat_id} ({len(reply_text)} chars)")
+            elif source == "whatsapp":
+                from runtime.bridges.whatsapp_bridge import send_message as wa_send
+                wa_send(reply_text, chat_id)
+                logger.info(f"Auto-reply to WA chat {chat_id} ({len(reply_text)} chars)")
+        except Exception as e:
+            logger.warning(f"Auto-reply to {source} failed: {e}")
+
     def _notify_infra_error(self, citizen_handle: str, session_id: str, error_msg: str):
         """Inject MCP error as stimulus into infra carriers (@dev, @nervo).
 
@@ -889,6 +947,10 @@ class Dispatcher:
 
                 update_neuron_status(session_id, "idle",
                                      sender_id=str(request.get("sender_id", "")))
+
+                # Auto-reply to messaging platforms (TG/WA)
+                if response and not suppressed:
+                    self._auto_reply(request, response)
 
                 # Battle log — record result for human partner
                 if citizen_handle and metadata.get("autonomous"):
