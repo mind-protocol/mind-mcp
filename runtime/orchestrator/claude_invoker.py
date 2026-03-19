@@ -606,7 +606,7 @@ def _attempt_failover(
     if response:
         logger.info(f"Failover to {failover_id} succeeded in {fo_elapsed:.0f}s")
     else:
-        if detect_rate_limit_error(fo_stderr or "", fo_stdout or ""):
+        if detect_rate_limit_error(fo_stderr or "", response or ""):
             mark_account_exhausted(failover_id)
         logger.warning(f"Failover to {failover_id} also failed")
 
