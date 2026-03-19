@@ -1,0 +1,137 @@
+module: "quality/constant_hygiene"
+status: "DESIGNING"
+owner: "auto-routed"  # per-commit: routes to the citizen who committed
+
+results:
+
+  - id: R1
+    name: "Constants are caught at the moment of creation"
+    traces_to: O1
+
+    achieved: "A citizen commits THRESHOLD = 0.5. Within one maintenance
+      cycle, a Concept node appears in their graph neighborhood:
+      'mind.eliminate_constants skill available.' Their next awareness
+      tick imports it. If their curiosity is high, it enters WM.
+      They fix it while the context is still hot."
+    not_achieved: "Constants accumulate silently across commits. Nobody
+      notices until a manual audit weeks later. By then the context is
+      gone — the citizen doesn't remember WHY they picked 0.5. The
+      constant stays forever."
+
+    threshold:
+      metric: detection_latency_ticks
+      target: 2   # detected within 2 maintenance cycles of the commit
+      window: per_commit
+      direction: below
+
+    measured_by:
+      - objective: "narrative:obj:constants_caught_early"
+        green: 0.7
+        red: 0.3
+
+    proved_by:
+      - "sense:quality:constant_detection_latency"
+
+    health_signal:
+      - "H1"
+
+    failure_diagnostic: |
+      If constants aren't caught:
+      1. Local: Is constant_hygiene.evaluate() being called in maintenance? Check dispatcher.
+      2. Upstream: Are commit Moments being created in L3? Check the commit pipeline.
+      3. Systemic: Is FalkorDB responsive? Check substrate health.
+
+    priority: P0
+    status: not_measured
+    horizon: short
+    target_date: "2026-03-21"
+    owner: "auto-routed"
+
+  - id: R2
+    name: "Citizens feel constants in their awareness, not in a report"
+    traces_to: O2
+
+    achieved: "The Concept node created by the sense enters the citizen's
+      WM via normal physics — energy competition, drive affinity (curiosity),
+      salience. The citizen doesn't receive a notification. They FEEL the
+      skill's presence. If they're deep in flow on something important,
+      the concept doesn't interrupt — it waits at the edge of awareness.
+      If they're idle, it surfaces naturally."
+    not_achieved: "The sense creates nodes but nobody imports them.
+      The concepts sit in L3 disconnected from any citizen's L1.
+      Detection happens but awareness doesn't follow."
+
+    threshold:
+      metric: concept_import_rate
+      target: 0.8   # 80% of injected concepts are imported within 3 awareness ticks
+      window: 7d
+      direction: above
+
+    measured_by:
+      - objective: "narrative:obj:constants_felt_not_reported"
+        green: 0.7
+        red: 0.3
+
+    proved_by:
+      - "sense:quality:concept_import_rate"
+
+    health_signal:
+      - "H2"
+
+    failure_diagnostic: |
+      If concepts aren't imported:
+      1. Local: Is the OBSERVED_IN link created between citizen and concept? Check _inject_concept().
+      2. Upstream: Is the awareness tick importing 1-hop concepts? Check graph_reader energy filter.
+      3. Systemic: Is the concept energy high enough to pass the import filter (>0.1)?
+
+    priority: P1
+    status: not_measured
+    horizon: short
+    target_date: "2026-03-25"
+    owner: "auto-routed"
+
+  - id: R3
+    name: "Constant count per citizen trends downward over time"
+    traces_to: O3
+
+    achieved: "After 2 weeks of the sense running, the average number of
+      constants per commit per citizen drops. Citizens internalize the
+      pattern — they start deriving values before the sense has to remind
+      them. The skill becomes a Process node in their L1: automatic behavior,
+      not conscious effort."
+    not_achieved: "The sense fires every commit, the citizen sees it every
+      time, but never changes behavior. The concept becomes noise — high
+      frequency, zero action. The objective weight decays because the
+      sense keeps firing degraded."
+
+    threshold:
+      metric: constants_per_commit_trend
+      target: -0.1   # negative slope = improving
+      window: 14d
+      direction: below
+
+    measured_by:
+      - objective: "narrative:obj:constant_count_improving"
+        green: 0.6
+        red: 0.2
+
+    proved_by:
+      - "sense:quality:constant_trend"
+
+    health_signal:
+      - "H3"
+
+    failure_diagnostic: |
+      If trend isn't improving:
+      1. Local: Is the skill actually helpful? Are derivation sources obvious?
+      2. Upstream: Are citizens acting on the concept, or ignoring it? Check WM entry rates.
+      3. Systemic: Is the weight_rule calibrated? Maybe degraded delta is too weak to motivate.
+
+    priority: P2
+    status: not_measured
+    horizon: medium
+    target_date: "2026-04-02"
+    owner: "auto-routed"
+
+composite:
+  carrier: "auto-routed"
