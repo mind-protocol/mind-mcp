@@ -43,7 +43,7 @@ try:
         record_attempt as _silence_attempt,
         record_success as _silence_success,
         evaluate_all as _silence_evaluate,
-        is_invoke_substantive as _is_substantive,
+        is_substantive as _is_substantive,
     )
     _SILENCE_AVAILABLE = True
 except ImportError:
@@ -80,7 +80,7 @@ logger = logging.getLogger("orchestrator.dispatcher")
 
 NEURON_CLEANUP_INTERVAL = 60     # seconds between neuron cleanups
 HEALTH_CHECK_INTERVAL = 10       # seconds between degradation checks
-ACCOUNT_REFRESH_INTERVAL = 1800  # seconds — proactive token refresh (30 min)
+ACCOUNT_REFRESH_INTERVAL = 900   # seconds — proactive token refresh (15 min, was 30)
 AWARENESS_INTERVAL = int(os.environ.get("MIND_AWARENESS_INTERVAL", "60"))
 THOUGHT_INTERVAL = int(os.environ.get("MIND_THOUGHT_INTERVAL", "300"))
 BASE_LOOP_INTERVAL = int(os.environ.get("MIND_BASE_LOOP_INTERVAL", "5"))
@@ -836,7 +836,7 @@ class Dispatcher:
                 else:
                     activation_pressure.on_success()
                     # Silence sentinel: record substantive success
-                    if _SILENCE_AVAILABLE and response and _is_substantive(response):
+                    if _SILENCE_AVAILABLE and response and _is_substantive("invoke_claude", response):
                         _silence_success("invoke_claude")
 
                 update_neuron_status(session_id, "idle",
