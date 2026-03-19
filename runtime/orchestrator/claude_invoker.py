@@ -344,18 +344,37 @@ def quick_call(
         f"Do not start new projects or make changes — just find the info and respond."
     )
 
-    cmd = [
-        "claude", "--print",
-        "--output-format", "stream-json",
-        "--verbose", "--include-partial-messages",
-        "--dangerously-skip-permissions",
-        "--session-id", session_id,
-    ]
+    # Choose CLI: Gemini if all Claude accounts are dead
+    use_gemini = healthy_account_count() == 0 and os.environ.get("ENABLE_GEMINI_CLI", "1") == "1"
+
+    if use_gemini:
+        cmd = ["gemini", "-m", os.environ.get("GEMINI_CLI_MODEL", "gemini-2.5-pro"), "--yolo", "-o", "text"]
+        logger.info(f"quick_call using Gemini (all Claude accounts expired)")
+    else:
+        cmd = [
+            "claude", "--print",
+            "--output-format", "stream-json",
+            "--verbose", "--include-partial-messages",
+            "--dangerously-skip-permissions",
+            "--session-id", session_id,
+        ]
 
     clean_env = {k: v for k, v in os.environ.items()
                  if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
-    balanced_env = get_account_env(clean_env)
-    account_id = balanced_env.get("_CLAUDE_ACCOUNT_ID", "default")
+
+    if use_gemini:
+        balanced_env = clean_env
+        account_id = "gemini"
+    else:
+        balanced_env = get_account_env(clean_env)
+        account_id = balanced_env.get("_CLAUDE_ACCOUNT_ID", "default")
+
+    # Gemini: pass prompt as -p arg; Claude: pass via stdin
+    if use_gemini:
+        cmd.extend(["-p", prompt])
+        input_text = None
+    else:
+        input_text = prompt
 
     process = subprocess.Popen(
         cmd,
@@ -368,28 +387,40 @@ def quick_call(
         preexec_fn=_set_resource_limits,
     )
 
-    # Send prompt via stdin
-    stdin_thread = threading.Thread(
-        target=_write_stdin, args=(process, prompt), daemon=True,
-    )
-    stdin_thread.start()
-
     # Prepare moment persistence
     r_graph = _get_l3_graph()
     space_id = _get_actor_space(r_graph, target_handle) if r_graph else None
 
-    # Read with moment streaming
-    response, stderr, _, _ = _read_stream_json(
-        process, target_handle, session_id,
-        timeout=QUICK_CALL_TIMEOUT,
-        r=r_graph, space_id=space_id,
-    )
+    if use_gemini:
+        # Gemini: blocking communicate (no stream-json support)
+        process.stdin.close()
+        try:
+            stdout, stderr = process.communicate(timeout=QUICK_CALL_TIMEOUT)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            stdout, stderr = process.communicate()
+        response = stdout.strip() if stdout else ""
+        # Persist as a single moment
+        if response and r_graph:
+            _persist_moment(r_graph, target_handle, session_id, 0, response[:1000], None, space_id)
+    else:
+        # Claude: streaming with moment persistence
+        stdin_thread = threading.Thread(
+            target=_write_stdin, args=(process, input_text), daemon=True,
+        )
+        stdin_thread.start()
+        response, stderr, _, _ = _read_stream_json(
+            process, target_handle, session_id,
+            timeout=QUICK_CALL_TIMEOUT,
+            r=r_graph, space_id=space_id,
+        )
 
     if process.poll() is None:
         process.kill()
         process.wait()
 
-    release_account(balanced_env, error=process.returncode != 0)
+    if not use_gemini:
+        release_account(balanced_env, error=process.returncode != 0)
 
     # Log the call
     logger.info(

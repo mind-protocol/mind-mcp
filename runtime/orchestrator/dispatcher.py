@@ -713,8 +713,14 @@ class Dispatcher:
             _silence_attempt("invoke_claude")
 
         # Choose invocation path — round-robin Claude/Gemini to spread load
+        # If all Claude accounts are dead (expired tokens), force Gemini as lifeline
+        from runtime.orchestrator.account_balancer import healthy_account_count
+        claude_alive = healthy_account_count() > 0
         if degradation.is_degraded():
             invoke_fn = invoke_degraded
+        elif not claude_alive and os.environ.get("ENABLE_GEMINI_CLI", "1") == "1":
+            invoke_fn = invoke_gemini
+            logger.warning("All Claude accounts expired — routing to Gemini")
         elif os.environ.get("ENABLE_GEMINI_CLI", "1") == "1" and self._should_use_gemini():
             invoke_fn = invoke_gemini
         else:
