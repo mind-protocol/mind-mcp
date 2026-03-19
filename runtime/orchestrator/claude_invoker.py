@@ -487,8 +487,8 @@ def invoke_subconscious(
     """Subconscious mode — respond using pure graph physics, no LLM.
 
     Flow:
-      1. Inject the input as a stimulus into the L1 graph
-      2. Run N ticks to let the WM stabilize
+      1. Get or create a TwoTickEngine for the citizen
+      2. Run N thought ticks to let the WM stabilize
       3. Read the most salient WM nodes
       4. Return them as a "subconscious response"
 
@@ -498,56 +498,41 @@ def invoke_subconscious(
     voice_text = request.get("voice_text", "")
 
     try:
-        from runtime.cognition.stimulus_router import StimulusRouter, IncomingEvent
-        from runtime.cognition.tick_runner_l1_cognitive_engine import L1CognitiveTickRunner, Stimulus
+        from runtime.cognition.two_tick_engine import TwoTickEngine
         from runtime.cognition.wm_prompt_serializer import serialize_wm_to_prompt
-        from runtime.cognition.citizen_brain_seeder import load_brain_into_state
-        from runtime.cognition.falkordb_checkpointer import FalkorDBBrainCheckpointer
+        from runtime.cognition.models import CitizenCognitiveState, Node, NodeType
+        from runtime.cognition.action_seed import ensure_action_nodes
 
-        # Load or get existing engine state
-        checkpointer = FalkorDBBrainCheckpointer(citizen_handle)
-        if checkpointer.connect():
-            state = checkpointer.load_state()
-        else:
-            state = None
+        # Create a temporary state for subconscious processing
+        state = CitizenCognitiveState(citizen_id=citizen_handle)
+        ensure_action_nodes(state)
 
-        if not state:
-            logger.warning(f"Subconscious: no brain state for {citizen_handle}")
-            return ""
+        # Inject the input as a high-energy concept node
+        if voice_text:
+            stimulus_node = Node(
+                id=f"stimulus:{hash(voice_text) & 0xFFFFFFFF:08x}",
+                node_type=NodeType.CONCEPT,
+                content=voice_text[:500],
+                weight=0.5,
+                energy=0.8,
+            )
+            state.add_node(stimulus_node)
 
-        runner = L1CognitiveTickRunner(state)
-        router = StimulusRouter(citizen_handle)
-
-        # Inject stimulus
-        event = IncomingEvent(
-            content=voice_text,
-            source="external",
-            citizen_handle=citizen_handle,
-            is_social=True,
-        )
-        stimulus = router.route(event)
+        engine = TwoTickEngine(state)
 
         # Run ticks to let WM stabilize
         SUBCONSCIOUS_TICKS = 5
-        for i in range(SUBCONSCIOUS_TICKS):
-            result = runner.run_tick(stimulus=stimulus if i == 0 else None)
+        for _ in range(SUBCONSCIOUS_TICKS):
+            engine.thought_tick()
 
         # Read WM state
-        orientation = runner._current_orientation
-        wm_text = serialize_wm_to_prompt(state, orientation)
+        orientation = engine._current_orientation
+        wm_nodes = [state.nodes[nid] for nid in state.wm.node_ids if nid in state.nodes]
+        top_nodes = sorted(wm_nodes, key=lambda n: n.energy, reverse=True)[:3]
 
-        # Get top WM nodes content
-        wm_nodes = state.get_wm_nodes()
-        top_nodes = sorted(wm_nodes, key=lambda n: n.salience, reverse=True)[:3]
-
-        # Build rich subconscious response from graph state
-        lines = _narrate_subconscious(state, runner, top_nodes, orientation, SUBCONSCIOUS_TICKS)
-
+        # Build response from WM content
+        lines = _narrate_subconscious(state, engine, top_nodes, orientation, SUBCONSCIOUS_TICKS)
         response = "\n".join(lines)
-
-        # Checkpoint the updated state
-        if checkpointer._connected:
-            checkpointer.flush_all(state)
 
         logger.info(
             f"Subconscious response for {citizen_handle}: "

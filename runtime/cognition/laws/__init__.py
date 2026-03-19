@@ -10,8 +10,7 @@ from .law_01_energy_injection import (
     reset_self_stimulus_state,
 )
 
-# Stimulus lives in tick_runner (single source of truth)
-from runtime.cognition.tick_runner_l1_cognitive_engine import Stimulus
+from runtime.cognition.models import Stimulus
 
 from .law_17_impulse import (
     ImpulseResult,

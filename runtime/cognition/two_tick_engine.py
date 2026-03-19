@@ -285,7 +285,7 @@ class TwoTickEngine:
         self.graph_read_fn = graph_read_fn
         self._awareness_tick_counter: int = 0
         self._thought_tick_counter: int = 0
-        self._last_action_tick: int = 0
+        self._last_action_tick: int = -ACTION_COOLDOWN_TICKS  # allow first tick to fire
         self._current_orientation: Optional[str] = None
         # Metabolic multipliers resolved once per tick, consumed by thought_tick
         self._metabolic_multipliers: dict[str, float] = {}
@@ -693,6 +693,11 @@ def thought_tick(
                 best = max(action_candidates, key=lambda n: n.energy)
                 result.action_fired = True
                 result.action_node_id = best.id
+            # No action node in WM = the physics tick IS the thinking.
+            # Hebbian crystallization, energy dispersal, drive updates —
+            # all ran above. Reflective thinking fires through action_seed
+            # nodes (think_future, reflect_on_identity, rest_consolidate)
+            # which use the same impulse→WM→fire pathway.
 
     # Update tick count
     state.tick_count = tick

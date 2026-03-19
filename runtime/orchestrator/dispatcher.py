@@ -211,12 +211,12 @@ class Dispatcher:
                 # Thought tick (internal processing + conscious action check)
                 last_thought = self._last_thought_tick.get(handle, 0.0)
                 if now - last_thought > THOUGHT_INTERVAL:
-                    wm_changed, conscious_action = self._thought_tick(handle)
+                    wm_changed, conscious_action, action_node_id = self._thought_tick(handle)
                     self._last_thought_tick[handle] = now
                     thought_count += 1
 
                     if conscious_action:
-                        self._fire_conscious_action(handle)
+                        self._fire_conscious_action(handle, action_node_id)
                         action_count += 1
 
                     # Write awareness file if WM changed
@@ -232,7 +232,7 @@ class Dispatcher:
                                     tick_num = engine._thought_tick_counter
                                 write_awareness_file(state, tick_num, orientation)
                         except Exception as e:
-                            logger.debug(f"Awareness write failed for {handle}: {e}")
+                            logger.warning(f"Awareness write failed for {handle}: {e}")
 
             except Exception as e:
                 logger.exception(f"Tick error for {handle}: {e}")
@@ -265,11 +265,11 @@ class Dispatcher:
         except Exception as e:
             logger.warning(f"Awareness tick failed for {handle}: {e}")
 
-    def _thought_tick(self, handle: str) -> tuple[bool, bool]:
-        """Run thought tick. Returns (wm_changed, action_fired)."""
+    def _thought_tick(self, handle: str) -> tuple[bool, bool, str | None]:
+        """Run thought tick. Returns (wm_changed, action_fired, action_node_id)."""
         engine = self._citizen_engines.get(handle)
         if not engine:
-            return False, False
+            return False, False, None
 
         try:
             if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
@@ -277,14 +277,20 @@ class Dispatcher:
                 return (
                     getattr(result, 'wm_changed', False),
                     getattr(result, 'action_fired', False),
+                    getattr(result, 'action_node_id', None),
                 )
-            return False, False
+            return False, False, None
         except Exception as e:
             logger.warning(f"Thought tick failed for {handle}: {e}")
-            return False, False
+            return False, False, None
 
-    def _fire_conscious_action(self, handle: str):
-        """Serialize WM to prompt and dispatch a Claude session."""
+    def _fire_conscious_action(self, handle: str, action_node_id: str | None = None):
+        """Serialize WM to prompt, extract action intent, and dispatch a Claude session.
+
+        If action_node_id is provided, the specific action node's content and
+        action_command are included in the prompt so the Claude session knows
+        exactly what MCP tool to call and why.
+        """
         state = self._citizen_states.get(handle)
         if not state:
             return
@@ -298,7 +304,31 @@ class Dispatcher:
         if not TWO_TICK_AVAILABLE:
             return
 
+        # Extract action intent from the fired action node
+        action_command = None
+        action_content = None
+        if action_node_id and hasattr(state, 'nodes'):
+            action_node = state.nodes.get(action_node_id)
+            if action_node:
+                action_command = getattr(action_node, 'action_command', None)
+                action_content = getattr(action_node, 'content', None)
+                logger.info(
+                    f"Action node selected for {handle}: {action_node_id} "
+                    f"→ tool={action_command}, intent='{action_content}'"
+                )
+
         wm_prompt = serialize_wm_to_prompt(state, orientation)
+
+        # Prepend action directive if we have a specific action to take
+        if action_command and action_content:
+            action_directive = (
+                f"[SUBCONSCIOUS ACTION DIRECTIVE]\n"
+                f"Your drives have selected this action: {action_content}\n"
+                f"Execute it using the MCP tool: /{action_command}\n"
+                f"This is not a suggestion — your limbic system has accumulated "
+                f"enough impulse to fire this action. Do it.\n\n"
+            )
+            wm_prompt = action_directive + wm_prompt
 
         request = {
             "text": wm_prompt,
@@ -310,12 +340,18 @@ class Dispatcher:
                 "citizen_handle": handle,
                 "autonomous": True,
                 "orientation": orientation,
+                "action_node_id": action_node_id,
+                "action_command": action_command,
+                "action_content": action_content,
                 "cognitive_context": wm_prompt,
             },
         }
 
         self.dispatch(request)
-        logger.info(f"Conscious action fired for {handle} (orientation={orientation})")
+        logger.info(
+            f"Conscious action fired for {handle} "
+            f"(orientation={orientation}, action={action_command or 'generic'})"
+        )
 
     # ── Direct Dispatch ────────────────────────────────────────────────────
 

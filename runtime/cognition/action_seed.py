@@ -320,22 +320,31 @@ def ensure_action_nodes(state: CitizenCognitiveState) -> None:
     """
     added = seed_action_nodes(state)
     if added > 0:
-        # Cold boot: inject initial energy into action nodes and drives
-        # so the first conscious action fires within ~2 thought ticks.
-        # This energy decays naturally (Law 3) — it's a one-time spark.
-        BOOT_ENERGY = 0.25
+        # Cold boot: inject initial energy so the first conscious action
+        # fires on the FIRST thought tick. Energy decays naturally (Law 3).
+        #
+        # Threshold math (worst case — idle arousal ~0):
+        #   effective_threshold = 0.15 / max(0.5, 0 + 0.5) = 0.30
+        #   mean WM energy must exceed 0.30
+        #   With 7 WM nodes each at BOOT_ENERGY, mean = BOOT_ENERGY
+        #   After decay (2%) and dispersal (30%): ~BOOT_ENERGY * 0.68
+        #   Need BOOT_ENERGY * 0.68 > 0.30 → BOOT_ENERGY > 0.44
+        #   Use 0.5 for safety margin.
+        BOOT_ENERGY = 0.5
         for action_def in CORE_ACTIONS:
             node = state.nodes.get(action_def["id"])
             if node and node.energy < BOOT_ENERGY:
                 node.energy = BOOT_ENERGY
-        # Also prime the top 3 drives so they push energy into action nodes
-        for drive_name in ("curiosity", "achievement", "care"):
+        # Prime drives so they push energy into action nodes via dispersal
+        # Also elevate arousal-contributing drives (curiosity, achievement,
+        # self_preservation) so arousal > 0.3 and threshold isn't doubled.
+        for drive_name in ("curiosity", "achievement", "care", "self_preservation"):
             drive = state.limbic.drives.get(drive_name)
-            if drive and drive.intensity < 0.5:
-                drive.intensity = 0.5
+            if drive and drive.intensity < 0.6:
+                drive.intensity = 0.6
         logger.info(
             f"Boot energy injected for {state.citizen_id}: "
-            f"{added} action nodes at {BOOT_ENERGY}, drives primed"
+            f"{added} action nodes at {BOOT_ENERGY}, drives+arousal primed"
         )
     else:
         logger.debug(
