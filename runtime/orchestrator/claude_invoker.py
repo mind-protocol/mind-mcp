@@ -202,10 +202,12 @@ def _read_stream_json(
 
         msg_type = obj.get("type", "")
 
-        # Extract text_delta only (not thinking_delta)
         if msg_type == "stream_event":
             delta = obj.get("event", {}).get("delta", {})
-            if delta.get("type") == "text_delta":
+            delta_type = delta.get("type", "")
+
+            # Text output (speech)
+            if delta_type == "text_delta":
                 text = delta.get("text", "")
                 if text:
                     accumulated += text
@@ -221,6 +223,25 @@ def _read_stream_json(
                             last_moment = mid
                         chunk_index += 1
                         accumulated = ""
+
+            # Tool use (action) — file writes, edits, bash commands = real work
+            elif delta_type == "tool_use":
+                tool_name = delta.get("name", "")
+                tool_input = delta.get("input", {})
+                if tool_name in ("Write", "Edit", "Bash", "NotebookEdit"):
+                    file_path = tool_input.get("file_path", tool_input.get("command", ""))
+                    summary = f"[{tool_name}] {file_path}" if file_path else f"[{tool_name}]"
+                    full_parts.append(summary)
+
+                    if citizen_handle and r:
+                        mid = _persist_moment(
+                            r, citizen_handle, session_id,
+                            chunk_index, summary,
+                            last_moment, space_id,
+                        )
+                        if mid:
+                            last_moment = mid
+                        chunk_index += 1
 
         elif msg_type == "result":
             result_text = obj.get("result", "")
@@ -537,6 +558,7 @@ def _attempt_failover(
     failover_uuid = str(uuid.uuid4())
     failover_cmd = [
         "claude", "--print", "--output-format", "stream-json",
+        "--verbose", "--include-partial-messages",
         "--dangerously-skip-permissions",
         "--session-id", failover_uuid,
         "--add-dir", "..",
