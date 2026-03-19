@@ -101,18 +101,19 @@ def _persist_moment(
     """Persist a streaming moment to L3. Returns the moment id, or None on failure."""
     moment_id = f"moment:stream:{session_id}:{chunk_index}"
     now_s = int(time.time())
+    # Escape content for Cypher string literal
+    safe_content = content[:1000].replace("\\", "\\\\").replace("'", "\\'").replace("\n", "\\n")
     try:
         # Create moment node
         r.execute_command(
             "GRAPH.QUERY", "lumina-prime",
             f"MERGE (m:Moment {{id: '{moment_id}'}}) "
             f"ON CREATE SET m.node_type = 'moment', "
-            f"m.content = $content, "
+            f"m.content = '{safe_content}', "
             f"m.energy = 0.4, m.weight = 0.05, "
             f"m.origin_citizen = '{citizen_handle}', "
             f"m.session_id = '{session_id}', "
             f"m.created_at_s = {now_s}",
-            "--params", json.dumps({"content": content[:1000]}),
         )
         # Link to actor
         r.execute_command(
@@ -301,6 +302,8 @@ def invoke_claude(
     cmd = [
         "claude", "--print",
         "--output-format", "stream-json",
+        "--verbose",
+        "--include-partial-messages",
         "--dangerously-skip-permissions",
     ]
 
