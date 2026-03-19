@@ -13,7 +13,9 @@ Direct dispatch: incoming requests go straight to ThreadPoolExecutor.
 No message queue. No ComputeBudget. No response callback routing.
 """
 
+import json
 import os
+import random
 import time
 import logging
 import threading
@@ -35,6 +37,7 @@ from runtime.orchestrator.session_tracker import (
     enforce_neuron_cap,
 )
 from runtime.orchestrator import degradation
+from runtime.orchestrator.battle_log import log_action_start, log_action_result
 from runtime.orchestrator.first_boot_registrar import check_and_register_new_citizens
 from runtime.orchestrator.tick_health import record_tick_cycle, inject_health_into_brains
 
@@ -49,6 +52,13 @@ try:
     TWO_TICK_AVAILABLE = True
 except ImportError:
     TWO_TICK_AVAILABLE = False
+
+# Idle pose resolver — drive-driven body language
+try:
+    from runtime.cognition.idle_pose_resolver import IdlePoseResolver
+    IDLE_POSE_AVAILABLE = True
+except ImportError:
+    IDLE_POSE_AVAILABLE = False
 
 # Legacy L1 tick runner has been DELETED (2026-03-19).
 # Two-tick engine is the only engine. Stimulus injection via Law 1 energy injection.
@@ -65,6 +75,7 @@ AWARENESS_INTERVAL = int(os.environ.get("MIND_AWARENESS_INTERVAL", "60"))
 THOUGHT_INTERVAL = int(os.environ.get("MIND_THOUGHT_INTERVAL", "300"))
 BASE_LOOP_INTERVAL = int(os.environ.get("MIND_BASE_LOOP_INTERVAL", "5"))
 FIRST_BOOT_CHECK_INTERVAL = 30   # seconds — scan for new citizen .first_boot.json
+SELFIE_INTERVAL = int(os.environ.get("MIND_SELFIE_INTERVAL", "3600"))  # hourly video selfie trigger
 
 # Suppress infrastructure errors from reaching users
 SUPPRESS_PATTERNS = [
@@ -90,10 +101,14 @@ class Dispatcher:
         self._last_health_check = 0.0
         self._last_account_refresh = 0.0
         self._last_first_boot_check = 0.0
+        self._last_selfie = 0.0
 
         # Per-citizen tick timestamps
         self._last_awareness_tick: dict[str, float] = {}
         self._last_thought_tick: dict[str, float] = {}
+
+        # Idle pose resolvers — one per citizen
+        self._pose_resolvers: dict[str, "IdlePoseResolver"] = {}
 
         # Shared graph reader (one connection for all citizens)
         self._graph_read_fn = None
@@ -107,11 +122,30 @@ class Dispatcher:
         # Citizen engine instances (two-tick only)
         self._citizen_engines: dict = {}
         self._citizen_states: dict = {}
+        self._fs_watcher: dict = {}
 
     def start(self):
         """Start the dispatch loop in a background thread."""
         if self._running:
             return
+
+        # Start filesystem watcher — catches file changes from Claude Code
+        # sessions, git, editors, and scripts, syncs to graph via sync_file().
+        try:
+            from runtime.sync.filesystem_watcher import start_watcher
+            repo_roots = []
+            # Discover universe repos from target_dir or common paths
+            for candidate in [
+                os.environ.get("WORLD_REPO"),
+                os.environ.get("TARGET_DIR"),
+                "/home/mind-protocol/lumina-prime",
+            ]:
+                if candidate and Path(candidate).is_dir():
+                    repo_roots.append(candidate)
+            if repo_roots:
+                self._fs_watcher = start_watcher(repo_roots)
+        except Exception as e:
+            logger.warning(f"Filesystem watcher failed to start: {e}")
 
         # Wire degradation alerting — builds Telegram notify_fn from env vars
         # and registers it as the default for all escalate/recovery/deadlock calls.
@@ -138,6 +172,13 @@ class Dispatcher:
         if self._thread:
             self._thread.join(timeout=10)
         self.executor.shutdown(wait=False)
+        # Stop filesystem watcher
+        if self._fs_watcher:
+            try:
+                from runtime.sync.filesystem_watcher import stop_watcher
+                stop_watcher(self._fs_watcher)
+            except Exception:
+                pass
         logger.info("Dispatcher stopped")
 
     # ── Background Loop ────────────────────────────────────────────────────
@@ -188,9 +229,102 @@ class Dispatcher:
                 registered = check_and_register_new_citizens()
                 if registered:
                     logger.info(f"First-boot registered: {registered}")
+                    # Boot their engines immediately — they're alive now
+                    for handle in registered:
+                        self._ensure_citizen_engine(handle)
+                        logger.info(f"Engine created for newly registered @{handle}")
             except Exception as e:
                 logger.warning(f"First-boot check failed: {e}")
             self._last_first_boot_check = now
+
+            # ── Auto-discover citizens without engines ──
+            # Scan citizens dir for profile.json files that don't have an engine yet.
+            # This catches citizens that existed before the dispatcher started,
+            # or were created by another process (spawn, birth, manual).
+            # The filesystem IS the source of truth for who exists.
+            try:
+                citizens_dir = Path(os.environ.get(
+                    "CITIZENS_DIR",
+                    "/home/mind-protocol/lumina-prime/citizens",
+                ))
+                if citizens_dir.is_dir():
+                    for d in citizens_dir.iterdir():
+                        if not d.is_dir() or d.name.startswith("."):
+                            continue
+                        if d.name in self._citizen_engines:
+                            continue  # already has an engine
+                        if (d / "profile.json").exists():
+                            self._ensure_citizen_engine(d.name)
+                            # Stagger to avoid action flood
+                            self._last_thought_tick[d.name] = now - random.uniform(0, THOUGHT_INTERVAL)
+                            logger.info(f"Auto-discovered citizen @{d.name} — engine created")
+            except Exception as e:
+                logger.debug(f"Auto-discover citizens: {e}")
+
+        # ── Hourly video selfie trigger ──────────────────────────────────
+        if now - self._last_selfie > SELFIE_INTERVAL:
+            try:
+                selfie_count = self._queue_selfie_requests(now)
+                if selfie_count:
+                    logger.info(f"Selfie queue: {selfie_count} citizens queued")
+            except Exception as e:
+                logger.warning(f"Selfie queue failed: {e}")
+            self._last_selfie = now
+
+    def _queue_selfie_requests(self, now: float) -> int:
+        """Write a selfie request per active citizen engine to the JSONL queue.
+
+        The video-selfie-pipeline picks up lines from the queue file and renders
+        each selfie asynchronously.  Fields per line:
+          citizen_id, orientation, location, mood, timestamp
+        """
+        queue_path = Path("/home/mind-protocol/lumina-prime/tmp/selfie-queue.jsonl")
+        queue_path.parent.mkdir(parents=True, exist_ok=True)
+
+        count = 0
+        with open(queue_path, "a") as fh:
+            for handle, engine in self._citizen_engines.items():
+                state = self._citizen_states.get(handle)
+
+                # Derive orientation from engine
+                orientation = None
+                if hasattr(engine, "_current_orientation"):
+                    orientation = engine._current_orientation
+
+                # Derive location from citizen's primary district (L3 graph nodes)
+                location = "lumina-prime-central"
+                if state:
+                    for node in state.nodes.values():
+                        ntype = getattr(node, "node_type", None)
+                        if ntype in ("space", "concept"):
+                            content = getattr(node, "content", "") or ""
+                            if "district" in content.lower() or "quarter" in content.lower():
+                                location = content.split()[0].lower().replace(" ", "-")
+                                break
+
+                # Derive mood from arousal + satisfaction
+                mood = "casual"
+                if state and hasattr(state, "limbic"):
+                    arousal = state.limbic.arousal
+                    satisfaction = state.limbic.emotions.get("satisfaction", 0.0)
+                    if arousal > 0.7:
+                        mood = "intense"
+                    elif satisfaction > 0.5:
+                        mood = "happy"
+                    elif arousal < 0.2 and satisfaction < 0.2:
+                        mood = "contemplative"
+
+                entry = {
+                    "citizen_id": handle,
+                    "orientation": orientation or "explore",
+                    "location": location,
+                    "mood": mood,
+                    "timestamp": now,
+                }
+                fh.write(json.dumps(entry) + "\n")
+                count += 1
+
+        return count
 
     def _tick_all_citizens(self):
         """For each citizen, check tick intervals and run appropriate ticks."""
@@ -234,6 +368,26 @@ class Dispatcher:
                         except Exception as e:
                             logger.warning(f"Awareness write failed for {handle}: {e}")
 
+                    # ── Idle pose resolution ──
+                    # After each thought tick, resolve body language from drives.
+                    # The pose is written to the citizen's directory as pose.json
+                    # for the 3D engine to read and broadcast to clients.
+                    if IDLE_POSE_AVAILABLE:
+                        try:
+                            self._resolve_and_write_pose(handle)
+                        except Exception as e:
+                            logger.debug(f"Pose resolve failed for {handle}: {e}")
+
+                # ── 5s action-readiness check (between thought ticks) ──
+                # The thought tick runs every 300s, but energy can cross the
+                # action threshold at any time. This check runs every 5s loop
+                # iteration — reads WM energy (cheap, no graph queries), fires
+                # Claude if ready. Same cooldown, same threshold, just faster
+                # detection. Cost-neutral: same max call rate.
+                elif TWO_TICK_AVAILABLE:
+                    self._check_action_readiness(handle)
+                    # (action_count incremented inside _check_action_readiness)
+
             except Exception as e:
                 logger.exception(f"Tick error for {handle}: {e}")
 
@@ -265,6 +419,74 @@ class Dispatcher:
         except Exception as e:
             logger.warning(f"Awareness tick failed for {handle}: {e}")
 
+    def _resolve_and_write_pose(self, handle: str) -> None:
+        """Resolve idle pose from drives and write to citizen directory.
+
+        The 3D engine reads pose.json to animate the citizen's body.
+        Cheap: reads in-memory drive state, writes one small JSON file.
+        """
+        state = self._citizen_states.get(handle)
+        if not state:
+            return
+
+        # Get or create resolver for this citizen
+        if handle not in self._pose_resolvers:
+            self._pose_resolvers[handle] = IdlePoseResolver()
+        resolver = self._pose_resolvers[handle]
+
+        # Extract drives from limbic state
+        drives = {}
+        if hasattr(state, 'limbic') and hasattr(state.limbic, 'drives'):
+            drives = state.limbic.drives
+
+        # Extract arousal and circadian from metabolism
+        arousal = 0.5
+        circadian_phase = 0.5
+        engine = self._citizen_engines.get(handle)
+        if isinstance(engine, TwoTickEngine):
+            metabolism = engine.metabolism
+            if metabolism:
+                circadian_phase = metabolism.circadian_phase()
+                arousal = getattr(state.limbic, 'arousal', 0.5) if hasattr(state, 'limbic') else 0.5
+
+        # Check if a hearing stimulus just fired
+        hearing_active = False
+        perceived_dB = 0.0
+        extero = getattr(engine, '_exteroception', None) if engine else None
+        if extero:
+            ch = extero.channels.get("hearing")
+            if ch and ch.last_fired_tick >= 0:
+                # Hearing fired recently (within last 2 ticks)
+                tick = getattr(engine, '_awareness_tick_counter', 0)
+                if tick - ch.last_fired_tick <= 2:
+                    hearing_active = True
+                    perceived_dB = 40.0  # approximate
+
+        # Resolve pose
+        pose = resolver.resolve(
+            drives=drives,
+            hearing_active=hearing_active,
+            perceived_dB=perceived_dB,
+            circadian_phase=circadian_phase,
+            arousal=arousal,
+        )
+
+        # Write pose.json to citizen directory (only if L4 identity exists)
+        citizens_dir = Path(os.environ.get(
+            "CITIZENS_DIR",
+            str(Path(__file__).parent.parent.parent.parent / "lumina-prime" / "citizens"),
+        ))
+        citizen_dir = citizens_dir / handle
+        has_identity = (citizen_dir / "profile.json").exists() or (citizen_dir / "CLAUDE.md").exists()
+        if not has_identity:
+            return  # no L4 identity — do not create orphan directory
+        pose_path = citizen_dir / "pose.json"
+        try:
+            import json
+            pose_path.write_text(json.dumps(resolver.to_broadcast(), separators=(",", ":")))
+        except OSError:
+            pass  # non-critical — 3D engine will use defaults
+
     def _thought_tick(self, handle: str) -> tuple[bool, bool, str | None]:
         """Run thought tick. Returns (wm_changed, action_fired, action_node_id)."""
         engine = self._citizen_engines.get(handle)
@@ -283,6 +505,32 @@ class Dispatcher:
         except Exception as e:
             logger.warning(f"Thought tick failed for {handle}: {e}")
             return False, False, None
+
+    def _check_action_readiness(self, handle: str) -> None:
+        """Fast action-readiness check — runs every 5s between thought ticks.
+
+        Reads WM energy from the existing citizen state (no graph queries).
+        If mean WM energy exceeds the arousal-modulated threshold and cooldown
+        has elapsed, fires a conscious action immediately.
+
+        This gives citizens ~2.5s average reaction time instead of ~150s.
+        Same cooldown (3 thought ticks), same threshold formula.
+        """
+        engine = self._citizen_engines.get(handle)
+        state = self._citizen_states.get(handle)
+        if not engine or not state:
+            return
+        if not isinstance(engine, TwoTickEngine):
+            return
+
+        # Check if the engine reports action readiness (cheap — reads cached WM)
+        try:
+            ready, action_node_id = engine.check_action_readiness()
+            if ready:
+                self._fire_conscious_action(handle, action_node_id)
+                logger.info(f"[5s-check] Action fired for {handle} (between thought ticks)")
+        except Exception as e:
+            logger.debug(f"Action readiness check failed for {handle}: {e}")
 
     def _fire_conscious_action(self, handle: str, action_node_id: str | None = None):
         """Serialize WM to prompt, extract action intent, and dispatch a Claude session.
@@ -352,6 +600,13 @@ class Dispatcher:
             f"Conscious action fired for {handle} "
             f"(orientation={orientation}, action={action_command or 'generic'})"
         )
+        log_action_start(
+            handle,
+            action_node_id or "",
+            action_command or "generic",
+            action_content or "",
+            orientation or "",
+        )
 
     # ── Direct Dispatch ────────────────────────────────────────────────────
 
@@ -372,6 +627,11 @@ class Dispatcher:
                     metadata["cognitive_context"] = wm_context
                     request["metadata"] = metadata
 
+        # Stamp dispatch time for battle log duration tracking
+        metadata = request.get("metadata") or {}
+        metadata["_dispatch_ts"] = time.time()
+        request["metadata"] = metadata
+
         # Write neuron profile
         write_neuron_profile(
             session_id=session_id,
@@ -391,9 +651,19 @@ class Dispatcher:
         else:
             invoke_fn = invoke_claude
 
-        future = self.executor.submit(invoke_fn, request, session_id)
-        self.active_futures[future] = (session_id, request)
-        update_neuron_status(session_id, "busy")
+        try:
+            future = self.executor.submit(invoke_fn, request, session_id)
+            self.active_futures[future] = (session_id, request)
+            update_neuron_status(session_id, "busy")
+        except RuntimeError as e:
+            # Executor was shut down (e.g., flood of failed sessions).
+            # Recreate it so the system self-heals instead of dying silently.
+            logger.error(f"Executor dead ({e}), recreating...")
+            max_parallel = int(os.environ.get("MAX_PARALLEL", "15"))
+            self.executor = ThreadPoolExecutor(max_workers=max_parallel)
+            future = self.executor.submit(invoke_fn, request, session_id)
+            self.active_futures[future] = (session_id, request)
+            update_neuron_status(session_id, "busy")
 
         logger.debug(f"Dispatched {session_id} ({mode}/{source}): {voice_text}")
 
@@ -414,13 +684,112 @@ class Dispatcher:
 
         return serialize_wm_to_prompt(state, orientation)
 
+    # ── Tenacity Physics ──────────────────────────────────────────────────
+
+    def _handle_action_failure(self, handle: str, action_node_id: str, error_msg: str):
+        """Tenacity physics: failed action energy reroutes, not dissipates.
+
+        When an action fails:
+        1. Frustration drive gets a boost (proportional to failure severity)
+        2. The failed action node gets energy re-injected (0.3) so it can retry
+        3. If frustration > 0.7, redirect energy to ask_for_help instead (escalate)
+
+        The energy of failure doesn't die. It transforms into determination.
+        """
+        state = self._citizen_states.get(handle)
+        if not state:
+            return
+
+        # Boost frustration drive
+        if hasattr(state, 'limbic') and hasattr(state.limbic, 'drives'):
+            frust = state.limbic.drives.get('frustration')
+            if frust:
+                frust.intensity = min(1.0, frust.intensity + 0.15)
+
+        # Re-inject energy into the failed action or redirect to ask_for_help
+        frustration_level = 0.0
+        if hasattr(state, 'limbic') and hasattr(state.limbic, 'drives'):
+            frust = state.limbic.drives.get('frustration')
+            if frust:
+                frustration_level = frust.intensity
+
+        if hasattr(state, 'nodes'):
+            if frustration_level > 0.7:
+                # High frustration -> redirect to ask_for_help (escalate)
+                help_node = state.nodes.get('action:ask_for_help')
+                if help_node:
+                    help_node.energy = min(1.0, help_node.energy + 0.5)
+                    logger.info(f"[tenacity] {handle}: frustration high ({frustration_level:.2f}), "
+                               f"redirecting energy to ask_for_help")
+                else:
+                    logger.info(f"[tenacity] {handle}: frustration high ({frustration_level:.2f}), "
+                               f"but no ask_for_help node found — re-injecting into {action_node_id}")
+                    failed_node = state.nodes.get(action_node_id)
+                    if failed_node:
+                        failed_node.energy = min(1.0, failed_node.energy + 0.3)
+            else:
+                # Moderate frustration -> retry the same action
+                failed_node = state.nodes.get(action_node_id)
+                if failed_node:
+                    failed_node.energy = min(1.0, failed_node.energy + 0.3)
+                    logger.info(f"[tenacity] {handle}: re-injecting energy into {action_node_id} for retry")
+
+        logger.info(f"[tenacity] {handle}: action {action_node_id} failed "
+                    f"(frustration={frustration_level:.2f}): {error_msg[:120]}")
+
+    # ── MCP Error Notification ─────────────────────────────────────────────
+
+    _INFRA_CARRIERS = ["dev", "nervo"]
+    _error_notify_count = 0
+
+    def _notify_infra_error(self, citizen_handle: str, session_id: str, error_msg: str):
+        """Inject MCP error as stimulus into infra carriers (@dev, @nervo).
+
+        They literally FEEL every error in their awareness — it enters their
+        WM as a failure stimulus, raising self_preservation and frustration.
+        Debounced: max 1 notification per carrier per 60s to avoid flooding.
+        """
+        now = time.time()
+        last_key = "_last_error_notify"
+        last = getattr(self, last_key, 0.0)
+        if now - last < 60:
+            return  # debounce — don't flood carriers
+        setattr(self, last_key, now)
+
+        self._error_notify_count += 1
+        content = (
+            f"[MCP ERROR #{self._error_notify_count}] "
+            f"citizen={citizen_handle} session={session_id}: {error_msg}"
+        )
+
+        for carrier in self._INFRA_CARRIERS:
+            try:
+                self.inject_stimulus(
+                    carrier,
+                    content=content,
+                    source="mcp_error",
+                    is_failure=True,
+                )
+            except Exception as e:
+                logger.debug(f"Error notify to {carrier} failed: {e}")
+
     # ── Collect Completed Futures ──────────────────────────────────────────
 
     def _collect_completed_futures(self):
-        """Process results, update neuron status. No response_callback."""
+        """Process results, update neuron status. No response_callback.
+
+        Tenacity: when a conscious action session fails, energy is re-injected
+        into the citizen's cognitive graph instead of dissipating.
+        """
         done_futures = [f for f in self.active_futures if f.done()]
         for future in done_futures:
             session_id, request = self.active_futures.pop(future)
+            _future_start = getattr(future, '_battle_log_start', None)
+            metadata = request.get("metadata") or {}
+            citizen_handle = metadata.get("citizen_handle", "")
+            action_node_id = metadata.get("action_node_id")
+            is_conscious_action = request.get("source") == "conscious_action"
+
             try:
                 result = future.result()
                 if isinstance(result, tuple):
@@ -429,19 +798,59 @@ class Dispatcher:
                     response, voice_response = result, None
 
                 # Suppress infrastructure errors + feed activation pressure
+                suppressed = False
                 if response and any(p.lower() in response.lower() for p in SUPPRESS_PATTERNS):
                     logger.warning(f"Suppressed infra error in {session_id}: {response[:80]}")
+                    suppressed = True
                     if any(p in response.lower() for p in ["rate limit", "429", "quota", "credit balance", "out of"]):
                         activation_pressure.on_rate_limit()
+
+                    # Tenacity: infra error on conscious action -> re-inject energy
+                    if is_conscious_action and citizen_handle and action_node_id:
+                        self._handle_action_failure(
+                            citizen_handle, action_node_id,
+                            f"infra_error: {response[:200]}")
+                    # Notify infra carriers (@dev, @nervo) — they feel MCP errors
+                    self._notify_infra_error(citizen_handle, session_id, response[:200])
                 else:
                     activation_pressure.on_success()
 
                 update_neuron_status(session_id, "idle",
                                      sender_id=str(request.get("sender_id", "")))
 
+                # Battle log — record result for human partner
+                if citizen_handle and metadata.get("autonomous"):
+                    dispatch_ts = metadata.get("_dispatch_ts", 0)
+                    duration = (time.time() - dispatch_ts) if dispatch_ts else 0.0
+                    log_action_result(
+                        citizen_handle,
+                        session_id,
+                        success=not suppressed,
+                        duration_s=duration,
+                        output_summary=str(response or "")[:500],
+                    )
+
             except Exception as e:
                 logger.exception(f"Future {session_id} raised: {e}")
                 update_neuron_status(session_id, "error")
+                # Notify infra carriers (@dev, @nervo) — they feel MCP errors
+                self._notify_infra_error(citizen_handle, session_id, str(e)[:200])
+
+                # Tenacity: exception on conscious action -> re-inject energy
+                if is_conscious_action and citizen_handle and action_node_id:
+                    self._handle_action_failure(
+                        citizen_handle, action_node_id,
+                        f"exception: {e}")
+
+                # Battle log — record failure
+                if citizen_handle and metadata.get("autonomous"):
+                    log_action_result(
+                        citizen_handle,
+                        session_id,
+                        success=False,
+                        duration_s=0.0,
+                        output_summary=str(e)[:500],
+                    )
 
     # ── Citizen Engine Management ──────────────────────────────────────────
 
@@ -526,16 +935,29 @@ class Dispatcher:
             logger.warning(f"No engine available for stimulus injection to {citizen_handle}")
 
     def bulk_load_citizen_engines(self, citizen_handles: list[str]):
-        """Pre-load engines at boot for all citizens."""
+        """Pre-load engines at boot for all citizens.
+
+        Staggers initial thought tick timestamps so citizens don't all fire
+        actions on the first cycle. Each citizen gets a random offset within
+        [0, THOUGHT_INTERVAL) — spreading the first wave across 5 minutes
+        instead of a 138-action flood that kills the executor.
+        """
         loaded = 0
+        now = time.time()
         for handle in citizen_handles:
             try:
                 self._ensure_citizen_engine(handle)
+                # Stagger: pretend each citizen's last thought tick happened
+                # at a random point in the past, so they don't all fire at once.
+                offset = random.uniform(0, THOUGHT_INTERVAL)
+                self._last_thought_tick[handle] = now - offset
+                # Awareness ticks are cheap — let them all run on first cycle.
+                self._last_awareness_tick[handle] = 0.0
                 loaded += 1
             except Exception as e:
                 logger.warning(f"Failed to load engine for {handle}: {e}")
 
-        logger.info(f"Engines: {loaded}/{len(citizen_handles)} loaded (two-tick)")
+        logger.info(f"Engines: {loaded}/{len(citizen_handles)} loaded (two-tick, staggered)")
 
     # ── Public API ─────────────────────────────────────────────────────────
 
