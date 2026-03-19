@@ -68,10 +68,10 @@ HEBB_LEARNING_RATE = 0.05          # weight delta for co-active WM pairs
 NEW_LINK_INITIAL_WEIGHT = 0.05     # weight for newly crystallized links
 FORGETTING_PERIOD = 100            # ticks between forgetting passes
 FORGETTING_WEIGHT_THRESHOLD = 0.005  # links below this dissolve
-CONSCIOUS_ACTION_THRESHOLD = float(
-    os.environ.get("MIND_CONSCIOUS_ACTION_THRESHOLD", "0.15")
-)  # mean WM energy to fire action (env-configurable, lowered from 0.3)
-ACTION_COOLDOWN_TICKS = 3          # minimum ticks between actions
+# Conscious action: no threshold, no cooldown.
+# WM selection IS the gate. Energy spend IS the cooldown.
+# Process node in WM + is_action_node → fires → energy=0 → rebuilds via propagation.
+# Rebuild time (~40-90s) depends on drive pressure and link topology, not constants.
 
 # Circadian adaptation interval (ticks between adapt_circadian calls)
 CIRCADIAN_ADAPTATION_INTERVAL = 100
@@ -285,7 +285,7 @@ class TwoTickEngine:
         self.graph_read_fn = graph_read_fn
         self._awareness_tick_counter: int = 0
         self._thought_tick_counter: int = 0
-        self._last_action_tick: int = -ACTION_COOLDOWN_TICKS  # allow first tick to fire
+        self._last_action_tick: int = 0
         self._current_orientation: Optional[str] = None
         # Metabolic multipliers resolved once per tick, consumed by thought_tick
         self._metabolic_multipliers: dict[str, float] = {}
@@ -341,6 +341,45 @@ class TwoTickEngine:
         self._current_orientation = self._derive_orientation()
         return result
 
+    # -- 5s Action Readiness Check -----------------------------------------
+
+    def check_action_readiness(self) -> tuple[bool, str | None]:
+        """Fast action-readiness check — called every 5s between thought ticks.
+
+        Physics-only: if an action-capable process node is in WM, fire it.
+        WM selection is the only gate. Energy spend is the only cooldown.
+
+        Cost: negligible (reads in-memory state only).
+        """
+        state = self.state
+
+        # Get WM nodes
+        wm_ids = state.wm.node_ids if hasattr(state, 'wm') else []
+        wm_nodes = [state.nodes[nid] for nid in wm_ids if nid in state.nodes]
+        if not wm_nodes:
+            return False, None
+
+        # Find action-capable process nodes in WM
+        action_candidates = [
+            n for n in wm_nodes
+            if n.node_type == NodeType.PROCESS and getattr(n, 'is_action_node', False)
+        ]
+        if not action_candidates:
+            return False, None
+
+        best = max(action_candidates, key=lambda n: n.energy)
+        if best.energy <= 0.0:
+            return False, None  # already spent — waiting for rebuild
+
+        # Spend energy — natural cooldown via propagation rebuild
+        best.energy = 0.0
+        best.in_working_memory = False
+        logger.info(
+            f"[5s-check] Action fired for {state.citizen_id}: "
+            f"node={best.id} (energy spent, rebuilding)"
+        )
+        return True, best.id
+
     # -- Helpers -----------------------------------------------------------
 
     def _derive_orientation(self) -> str:
@@ -383,8 +422,8 @@ def thought_tick(
     Args:
         state: The citizen's cognitive state (mutated in place).
         tick: Current tick number.
-        last_action_tick: Tick number when the last conscious action fired
-            (used for cooldown gating).
+        last_action_tick: Deprecated — kept for call-site compat.
+            Cooldown is now physics-only (energy spend on fire).
         metabolic_multipliers: Dict of {constant_name: multiplier} from
             CitizenMetabolism.resolve_effective_constants(). When provided,
             physics constants are scaled by circadian rhythm and active tonics.
@@ -400,7 +439,7 @@ def thought_tick(
     effective_decay_rate = ENERGY_DECAY_RATE * mm.get("DECAY_RATE", 1.0)
     effective_injection_scale = mm.get("energy_injection_scale", 1.0)
     effective_activation_mult = mm.get("ACTIVATION_THRESHOLD", 1.0)
-    effective_action_threshold = CONSCIOUS_ACTION_THRESHOLD * effective_activation_mult
+    # Action threshold removed — WM selection is the only gate.
 
     # Snapshot previous WM for change detection
     prev_wm_ids = list(state.wm.node_ids)
@@ -657,47 +696,44 @@ def thought_tick(
         result.links_dissolved = len(to_remove)
 
     # ------------------------------------------------------------------
-    # Step 7: Conscious action firing
+    # Step 7: Conscious action firing — PHYSICS ONLY
     #
-    # When mean WM energy > threshold AND cooldown has elapsed,
-    # fire the highest-energy action-capable process node in WM.
+    # If an action-capable process node is in WM, it fires.
+    # WM selection (Step 4) IS the gate — salience competition
+    # already filters by energy, weight, and drive alignment.
     #
-    # The threshold is modulated by:
-    # 1. Circadian ACTIVATION_THRESHOLD (metabolism): at circadian trough,
-    #    the threshold rises (harder to fire unless urgent).
-    # 2. Arousal (limbic): high arousal (panic) → lower threshold → easier
-    #    to fire; low arousal (idle) → higher threshold → conserves compute.
+    # On fire: node.energy → 0 (energy spent doing the action).
+    # Natural cooldown: node must rebuild energy through propagation
+    # before it can re-enter WM. Rebuild time ~40-90s depending on
+    # drive pressure and link topology. No timer needed.
     #
-    # Arousal formula: effective_threshold = base / max(0.5, arousal + 0.5)
-    #   - arousal ~0.0 (idle):  threshold / 0.5 = 2x threshold (hard to fire)
-    #   - arousal ~0.5 (flow):  threshold / 1.0 = 1x threshold (normal)
-    #   - arousal ~1.0 (panic): threshold / 1.5 = 0.67x threshold (easy to fire)
+    # No thresholds. No cooldown ticks. No arousal modulation.
+    # The moat (arousal, frustration, rest) already shapes WM entry.
+    # The brain topology determines action frequency per citizen.
     # ------------------------------------------------------------------
     if wm_nodes:
         mean_energy = sum(n.energy for n in wm_nodes) / len(wm_nodes)
         result.mean_wm_energy = mean_energy
 
-        cooldown_ok = (tick - last_action_tick) >= ACTION_COOLDOWN_TICKS
-
-        # Arousal-modulated threshold: high arousal lowers it, low arousal raises it
-        arousal = state.limbic.arousal
-        arousal_modulated_threshold = effective_action_threshold / max(0.5, arousal + 0.5)
-
-        if mean_energy > arousal_modulated_threshold and cooldown_ok:
-            # Find the best action node in WM
-            action_candidates = [
-                n for n in wm_nodes
-                if n.node_type == NodeType.PROCESS and n.is_action_node
-            ]
-            if action_candidates:
-                best = max(action_candidates, key=lambda n: n.energy)
-                result.action_fired = True
-                result.action_node_id = best.id
-            # No action node in WM = the physics tick IS the thinking.
-            # Hebbian crystallization, energy dispersal, drive updates —
-            # all ran above. Reflective thinking fires through action_seed
-            # nodes (think_future, reflect_on_identity, rest_consolidate)
-            # which use the same impulse→WM→fire pathway.
+        # Find action-capable process nodes in WM
+        action_candidates = [
+            n for n in wm_nodes
+            if n.node_type == NodeType.PROCESS and n.is_action_node
+        ]
+        if action_candidates:
+            best = max(action_candidates, key=lambda n: n.energy)
+            result.action_fired = True
+            result.action_node_id = best.id
+            # SPEND energy — the action consumed activation.
+            # Node drops out of WM next tick (energy=0 → salience=0).
+            # Must rebuild through propagation before firing again.
+            # This IS the cooldown — adaptive, topology-dependent.
+            best.energy = 0.0
+            best.in_working_memory = False
+            logger.info(
+                f"Action fired: {best.id} for {state.citizen_id} "
+                f"(energy spent, will rebuild via propagation)"
+            )
 
     # Update tick count
     state.tick_count = tick
