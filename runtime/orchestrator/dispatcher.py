@@ -100,10 +100,18 @@ SUPPRESS_PATTERNS = [
 class Dispatcher:
     """Two-tick engine dispatcher. No queue, no budget, no response routing."""
 
+    # Sources from real humans — always get priority executor
+    HUMAN_SOURCES = {"telegram", "whatsapp", "discord", "email", "api", "voice", "web"}
+
     def __init__(self):
         max_parallel = int(os.environ.get("MAX_PARALLEL", "15"))
-        self.executor = ThreadPoolExecutor(max_workers=max_parallel)
+        # Two pools: human messages get dedicated fast lane (never blocked by autonomous)
+        human_workers = max(2, max_parallel // 3)
+        autonomous_workers = max_parallel - human_workers
+        self.executor_human = ThreadPoolExecutor(max_workers=human_workers)
+        self.executor = ThreadPoolExecutor(max_workers=autonomous_workers)
         self.active_futures: dict[Future, tuple[str, dict]] = {}
+        logger.info(f"Thread pools: {human_workers} human + {autonomous_workers} autonomous")
 
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -726,17 +734,28 @@ class Dispatcher:
         else:
             invoke_fn = invoke_claude
 
+        # Human messages get dedicated fast lane — never queued behind autonomous actions
+        is_human = source in self.HUMAN_SOURCES
+        pool = self.executor_human if is_human else self.executor
+
         try:
-            future = self.executor.submit(invoke_fn, request, session_id)
+            future = pool.submit(invoke_fn, request, session_id)
             self.active_futures[future] = (session_id, request)
             update_neuron_status(session_id, "busy")
+            if is_human:
+                logger.info(f"PRIORITY dispatch {session_id} ({source}/{citizen_handle})")
         except RuntimeError as e:
             # Executor was shut down (e.g., flood of failed sessions).
             # Recreate it so the system self-heals instead of dying silently.
             logger.error(f"Executor dead ({e}), recreating...")
             max_parallel = int(os.environ.get("MAX_PARALLEL", "15"))
-            self.executor = ThreadPoolExecutor(max_workers=max_parallel)
-            future = self.executor.submit(invoke_fn, request, session_id)
+            if is_human:
+                self.executor_human = ThreadPoolExecutor(max_workers=max(2, max_parallel // 3))
+                pool = self.executor_human
+            else:
+                self.executor = ThreadPoolExecutor(max_workers=max_parallel - max(2, max_parallel // 3))
+                pool = self.executor
+            future = pool.submit(invoke_fn, request, session_id)
             self.active_futures[future] = (session_id, request)
             update_neuron_status(session_id, "busy")
 
