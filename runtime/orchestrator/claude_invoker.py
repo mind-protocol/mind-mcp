@@ -700,12 +700,27 @@ def invoke_claude(
 
     logger.info(f"Session {session_id} done in {elapsed:.0f}s — {len(response)} chars")
 
-    # Log action result directly here — not in the future callback.
-    # The callback in _collect_completed_futures() misses ~93% of results
-    # because futures hang (subprocess zombies, restarts lose active_futures).
-    # Logging here guarantees the result is captured as long as invoke_claude returns.
     metadata = request.get("metadata") or {}
     citizen_handle_for_log = metadata.get("citizen_handle", "")
+
+    # Auto-reply directly from invoker — don't wait for _collect_completed_futures
+    source = request.get("source", "")
+    if response and source in ("telegram", "whatsapp"):
+        chat_id = metadata.get("chat_id")
+        if chat_id:
+            try:
+                if source == "telegram":
+                    from runtime.bridges.telegram_bridge import send_message
+                    send_message(response[:4000], chat_id)
+                    logger.info(f"Auto-reply to TG {chat_id} ({len(response)} chars)")
+                elif source == "whatsapp":
+                    from runtime.bridges.whatsapp_bridge import send_message as wa_send
+                    wa_send(response[:4000], chat_id)
+                    logger.info(f"Auto-reply to WA {chat_id} ({len(response)} chars)")
+            except Exception as e:
+                logger.warning(f"Auto-reply from invoker failed: {e}")
+
+    # Log action result directly here — not in the future callback.
     if citizen_handle_for_log and metadata.get("autonomous"):
         try:
             from runtime.orchestrator.battle_log import log_action_result
