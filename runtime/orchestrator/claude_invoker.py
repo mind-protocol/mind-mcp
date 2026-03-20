@@ -46,11 +46,9 @@ def _set_resource_limits():
     import resource
     # 50MB max file write
     resource.setrlimit(resource.RLIMIT_FSIZE, (50_000_000, 50_000_000))
-    # 1GB virtual memory (Claude Code needs headroom for context + MCP tools)
-    try:
-        resource.setrlimit(resource.RLIMIT_AS, (1_000_000_000, 1_000_000_000))
-    except ValueError:
-        pass  # Not available on all platforms
+    # No virtual memory limit — Claude Code + node.js + MCP needs variable
+    # amounts depending on context size. SESSION_TIMEOUT + CPU limit are
+    # sufficient guards. RLIMIT_AS was causing SIGABRT/SIGILL crashes.
     # 20 min CPU time (matches SESSION_TIMEOUT)
     resource.setrlimit(resource.RLIMIT_CPU, (1200, 1200))
 
