@@ -46,9 +46,9 @@ def _set_resource_limits():
     import resource
     # 50MB max file write
     resource.setrlimit(resource.RLIMIT_FSIZE, (50_000_000, 50_000_000))
-    # 500MB virtual memory
+    # 1GB virtual memory (Claude Code needs headroom for context + MCP tools)
     try:
-        resource.setrlimit(resource.RLIMIT_AS, (500_000_000, 500_000_000))
+        resource.setrlimit(resource.RLIMIT_AS, (1_000_000_000, 1_000_000_000))
     except ValueError:
         pass  # Not available on all platforms
     # 20 min CPU time (matches SESSION_TIMEOUT)
@@ -171,6 +171,8 @@ def _read_stream_json(
     chunk_index = chunk_offset
     last_moment = prev_moment_id
     result_text = None
+    _lines_read = 0
+    _types_seen = {}
 
     while True:
         remaining = deadline - time.time()
@@ -184,13 +186,23 @@ def _read_stream_json(
 
         if not ready:
             if process.poll() is not None:
-                break
-            continue
+                # Process exited — but pipe may still have buffered data.
+                # Do one more select with 0 timeout to drain it.
+                try:
+                    ready2, _, _ = select.select([process.stdout], [], [], 0.1)
+                    if not ready2:
+                        break
+                except (ValueError, OSError):
+                    break
+                # Fall through to readline below
+            else:
+                continue
 
         line = process.stdout.readline()
         if not line:
             break
 
+        _lines_read += 1
         line = line.strip()
         if not line:
             continue
@@ -201,6 +213,7 @@ def _read_stream_json(
             continue
 
         msg_type = obj.get("type", "")
+        _types_seen[msg_type] = _types_seen.get(msg_type, 0) + 1
 
         # Claude Code stream-json format:
         #   {"type": "assistant", "message": {"content": [{"type": "text", "text": "..."}]}}
@@ -251,6 +264,8 @@ def _read_stream_json(
 
         elif msg_type == "result":
             result_text = obj.get("result", "")
+
+    logger.info(f"[stream-parse] {session_id[:8]}: {_lines_read} lines, types={_types_seen}, parts={len(full_parts)}, result={'yes' if result_text else 'no'}")
 
     # Drain any remaining buffered stdout after loop ends
     # (process may exit with data still in the pipe)
