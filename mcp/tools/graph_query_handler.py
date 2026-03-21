@@ -119,7 +119,11 @@ def handle_graph_query(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, An
         return _err("'queries' array is required.")
 
     if not ctx.graph_queries:
-        return _err("No graph connection available.")
+        return _err(
+            "No graph connection available. "
+            "FalkorDB may be unreachable — run `wsl -d Ubuntu-22.04 -- docker exec falkordb redis-cli PING` "
+            "to wake WSL and verify the database is up, then retry."
+        )
 
     actor_id = _resolve_actor(actor_id, ctx, debug)
 

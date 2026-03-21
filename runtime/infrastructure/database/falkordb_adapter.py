@@ -67,6 +67,14 @@ class FalkorDBAdapter(DatabaseAdapter):
                 f"Cannot connect to FalkorDB at {self._host}:{self._port}: {e}"
             )
 
+    def ping(self) -> bool:
+        """Check if the database connection is alive."""
+        try:
+            self._db.connection.ping()
+            return True
+        except Exception:
+            return False
+
     @property
     def graph_name(self) -> str:
         """Return the current graph name."""

@@ -76,13 +76,6 @@ sys.path.insert(0, str(project_root))
 from dotenv import load_dotenv
 load_dotenv(project_root / ".env")
 
-from runtime.connectome import ConnectomeRunner
-from runtime.membrane.endpoint_registrar import auto_register
-from runtime.capability_integration import (
-    init_capability_manager,
-    CapabilityManager,
-    CAPABILITY_RUNTIME_AVAILABLE,
-)
 
 # Import tool schemas and handlers
 from runtime.citizens.autonomy_gate import check_tool_permission, GateResult
@@ -106,6 +99,7 @@ from mcp.tools.debug_handler import TOOL_SCHEMA as DEBUG_SCHEMA, handle_debug
 from mcp.tools.bond_handler import TOOL_SCHEMA as BOND_SCHEMA, handle_bond
 from mcp.tools.anamnesis_handler import TOOL_SCHEMA as ANAMNESIS_SCHEMA, handle as handle_anamnesis
 from mcp.tools.sense_handler import TOOL_SCHEMA as SENSE_SCHEMA, handle_sense
+from mcp.tools.inject_cluster_handler import TOOL_SCHEMA as INJECT_CLUSTER_SCHEMA, handle_inject_cluster
 
 logging.basicConfig(
     level=logging.INFO,
@@ -145,6 +139,8 @@ TOOL_SCHEMAS = [
     ANAMNESIS_SCHEMA,
     # THINK (perception)
     SENSE_SCHEMA,
+    # ACT (L3 ingestion)
+    INJECT_CLUSTER_SCHEMA,
 ]
 
 # Tool name → (handler_fn, needs_ctx)
@@ -169,6 +165,7 @@ TOOL_DISPATCH = {
     "bond":        (handle_bond,        True),
     "anamnesis":   (handle_anamnesis,   True),
     "sense":       (handle_sense,       True),
+    "inject_cluster": (handle_inject_cluster, False),
 }
 
 
@@ -186,100 +183,17 @@ class MindServer:
         self.connectomes_dir = connectomes_dir or (project_root / "procedures")
         self.target_dir = project_root
 
-        # Auto-upgrade check on startup
-        try:
-            from runtime.upgrade import check_and_upgrade
-            if check_and_upgrade(self.target_dir):
-                logger.info("Runtime upgraded, restart may be needed for full effect")
-        except Exception as e:
-            logger.debug(f"Upgrade check skipped: {e}")
-
-        # Graph connections
+        # All connections are lazy — nothing blocks startup
         self.graph_ops = None
         self.graph_queries = None
-        try:
-            from runtime.physics.graph import GraphOps, GraphQueries
-            self.graph_ops = GraphOps()
-            self.graph_queries = GraphQueries()
-            logger.info("Connected to graph database")
-        except Exception as e:
-            logger.warning(f"No graph connection: {e}")
+        self.membrane_queries = None
+        self.capability_manager = None
 
-        # Membrane graph
-        try:
-            from runtime.membrane import get_membrane_queries
-            self.membrane_queries = get_membrane_queries()
-            if self.membrane_queries:
-                logger.info("Connected to membrane graph")
-        except Exception as e:
-            logger.warning(f"No membrane connection: {e}")
-            self.membrane_queries = None
-
-        # Capability manager (internal — not exposed as tools)
-        self.capability_manager: Optional[CapabilityManager] = None
-        if CAPABILITY_RUNTIME_AVAILABLE:
-            try:
-                self.capability_manager = init_capability_manager(
-                    target_dir=self.target_dir,
-                    graph=self.graph_ops,
-                )
-                cap_summary = self.capability_manager.initialize()
-                logger.info(f"Capabilities: {cap_summary}")
-                self.capability_manager.start_cron_scheduler()
-                startup_result = self.capability_manager.fire_trigger(
-                    "init.startup", {}, create_tasks=True,
-                )
-                logger.info(f"Startup trigger: {startup_result}")
-            except Exception as e:
-                logger.warning(f"Capability system failed: {e}")
-                self.capability_manager = None
-
-        # Auto-assign pending tasks
-        try:
-            from runtime.task_assignment import startup_assign
-            assigned, skipped = startup_assign(self.target_dir)
-            if assigned > 0:
-                logger.info(f"Task assignment: {assigned} assigned, {skipped} skipped")
-        except Exception as e:
-            logger.debug(f"Task assignment skipped: {e}")
-
-        # Connectome runner (for procedures)
-        self.runner = ConnectomeRunner(
-            graph_ops=self.graph_ops,
-            graph_queries=self.graph_queries,
-            connectomes_dir=self.connectomes_dir,
-        )
-
-        # Dispatcher — L1 physics tick loop (background thread)
+        # No ConnectomeRunner, no Dispatcher.
+        # L1 physics lives in the Rust daemon (mind-desktop).
+        # This MCP server is a passive tool executor — nothing more.
+        self.runner = None
         self.dispatcher = None
-        try:
-            from runtime.orchestrator.dispatcher import Dispatcher
-            self.dispatcher = Dispatcher()
-            self.dispatcher.start()
-            logger.info("Dispatcher started — L1 physics ticks running")
-
-            # Load L1 engines for all citizens with brains
-            self._load_citizen_engines()
-
-            # Start settlement scheduler (6h epochs)
-            try:
-                from runtime.economy.settlement import start_settlement_scheduler
-                start_settlement_scheduler(dispatcher=self.dispatcher)
-                logger.info("Settlement scheduler started (6h epochs)")
-            except Exception as e:
-                logger.warning(f"Settlement scheduler not started: {e}")
-
-            # Wire citizen_wake dispatcher reference
-            try:
-                import sys
-                sys.path.insert(0, str(self.target_dir / "scripts"))
-                from citizen_wake import set_dispatcher
-                set_dispatcher(self.dispatcher)
-                logger.info("Citizen wake dispatcher registered")
-            except Exception as e:
-                logger.debug(f"Citizen wake dispatcher not registered: {e}")
-        except Exception as e:
-            logger.warning(f"Dispatcher not started: {e}")
 
         # Build shared context for handlers
         self.ctx = ServerContext(
@@ -292,27 +206,43 @@ class MindServer:
             dispatcher=self.dispatcher,
         )
 
-    def _load_citizen_engines(self):
-        """Load L1 engines for all citizens that have brains."""
-        if not self.dispatcher:
-            return
-        citizens_env = os.environ.get("CITIZENS_DIR")
-        citizens_dir = Path(citizens_env) if citizens_env else self.target_dir / "citizens"
-        if not citizens_dir.exists():
-            logger.warning(f"Citizens dir not found: {citizens_dir}")
-            return
-        handles = []
-        for d in sorted(citizens_dir.iterdir()):
-            if not d.is_dir():
-                continue
-            # All citizens get engines — _ensure_citizen_engine creates fresh
-            # CitizenCognitiveState without needing brain.json. The engine seeds
-            # action nodes and attaches metabolism at construction time.
-            # brain.json is optional (provides pre-loaded graph state).
-            handles.append(d.name)
-        if handles:
-            self.dispatcher.bulk_load_citizen_engines(handles)
-            logger.info(f"L1 engines loaded for {len(handles)} citizens")
+    def _ensure_graph_connection(self) -> bool:
+        """Lazy reconnect: if graph_ops is None, try connecting now.
+
+        Returns True if graph is available (already connected or just reconnected).
+        Returns False if connection still unavailable.
+
+        On successful reconnect, propagates new connections to ctx, runner,
+        membrane, and capability manager so all handlers see the live graph.
+        """
+        # If we have a connection, verify it's still alive
+        if self.graph_ops is not None:
+            try:
+                self.graph_ops._adapter.ping()
+                return True
+            except Exception:
+                logger.warning("Graph connection lost, attempting reconnect...")
+                self.graph_ops = None
+                self.graph_queries = None
+
+        try:
+            # Reload .env in case host/port changed since startup
+            load_dotenv(project_root / ".env", override=True)
+            from runtime.infrastructure.database.factory import _instances
+            _instances.clear()  # Clear cached adapters so new config takes effect
+            from runtime.physics.graph import GraphOps, GraphQueries
+            self.graph_ops = GraphOps()
+            self.graph_queries = GraphQueries()
+            logger.info("Graph reconnected (lazy)")
+        except Exception as e:
+            logger.warning(f"Graph reconnect failed: {e}")
+            return False
+
+        # Propagate to context so all handlers see the live graph
+        self.ctx.graph_ops = self.graph_ops
+        self.ctx.graph_queries = self.graph_queries
+
+        return True
 
     def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
         """Handle a JSON-RPC request."""
@@ -351,6 +281,9 @@ class MindServer:
         Every call passes through the autonomy gate BEFORE the handler executes.
         New tools added to TOOL_DISPATCH are automatically gated.
         """
+        # Lazy reconnect — if WSL/FalkorDB was asleep at startup, retry now
+        self._ensure_graph_connection()
+
         tool_name = params.get("name", "")
         arguments = params.get("arguments", {})
 
@@ -437,9 +370,6 @@ def main():
 
     server = MindServer()
     logger.info(f"Mind MCP server started ({len(TOOL_SCHEMAS)} tools: THINK/ACT/SPEAK)")
-
-    # Auto-register this instance's endpoint in L4 graph
-    auto_register()
 
     for line in sys.stdin:
         line = line.strip()

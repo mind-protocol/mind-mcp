@@ -275,7 +275,11 @@ def handle_graph_write(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, An
     link_to = args.get("link_to", [])
 
     if not ctx.graph_ops:
-        return _err("No graph connection available.")
+        return _err(
+            "No graph connection available. "
+            "FalkorDB may be unreachable — run `wsl -d Ubuntu-22.04 -- docker exec falkordb redis-cli PING` "
+            "to wake WSL and verify the database is up, then retry."
+        )
 
     # ── Schema validation — enforce invariants before any write ──
     try:
