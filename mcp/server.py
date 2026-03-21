@@ -281,8 +281,8 @@ class MindServer:
         Every call passes through the autonomy gate BEFORE the handler executes.
         New tools added to TOOL_DISPATCH are automatically gated.
         """
-        # Lazy reconnect — if WSL/FalkorDB was asleep at startup, retry now
-        self._ensure_graph_connection()
+        # V3: No FalkorDB reconnect. graph_query reads workspace.json directly.
+        # self._ensure_graph_connection()  # KILLED — Phase 4
 
         tool_name = params.get("name", "")
         arguments = params.get("arguments", {})

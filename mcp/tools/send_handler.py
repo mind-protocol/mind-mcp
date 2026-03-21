@@ -356,6 +356,71 @@ def _send_partner(args: Dict[str, Any]) -> Dict[str, Any]:
 
 # ── Telegram ────────────────────────────────────────────────────────────────
 
+def _create_send_moment(platform: str, message: str, chat_id: str, msg_id: str, handle: str):
+    """Create a moment:message in workspace.json after every successful send.
+
+    This closes the semantic ingestion loop: every outbound message becomes
+    a node in the L3 universe, linked to the sender actor.
+    """
+    import time as _time
+    workspace_path = Path.home() / ".mind-desktop" / "workspace.json"
+    try:
+        with open(workspace_path, encoding="utf-8") as f:
+            ws = json.load(f)
+
+        now = int(_time.time())
+        moment_id = f"moment:{platform}:{msg_id}"
+
+        # Check if already exists (idempotent)
+        if any(n["id"] == moment_id for n in ws["nodes"]):
+            return
+
+        # Create moment node
+        truncated = message[:200] if len(message) > 200 else message
+        ws["nodes"].append({
+            "id": moment_id,
+            "name": f"Sent: {truncated[:60]}",
+            "node_type": "moment",
+            "type": "message",
+            "energy": 0.3,
+            "weight": 0.3,
+            "synthesis": f"[{platform}] {truncated}",
+            "content": json.dumps({
+                "platform": platform,
+                "chat_id": chat_id,
+                "message_id": msg_id,
+                "text": truncated,
+                "timestamp": now,
+            }),
+            "status": None,
+            "subtype": "message",
+            "blocked_by": None,
+            "assigned_to": None,
+        })
+
+        # Link to sender actor — always use mechanical_visionary as the citizen identity
+        actor_id = "actor:mp:mechanical_visionary"
+        if any(n["id"] == actor_id for n in ws["nodes"]):
+            ws["links"].append({
+                "source_id": actor_id,
+                "target_id": moment_id,
+                "weight": 0.3,
+                "energy": 0.1,
+                "hierarchy": -1.0,
+                "stability": 0.0,
+                "permanence": 0.3,
+                "trust": 1.0,
+                "polarity": [1.0, 0.5],
+            })
+
+        with open(workspace_path, "w", encoding="utf-8") as f:
+            json.dump(ws, f, indent=2, ensure_ascii=False, default=str)
+
+        logger.info(f"Moment created: {moment_id}")
+    except Exception as e:
+        logger.warning(f"Failed to create send moment: {e}")
+
+
 def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
     """Send a Telegram message via Bot API. Auto-repairs Markdown errors."""
     import requests
@@ -381,6 +446,7 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
         if resp.ok:
             msg_id = resp.json()["result"]["message_id"]
             _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
+            _create_send_moment("telegram", message, chat_id, msg_id, handle)
             return _ok(f"Sent to Telegram as @{handle or 'citizen'}. (message_id: {msg_id})")
 
         resp_data = resp.json() if "json" in resp.headers.get("content-type", "") else {}
@@ -393,6 +459,7 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
             if resp2.ok:
                 msg_id = resp2.json()["result"]["message_id"]
                 _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
+                _create_send_moment("telegram", message, chat_id, msg_id, handle)
                 return _ok(f"Sent to Telegram as @{handle or 'citizen'} (plain). (message_id: {msg_id})")
 
         # Auto-repair: chat not found → might be a group migration
@@ -409,6 +476,7 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
             if resp3.ok:
                 msg_id = resp3.json()["result"]["message_id"]
                 _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
+                _create_send_moment("telegram", message, chat_id, msg_id, handle)
                 return _ok(f"Sent to Telegram as @{handle or 'citizen'} (after rate limit). (message_id: {msg_id})")
 
         return _err(f"Telegram API error: {resp.status_code} — {resp.text[:200]}")

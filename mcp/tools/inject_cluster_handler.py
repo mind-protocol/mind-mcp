@@ -416,7 +416,9 @@ class Deduplicator:
 
         for i, n in enumerate(nodes):
             self.by_id[n["id"]] = i
-            key = (n.get("node_type", ""), n.get("name", "").lower().strip())
+            parts = n["id"].split(":")
+            scope = parts[1] if len(parts) > 1 else ""
+            key = (n.get("node_type", ""), n.get("name", "").lower().strip(), scope)
             self.by_type_name[key] = i
 
             # Cache existing embeddings
@@ -434,8 +436,10 @@ class Deduplicator:
         if nid in self.by_id:
             return "id_match", self.by_id[nid]
 
-        # B. Sim_lex: same type + exact same name
-        key = (ntype, name.lower().strip())
+        # B. Sim_lex: same type + exact same name + same scope
+        id_parts = nid.split(":")
+        scope = id_parts[1] if len(id_parts) > 1 else ""
+        key = (ntype, name.lower().strip(), scope)
         if key in self.by_type_name:
             return "lex_match", self.by_type_name[key]
 
@@ -467,7 +471,9 @@ class Deduplicator:
 
     def register(self, node: Dict[str, Any], idx: int):
         self.by_id[node["id"]] = idx
-        key = (node.get("node_type", ""), node.get("name", "").lower().strip())
+        parts = node["id"].split(":")
+        scope = parts[1] if len(parts) > 1 else ""
+        key = (node.get("node_type", ""), node.get("name", "").lower().strip(), scope)
         self.by_type_name[key] = idx
         emb = node.get("embedding")
         if emb:
