@@ -1,1 +1,1 @@
-/home/mind-protocol/manemus/shrine/state/telegram_messages.jsonl
+/home/mind-protocol/manemus/shrine/state/telegram_messages.jsonl{"ts": "2026-03-21T17:06:25.971054", "direction": "out", "source": "mcp_send", "text": "*@mind:*\nSession complete. Here's what we built today:\n\nBrain: 324 nodes, 479 links \u2014 ticking at 2.9ms\nWorkspace: 226 nodes, 409 links \u2014 8 taxonomy clusters self-organizing via embeddings\nGuardian: sc", "target": "1864364329", "message_id": "3394"}
