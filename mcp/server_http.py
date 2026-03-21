@@ -26,6 +26,7 @@ load_dotenv(project_root / ".env")
 
 from flask import Flask, request, Response
 from mcp.server import MindServer, TOOL_SCHEMAS
+from mcp.tools.inject_cluster_handler import get_embedding, cosine_similarity
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s", stream=sys.stderr)
 logger = logging.getLogger("mind.http")
@@ -210,17 +211,29 @@ def telegram_webhook():
         # 1. Ensure space exists (auto-create group/channel/topic)
         space_id = _ensure_space(ws, chat_id, chat, topic_id)
 
-        # 2. Create moment node
+        # 2. Salience analysis via embedding anchors (no keywords, pure vector math)
         truncated = text[:300] if len(text) > 300 else text
         chat_title = chat.get("title", f"chat_{chat_id}")
+
+        msg_energy = 0.2
+        msg_valence = 0.0
+
+        # Structural signals (language-agnostic)
+        msg_energy += min(len(text) / 1000, 0.2)  # length = effort
+        msg_energy += min(text.count("@") * 0.05, 0.1)  # mentions = social signal
+        msg_energy = min(msg_energy, 0.9)
+
+        # Embedding-based sentiment: computed in step 7 (after node creation)
+        # We'll update energy/valence there using anchor similarity
 
         ws["nodes"].append({
             "id": moment_id,
             "name": f"{sender_name}: {truncated[:60]}",
             "node_type": "moment",
             "type": "message",
-            "energy": 0.3,
+            "energy": round(msg_energy, 3),
             "weight": 0.2,
+            "valence": round(msg_valence, 3),
             "synthesis": f"[{chat_title}] {sender_name}: {truncated}",
             "content": json.dumps({
                 "platform": "telegram",
@@ -241,6 +254,30 @@ def telegram_webhook():
         })
 
         node_ids = {n["id"] for n in ws["nodes"]}
+
+        # 2b. Temporal thread: link to previous moment in same space
+        prev_moments = [
+            n for n in ws["nodes"]
+            if n["id"] != moment_id
+            and n["node_type"] == "moment"
+            and n.get("type") == "message"
+            and f"telegram:{chat_id}_" in n["id"]
+        ]
+        if prev_moments:
+            # Sort by message_id (last segment of ID) to find the most recent
+            prev_moments.sort(key=lambda n: n["id"], reverse=True)
+            prev = prev_moments[0]
+            ws["links"].append({
+                "source_id": prev["id"],
+                "target_id": moment_id,
+                "weight": 0.2,
+                "energy": 0.1,
+                "hierarchy": 0.0,
+                "stability": 0.1,
+                "permanence": 0.3,
+                "trust": 1.0,
+                "polarity": [1.0, 0.5],  # directional: prev → next
+            })
 
         # 3. Link moment to space (containment)
         ws["links"].append({
@@ -317,12 +354,73 @@ def telegram_webhook():
                     "polarity": [0.5, 1.0],
                 })
 
+        # 7. Semantic discovery: embed, find cluster, inherit physics from neighbors
+        auto_linked_to = None
+        try:
+            moment_node = next(n for n in ws["nodes"] if n["id"] == moment_id)
+            emb = get_embedding(moment_node.get("synthesis", truncated))
+            if emb:
+                moment_node["embedding"] = emb
+
+                # Find top-K nearest nodes by embedding
+                scored = []
+                for n in ws["nodes"]:
+                    if n["id"] == moment_id:
+                        continue
+                    n_emb = n.get("embedding")
+                    if not n_emb:
+                        continue
+                    sim = cosine_similarity(emb, n_emb)
+                    if sim > 0.3:
+                        scored.append((sim, n))
+
+                scored.sort(key=lambda x: -x[0])
+                cluster = scored[:5]  # top 5 neighbors = local cluster
+
+                if cluster:
+                    # Inherit physics from cluster: weighted average by cosine similarity
+                    total_w = sum(sim for sim, _ in cluster)
+                    if total_w > 0:
+                        avg_energy = sum(sim * n.get("energy", 0.2) for sim, n in cluster) / total_w
+                        avg_weight = sum(sim * n.get("weight", 0.2) for sim, n in cluster) / total_w
+                        avg_valence = sum(sim * n.get("valence", 0.0) for sim, n in cluster) / total_w
+                        avg_stability = sum(sim * n.get("stability", 0.0) for sim, n in cluster) / total_w
+
+                        # Blend: 30% structural signal + 70% inherited from cluster
+                        moment_node["energy"] = round(moment_node["energy"] * 0.3 + avg_energy * 0.7, 3)
+                        moment_node["weight"] = round(moment_node["weight"] * 0.3 + avg_weight * 0.7, 3)
+                        moment_node["valence"] = round(avg_valence, 3)
+                        moment_node["stability"] = round(avg_stability * 0.5, 3)
+
+                    # Link to best match
+                    best_sim, best_node = cluster[0]
+                    ws["links"].append({
+                        "source_id": moment_id,
+                        "target_id": best_node["id"],
+                        "weight": round(best_sim * 0.4, 3),
+                        "energy": round(moment_node["energy"] * 0.5, 3),
+                        "hierarchy": 0.0,
+                        "stability": 0.0,
+                        "permanence": 0.2,
+                        "trust": 0.0,
+                        "affinity": round(best_sim * 0.3, 3),
+                        "polarity": [0.5, 0.5],
+                    })
+                    auto_linked_to = (
+                        f"{best_node['id']} (sim={best_sim:.3f}) "
+                        f"cluster={len(cluster)} inherited: "
+                        f"e={moment_node['energy']:.2f} w={moment_node['weight']:.2f} v={moment_node['valence']:.2f}"
+                    )
+        except Exception as e:
+            logger.debug(f"[webhook] Embedding/auto-link skipped: {e}")
+
         with open(WORKSPACE_PATH, "w", encoding="utf-8") as f:
             json.dump(ws, f, indent=2, ensure_ascii=False, default=str)
 
         logger.info(f"[webhook] {moment_id} from {sender_name} in {chat_title}" +
                      (f" (topic {topic_id})" if topic_id else "") +
-                     (f" mentions: {mentions}" if mentions else ""))
+                     (f" mentions: {mentions}" if mentions else "") +
+                     (f" linked→{auto_linked_to}" if auto_linked_to else ""))
 
     except Exception as e:
         logger.warning(f"[webhook] Failed: {e}")
