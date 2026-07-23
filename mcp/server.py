@@ -83,6 +83,7 @@ from mcp.tools.context import ServerContext
 from mcp.tools.graph_query_handler import (
     TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, ASK_GRAPH_SCHEMA, handle_graph_query,
 )
+from mcp.tools.smart_search_handler import TOOL_SCHEMA as SMART_SEARCH_SCHEMA, handle_smart_search
 from mcp.tools.code_context_handler import (
     TOOL_SCHEMA as CODE_CONTEXT_SCHEMA, BEFORE_CODE_EDIT_SCHEMA, handle_code_context,
 )
@@ -137,6 +138,7 @@ TOOL_SCHEMAS = [
     BEFORE_CODE_EDIT_SCHEMA,
     GRAPH_QUERY_SCHEMA,
     ASK_GRAPH_SCHEMA,
+    SMART_SEARCH_SCHEMA,
     GRAPH_WRITE_SCHEMA,
     PROCEDURE_SCHEMA,
     THINK_SCHEMA,
@@ -185,6 +187,7 @@ TOOL_DISPATCH = {
     "graph_query": (handle_graph_query, True),
     "ask_graph": (handle_graph_query, True),
     "query_graph": (handle_graph_query, True),
+    "smart_search": (handle_smart_search, False),
     "next_l1_task_wake": (handle_next_l1_task_wake, True),
     "report_l1_task_wake": (handle_report_l1_task_wake, True),
     "sync_l1_blueprint": (handle_sync_l1_blueprint, True),

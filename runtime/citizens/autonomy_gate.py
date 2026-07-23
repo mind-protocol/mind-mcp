@@ -122,6 +122,7 @@ ALWAYS_ALLOWED_TOOLS = frozenset({
     "graph_query",    # Read-only graph search
     "ask_graph",      # Read-only graph search
     "query_graph",
+    "smart_search",   # Read-only fuzzy entity search
     "think",          # Gemini reasoning (no side effects)
     "sense",          # Read-only awareness & perception
     "l4_state",       # Read-only L4 energy physics state
