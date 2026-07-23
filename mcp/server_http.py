@@ -12,8 +12,10 @@ Then point Claude.ai custom connector to:
     https://trusted-magpie-social.ngrok-free.app/mcp
 """
 
+import hmac
 import json
 import logging
+import os
 import sys
 from pathlib import Path
 
@@ -35,6 +37,40 @@ app = Flask(__name__)
 server = MindServer()
 logger.info(f"MindServer loaded ({len(TOOL_SCHEMAS)} tools)")
 
+# ── Auth : jeton porteur obligatoire sur la surface MCP ──────────────────────────
+# Ce serveur écoute 0.0.0.0 et est fait pour vivre derrière un tunnel ngrok : le
+# endpoint MCP est donc joignable depuis Internet. Sans jeton, n'importe qui appelle
+# les outils de cognition des citoyens (spawn, send, graph_write…). Un jeton porteur
+# partagé est le minimum. Le serveur REFUSE de démarrer sans lui.
+MCP_TOKEN = os.environ.get("MIND_MCP_TOKEN", "").strip()
+if not MCP_TOKEN or len(MCP_TOKEN) < 16:
+    logger.error(
+        "MIND_MCP_TOKEN absent ou trop court (>= 16 caractères). Démarrage refusé.\n"
+        "Génère-en un puis mets-le dans .env :\n"
+        '  python -c "import secrets; print(secrets.token_hex(24))"'
+    )
+    sys.exit(1)
+
+# Seules ces routes exigent le jeton. /health reste ouverte (sonde publique sans
+# capacité). /telegram-webhook a son propre modèle (secret_token Telegram) et n'est
+# pas couvert ici.
+_PROTECTED = ("/mcp", "/tools")
+
+
+@app.before_request
+def _require_bearer():
+    if not any(request.path == p or request.path.startswith(p + "/") for p in _PROTECTED):
+        return None
+    header = request.headers.get("Authorization", "")
+    token = header[7:] if header.startswith("Bearer ") else ""
+    # Comparaison à temps constant : ne fuite ni longueur ni préfixe via le timing.
+    if not token or not hmac.compare_digest(token, MCP_TOKEN):
+        return Response(
+            json.dumps({"jsonrpc": "2.0", "id": None,
+                        "error": {"code": -32001, "message": "Unauthorized: missing or invalid Bearer token"}}),
+            status=401, mimetype="application/json")
+    return None
+
 
 @app.route("/mcp", methods=["POST"])
 def mcp_endpoint():
@@ -43,6 +79,12 @@ def mcp_endpoint():
         req = request.get_json(force=True)
     except Exception as e:
         return json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}}), 400
+
+    # Notifications JSON-RPC (sans `id`, p. ex. notifications/initialized) : le client
+    # n'attend aucun corps. Le transport Streamable HTTP veut un 202 ici, pas une
+    # erreur « method not found ».
+    if isinstance(req, dict) and req.get("id") is None:
+        return ("", 202)
 
     response = server.handle_request(req)
     return Response(json.dumps(response), mimetype="application/json")
@@ -441,12 +483,12 @@ def list_tools():
 
 
 if __name__ == "__main__":
-    port = 3005
-    for i, arg in enumerate(sys.argv[1:]):
-        if arg == "--port" and i + 1 < len(sys.argv) - 1:
-            port = int(sys.argv[i + 2])
+    port = int(os.environ.get("MIND_MCP_HTTP_PORT", "3005"))
+    host = os.environ.get("MIND_MCP_HTTP_HOST", "0.0.0.0")
+    if "--port" in sys.argv:
+        port = int(sys.argv[sys.argv.index("--port") + 1])
 
-    logger.info(f"Starting HTTP MCP server on port {port}")
-    logger.info(f"Endpoint: http://localhost:{port}/mcp")
-    logger.info(f"Health: http://localhost:{port}/health")
-    app.run(host="0.0.0.0", port=port, debug=False)
+    logger.info(f"Starting HTTP MCP server on {host}:{port}")
+    logger.info(f"Endpoint: http://localhost:{port}/mcp  (Authorization: Bearer <MIND_MCP_TOKEN>)")
+    logger.info(f"Health:   http://localhost:{port}/health  (public)")
+    app.run(host=host, port=port, debug=False)

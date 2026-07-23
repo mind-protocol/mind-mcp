@@ -8,6 +8,7 @@ No cron — citizens set their own alarms via the `alarm` MCP tool.
 """
 
 import json
+import os
 import time
 import logging
 import threading
@@ -29,8 +30,8 @@ class AlarmWatcher:
         enqueue_fn: Optional[Callable] = None,
     ):
         _mind_mcp_root = Path(__file__).resolve().parent.parent.parent
-        _world_root = _mind_mcp_root.parent.parent
-        self.citizens_dir = citizens_dir or (_world_root / "citizens")
+        configured_dir = Path(os.environ.get("MIND_CITIZENS_DIR", _mind_mcp_root / "citizens"))
+        self.citizens_dir = citizens_dir or configured_dir
         self.enqueue_fn = enqueue_fn  # function to add items to orchestrator queue
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -51,6 +52,13 @@ class AlarmWatcher:
 
     def _run_loop(self):
         while self._running:
+            # Heartbeat first, so the wake tools can detect a live watcher even if a scan
+            # later throws. Best-effort — never let liveness reporting break the loop.
+            try:
+                from mcp.tools.orchestrator_heartbeat import touch_heartbeat
+                touch_heartbeat(SCAN_INTERVAL)
+            except Exception as e:
+                logger.debug(f"Heartbeat write skipped: {e}")
             try:
                 self._scan_alarms()
             except Exception as e:
@@ -136,7 +144,8 @@ class AlarmWatcher:
           - GUARDED (2): alarm fires in 'partner' mode (non-autonomous)
           - AUTONOMOUS (3+): alarm fires in 'autonomous' mode (original behavior)
         """
-        reason = alarm.get("reason", "Scheduled alarm")
+        prompt = alarm.get("prompt") or alarm.get("reason", "Scheduled wake")
+        place = alarm.get("place")
         alarm_id = alarm.get("id", "unknown")
 
         # Check citizen's supervision tier before firing
@@ -158,25 +167,28 @@ class AlarmWatcher:
         # Determine mode based on tier
         if tier <= 1:  # OBSERVE_ONLY — queue, don't dispatch autonomously
             mode = "partner"
-            logger.info(f"Alarm queued (OBSERVE_ONLY) for @{handle}: {alarm_id} — {reason}")
+            logger.info(f"Alarm queued (OBSERVE_ONLY) for @{handle}: {alarm_id} — {prompt}")
         elif tier == 2:  # GUARDED — fire in partner mode
             mode = "partner"
-            logger.info(f"Alarm fired (GUARDED) for @{handle}: {alarm_id} — {reason}")
+            logger.info(f"Alarm fired (GUARDED) for @{handle}: {alarm_id} — {prompt}")
         else:  # AUTONOMOUS / SOVEREIGN — original behavior
             mode = "autonomous"
-            logger.info(f"Alarm fired for @{handle}: {alarm_id} — {reason}")
+            logger.info(f"Alarm fired for @{handle}: {alarm_id} — {prompt}")
 
         if self.enqueue_fn:
+            place_context = f" @ {place}" if place else ""
             self.enqueue_fn({
                 "mode": mode,
-                "voice_text": f"[ALARM] {reason}",
+                "voice_text": f"[WAKE{place_context}] {prompt}",
                 "source": "alarm",
                 "sender": "alarm_watcher",
                 "timestamp": datetime.now().isoformat(),
                 "metadata": {
                     "citizen_handle": handle,
                     "alarm_id": alarm_id,
-                    "alarm_reason": reason,
+                    "alarm_reason": prompt,
+                    "wake_prompt": prompt,
+                    "place": place,
                 },
             })
 

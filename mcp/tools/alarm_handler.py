@@ -13,8 +13,9 @@ Usage via MCP:
 
 import json
 import logging
+import os
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Dict
 
@@ -56,9 +57,9 @@ TOOL_SCHEMA = {
 
 def _get_alarms_file(handle: str) -> Path:
     """Return the alarms file path for a citizen."""
-    # Look for citizens dir in project root
     project_root = Path(__file__).resolve().parent.parent.parent
-    return project_root / "citizens" / handle / "alarms.jsonl"
+    citizens_dir = Path(os.environ.get("MIND_CITIZENS_DIR", project_root / "citizens"))
+    return citizens_dir / handle / "alarms.jsonl"
 
 
 def _parse_time(time_str: str) -> str:
@@ -72,8 +73,10 @@ def _parse_time(time_str: str) -> str:
 
     # HH:MM format — assume today
     try:
-        today = datetime.now().strftime("%Y-%m-%d")
-        dt = datetime.fromisoformat(f"{today}T{time_str}:00")
+        now = datetime.now()
+        dt = datetime.fromisoformat(f"{now:%Y-%m-%d}T{time_str}:00")
+        if dt <= now:
+            dt += timedelta(days=1)
         return dt.isoformat()
     except ValueError:
         pass
@@ -101,25 +104,69 @@ def handle_alarm(arguments: Dict[str, Any]) -> Dict[str, Any]:
 def _set_alarm(handle: str, args: Dict) -> Dict:
     """Set a new alarm for a citizen."""
     time_str = args.get("time")
-    reason = args.get("reason", "")
+    prompt = args.get("prompt") or args.get("reason", "")
     repeat = args.get("repeat", "once")
 
     if not time_str:
         return {"content": [{"type": "text", "text": "Error: 'time' is required for set action"}]}
-    if not reason:
+    if not prompt:
         return {"content": [{"type": "text", "text": "Error: 'reason' is required for set action"}]}
 
     try:
-        trigger_at = _parse_time(time_str)
+        alarm = schedule_wake_record(
+            handle=handle,
+            time_str=time_str,
+            prompt=prompt,
+            place=args.get("place") or args.get("place_id"),
+            repeat=repeat,
+        )
     except ValueError as e:
         return {"content": [{"type": "text", "text": f"Error parsing time: {e}"}]}
 
+    repeat_str = f", repeats {repeat}" if alarm["repeat"] else ""
+    place_str = f"\nPlace: {alarm['place']}" if alarm.get("place") else ""
+
+    # An alarm is only real if a live watcher will consume it. Warn when the orchestrator is
+    # down so the "Alarm set" line is never misleading.
+    from mcp.tools.orchestrator_heartbeat import liveness_warning
+    warning = liveness_warning() or ""
+
+    return {
+        "content": [{
+            "type": "text",
+            "text": (
+                f"Alarm set: {alarm['id']}\nTime: {alarm['trigger_at']}{repeat_str}"
+                f"\nPrompt: {alarm['prompt']}{place_str}{warning}"
+            ),
+        }]
+    }
+
+
+def schedule_wake_record(
+    *,
+    handle: str,
+    time_str: str,
+    prompt: str,
+    place: str | None = None,
+    repeat: str = "once",
+) -> Dict[str, Any]:
+    """Persist one wake schedule and return its structured record."""
+    if not time_str:
+        raise ValueError("'time' is required")
+    if not prompt or not prompt.strip():
+        raise ValueError("'prompt' is required")
+    if repeat not in {"once", "hourly", "daily", "weekly"}:
+        raise ValueError("repeat must be once, hourly, daily, or weekly")
+
+    trigger_at = _parse_time(time_str)
     alarm = {
         "id": f"alarm_{uuid.uuid4().hex[:8]}",
         "citizen": handle,
         "trigger_at": trigger_at,
         "repeat": repeat if repeat != "once" else None,
-        "reason": reason,
+        "reason": prompt.strip(),
+        "prompt": prompt.strip(),
+        "place": place.strip() if isinstance(place, str) and place.strip() else None,
         "set_by": handle,
         "set_at": datetime.now().isoformat(),
         "active": True,
@@ -130,15 +177,8 @@ def _set_alarm(handle: str, args: Dict) -> Dict:
     with open(alarms_file, "a") as f:
         f.write(json.dumps(alarm) + "\n")
 
-    logger.info(f"Alarm set for @{handle}: {alarm['id']} at {trigger_at} ({repeat})")
-
-    repeat_str = f", repeats {repeat}" if alarm["repeat"] else ""
-    return {
-        "content": [{
-            "type": "text",
-            "text": f"Alarm set: {alarm['id']}\nTime: {trigger_at}{repeat_str}\nReason: {reason}",
-        }]
-    }
+    logger.info(f"Wake scheduled for @{handle}: {alarm['id']} at {trigger_at} ({repeat})")
+    return alarm
 
 
 def _list_alarms(handle: str) -> Dict:
@@ -163,7 +203,11 @@ def _list_alarms(handle: str) -> Dict:
     lines = [f"Active alarms ({len(alarms)}):"]
     for a in sorted(alarms, key=lambda x: x.get("trigger_at", "")):
         repeat = f" (repeats {a['repeat']})" if a.get("repeat") else ""
-        lines.append(f"  [{a['id']}] {a['trigger_at']}{repeat} — {a.get('reason', '')}")
+        place = f" @ {a['place']}" if a.get("place") else ""
+        lines.append(
+            f"  [{a['id']}] {a['trigger_at']}{repeat}{place} — "
+            f"{a.get('prompt') or a.get('reason', '')}"
+        )
 
     return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 

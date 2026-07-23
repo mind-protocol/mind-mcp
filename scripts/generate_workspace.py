@@ -95,7 +95,10 @@ for n in nodes:
 
 workspace = {"nodes": nodes, "links": links}
 
-out = "C:/Users/reyno/.mind-desktop/workspace.json"
+# ~/.mind-desktop peut ne pas exister au premier lancement : on le crée.
+# Portable (n'importe quel utilisateur), plus de chemin en dur.
+out = os.path.join(os.path.expanduser("~"), ".mind-desktop", "workspace.json")
+os.makedirs(os.path.dirname(out), exist_ok=True)
 with open(out, "w", encoding="utf-8") as f:
     json.dump(workspace, f, indent=2, ensure_ascii=False)
 

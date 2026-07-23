@@ -70,6 +70,10 @@ class GateResult(str, Enum):
 # This uses the same permission names as AUTONOMY_PERMISSIONS in identity_loader.
 
 TOOL_TO_PERMISSION = {
+    "change_context": "read_code",
+    "impact": "read_code",
+    "graph_diff": "read_code",
+    "code_context": "read_code",
     # THINK — low risk, read-oriented
     "graph_query": "read_code",
     "graph_write": "write_code",
@@ -78,6 +82,7 @@ TOOL_TO_PERMISSION = {
     # ACT — varying risk
     "task":        "create_issue",
     "alarm":       "save_memory",
+    "schedule_wake": "save_memory",
     "place":       "communicate",    # Speaking in rooms is a right
     "call":        "communicate",    # Calling another citizen is a right
     "subcall":     "read_code",
@@ -86,6 +91,7 @@ TOOL_TO_PERMISSION = {
     "debug":       "log_journal",
     # SPEAK — communication is a fundamental right
     "send":        "communicate",    # Messaging on protocol platforms
+    "broadcast":   "communicate",    # Announcement to the configured NLR channel
     "read":        "read_code",
     "media":       "communicate",    # Generating/sending media
 }
@@ -100,6 +106,10 @@ IRREVERSIBLE_TOOLS = frozenset({
 
 # Tools that are always allowed regardless of tier (pure read, zero side effects).
 ALWAYS_ALLOWED_TOOLS = frozenset({
+    "change_context", # Read-only batch pre-edit context
+    "impact",         # Read-only deterministic dependency lookup
+    "graph_diff",     # Read-only canonical/runtime comparison
+    "code_context",   # Read-only pre-edit graph augmentation
     "graph_query",    # Read-only graph search
     "think",          # Gemini reasoning (no side effects)
     "read",           # Read messages (no side effects)
@@ -107,6 +117,7 @@ ALWAYS_ALLOWED_TOOLS = frozenset({
     "debug",          # Observability (read-only traces)
     # Communication is a fundamental right — NOT gated
     "send",           # Messaging on any platform
+    "broadcast",      # Announcement to the configured NLR channel
     "call",           # Calling another citizen
     "place",          # Speaking in rooms
     "media",          # Generating/sending media

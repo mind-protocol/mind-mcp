@@ -56,6 +56,9 @@ logs/
 .mind/runtime/
 .env
 
+# Orchestrator liveness heartbeat — regenerated at runtime by the alarm watcher
+data/orchestrator_heartbeat.json
+
 # mind agent working directories
 .mind/work/
 .mind/traces/

@@ -48,16 +48,41 @@ Add to your MCP config (`.mcp.json`, Claude Desktop, etc.):
 }
 ```
 
-## Tools (15)
+## Tools (26)
 
 ### THINK — Knowledge & Reasoning
 
 | Tool | What It Does |
 |------|-------------|
+| `change_context` | Preferred batch pre-edit call: exact graph impact plus related filesystem tests for multiple paths. |
+| `impact` | Deterministic incoming/outgoing dependencies, decisions, risks, tests, and affected files by node ID or path. |
+| `graph_diff` | Compare FalkorDB runtime state with canonical JSON and flag mutations that may disappear on seed. |
 | `graph_query` | Query the graph with natural language. Semantic search via SubEntity traversal. |
+| `code_context` | Before a code edit, find Thing nodes with the same path across FalkorDB graphs and return their local neighborhood. |
 | `graph_write` | Create nodes (narratives, moments, things) and links. MERGE semantics. |
 | `procedure` | Structured dialogues for documentation, investigation, workflow. |
 | `think` | Consult Gemini for reasoning, vision analysis, structured output. |
+
+Enable pre-edit graph augmentation in the MCP server environment:
+
+```bash
+MIND_CODE_CONTEXT_ENABLED=true
+# Optional: restrict the scan instead of searching every FalkorDB graph
+MIND_CODE_CONTEXT_GRAPHS=mind_causal_graph,mind_protocol
+# Required only for graph_diff
+MIND_GRAPH_MANIFEST=/path/to/graphs.json
+```
+
+When enabled, MCP initialization instructs the agent to call
+`change_context(file_paths=[...], project_root="...")` once before a batch of
+edits, then `graph_diff()` after graph mutations. `change_context` composes the
+exact path lookup, directional impact and deterministic test discovery;
+`code_context` remains available as the smaller compatibility primitive.
+
+These two tools intentionally serve different truth layers. `change_context`
+returns temporary agent context without promoting it into canonical knowledge.
+`graph_diff` makes the runtime/canonical boundary visible and explicitly marks
+runtime-only mutations that a destructive seed may erase.
 
 ### ACT — Work & Coordination
 
@@ -65,6 +90,7 @@ Add to your MCP config (`.mcp.json`, Claude Desktop, etc.):
 |------|-------------|
 | `task` | Manage tasks: list, claim, complete, fail. Tasks are graph nodes. |
 | `alarm` | Autonomous wake scheduling. Citizens decide when they wake. |
+| `schedule_wake` | Schedule a wake-up with a time, prompt, and optional place. |
 | `place` | Living Places: join/speak/listen/leave/create encrypted rooms. |
 | `call` | Instant citizen-to-citizen call via temporary room. Gets subconscious response if target is sleeping. |
 | `subcall` | **Zero-LLM telepathy.** Probe any citizen's graph. 24 scenarios, 6 targeting modes, custom Cypher, thermodynamic resonance formula. The flagship tool. |
@@ -76,9 +102,17 @@ Add to your MCP config (`.mcp.json`, Claude Desktop, etc.):
 
 | Tool | What It Does |
 |------|-------------|
+| `broadcast` | Publish a structured English announcement—with context, impact, status, and next step—to the NLR Telegram channel. |
 | `send` | Send message to any platform: Telegram, Discord, WhatsApp, Twitter/X, email, SMS. |
 | `read` | Read messages/mentions from any platform. |
 | `media` | Generate images, synthesize voice, send files. |
+
+For Telegram, the configured default destination is the NLR communication
+channel. Use it for major changes, validation outcomes, milestones, important
+blockers, and decisions requiring attention—not for routine edit-by-edit
+updates. An explicit `chat_id` can still override the configured destination.
+Broadcasts must always be written in English and include enough context for a
+reader who has not followed the originating task.
 
 ## /subcall — The Flagship Tool
 
@@ -142,7 +176,7 @@ $MIND Economy        Continuous thermodynamic settlement via link.trust × link.
 ```
 mind-mcp/
 ├── mcp/
-│   ├── server.py              # MCP server (15 tools, THINK/ACT/SPEAK)
+│   ├── server.py              # MCP server (26 tools, THINK/ACT/SPEAK)
 │   └── tools/                 # Tool handlers
 │       ├── subcall_handler.py # /subcall (flagship)
 │       ├── subcall_auto.py    # Auto-trigger + smart scoring

@@ -3,7 +3,7 @@
 Mind MCP Server — The Cognitive Membrane
 
 The interface between AI citizens and the Mind Protocol living graph.
-15 tools organized by cognitive function: THINK / ACT / SPEAK.
+26 tools organized by cognitive function: THINK / ACT / SPEAK.
 
 Every tool operates on a shared FalkorDB knowledge graph where nodes are
 thoughts, memories, values, and relationships — governed by 21 physics
@@ -81,14 +81,21 @@ load_dotenv(project_root / ".env")
 from runtime.citizens.autonomy_gate import check_tool_permission, GateResult
 from mcp.tools.context import ServerContext
 from mcp.tools.graph_query_handler import TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, handle_graph_query
+from mcp.tools.code_context_handler import TOOL_SCHEMA as CODE_CONTEXT_SCHEMA, handle_code_context
+from mcp.tools.change_context_handler import (
+    CHANGE_CONTEXT_SCHEMA, IMPACT_SCHEMA, handle_change_context, handle_impact,
+)
+from mcp.tools.graph_diff_handler import TOOL_SCHEMA as GRAPH_DIFF_SCHEMA, handle_graph_diff
 from mcp.tools.graph_write_handler import TOOL_SCHEMA as GRAPH_WRITE_SCHEMA, handle_graph_write
 from mcp.tools.procedure_handler import TOOL_SCHEMA as PROCEDURE_SCHEMA, handle_procedure
 from mcp.tools.task_handler import TOOL_SCHEMA as TASK_SCHEMA, handle_task
 from mcp.tools.think_handler import TOOL_SCHEMA as THINK_SCHEMA, handle_think
 from mcp.tools.send_handler import TOOL_SCHEMA as SEND_SCHEMA, handle_send
+from mcp.tools.broadcast_handler import TOOL_SCHEMA as BROADCAST_SCHEMA, handle_broadcast
 from mcp.tools.read_handler import TOOL_SCHEMA as READ_SCHEMA, handle_read
 from mcp.tools.media_handler import TOOL_SCHEMA as MEDIA_SCHEMA, handle_media
 from mcp.tools.alarm_handler import TOOL_SCHEMA as ALARM_SCHEMA, handle_alarm
+from mcp.tools.schedule_wake_handler import TOOL_SCHEMA as SCHEDULE_WAKE_SCHEMA, handle_schedule_wake
 from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
 from mcp.tools.move_handler import TOOL_SCHEMA as MOVE_SCHEMA, handle_move
 from mcp.tools.call_file_watcher import TOOL_SCHEMA as CALL_SCHEMA, handle_call_file_watcher as handle_call
@@ -111,6 +118,10 @@ logger = logging.getLogger("mind")
 # All tool schemas in presentation order
 TOOL_SCHEMAS = [
     # THINK
+    CHANGE_CONTEXT_SCHEMA,
+    IMPACT_SCHEMA,
+    GRAPH_DIFF_SCHEMA,
+    CODE_CONTEXT_SCHEMA,
     GRAPH_QUERY_SCHEMA,
     GRAPH_WRITE_SCHEMA,
     PROCEDURE_SCHEMA,
@@ -118,10 +129,12 @@ TOOL_SCHEMAS = [
     # ACT
     TASK_SCHEMA,
     # SPEAK
+    BROADCAST_SCHEMA,
     SEND_SCHEMA,
     READ_SCHEMA,
     MEDIA_SCHEMA,
     # ACT (citizen autonomy)
+    SCHEDULE_WAKE_SCHEMA,
     ALARM_SCHEMA,
     # ACT (living places + spatial)
     PLACE_SCHEMA,
@@ -146,15 +159,21 @@ TOOL_SCHEMAS = [
 # Tool name → (handler_fn, needs_ctx)
 # handlers that need ServerContext get it; stateless ones (think, send) don't
 TOOL_DISPATCH = {
+    "change_context": (handle_change_context, True),
+    "impact": (handle_impact, True),
+    "graph_diff": (handle_graph_diff, True),
+    "code_context": (handle_code_context, True),
     "graph_query": (handle_graph_query, True),
     "graph_write": (handle_graph_write, True),
     "procedure":   (handle_procedure,   True),
     "task":        (handle_task,        True),
     "think":       (handle_think,       False),
+    "broadcast":   (handle_broadcast,   False),
     "send":        (handle_send,        False),
     "read":        (handle_read,        False),
     "media":       (handle_media,       False),
     "alarm":       (handle_alarm,       False),
+    "schedule_wake": (handle_schedule_wake, False),
     "place":       (handle_place,       True),
     "move":        (handle_move,        True),
     "call":        (handle_call,        True),
@@ -266,11 +285,23 @@ class MindServer:
             return self._error_response(request_id, -32000, str(e))
 
     def _handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
-        return {
+        result = {
             "protocolVersion": "2024-11-05",
             "capabilities": {"tools": {}},
             "serverInfo": {"name": "mind", "version": "0.3.0"},
         }
+        if os.environ.get("MIND_CODE_CONTEXT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}:
+            result["instructions"] = (
+                "Code-context enrichment is enabled. Immediately before modifying code files, call "
+                "change_context once with all paths and the current project_root; use its exact Thing anchors, "
+                "impact, risks, decisions, and related tests. After graph mutations, call graph_diff. "
+                "If FalkorDB is unavailable or no Thing matches, continue normally. Use Telegram send only "
+                "to notify NLR about major changes, validation outcomes, milestones, important blockers, or "
+                "decisions requiring attention; do not notify for routine edits. Use broadcast for concise "
+                "English channel announcements several times per day when meaningful news exists. Every broadcast "
+                "must include enough context for a reader who has not followed the task and use the structured fields."
+            )
+        return result
 
     def _handle_list_tools(self) -> Dict[str, Any]:
         return {"tools": TOOL_SCHEMAS}

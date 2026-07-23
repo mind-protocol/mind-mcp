@@ -3,6 +3,11 @@
 
 Supports: telegram, discord, whatsapp, twitter, email, sms.
 
+Telegram's default destination is the configured NLR channel. It is intended
+for significant project events: major changes, validation results, milestones,
+important blockers, and decisions that need human attention. Routine edit
+noise should stay in the agent task.
+
 All bridge imports are lazy — missing dependencies return clear errors, not crashes.
 
 Usage via MCP:
@@ -23,6 +28,11 @@ from pathlib import Path
 from typing import Any, Dict, Optional
 
 logger = logging.getLogger("mind.send")
+
+# Telegram embeds the bot token in the request URL. httpx/httpcore INFO logs
+# would therefore disclose the credential verbatim on every successful send.
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
 
 # Paths — project root for bridge configs
 PROJECT_ROOT = Path(os.getenv("MIND_PROJECT_ROOT", Path(__file__).parent.parent.parent))
@@ -85,6 +95,8 @@ TOOL_SCHEMA = {
     "description": (
         "[SPEAK] Send a message to any platform: Telegram, Discord, WhatsApp, "
         "Twitter/X, Email, SMS. Auto-detects your citizen handle. "
+        "Telegram is the NLR notification channel for major changes, validation results, "
+        "milestones, important blockers, and decisions requiring attention. "
         "Use chat_id for the target (Telegram chat, Discord channel, WhatsApp number, phone). "
         "For email, use 'to' and 'subject'. For Twitter, use 'reply_to' to reply to a tweet."
     ),
@@ -423,10 +435,9 @@ def _create_send_moment(platform: str, message: str, chat_id: str, msg_id: str, 
 
 def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
     """Send a Telegram message via Bot API. Auto-repairs Markdown errors."""
-    import requests
+    import httpx
 
     message = (args.get("message") or "").strip()
-    chat_id = args.get("chat_id", NICOLAS_CHAT_ID)
     handle = _resolve_handle(args)
 
     formatted = f"*@{handle}:*\n{message}" if handle else f"*[citizen]:*\n{message}"
@@ -437,13 +448,14 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
     bot_token = config.get("bot_token")
     if not bot_token:
         return _err("Telegram not configured. No bot_token in telegram_config.json.")
+    chat_id = args.get("chat_id") or config.get("channel_id") or NICOLAS_CHAT_ID
 
     api_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     payload = {"chat_id": chat_id, "text": formatted, "parse_mode": "Markdown"}
 
     try:
-        resp = requests.post(api_url, json=payload, timeout=15)
-        if resp.ok:
+        resp = httpx.post(api_url, json=payload, timeout=15)
+        if resp.is_success:
             msg_id = resp.json()["result"]["message_id"]
             _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
             _create_send_moment("telegram", message, chat_id, msg_id, handle)
@@ -455,8 +467,8 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
         # Auto-repair: Markdown parse error → retry plain text
         if "can't parse entities" in desc:
             payload.pop("parse_mode", None)
-            resp2 = requests.post(api_url, json=payload, timeout=15)
-            if resp2.ok:
+            resp2 = httpx.post(api_url, json=payload, timeout=15)
+            if resp2.is_success:
                 msg_id = resp2.json()["result"]["message_id"]
                 _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
                 _create_send_moment("telegram", message, chat_id, msg_id, handle)
@@ -472,8 +484,8 @@ def _send_telegram(args: Dict[str, Any]) -> Dict[str, Any]:
             logger.warning(f"Telegram rate limited, waiting {retry_after}s...")
             import time
             time.sleep(min(retry_after, 30))
-            resp3 = requests.post(api_url, json=payload, timeout=15)
-            if resp3.ok:
+            resp3 = httpx.post(api_url, json=payload, timeout=15)
+            if resp3.is_success:
                 msg_id = resp3.json()["result"]["message_id"]
                 _log_message("telegram", formatted, chat_id, msg_id, handle=handle)
                 _create_send_moment("telegram", message, chat_id, msg_id, handle)
