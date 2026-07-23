@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 
-from .core_utils import HAS_YAML
+from ..core_utils import HAS_YAML
 
 if HAS_YAML:
     import yaml
@@ -186,7 +186,6 @@ def archive_sync_file(sync_path: Path, max_lines: int = 200) -> Optional[Path]:
 
     # Identify sections to keep vs archive
     # Keep: header, CURRENT STATE, KNOWN ISSUES, TODO (recent), HANDOFF
-    # Archive: older TODO items, old KNOWN ISSUES, historical notes
     keep_sections = ["header", "CURRENT STATE", "KNOWN ISSUES", "HANDOFF", "FOR AGENTS"]
     archive_sections = []
     kept_lines = []
@@ -351,8 +350,8 @@ def sync_command(target_dir: Path, max_lines: int = 200) -> int:
 
     # Re-ingest docs and mind files to graph (if graph available)
     try:
-        from .physics.graph.graph_ops import GraphOps
-        from .ingest.docs import ingest_docs_to_graph, ingest_mind_to_graph
+        from ..physics.graph.graph_ops import GraphOps
+        from ..ingest.docs import ingest_docs_to_graph, ingest_mind_to_graph
 
         repo_name = target_dir.name
         graph_ops = GraphOps(graph_name=repo_name)

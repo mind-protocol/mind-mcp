@@ -11,6 +11,7 @@ import os
 import select
 import signal
 import subprocess
+import sys
 import threading
 import time
 import uuid
@@ -31,7 +32,13 @@ from runtime.orchestrator.degradation import (
     escalate,
     attempt_recovery,
 )
-from runtime.citizens import load_citizen_identity, build_citizen_prompt
+from runtime.citizens import build_citizen_prompt
+from runtime.l4.citizen_registry import (
+    citizen_data as registry_citizen_data,
+    citizen_env,
+    l1_graph_name,
+    normalize_handle,
+)
 
 logger = logging.getLogger("orchestrator.invoker")
 
@@ -39,6 +46,66 @@ logger = logging.getLogger("orchestrator.invoker")
 
 SESSION_TIMEOUT = 1200  # 20 minutes max per subprocess
 STREAM_CHUNK_SIZE = 800  # chars before persisting a thinking moment
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# Python running the MCP server: the project venv, or whatever launched us.
+MCP_PYTHON = os.environ.get("MIND_MCP_PYTHON") or str(
+    PROJECT_ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+)
+
+
+def citizen_workspace(handle: str) -> Path:
+    """Scratch directory for a citizen's sessions.
+
+    Files a citizen writes have to land somewhere. That somewhere carries no
+    identity — the handle does, and it comes from L4.
+    """
+    workspace = get_state_dir() / "workspaces" / handle
+    workspace.mkdir(parents=True, exist_ok=True)
+    return workspace
+
+
+def _mcp_config_path(handle: str) -> Optional[Path]:
+    """Write (and return) the MCP config a citizen's subprocess should load.
+
+    Regenerated on every invocation and pinned to this citizen: the server
+    inherits `MIND_CITIZEN_ID` and its own L1 graph, so a session can only ever
+    act — and write — as the citizen it was launched for.
+    """
+    handle = normalize_handle(handle)
+    if not handle:
+        return None
+
+    python = MCP_PYTHON if Path(MCP_PYTHON).exists() else sys.executable
+    config = {
+        "mcpServers": {
+            "mind": {
+                "command": python,
+                "args": ["-m", "mcp.server"],
+                "cwd": str(PROJECT_ROOT),
+                "env": {
+                    "MIND_CITIZEN_ID": handle,
+                    "CITIZEN_HANDLE": handle,
+                    "L1_GRAPH": l1_graph_name(handle),
+                    "PYTHONUTF8": "1",
+                    "PYTHONIOENCODING": "utf-8",
+                },
+            }
+        }
+    }
+
+    config_dir = get_state_dir() / "mcp"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    path = config_dir / f"{handle}.mcp.json"
+    try:
+        path.write_text(json.dumps(config, indent=2), encoding="utf-8")
+    except OSError as e:
+        # Pas de config = pas d'outils. On le dit : un citoyen muet qui répond
+        # quand même est plus difficile à diagnostiquer qu'une erreur.
+        logger.error(f"Cannot write MCP config for @{handle}: {e} — session will have no tools")
+        return None
+    return path
 
 
 def _set_resource_limits():
@@ -333,19 +400,16 @@ def quick_call(
     """Invoke a citizen directly with a question. Returns their answer.
 
     Lightweight: no tick loop, no dispatcher, no subconscious threshold.
-    Loads the target's CLAUDE.md + awareness.md, asks the question, returns text.
+    Resolves the target in the L4 registry, asks the question, returns text.
     Moments are persisted to L3 (chained, located in target's space).
 
     Cost: 1 session slot for ~30-120s. Use for real questions, not pings.
     """
-    citizens_dir = Path(os.environ.get(
-        "CITIZENS_DIR",
-        str(Path(__file__).parent.parent.parent.parent / "lumina-prime" / "citizens"),
-    ))
-    citizen_dir = citizens_dir / target_handle
-
-    if not citizen_dir.exists() or not (citizen_dir / "CLAUDE.md").exists():
+    target_handle = normalize_handle(target_handle)
+    if not target_handle or not registry_citizen_data(target_handle):
         return f"(citizen @{target_handle} has no L4 identity — cannot call)"
+
+    citizen_dir = citizen_workspace(target_handle)
 
     session_id = str(uuid.uuid4())
     caller = caller_handle or "unknown"
@@ -371,9 +435,14 @@ def quick_call(
             "--dangerously-skip-permissions",
             "--session-id", session_id,
         ]
+        mcp_config = _mcp_config_path(target_handle)
+        if mcp_config:
+            cmd.extend(["--mcp-config", str(mcp_config), "--strict-mcp-config"])
 
-    clean_env = {k: v for k, v in os.environ.items()
-                 if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")}
+    clean_env = citizen_env(target_handle, {
+        k: v for k, v in os.environ.items()
+        if k not in ("CLAUDECODE", "CLAUDE_CODE_ENTRYPOINT")
+    })
 
     if use_gemini:
         balanced_env = clean_env
@@ -477,15 +546,17 @@ def invoke_claude(
     metadata = request.get("metadata", {})
     sender = request.get("sender", "user")
 
-    # Citizen session detection
-    citizen_handle = metadata.get("citizen_handle")
+    # Citizen session detection — the L4 registry decides who exists.
+    citizen_handle = normalize_handle(metadata.get("citizen_handle"))
     citizen_data = None
     is_citizen_session = False
     if citizen_handle:
-        citizen_data = load_citizen_identity(citizen_handle)
+        citizen_data = registry_citizen_data(citizen_handle)
         if citizen_data:
             is_citizen_session = True
-            logger.info(f"Citizen session for @{citizen_handle}")
+            logger.info(f"Citizen session for @{citizen_handle} ({citizen_data['l1_graph']})")
+        else:
+            logger.warning(f"@{citizen_handle} is not in the L4 registry — no citizen session")
 
     # Task routing
     is_task = source == "task" or metadata.get("task_type") == "implementation"
@@ -498,11 +569,12 @@ def invoke_claude(
         is_task, task_cwd, metadata,
     )
 
-    # Determine working directory
+    # Determine working directory. A citizen's workspace is scratch space, not
+    # identity: the handle says who acts, the directory only says where files
+    # land. Nothing is read back from it to decide who the citizen is.
     project_root = Path(__file__).resolve().parent.parent.parent
-    if is_citizen_session and citizen_data:
-        citizen_dir = Path(citizen_data["dir"])
-        working_dir = citizen_dir if citizen_dir.exists() else project_root
+    if is_citizen_session and citizen_handle:
+        working_dir = citizen_workspace(citizen_handle)
     elif task_cwd and Path(task_cwd).exists():
         working_dir = Path(task_cwd)
     else:
@@ -516,6 +588,12 @@ def invoke_claude(
         "--include-partial-messages",
         "--dangerously-skip-permissions",
     ]
+
+    # Cognition tools. Without this the citizen answering on Telegram runs with
+    # no MCP at all — it can talk, but it cannot query or write its own graph.
+    mcp_config = _mcp_config_path(citizen_handle) if citizen_handle else None
+    if mcp_config:
+        cmd.extend(["--mcp-config", str(mcp_config), "--strict-mcp-config"])
 
     # Conversation continuity
     is_resuming = False
@@ -539,6 +617,11 @@ def invoke_claude(
     else:
         balanced_env = get_account_env(clean_env)
     account_id = balanced_env.get("_CLAUDE_ACCOUNT_ID", "default")
+
+    # One process, one citizen — the identity travels in the environment, so
+    # anything the session spawns (MCP server included) inherits the same one.
+    if citizen_handle:
+        balanced_env = citizen_env(citizen_handle, balanced_env)
 
     # Build message BEFORE launching subprocess.
     # For short messages: pass as CLI positional arg.
@@ -767,6 +850,15 @@ def _attempt_failover(
         "--session-id", failover_uuid,
         "--add-dir", "..",
     ]
+    # Carry forward the citizen's MCP config. A failover session is the same
+    # citizen on another account — losing its tools mid-answer would look like
+    # the citizen suddenly went blind.
+    if "--mcp-config" in base_cmd:
+        idx = base_cmd.index("--mcp-config")
+        failover_cmd.extend(base_cmd[idx:idx + 2])
+        if "--strict-mcp-config" in base_cmd:
+            failover_cmd.append("--strict-mcp-config")
+
     # Carry forward the message: either via stdin (input_text) or CLI arg (from base_cmd)
     if not input_text and base_cmd and not base_cmd[-1].startswith("-"):
         failover_cmd.append(base_cmd[-1])
@@ -931,12 +1023,12 @@ def invoke_gemini(
     metadata = request.get("metadata", {})
     sender = request.get("sender", "user")
 
-    # Citizen session detection
-    citizen_handle = metadata.get("citizen_handle")
+    # Citizen session detection — same registry as the Claude path.
+    citizen_handle = normalize_handle(metadata.get("citizen_handle"))
     citizen_data = None
     is_citizen_session = False
     if citizen_handle:
-        citizen_data = load_citizen_identity(citizen_handle)
+        citizen_data = registry_citizen_data(citizen_handle)
         if citizen_data:
             is_citizen_session = True
             logger.info(f"Gemini session for @{citizen_handle}")
@@ -952,11 +1044,10 @@ def invoke_gemini(
         is_task, task_cwd, metadata,
     )
 
-    # Determine working directory
+    # Determine working directory (scratch space, not identity)
     project_root = Path(__file__).resolve().parent.parent.parent
-    if is_citizen_session and citizen_data:
-        citizen_dir = Path(citizen_data["dir"])
-        working_dir = citizen_dir if citizen_dir.exists() else project_root
+    if is_citizen_session and citizen_handle:
+        working_dir = citizen_workspace(citizen_handle)
     elif task_cwd and Path(task_cwd).exists():
         working_dir = Path(task_cwd)
     else:

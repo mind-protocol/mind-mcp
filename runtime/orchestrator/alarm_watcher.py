@@ -1,13 +1,16 @@
-"""Alarm watcher — scans citizen alarms and enqueues wake messages.
+"""Alarm watcher — scans citizen wakes in the L1 graphs and enqueues wake messages.
 
-Background thread that periodically checks all citizens' alarms.jsonl files.
-When an alarm triggers, it enqueues a wake message for the orchestrator.
-Repeating alarms are rescheduled; one-shot alarms are deactivated.
+Background thread that periodically checks every citizen's L1 graph for Moment nodes
+whose scheduledFor has come due. When one triggers, it enqueues a wake message for
+the orchestrator. Repeating wakes are rescheduled; one-shot wakes are marked fired.
 
-No cron — citizens set their own alarms via the `alarm` MCP tool.
+Wakes used to live in citizens/<handle>/alarms.jsonl. They do not: the citizen's
+state is its L1 graph, and that is now the only store. See runtime/orchestrator/
+graph_alarms.py for the node shape.
+
+No cron — citizens set their own wakes via the `alarm` / `schedule_wake` MCP tools.
 """
 
-import json
 import os
 import time
 import logging
@@ -15,6 +18,8 @@ import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional, Callable
+
+from runtime.orchestrator import graph_alarms
 
 logger = logging.getLogger("orchestrator.alarms")
 
@@ -24,14 +29,7 @@ SCAN_INTERVAL = 30  # seconds between alarm scans
 class AlarmWatcher:
     """Background thread that watches citizen alarm files."""
 
-    def __init__(
-        self,
-        citizens_dir: Optional[Path] = None,
-        enqueue_fn: Optional[Callable] = None,
-    ):
-        _mind_mcp_root = Path(__file__).resolve().parent.parent.parent
-        configured_dir = Path(os.environ.get("MIND_CITIZENS_DIR", _mind_mcp_root / "citizens"))
-        self.citizens_dir = citizens_dir or configured_dir
+    def __init__(self, enqueue_fn: Optional[Callable] = None):
         self.enqueue_fn = enqueue_fn  # function to add items to orchestrator queue
         self._running = False
         self._thread: Optional[threading.Thread] = None
@@ -66,74 +64,57 @@ class AlarmWatcher:
             time.sleep(SCAN_INTERVAL)
 
     def _scan_alarms(self):
-        """Scan all citizens' alarm files for triggered alarms."""
-        if not self.citizens_dir.exists():
-            return
+        """Scan every citizen's L1 graph for wakes that have come due.
 
+        Citizens are discovered from the graph list, not from a directory — there is
+        no citizen folder. Each citizen is scanned behind its own guard: an
+        unreachable or malformed graph costs that citizen its wakes and nothing more.
+        A single failure used to abort the whole scan every 30s and silence everyone.
+        """
         now = datetime.now()
 
-        for citizen_dir in self.citizens_dir.iterdir():
-            if not citizen_dir.is_dir():
-                continue
-            alarms_file = citizen_dir / "alarms.jsonl"
-            if not alarms_file.exists():
-                continue
-
-            handle = citizen_dir.name
-            alarms = []
-            modified = False
-
-            for line in alarms_file.read_text().strip().split("\n"):
-                if not line.strip():
-                    continue
-                try:
-                    alarm = json.loads(line)
-                except json.JSONDecodeError:
-                    alarms.append(line)
-                    continue
-
-                if not alarm.get("active", True):
-                    alarms.append(json.dumps(alarm))
-                    continue
-
-                # Check if alarm should fire
-                try:
-                    trigger_at = datetime.fromisoformat(alarm["trigger_at"].replace("Z", "+00:00"))
-                    # Remove timezone info for comparison if needed
-                    if trigger_at.tzinfo:
-                        trigger_at = trigger_at.replace(tzinfo=None)
-                except (ValueError, KeyError):
-                    alarms.append(json.dumps(alarm))
-                    continue
-
-                alarm_id = alarm.get("id", "unknown")
-
-                if trigger_at <= now and alarm_id not in self._fired_ids:
-                    # Fire the alarm
-                    self._fire_alarm(handle, alarm)
-                    self._fired_ids.add(alarm_id)
-                    modified = True
-
-                    # Handle repeat
-                    repeat = alarm.get("repeat")
-                    if repeat:
-                        new_trigger = self._next_trigger(trigger_at, repeat)
-                        alarm["trigger_at"] = new_trigger.isoformat()
-                        alarms.append(json.dumps(alarm))
-                    else:
-                        alarm["active"] = False
-                        alarm["fired_at"] = now.isoformat()
-                        alarms.append(json.dumps(alarm))
-                else:
-                    alarms.append(json.dumps(alarm))
-
-            # Write back if modified
-            if modified:
-                alarms_file.write_text("\n".join(alarms) + "\n")
+        for handle in graph_alarms.list_citizen_handles():
+            try:
+                self._scan_citizen(handle, now)
+            except Exception as e:
+                logger.exception(f"Wake scan failed for @{handle}: {e}")
 
         # Cleanup fired IDs older than 1 hour (prevent memory leak)
         if len(self._fired_ids) > 1000:
             self._fired_ids.clear()
+
+    def _scan_citizen(self, handle: str, now: datetime):
+        """Fire one citizen's due wakes. Never lets one wake break the others."""
+        for wake in graph_alarms.due_wakes(handle, now):
+            wake_id = wake.get("id", "unknown")
+            if wake_id in self._fired_ids:
+                continue
+
+            try:
+                self._fire_alarm(handle, self._as_alarm(wake))
+            except Exception as e:
+                # Delivery failed: the wake stays dormant so the next scan retries it,
+                # and the remaining wakes still get their chance.
+                logger.exception(f"Wake {wake_id} failed to fire for @{handle}: {e}")
+                continue
+
+            self._fired_ids.add(wake_id)
+
+            repeat = wake.get("repeat")
+            if repeat and repeat != "once":
+                scheduled = graph_alarms._as_comparable(wake.get("scheduledFor")) or now
+                graph_alarms.reschedule(handle, wake_id, self._next_trigger(scheduled, repeat))
+            else:
+                graph_alarms.mark_fired(handle, wake_id, now)
+
+    @staticmethod
+    def _as_alarm(wake: dict) -> dict:
+        """Present a wake Moment in the shape _fire_alarm expects."""
+        return {
+            "id": wake.get("id", "unknown"),
+            "prompt": wake.get("prompt") or wake.get("name", "Scheduled wake"),
+            "place": wake.get("place") or None,
+        }
 
     def _fire_alarm(self, handle: str, alarm: dict):
         """Enqueue a wake message for a citizen whose alarm has fired.

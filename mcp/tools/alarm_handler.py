@@ -1,23 +1,21 @@
 """
 [ACT] Alarm — Citizens set their own alarms for autonomous wake.
 
-No cron. Citizens have agency over when they wake. Alarms are per-citizen,
-stored in citizens/{handle}/alarms.jsonl.
+No cron. Citizens have agency over when they wake. Each alarm is a Moment node in
+the citizen's L1 graph (l1_{handle}_graph) — see runtime/orchestrator/graph_alarms.py.
 
 Usage via MCP:
     alarm(action="set", time="2026-03-14T08:00:00Z", reason="Check CI pipeline")
     alarm(action="set", time="08:00", repeat="daily", reason="Morning standup")
     alarm(action="list")
-    alarm(action="cancel", alarm_id="alarm_abc123")
+    alarm(action="cancel", alarm_id="wake-abc123def456")
 """
 
-import json
 import logging
-import os
-import uuid
 from datetime import datetime, timedelta
-from pathlib import Path
 from typing import Any, Dict
+
+from runtime.orchestrator import graph_alarms
 
 logger = logging.getLogger("mind.alarm")
 
@@ -53,13 +51,6 @@ TOOL_SCHEMA = {
         "required": ["action"],
     },
 }
-
-
-def _get_alarms_file(handle: str) -> Path:
-    """Return the alarms file path for a citizen."""
-    project_root = Path(__file__).resolve().parent.parent.parent
-    citizens_dir = Path(os.environ.get("MIND_CITIZENS_DIR", project_root / "citizens"))
-    return citizens_dir / handle / "alarms.jsonl"
 
 
 def _parse_time(time_str: str) -> str:
@@ -150,7 +141,10 @@ def schedule_wake_record(
     place: str | None = None,
     repeat: str = "once",
 ) -> Dict[str, Any]:
-    """Persist one wake schedule and return its structured record."""
+    """Store one wake in the citizen's L1 graph and return its structured record.
+
+    The wake is a Moment node — the citizen's state is its graph, not a file.
+    """
     if not time_str:
         raise ValueError("'time' is required")
     if not prompt or not prompt.strip():
@@ -159,86 +153,51 @@ def schedule_wake_record(
         raise ValueError("repeat must be once, hourly, daily, or weekly")
 
     trigger_at = _parse_time(time_str)
-    alarm = {
-        "id": f"alarm_{uuid.uuid4().hex[:8]}",
+    wake = graph_alarms.create_wake(
+        handle=handle,
+        scheduled_for=trigger_at,
+        prompt=prompt.strip(),
+        place=place.strip() if isinstance(place, str) and place.strip() else None,
+        repeat=repeat,
+    )
+
+    # The alarm/schedule_wake tools report on these keys; keep their contract stable.
+    return {
+        **wake,
         "citizen": handle,
         "trigger_at": trigger_at,
         "repeat": repeat if repeat != "once" else None,
-        "reason": prompt.strip(),
-        "prompt": prompt.strip(),
-        "place": place.strip() if isinstance(place, str) and place.strip() else None,
+        "reason": wake["prompt"],
+        "place": wake["place"] or None,
         "set_by": handle,
-        "set_at": datetime.now().isoformat(),
+        "set_at": wake["createdAt"],
         "active": True,
     }
 
-    alarms_file = _get_alarms_file(handle)
-    alarms_file.parent.mkdir(parents=True, exist_ok=True)
-    with open(alarms_file, "a") as f:
-        f.write(json.dumps(alarm) + "\n")
-
-    logger.info(f"Wake scheduled for @{handle}: {alarm['id']} at {trigger_at} ({repeat})")
-    return alarm
-
 
 def _list_alarms(handle: str) -> Dict:
-    """List active alarms for a citizen."""
-    alarms_file = _get_alarms_file(handle)
-    if not alarms_file.exists():
-        return {"content": [{"type": "text", "text": "No alarms set."}]}
-
-    alarms = []
-    for line in alarms_file.read_text().strip().split("\n"):
-        if line.strip():
-            try:
-                alarm = json.loads(line)
-                if alarm.get("active", True):
-                    alarms.append(alarm)
-            except json.JSONDecodeError:
-                pass
-
-    if not alarms:
+    """List dormant wakes for a citizen, read from their L1 graph."""
+    wakes = graph_alarms.list_wakes(handle)
+    if not wakes:
         return {"content": [{"type": "text", "text": "No active alarms."}]}
 
-    lines = [f"Active alarms ({len(alarms)}):"]
-    for a in sorted(alarms, key=lambda x: x.get("trigger_at", "")):
-        repeat = f" (repeats {a['repeat']})" if a.get("repeat") else ""
-        place = f" @ {a['place']}" if a.get("place") else ""
-        lines.append(
-            f"  [{a['id']}] {a['trigger_at']}{repeat}{place} — "
-            f"{a.get('prompt') or a.get('reason', '')}"
-        )
+    lines = [f"Active alarms ({len(wakes)}):"]
+    for w in sorted(wakes, key=lambda x: x.get("scheduledFor", "")):
+        repeat = f" (repeats {w['repeat']})" if w.get("repeat") and w["repeat"] != "once" else ""
+        place = f" @ {w['place']}" if w.get("place") else ""
+        lines.append(f"  [{w['id']}] {w.get('scheduledFor', '?')}{repeat}{place} — {w.get('prompt', '')}")
 
     return {"content": [{"type": "text", "text": "\n".join(lines)}]}
 
 
 def _cancel_alarm(handle: str, args: Dict) -> Dict:
-    """Cancel an alarm by ID."""
+    """Cancel a wake by ID."""
     alarm_id = args.get("alarm_id")
     if not alarm_id:
         return {"content": [{"type": "text", "text": "Error: 'alarm_id' is required for cancel"}]}
 
-    alarms_file = _get_alarms_file(handle)
-    if not alarms_file.exists():
+    if not graph_alarms.cancel_wake(handle, alarm_id):
         return {"content": [{"type": "text", "text": f"Alarm {alarm_id} not found"}]}
 
-    # Rewrite file with alarm deactivated
-    updated = []
-    found = False
-    for line in alarms_file.read_text().strip().split("\n"):
-        if line.strip():
-            try:
-                alarm = json.loads(line)
-                if alarm.get("id") == alarm_id:
-                    alarm["active"] = False
-                    found = True
-                updated.append(json.dumps(alarm))
-            except json.JSONDecodeError:
-                updated.append(line)
-
-    if not found:
-        return {"content": [{"type": "text", "text": f"Alarm {alarm_id} not found"}]}
-
-    alarms_file.write_text("\n".join(updated) + "\n")
     logger.info(f"Alarm cancelled for @{handle}: {alarm_id}")
     return {"content": [{"type": "text", "text": f"Alarm {alarm_id} cancelled."}]}

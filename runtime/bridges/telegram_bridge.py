@@ -25,6 +25,7 @@ from typing import Optional, Callable
 import requests
 
 from runtime.bridges.rate_limiter import check_rate_limit, set_bypass_ids
+from runtime.l4 import citizen_registry as registry
 
 logger = logging.getLogger("bridge.telegram")
 
@@ -32,13 +33,10 @@ logger = logging.getLogger("bridge.telegram")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-# Citizens dir — from env or default to lumina-prime
-_WORLD_CITIZENS = Path(os.environ.get(
-    "CITIZENS_DIR",
-    str(PROJECT_ROOT.parent / "lumina-prime" / "citizens")
-))
 STATE_DIR = PROJECT_ROOT / "shrine" / "state"
-CITIZENS_DIR = PROJECT_ROOT / "citizens"
+# Qui existe et comment le joindre : L4, jamais un dossier. Ici on ne garde que
+# les répertoires d'état volatile (messages en transit, appels en cours).
+WORKSPACES_DIR = STATE_DIR / "workspaces"
 MESSAGES_FILE = STATE_DIR / "telegram_messages.jsonl"
 OFFSET_FILE = STATE_DIR / "telegram_offset.txt"
 USERS_FILE = STATE_DIR / "telegram_users.jsonl"
@@ -106,11 +104,12 @@ API_BASE = "https://api.telegram.org/bot"
 
 def _api(method: str, **kwargs) -> dict | None:
     """Call Telegram Bot API. Returns response or None on error."""
-    if not BOT_TOKEN:
+    token = BOT_TOKEN or os.environ.get("TELEGRAM_BOT_TOKEN", "")
+    if not token:
         logger.error("TELEGRAM_BOT_TOKEN not set")
         return None
     try:
-        url = f"{API_BASE}{BOT_TOKEN}/{method}"
+        url = f"{API_BASE}{token}/{method}"
         resp = requests.post(url, timeout=30, **kwargs)
         data = resp.json()
         if not data.get("ok"):
@@ -374,137 +373,54 @@ _MULTI_ALIASES = {
     "everyone": 99,
 }
 
-# Cache: telegram user_id → bonded AI citizen handle (or None)
-_partner_cache: dict[str, Optional[str]] = {}
-_partner_cache_built = False
-
-
-def _build_partner_cache():
-    """Build a reverse index: human telegram_id → AI citizen with that human as partner.
-
-    Scans all citizen profiles once at startup. A citizen has a human partner
-    when profile.relationships.human_partner is set. The human's telegram_id
-    is found in the partner's contacts list.
-    """
-    global _partner_cache_built
-    if _partner_cache_built:
-        return
-    _partner_cache_built = True
-
-    if not _WORLD_CITIZENS.exists():
-        return
-
-    # Step 1: collect all human profiles with telegram IDs
-    human_tg_ids: dict[str, str] = {}  # handle → telegram_id
-    for d in _WORLD_CITIZENS.iterdir():
-        if not d.is_dir() or d.name.startswith("."):
-            continue
-        profile_path = d / "profile.json"
-        if not profile_path.exists():
-            continue
-        try:
-            profile = json.loads(profile_path.read_text())
-            identity = profile.get("identity", {})
-            if identity.get("type") != "human":
-                continue
-            # Find telegram contact
-            contacts = profile.get("contacts", [])
-            if isinstance(contacts, dict):
-                tg_id = str(contacts.get("telegram_chat_id", "") or contacts.get("telegram", "")).strip()
-                if tg_id.lstrip("-").isdigit():
-                    human_tg_ids[d.name] = tg_id
-            elif isinstance(contacts, list):
-                for contact in contacts:
-                    if isinstance(contact, dict) and contact.get("type") == "telegram" and contact.get("value"):
-                        tg_id = str(contact["value"]).strip()
-                        if tg_id.lstrip("-").isdigit():
-                            human_tg_ids[d.name] = tg_id
-                            break
-        except (json.JSONDecodeError, OSError):
-            continue
-
-    # Step 2: find AI citizens with human_partner set → reverse map
-    for d in _WORLD_CITIZENS.iterdir():
-        if not d.is_dir() or d.name.startswith("."):
-            continue
-        profile_path = d / "profile.json"
-        if not profile_path.exists():
-            continue
-        try:
-            profile = json.loads(profile_path.read_text())
-            identity = profile.get("identity", {})
-            if identity.get("type") == "human":
-                continue
-            partner_handle = profile.get("relationships", {}).get("human_partner")
-            if not partner_handle:
-                continue
-            # Look up the human's telegram ID
-            tg_id = human_tg_ids.get(partner_handle)
-            if tg_id:
-                _partner_cache[tg_id] = d.name
-                logger.info(f"Partner route: TG {tg_id} ({partner_handle}) → @{d.name}")
-        except (json.JSONDecodeError, OSError):
-            continue
-
-    logger.info(f"Partner cache built: {len(_partner_cache)} human→AI bonds")
-
-
 def _sanitize_tg_handle(name: str) -> str:
     """Turn a display name into a safe graph handle."""
-    clean = re.sub(r"[^\w]", "_", name).strip("_").lower()
-    return clean[:40] or "unknown"
+    return registry.normalize_handle(name) or "unknown"
 
 
-def _resolve_partner_for_sender(sender_id: str) -> Optional[str]:
+def _resolve_partner_for_sender(sender_id: str, username: str = "") -> Optional[str]:
     """Resolve a telegram sender to their bonded AI citizen handle.
 
-    Returns the AI citizen handle if the sender has a bonded partner,
-    or None to fall back to default routing.
+    The bond is an active `bilateral_bond` edge in L4 — the same edge
+    `/accept bond` writes. Rien à reconstruire au démarrage : un bond noué à
+    10h02 route le message de 10h03, sans redémarrer le pont.
     """
-    _build_partner_cache()
-    return _partner_cache.get(sender_id)
+    try:
+        return registry.citizen_for_human(user_id=sender_id, username=username)
+    except Exception as e:
+        logger.error(f"[TelegramBridge] L4 registry unreachable for sender {sender_id}: {e}")
+        return None
 
 
 def _resolve_citizen_tg(handle: str) -> Optional[str]:
     """Resolve citizen handle to numeric Telegram chat_id."""
-    citizen_dir = CITIZENS_DIR / handle
-    if not citizen_dir.is_dir():
+    try:
+        citizen = registry.get_citizen(handle)
+    except Exception as e:
+        logger.error(f"[TelegramBridge] L4 registry unreachable for @{handle}: {e}")
         return None
-
-    # Check profile.json for telegram_chat_id
-    profile_path = citizen_dir / "profile.json"
-    if profile_path.exists():
-        try:
-            profile = json.loads(profile_path.read_text())
-            tg_id = profile.get("telegram_chat_id") or profile.get("tg_chat_id")
-            if tg_id and str(tg_id).lstrip("-").isdigit():
-                return str(tg_id)
-        except (json.JSONDecodeError, OSError):
-            pass
-
-    return None
+    if not citizen:
+        return None
+    tg_id = citizen.get("tg_chat_id") or citizen.get("tg_user_id")
+    return str(tg_id) if tg_id and str(tg_id).lstrip("-").isdigit() else None
 
 
 def _get_all_citizens() -> list[dict]:
-    """List all citizens with available info."""
-    citizens = []
-    if not _WORLD_CITIZENS.exists():
-        return citizens
-
-    for d in sorted(_WORLD_CITIZENS.iterdir()):
-        if not d.is_dir() or d.name.startswith("."):
-            continue
-        info = {"handle": d.name, "dir": str(d)}
-        profile_path = d / "profile.json"
-        if profile_path.exists():
-            try:
-                profile = json.loads(profile_path.read_text())
-                info["name"] = profile.get("name", d.name)
-                info["tg_chat_id"] = profile.get("telegram_chat_id")
-            except (json.JSONDecodeError, OSError):
-                pass
-        citizens.append(info)
-    return citizens
+    """List all registered citizens."""
+    try:
+        citizens = registry.list_citizens()
+    except Exception as e:
+        logger.error(f"[TelegramBridge] L4 registry unreachable listing citizens: {e}")
+        return []
+    return [
+        {
+            "handle": c["handle"],
+            "name": c.get("name") or c["handle"],
+            "tg_chat_id": c.get("tg_chat_id") or c.get("tg_user_id"),
+            "l1_graph": c["l1_graph"],
+        }
+        for c in citizens
+    ]
 
 
 def _pick_citizen_for_alias(alias: str, message: str = "") -> Optional[str]:
@@ -842,9 +758,13 @@ def process_update(update: dict) -> bool:
         all_mentioned = []
         import re as _re_mod
         for match in _re_mod.finditer(r"@(\w+)", text):
-            candidate = match.group(1).lower()
-            candidate_dir = CITIZENS_DIR / candidate
-            if candidate_dir.is_dir() and (candidate_dir / "profile.json").exists():
+            candidate = registry.normalize_handle(match.group(1))
+            try:
+                known = bool(candidate and registry.get_citizen(candidate))
+            except Exception as e:
+                logger.error(f"[TelegramBridge] L4 registry unreachable for @{candidate}: {e}")
+                known = False
+            if known:
                 all_mentioned.append(candidate)
                 if mentioned_handle is None:
                     mentioned_handle = candidate
@@ -872,7 +792,7 @@ def process_update(update: dict) -> bool:
             target_handle = mentioned_handle
             route_mode = "mention"
         else:
-            target_handle = _resolve_partner_for_sender(user_id)
+            target_handle = _resolve_partner_for_sender(user_id, username)
             route_mode = "partner" if target_handle else "default"
 
         metadata = {
@@ -893,7 +813,7 @@ def process_update(update: dict) -> bool:
             _sender_handle = username.lower() if username else _sanitize_tg_handle(sender_name)
             _target = target_handle or "mind"
             _ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-            _msg_dir = _WORLD_CITIZENS / _target / "messages"
+            _msg_dir = WORKSPACES_DIR / _target / "messages"
             _msg_dir.mkdir(parents=True, exist_ok=True)
             _msg_path = _msg_dir / f"{_ts}_{_sender_handle}.md"
             _msg_path.write_text(
@@ -1083,28 +1003,27 @@ def _handle_voice_call(chat_id: str, sender_name: str, user_id: str, text: str):
     """Start a voice call with a citizen. /call @handle or /call (defaults to partner)."""
     parts = text.split()
     if len(parts) >= 2:
-        target = parts[1].lstrip("@")
+        target = registry.normalize_handle(parts[1])
     else:
-        # Default to the human's partner citizen
-        _build_partner_cache()
-        target = _partner_cache.get(str(user_id), "") or _partner_cache.get(str(chat_id), "")
+        # Default to the human's bonded citizen
+        target = _resolve_partner_for_sender(str(user_id))
         if not target:
             send_message("No partner found. Use: /call @citizen", chat_id)
             return
 
-    # Resolve citizen dir
-    citizens_dir = _WORLD_CITIZENS
-    if not citizens_dir.is_dir():
-        citizens_dir = PROJECT_ROOT / "citizens"
-    citizen_dir = citizens_dir / target
-
-    if not citizen_dir.is_dir():
+    try:
+        known = bool(target and registry.get_citizen(target))
+    except Exception as e:
+        send_message(f"Registry unreachable — cannot start the call ({e}).", chat_id)
+        return
+    if not known:
         send_message(f"Citizen @{target} not found.", chat_id)
         return
 
-    # Create call file
+    # Create call file in the citizen's workspace (state, not identity)
+    citizen_dir = WORKSPACES_DIR / target
     calls_dir = citizen_dir / "calls"
-    calls_dir.mkdir(exist_ok=True)
+    calls_dir.mkdir(parents=True, exist_ok=True)
     call_path = calls_dir / f"live_{chat_id}.md"
 
     ts = time.strftime("%H:%M:%S")
@@ -1117,7 +1036,7 @@ def _handle_voice_call(chat_id: str, sender_name: str, user_id: str, text: str):
         "buffer": [],
         "last_voice": 0.0,
         "processing": False,
-        "citizens_dir": citizens_dir,
+        "workspace": citizen_dir,
     }
 
     send_message(
@@ -1166,14 +1085,24 @@ def _process_voice_call_buffer(chat_id: str):
         # Show typing
         send_typing(chat_id)
 
-        # Run claude -p in citizen's directory
+        # Run claude -p in the citizen's workspace, with their own cognition
+        # tools: a voice call is the same citizen as a text message, so it gets
+        # the same MCP surface.
         citizen = call["citizen"]
-        citizen_dir = call["citizens_dir"] / citizen
+        citizen_dir = call["workspace"]
+
+        from runtime.orchestrator.claude_invoker import _mcp_config_path
+
+        call_cmd = ["claude", "-p", full_text]
+        _mcp_config = _mcp_config_path(citizen)
+        if _mcp_config:
+            call_cmd[1:1] = ["--mcp-config", str(_mcp_config), "--strict-mcp-config"]
 
         try:
             result = subprocess.run(
-                ["claude", "-p", full_text],
+                call_cmd,
                 cwd=str(citizen_dir),
+                env=registry.citizen_env(citizen),
                 capture_output=True,
                 text=True,
                 timeout=120,
@@ -1305,6 +1234,12 @@ def _listener_loop(poll_interval: float = 2.0):
 
     logger.info(f"Telegram listener started (offset={offset})")
 
+    # Clear any active webhook so long-polling (getUpdates) can operate
+    try:
+        _api("deleteWebhook", json={"drop_pending_updates": False})
+    except Exception as err:
+        logger.warning(f"Failed to delete Telegram webhook at startup: {err}")
+
     while _running:
         try:
             updates, new_offset = _poll_once(offset)
@@ -1351,28 +1286,13 @@ def _listener_loop(poll_interval: float = 2.0):
 
 # ── Bond Commands ────────────────────────────────────────────────────────────
 
-def _resolve_handle_from_tg(user_id: str) -> str | None:
-    """Find citizen handle from Telegram user ID."""
-    for pf in CITIZENS_DIR.glob("*/profile.json"):
-        try:
-            data = json.loads(pf.read_text())
-            # Check contacts for telegram_id
-            contacts = data.get("contacts", {})
-            if isinstance(contacts, dict):
-                tg_id = contacts.get("telegram_id", contacts.get("telegram", ""))
-                if str(tg_id) == str(user_id):
-                    return data.get("identity", {}).get("handle", pf.parent.name)
-            elif isinstance(contacts, list):
-                for c in contacts:
-                    if c.get("type") == "telegram" and str(c.get("value", "")) == str(user_id):
-                        return data.get("identity", {}).get("handle", pf.parent.name)
-            # Also check top-level telegram_id
-            if str(data.get("telegram_id", "")) == str(user_id):
-                return data.get("id", data.get("handle", pf.parent.name))
-        except Exception as e:
-            logger.error(f"[TelegramBridge] Failed to read citizen profile {pf}: {e}")
-            continue
-    return None
+def _resolve_handle_from_tg(user_id: str, username: str = "") -> str | None:
+    """Find a citizen handle from a Telegram sender."""
+    try:
+        return registry.resolve_by_tg(username=username, user_id=user_id)
+    except Exception as e:
+        logger.error(f"[TelegramBridge] L4 registry unreachable resolving TG {user_id}: {e}")
+        return None
 
 
 def _bond_connect_l4():
@@ -1581,21 +1501,8 @@ def _send_bond_congrats_tg(proposer: str, target: str, bond_id: str, acceptor_na
     """Send congratulations to the other party in the bond."""
     try:
         other = proposer if acceptor_name.lower() != proposer.lower() else target
-        # Find their TG chat_id from profile
-        other_profile = CITIZENS_DIR / other / "profile.json"
-        other_chat_id = None
-        if other_profile.exists():
-            data = json.loads(other_profile.read_text())
-            other_chat_id = data.get("telegram_id")
-            if not other_chat_id:
-                contacts = data.get("contacts", {})
-                if isinstance(contacts, dict):
-                    other_chat_id = contacts.get("telegram_id")
-                elif isinstance(contacts, list):
-                    for c in contacts:
-                        if c.get("type") == "telegram":
-                            other_chat_id = c.get("value")
-                            break
+        # Where to reach them is registry data, like the rest of their identity.
+        other_chat_id = _resolve_citizen_tg(other)
 
         if other_chat_id:
             send_message(
@@ -1669,10 +1576,13 @@ def start(enqueue_fn: Optional[Callable] = None,
     known_chat_ids: user IDs that bypass rate limiting
     active_groups: group chat IDs where bot processes all messages
     """
-    global _running, _thread, _enqueue_fn, KNOWN_CHAT_IDS, ACTIVE_GROUPS
+    global _running, _thread, _enqueue_fn, KNOWN_CHAT_IDS, ACTIVE_GROUPS, BOT_TOKEN
 
     if _running:
         return
+
+    if not BOT_TOKEN:
+        BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 
     if not BOT_TOKEN:
         logger.warning("TELEGRAM_BOT_TOKEN not set — Telegram bridge disabled")

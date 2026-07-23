@@ -80,8 +80,20 @@ load_dotenv(project_root / ".env")
 # Import tool schemas and handlers
 from runtime.citizens.autonomy_gate import check_tool_permission, GateResult
 from mcp.tools.context import ServerContext
-from mcp.tools.graph_query_handler import TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, handle_graph_query
-from mcp.tools.code_context_handler import TOOL_SCHEMA as CODE_CONTEXT_SCHEMA, handle_code_context
+from mcp.tools.graph_query_handler import (
+    TOOL_SCHEMA as GRAPH_QUERY_SCHEMA, ASK_GRAPH_SCHEMA, handle_graph_query,
+)
+from mcp.tools.code_context_handler import (
+    TOOL_SCHEMA as CODE_CONTEXT_SCHEMA, BEFORE_CODE_EDIT_SCHEMA, handle_code_context,
+)
+from mcp.tools.l1_task_handler import (
+    NEXT_L1_TASK_WAKE_SCHEMA, REPORT_L1_TASK_WAKE_SCHEMA,
+    handle_next_l1_task_wake, handle_report_l1_task_wake,
+)
+from mcp.tools.l1_blueprint_handler import (
+    SYNC_L1_BLUEPRINT_SCHEMA, L4_STATE_SCHEMA,
+    handle_sync_l1_blueprint, handle_l4_state,
+)
 from mcp.tools.change_context_handler import (
     CHANGE_CONTEXT_SCHEMA, IMPACT_SCHEMA, handle_change_context, handle_impact,
 )
@@ -122,12 +134,18 @@ TOOL_SCHEMAS = [
     IMPACT_SCHEMA,
     GRAPH_DIFF_SCHEMA,
     CODE_CONTEXT_SCHEMA,
+    BEFORE_CODE_EDIT_SCHEMA,
     GRAPH_QUERY_SCHEMA,
+    ASK_GRAPH_SCHEMA,
     GRAPH_WRITE_SCHEMA,
     PROCEDURE_SCHEMA,
     THINK_SCHEMA,
     # ACT
     TASK_SCHEMA,
+    NEXT_L1_TASK_WAKE_SCHEMA,
+    REPORT_L1_TASK_WAKE_SCHEMA,
+    SYNC_L1_BLUEPRINT_SCHEMA,
+    L4_STATE_SCHEMA,
     # SPEAK
     BROADCAST_SCHEMA,
     SEND_SCHEMA,
@@ -163,7 +181,14 @@ TOOL_DISPATCH = {
     "impact": (handle_impact, True),
     "graph_diff": (handle_graph_diff, True),
     "code_context": (handle_code_context, True),
+    "before_code_edit": (handle_code_context, True),
     "graph_query": (handle_graph_query, True),
+    "ask_graph": (handle_graph_query, True),
+    "query_graph": (handle_graph_query, True),
+    "next_l1_task_wake": (handle_next_l1_task_wake, True),
+    "report_l1_task_wake": (handle_report_l1_task_wake, True),
+    "sync_l1_blueprint": (handle_sync_l1_blueprint, True),
+    "l4_state": (handle_l4_state, True),
     "graph_write": (handle_graph_write, True),
     "procedure":   (handle_procedure,   True),
     "task":        (handle_task,        True),

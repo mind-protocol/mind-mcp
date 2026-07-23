@@ -74,13 +74,21 @@ TOOL_TO_PERMISSION = {
     "impact": "read_code",
     "graph_diff": "read_code",
     "code_context": "read_code",
+    "before_code_edit": "read_code",
     # THINK — low risk, read-oriented
     "graph_query": "read_code",
+    "ask_graph": "read_code",
+    "query_graph": "read_code",
     "graph_write": "write_code",
     "procedure":   "read_code",
     "think":       "read_code",
+    "sense":       "read_code",
+    "l4_state":    "read_code",
     # ACT — varying risk
     "task":        "create_issue",
+    "next_l1_task_wake": "read_code",
+    "report_l1_task_wake": "save_memory",
+    "sync_l1_blueprint": "write_code",
     "alarm":       "save_memory",
     "schedule_wake": "save_memory",
     "place":       "communicate",    # Speaking in rooms is a right
@@ -110,8 +118,14 @@ ALWAYS_ALLOWED_TOOLS = frozenset({
     "impact",         # Read-only deterministic dependency lookup
     "graph_diff",     # Read-only canonical/runtime comparison
     "code_context",   # Read-only pre-edit graph augmentation
+    "before_code_edit", # Read-only pre-edit graph augmentation
     "graph_query",    # Read-only graph search
+    "ask_graph",      # Read-only graph search
+    "query_graph",
     "think",          # Gemini reasoning (no side effects)
+    "sense",          # Read-only awareness & perception
+    "l4_state",       # Read-only L4 energy physics state
+    "next_l1_task_wake", # Read-only L1 task evaluation
     "read",           # Read messages (no side effects)
     "subcall",        # Zero-LLM graph probe (no side effects)
     "debug",          # Observability (read-only traces)
@@ -170,7 +184,7 @@ def _log_audit(
     }
     try:
         _AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
-        with open(_AUDIT_LOG, "a") as f:
+        with open(_AUDIT_LOG, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry) + "\n")
     except OSError as e:
         logger.warning(f"Audit log write failed: {e}")
@@ -253,8 +267,8 @@ def _get_citizen_tier_and_level(handle: str) -> tuple[Tier, int]:
         if cwd_profile.exists():
             try:
                 import json
-                profile = json.loads(cwd_profile.read_text())
-            except (OSError, json.JSONDecodeError):
+                profile = json.loads(cwd_profile.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError, json.JSONDecodeError):
                 pass
 
     # 3. Fallback: search other universe repos
@@ -271,7 +285,18 @@ def _get_citizen_tier_and_level(handle: str) -> tuple[Tier, int]:
 
     if profile:
         caps = profile.get("capabilities", {})
-        autonomy_level = max(caps.get("autonomy_level", min_level), min_level)
+        # autonomy_level is a number (0-10). Older profiles wrote words ("full").
+        # A non-numeric value must not crash the gate for every tool call — it
+        # falls back to the floor, which is the conservative direction.
+        raw_level = caps.get("autonomy_level", min_level)
+        try:
+            autonomy_level = max(int(raw_level), min_level)
+        except (TypeError, ValueError):
+            logger.warning(
+                f"@{handle}: autonomy_level={raw_level!r} n'est pas un nombre 0-10 — "
+                f"niveau ramené à {min_level}."
+            )
+            autonomy_level = min_level
 
         if handle not in TIER_OVERRIDES:
             profile_tier = caps.get("supervision_tier")

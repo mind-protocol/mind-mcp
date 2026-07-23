@@ -53,10 +53,30 @@ TOOL_SCHEMA = {
 }
 
 
+BEFORE_CODE_EDIT_SCHEMA = {
+    "name": "before_code_edit",
+    "description": (
+        "À appeler avant de modifier un fichier de code. Cherche dans toutes les bases FalkorDB "
+        "actives les nœuds Thing dont sourcePath correspond au chemin du fichier, traverse leur voisinage "
+        "local, puis renvoie le contexte d'architecture."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "filePath": {"type": "string", "description": "Chemin absolu ou relatif du fichier qui va être modifié."},
+            "path": {"type": "string", "description": "Chemin absolu ou relatif du fichier qui va être modifié."},
+            "enabled": {"type": "boolean", "default": True, "description": "Active ou désactive l'augmentation."},
+            "maxDepth": {"type": "integer", "default": 1, "description": "Profondeur locale de traversée, entre 1 et 3 sauts."},
+            "depth": {"type": "integer", "default": 1, "description": "Profondeur locale de traversée, entre 1 et 3 sauts."},
+        },
+    },
+}
+
+
 def handle_code_context(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
-    file_path = args.get("path")
+    file_path = args.get("path") or args.get("filePath")
     if not isinstance(file_path, str) or not file_path.strip():
-        return _response({"enabled": False, "error": "'path' is required."}, is_error=True)
+        return _response({"enabled": False, "error": "'path' or 'filePath' is required."}, is_error=True)
 
     enabled = args.get("enabled")
     if enabled is None:
@@ -68,13 +88,14 @@ def handle_code_context(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, A
             "message": "Code-context enrichment is disabled. Set MIND_CODE_CONTEXT_ENABLED=true or pass enabled=true.",
         })
 
+    depth = args.get("depth") or args.get("maxDepth", 1)
     project_root = Path(args.get("project_root") or ctx.target_dir)
     try:
         result = enrich_code_path(
             file_path,
             project_root=project_root,
             graph_names=args.get("graph_names"),
-            depth=args.get("depth", 1),
+            depth=depth,
             limit=args.get("limit", 50),
         )
     except Exception as exc:  # optional context must never block the edit

@@ -1,12 +1,13 @@
 """Orchestrator liveness heartbeat — shared by the alarm watcher and the wake tools.
 
 Problem this solves:
-    ``schedule_wake`` / ``alarm`` only *write* a line to ``citizens/{handle}/alarms.jsonl``.
-    The line is turned into a real wake by the ``AlarmWatcher`` background thread, which
-    lives in a *separate process* (the orchestrator daemon, ``home_server.py``). The MCP
-    server that Claude talks to and the orchestrator do not share memory — only the
-    filesystem. If the daemon is not running, alarms pile up silently and the tool still
-    reports ``Wake scheduled`` as if it worked.
+    ``schedule_wake`` / ``alarm`` only *store* a dormant Moment in the citizen's L1
+    graph. The Moment is turned into a real wake by the ``AlarmWatcher`` background
+    thread, which lives in a *separate process* (the orchestrator daemon,
+    ``home_server.py``). The MCP server that Claude talks to and the orchestrator do
+    not share memory — only the database and the filesystem. If the daemon is not
+    running, wakes pile up dormant and the tool still reports ``Wake scheduled`` as if
+    it worked.
 
 Fix:
     The watcher writes a heartbeat file on every scan. The wake tools read it and can warn

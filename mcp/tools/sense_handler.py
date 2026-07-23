@@ -64,29 +64,37 @@ def handle_sense(args: dict, ctx) -> Dict[str, Any]:
 
     sections = []
 
+    # Une couche muette n'est pas une couche vide. Auparavant, une couche sans
+    # donnée renvoyait "" et disparaissait du rapport : seule la Vision (un
+    # placeholder 3D optionnel) parlait encore, y compris pour dire son échec.
+    # sense(layer="all") ressemblait donc à « tout le moteur est mort » alors que
+    # rien n'était cassé, et les réveils s'interrompaient pour rien. L'absence
+    # doit être énoncée, jamais devinée.
+    who = citizen_handle or "handle non détecté"
+
+    def _add(text: str, title: str, why: str) -> None:
+        sections.append(text if text else f"## {title}\nIndisponible — {why} (citoyen : {who}).")
+
     # ── Exteroception: what I see ──
     if layer in ("all", "exteroception"):
-        extero_text = _get_exteroception(citizen_handle, ctx)
-        if extero_text:
-            sections.append(extero_text)
+        _add(_get_exteroception(citizen_handle, ctx), "What I See",
+             "aucun moteur vivant ni état L3 pour ce citoyen")
 
     # ── Interoception: what I feel ──
     if layer in ("all", "interoception"):
-        intero_text = _get_interoception(citizen_handle, ctx)
-        if intero_text:
-            sections.append(intero_text)
+        _add(_get_interoception(citizen_handle, ctx), "What I Feel",
+             "aucun état L1 vivant ni fichier awareness.md")
 
     # ── Custom senses: what I measure ──
     if layer in ("all", "senses"):
-        senses_text = _get_senses(citizen_handle, ctx)
-        if senses_text:
-            sections.append(senses_text)
+        _add(_get_senses(citizen_handle, ctx), "What I Measure",
+             "aucun nœud de type 'sense' dans le graphe de ce citoyen")
 
-    # ── Vision: what I see in the 3D world ──
+    # ── Vision: what I see in the 3D world (optionnel) ──
+    # Explicitement optionnelle : son indisponibilité ne dit rien de la santé du
+    # reste du système, et ne doit pas être lue comme une panne générale.
     if layer in ("all", "vision"):
-        vision_data = _get_vision()
-        if vision_data:
-            sections.append(vision_data)
+        sections.append(_get_vision() or "## What I See (3D World)\nIndisponible (couche optionnelle).")
 
     if not sections:
         return _ok("No awareness data available. Engine may not be loaded.")
@@ -390,7 +398,13 @@ def _get_vision() -> str:
                 lines.append("No frame captured yet. The 3D viewer hasn't been opened.")
                 return "\n".join(lines)
     except Exception:
-        lines.append(f"Engine not reachable at {engine_url}.")
+        # Nommer ce qui est absent. "Engine not reachable" laissait croire que
+        # tout Mind était tombé, alors que ce moteur 3D est optionnel et distinct
+        # du home_server (:8765) : un réveil s'est arrêté sur ce seul message.
+        lines.append(
+            f"Moteur 3D optionnel (cities-of-light) injoignable sur {engine_url} — "
+            "sans effet sur le reste de la perception ni sur le home_server."
+        )
         return "\n".join(lines)
 
 
@@ -413,15 +427,14 @@ def _get_dispatcher(ctx=None):
 
 
 def _detect_handle() -> str:
-    """Auto-detect citizen handle from environment."""
-    import os
-    handle = os.environ.get("MIND_HANDLE", "")
-    if handle:
-        return handle
-    cwd = os.getcwd()
-    if "/citizens/" in cwd:
-        return cwd.split("/citizens/")[-1].split("/")[0]
-    return ""
+    """Auto-detect citizen handle from environment.
+
+    Délègue au détecteur canonique déjà importé plus haut. Cette fonction en
+    était une copie qui découpait sur "/citizens/" : sous Windows le cwd est en
+    "\", donc le handle restait toujours vide et les trois couches de perception
+    remontaient muettes. Une seule implémentation, corrigée à un seul endroit.
+    """
+    return detect_citizen_handle()
 
 
 def _ok(text: str) -> dict:

@@ -1,4 +1,3 @@
-import json
 from datetime import datetime
 from unittest.mock import patch
 
@@ -7,22 +6,31 @@ from mcp.tools.schedule_wake_handler import handle_schedule_wake
 from runtime.orchestrator.alarm_watcher import AlarmWatcher
 
 
-def test_schedule_wake_persists_prompt_and_optional_place(tmp_path, monkeypatch):
-    alarm_file = tmp_path / "system" / "alarms.jsonl"
-    monkeypatch.setattr(alarm_handler, "_get_alarms_file", lambda handle: alarm_file)
+def test_schedule_wake_stores_prompt_and_optional_place_in_the_l1_graph():
+    stored = {}
 
-    result = handle_schedule_wake({
-        "time": "2099-01-02T09:30:00",
-        "prompt": "Review the broadcast brief",
-        "place": "space:mind-protocol:hall",
-    })
+    def fake_create_wake(**kwargs):
+        stored.update(kwargs)
+        return {
+            "id": "wake-test",
+            "prompt": kwargs["prompt"],
+            "place": kwargs["place"] or "",
+            "createdAt": datetime.now().isoformat(),
+        }
 
-    alarm = json.loads(alarm_file.read_text(encoding="utf-8").strip())
+    with patch.object(alarm_handler.graph_alarms, "create_wake", side_effect=fake_create_wake):
+        result = handle_schedule_wake({
+            "time": "2099-01-02T09:30:00",
+            "prompt": "Review the broadcast brief",
+            "place": "space:mind-protocol:hall",
+        })
+
     assert result.get("isError") is not True
-    assert alarm["prompt"] == "Review the broadcast brief"
-    assert alarm["place"] == "space:mind-protocol:hall"
-    assert alarm["repeat"] is None
-    assert alarm["active"] is True
+    assert stored["handle"] == "system"
+    assert stored["prompt"] == "Review the broadcast brief"
+    assert stored["place"] == "space:mind-protocol:hall"
+    assert stored["repeat"] == "once"
+    assert stored["scheduled_for"].startswith("2099-01-02T09:30")
 
 
 def test_hhmm_in_the_past_schedules_the_next_occurrence():

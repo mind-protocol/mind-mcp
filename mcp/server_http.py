@@ -37,19 +37,68 @@ app = Flask(__name__)
 server = MindServer()
 logger.info(f"MindServer loaded ({len(TOOL_SCHEMAS)} tools)")
 
-# ── Auth : jeton porteur obligatoire sur la surface MCP ──────────────────────────
+# ── Auth : mode réglable via AUTH_MODE (none / token / oauth) ────────────────────
 # Ce serveur écoute 0.0.0.0 et est fait pour vivre derrière un tunnel ngrok : le
 # endpoint MCP est donc joignable depuis Internet. Sans jeton, n'importe qui appelle
-# les outils de cognition des citoyens (spawn, send, graph_write…). Un jeton porteur
-# partagé est le minimum. Le serveur REFUSE de démarrer sans lui.
+# les outils de cognition des citoyens (spawn, send, graph_write…).
+#
+#   AUTH_MODE=none   → OUVERT, aucun jeton requis (démarrage autorisé sans jeton)
+#   AUTH_MODE=token  → jeton porteur MIND_MCP_TOKEN obligatoire (défaut, prod)
+#   AUTH_MODE=oauth  → OAuth (pas encore implémenté — 501)
+#
+# Le flag est aligné sur runtime/api/auth_mode.py (même variable AUTH_MODE) mais lu
+# localement ici pour ne pas coupler ce serveur Flask au module FastAPI de l'API.
+AUTH_MODE = os.environ.get("AUTH_MODE", "token").strip().lower()
+if AUTH_MODE not in ("none", "token", "oauth"):
+    logger.warning("AUTH_MODE=%r inconnu, retombe sur 'token'", AUTH_MODE)
+    AUTH_MODE = "token"
+
 MCP_TOKEN = os.environ.get("MIND_MCP_TOKEN", "").strip()
-if not MCP_TOKEN or len(MCP_TOKEN) < 16:
+if AUTH_MODE == "token" and (not MCP_TOKEN or len(MCP_TOKEN) < 16):
     logger.error(
         "MIND_MCP_TOKEN absent ou trop court (>= 16 caractères). Démarrage refusé.\n"
         "Génère-en un puis mets-le dans .env :\n"
         '  python -c "import secrets; print(secrets.token_hex(24))"'
     )
     sys.exit(1)
+if AUTH_MODE == "none":
+    logger.warning("AUTH_MODE=none : surface MCP OUVERTE, aucun jeton requis.")
+
+# ── Identité du pair distant ────────────────────────────────────────────────────
+# Les handlers résolvent le citoyen qui agit via l'environnement du PROCESSUS
+# (runtime.identity.detect_citizen_id, os.environ["CITIZEN_HANDLE"]…), jamais par
+# requête. Ce processus porte donc une identité unique, et le jeton porteur est
+# nominatif : un jeton = un pair = un processus. Sans ça, `profile`, `bond`,
+# `anamnesis`, `alarm` échouent (« Cannot determine citizen identity ») et les
+# Moments créés par `send` n'ont pas d'auteur.
+#
+# `MIND_HTTP_CITIZEN` n'est lu que par ce transport : le serveur stdio local
+# (mcp/server.py) partage le même .env mais ignore cette variable, donc les
+# sessions locales gardent leur propre identité.
+#
+# Deux pairs distincts = deux processus (ports différents) avec chacun son jeton
+# et son MIND_HTTP_CITIZEN. Ne pas partager un jeton entre pairs : ils
+# écriraient dans le graphe sous la même identité.
+HTTP_CITIZEN = os.environ.get("MIND_HTTP_CITIZEN", "").strip().lstrip("@")
+if HTTP_CITIZEN:
+    from runtime.identity import normalize_citizen_id
+
+    handle = HTTP_CITIZEN.lower()
+    os.environ["MIND_CITIZEN_ID"] = normalize_citizen_id(handle)
+    # Les handlers n'utilisent pas tous la même variable — on les couvre toutes.
+    for _var in ("MIND_CITIZEN", "CITIZEN_HANDLE", "MIND_CITIZEN_HANDLE"):
+        os.environ[_var] = handle
+    if not (project_root / "citizens" / handle / "profile.json").exists():
+        logger.warning(
+            f"Aucun profil pour @{handle} (citizens/{handle}/profile.json). "
+            "Les outils d'identité répondront « No profile found » tant qu'il n'existe pas."
+        )
+    logger.info(f"Identité du transport HTTP : @{handle}")
+else:
+    logger.warning(
+        "MIND_HTTP_CITIZEN absent : les appels distants n'auront aucune identité de "
+        "citoyen (profile, bond, anamnesis, alarm échoueront). Renseigne-la dans .env."
+    )
 
 # Seules ces routes exigent le jeton. /health reste ouverte (sonde publique sans
 # capacité). /telegram-webhook a son propre modèle (secret_token Telegram) et n'est
@@ -59,8 +108,17 @@ _PROTECTED = ("/mcp", "/tools")
 
 @app.before_request
 def _require_bearer():
+    # AUTH_MODE=none → surface ouverte, on ne vérifie rien.
+    if AUTH_MODE == "none":
+        return None
     if not any(request.path == p or request.path.startswith(p + "/") for p in _PROTECTED):
         return None
+    if AUTH_MODE == "oauth":
+        # TODO: implémenter la vérification OAuth. Placeholder pour l'instant.
+        return Response(
+            json.dumps({"jsonrpc": "2.0", "id": None,
+                        "error": {"code": -32001, "message": "OAuth auth mode not implemented yet"}}),
+            status=501, mimetype="application/json")
     header = request.headers.get("Authorization", "")
     token = header[7:] if header.startswith("Bearer ") else ""
     # Comparaison à temps constant : ne fuite ni longueur ni préfixe via le timing.

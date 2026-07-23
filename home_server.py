@@ -898,4 +898,22 @@ async def proxy_to_engine(request: Request, path: str):
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8765))
-    uvicorn.run("home_server:app", host="0.0.0.0", port=port, reload=False)
+
+    # Running this file directly is the local-dev path, so auto-reload is on: edit any
+    # .py and the server comes back by itself. Set MIND_RELOAD=0 to pin it down.
+    # Production does not come through here — docker/entrypoint.sh execs uvicorn directly.
+    #
+    # Only *.py is watched (uvicorn's default include) and dot-directories are excluded,
+    # so .venv/ is skipped. The excludes below matter more: this server writes its own
+    # heartbeat every 30s under data/ — watching that would restart it in a loop.
+    reload = os.environ.get("MIND_RELOAD", "1").strip().lower() not in {"0", "false", "no", "off"}
+    if reload:
+        logger.info("Auto-reload enabled — the server restarts on any .py change (MIND_RELOAD=0 to disable)")
+
+    uvicorn.run(
+        "home_server:app",
+        host="0.0.0.0",
+        port=port,
+        reload=reload,
+        reload_excludes=["data/*", "citizens/*", "shrine/*", "logs/*"] if reload else None,
+    )

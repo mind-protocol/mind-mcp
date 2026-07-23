@@ -14,7 +14,7 @@ Usage:
 
 Env:
     WAKE_NOTIFY_CHAT_ID   Telegram chat to notify (default: NICOLAS_CHAT_ID).
-    MIND_CITIZENS_DIR     Where alarms.jsonl live (shared with schedule_wake).
+    FALKORDB_HOST/PORT    Where the citizens' L1 graphs live (shared with schedule_wake).
 
 Note: run exactly ONE delivery loop. Two AlarmWatchers (this + home_server)
 would double-fire, since fired-id dedupe is per-process.

@@ -73,7 +73,11 @@ def _extract_citizens_segment(path_str: str) -> Optional[Tuple[str, str]]:
 
     Returns None if the path doesn't contain /citizens/{handle}/.
     """
-    match = re.search(r"/citizens/([^/]+)(?:/(.*))?$", path_str)
+    # Le chemin arrive avec le séparateur natif : sous Windows c'est "\", et une
+    # regex sur "/" ne matchait alors jamais. Conséquences observées : handle
+    # toujours vide (donc perception muette) et vérifications de propriété
+    # silencieusement fausses. On normalise avant de chercher.
+    match = re.search(r"/citizens/([^/]+)(?:/(.*))?$", path_str.replace("\\", "/"))
     if match:
         handle = match.group(1)
         subpath = match.group(2) or ""

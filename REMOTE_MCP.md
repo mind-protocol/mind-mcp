@@ -35,6 +35,7 @@ Le serveur HTTP **refuse de démarrer sans jeton** (≥ 16 car.). Crée `.env` (
 MIND_MCP_HTTP_HOST=0.0.0.0
 MIND_MCP_HTTP_PORT=3005
 MIND_MCP_TOKEN=<jeton>
+MIND_HTTP_CITIZEN=aurore
 ```
 
 Génère le jeton :
@@ -42,6 +43,40 @@ Génère le jeton :
 ```powershell
 .venv\Scripts\python -c "import secrets; print(secrets.token_hex(24))"
 ```
+
+### 2 bis. Identité du pair (`MIND_HTTP_CITIZEN`)
+
+Les handlers résolvent le citoyen qui agit dans l'**environnement du processus**
+(`runtime/identity.py`, `CITIZEN_HANDLE`), jamais par requête. Un processus HTTP porte
+donc **une** identité, et le jeton est nominatif : **un jeton = un pair = un processus**.
+
+Sans `MIND_HTTP_CITIZEN`, le pair est anonyme : `profile`, `bond`, `anamnesis`, `alarm`
+répondent « Cannot determine citizen identity », les Moments créés par `send` n'ont pas
+d'auteur, et le gate d'autonomie retombe sur `_unknown` (tier GUARDED, niveau 1).
+
+Le handle doit avoir son profil, `citizens/<handle>/profile.json` — sinon le serveur
+démarre quand même mais journalise un avertissement. Le bloc `capabilities` fixe les
+droits, lus par `runtime/citizens/autonomy_gate.py` :
+
+```json
+"capabilities": { "autonomy_level": 5, "supervision_tier": 2 }
+```
+
+- `autonomy_level` (0-10, **un nombre**) : la table `AUTONOMY_PERMISSIONS`
+  (`runtime/citizens/identity_loader.py`) donne les permissions. 1 = observateur (lecture
+  + parole), 3 = écrit le graphe, 5 = + `task`, 6 = + `spawn`.
+- `supervision_tier` (0-4) : 2 = GUARDED, tout passe sauf les actions irréversibles
+  (`spawn`) qui sont mises en file d'attente humaine.
+
+Chaque décision du gate est journalisée dans `shrine/state/autonomy_audit.jsonl` — c'est
+là qu'on vérifie ce qu'un pair a le droit de faire, et ce qu'il a fait.
+
+**Deux pairs = deux processus**, sur deux ports, avec chacun son jeton et son
+`MIND_HTTP_CITIZEN`. Partager un jeton entre deux pairs les ferait écrire sous la même
+identité — le graphe ne saurait plus qui a agi.
+
+Le serveur stdio local (`mcp/server.py`) partage le même `.env` mais **ignore**
+`MIND_HTTP_CITIZEN` : les sessions locales gardent leur propre identité.
 
 ### 3. Semer le graphe workspace
 
@@ -76,6 +111,18 @@ curl -X POST https://trusted-magpie-social.ngrok-free.app/mcp `
 
 Attendu : `/health` → `{"status":"ok","tools":26}` ; `POST /mcp` sans jeton → **401** ;
 avec jeton → résultats du graphe.
+
+L'identité se vérifie par un outil qui en dépend — `profile` doit renvoyer le bon pair,
+pas « Cannot determine citizen identity » :
+
+```powershell
+curl -X POST https://trusted-magpie-social.ngrok-free.app/mcp `
+  -H "Authorization: Bearer <jeton>" -H "Content-Type: application/json" `
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"profile","arguments":{"action":"get"}}}'
+```
+
+Attendu : `Profile for @aurore`. Au démarrage, le serveur journalise aussi
+`Identité du transport HTTP : @aurore`.
 
 ## Côté pair (Aurore) : se connecter
 

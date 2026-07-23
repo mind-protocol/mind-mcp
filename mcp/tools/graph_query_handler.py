@@ -153,7 +153,25 @@ TOOL_SCHEMA = {
                 "description": "Max results per query (default 10)",
             },
         },
-        "required": ["queries"],
+    },
+}
+
+ASK_GRAPH_SCHEMA = {
+    "name": "ask_graph",
+    "description": (
+        "Pose une question au graphe causal de Mind Protocol. "
+        "Renvoie le cluster pertinent et les nœuds correspondants."
+    ),
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "question": {"type": "string", "description": "La question en langage naturel."},
+            "queries": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": "Keywords to search for (e.g. ['tick engine', 'devboard'])",
+            },
+        },
     },
 }
 
@@ -161,13 +179,17 @@ TOOL_SCHEMA = {
 def handle_graph_query(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
     """Search the workspace graph by keywords — no FalkorDB, pure in-memory."""
     queries = args.get("queries", [])
+    question = args.get("question")
+    if question and not queries:
+        queries = [question]
+
     scope_filter = args.get("scope_filter")
     node_types = args.get("node_types")
     expand_depth = min(args.get("expand_depth", 0), 2)
     limit = args.get("limit", 10)
 
     if not queries:
-        return _err("'queries' array is required.")
+        return _err("'queries' array or 'question' string is required.")
 
     ws = _load_workspace()
     if ws is None:

@@ -205,7 +205,22 @@ def get_effective_autonomy_level(handle: str) -> int:
     if not citizen:
         return 0
     caps = citizen.get("profile", {}).get("capabilities", {})
-    base_level = caps.get("autonomy_level", 1)
+    # autonomy_level est un nombre 0-10. D'anciens profils ont écrit des mots
+    # ("full"), ce qui faisait crasher TOUTE lecture d'identité de ce citoyen.
+    # `autonomy_gate` applique déjà cette coercition ; elle manquait ici. On
+    # retombe sur le plancher — la direction conservatrice, jamais l'inverse —
+    # et on le journalise pour que la donnée invalide reste visible plutôt que
+    # devinée silencieusement.
+    raw_level = caps.get("autonomy_level", 1)
+    try:
+        base_level = int(raw_level)
+    except (TypeError, ValueError):
+        logger.warning(
+            f"@{handle}: autonomy_level={raw_level!r} n'est pas un nombre 0-10 — "
+            "niveau ramené à 1. Corrige le profil : ce citoyen est traité comme "
+            "le plus restreint tant que la valeur n'est pas numérique."
+        )
+        base_level = 1
     downgrade = _session_downgrades.get(handle, 0)
     return max(0, base_level - downgrade)
 

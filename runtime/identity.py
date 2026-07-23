@@ -45,40 +45,44 @@ def extract_citizen_handle(citizen_id: str) -> str:
 
 
 def detect_citizen_id(target_dir: Optional[Path] = None) -> Optional[str]:
-    """Detect current citizen from env var, cwd path, or target_dir config.
+    """Detect the citizen this process acts as, from its environment.
 
-    Priority:
-    1. MIND_CITIZEN_ID env var (explicit override)
-    2. cwd within a citizens/ directory
-    3. .mind/citizen_id file in target_dir (written by session setup)
+    A process carries one identity, declared by whoever launched it
+    (`MIND_CITIZEN_ID`, set by `citizen_registry.citizen_env`), and the L4
+    registry decides whether that handle is a real citizen.
 
-    Returns CITIZEN_{handle} if detected, None otherwise.
+    L'identité ne se déduit plus du répertoire courant : un cwd n'est pas une
+    preuve, et le même processus pouvait changer de citoyen en changeant de
+    dossier. Le handle Telegram est la clé, L4 en est le registre.
+
+    `target_dir` is accepted for call-site compatibility and ignored.
+
+    Returns CITIZEN_{handle} if the handle is registered, None otherwise.
     """
-    # 1. Explicit env var
-    citizen = os.environ.get("MIND_CITIZEN_ID")
-    if citizen:
-        return normalize_citizen_id(citizen)
+    citizen = os.environ.get("MIND_CITIZEN_ID") or os.environ.get("CITIZEN_HANDLE")
+    if not citizen:
+        return None
 
-    # 2. cwd within a citizens/ directory
-    cwd = Path.cwd()
-    parts = cwd.parts
-    if "citizens" in parts:
-        idx = parts.index("citizens")
-        if idx + 1 < len(parts):
-            return normalize_citizen_id(parts[idx + 1])
+    from runtime.l4.citizen_registry import get_citizen, normalize_handle
 
-    # 3. .mind/citizen_id file (project-level config)
-    if target_dir:
-        cid_file = Path(target_dir) / ".mind" / "citizen_id"
-        if cid_file.exists():
-            try:
-                handle = cid_file.read_text().strip()
-                if handle:
-                    return normalize_citizen_id(handle)
-            except OSError:
-                pass
+    handle = normalize_handle(citizen)
+    if not handle:
+        return None
 
-    return None
+    try:
+        if get_citizen(handle) is None:
+            logger.warning(
+                "MIND_CITIZEN_ID=%s is not in the L4 registry — acting anonymously. "
+                "Seed it with scripts/seed_citizen_registry.py.", citizen,
+            )
+            return None
+    except Exception as e:
+        # Registre injoignable ≠ citoyen inconnu. On ne fabrique pas une
+        # identité sur une panne, et on ne la nie pas silencieusement non plus.
+        logger.error("L4 registry unreachable while resolving @%s: %s", handle, e)
+        raise
+
+    return normalize_citizen_id(handle)
 
 
 def resolve_actor_id(

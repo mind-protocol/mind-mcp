@@ -1,8 +1,8 @@
 {
-  "last_check": "2026-03-19T00:34:42.142446",
-  "status": "healthy",
+  "last_check": "2026-07-23T17:04:05.299441",
+  "status": "restart_failed",
   "downtime_start": null,
-  "restart_count": 2,
+  "restart_count": 22,
   "incidents": [],
   "me": {
     "id": "447916653048@c.us",
