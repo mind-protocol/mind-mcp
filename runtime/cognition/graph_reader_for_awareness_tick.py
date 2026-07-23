@@ -47,6 +47,23 @@ _RECENT_WINDOW_S = 300.0  # 5 minutes
 _ENERGY_THRESHOLD = 0.1
 
 
+def citizen_actor_ids(citizen_id: str) -> list[str]:
+    """Resolve one citizen handle to the actor IDs used across L3 projections."""
+    normalized = str(citizen_id or "").strip().lstrip("@").lower().replace("-", "_")
+    for prefix in ("citizen_", "actor_", "l3_actor_"):
+        if normalized.startswith(prefix):
+            normalized = normalized[len(prefix):]
+            break
+    normalized = normalized.strip("_")
+    slug = normalized.replace("_", "-")
+    return list(dict.fromkeys([
+        normalized,
+        f"CITIZEN_{normalized}",
+        f"actor-{slug}",
+        f"l3-actor-{slug}",
+    ]))
+
+
 # =========================================================================
 # Public API
 # =========================================================================
@@ -146,16 +163,25 @@ def create_graph_read_fn() -> Callable[[str], list[dict]]:
         # Match nodes connected to the citizen's Actor node via LINK edges.
         # Filter: energy > threshold OR recent activity.
         # Both directions: outgoing and incoming links.
+        actor_ids = citizen_actor_ids(citizen_id)
         rows = _safe_query(
-            "MATCH (a {id: $cid})-[r:LINK]-(n) "
-            "WHERE (n.energy > $ethresh OR n.timestamp > $since) "
-            "AND n.id <> $cid "
-            "RETURN DISTINCT n.id, n.node_type, n.name, n.synthesis, "
+            "MATCH (a)-[r]-(n) "
+            "WHERE a.id IN $cids "
+            "AND ("
+            "(n.energy > $ethresh OR n.timestamp > $since) "
+            "OR coalesce(r.weight, 0.0) >= 0.5 "
+            "OR toLower(coalesce(n.node_type, '')) = 'moment' "
+            "OR 'Moment' IN labels(n)"
+            ") "
+            "AND NOT n.id IN $cids "
+            "RETURN DISTINCT n.id, n.node_type, n.name, n.synthesis, n.content, "
             "       n.energy, n.weight, n.stability, n.valence, "
-            "       r.weight, r.relation_kind "
+            "       r.weight, coalesce(r.relation_kind, r.computed_type, type(r)), "
+            "       r.perception_energy, n.timestamp, "
+            "       coalesce(n.author_handle, n.origin_citizen, '') "
             "LIMIT 50",
             {
-                "cid": citizen_id,
+                "cids": actor_ids,
                 "ethresh": _ENERGY_THRESHOLD,
                 "since": since,
             },
@@ -179,13 +205,15 @@ def create_graph_read_fn() -> Callable[[str], list[dict]]:
             node_data[n_id] = {
                 "id": n_id,
                 "node_type": _normalize_node_type(row[1]),
-                "content": row[3] or row[2] or n_id,  # synthesis > name > id
-                "energy": float(row[4] or 0.0),
-                "weight": float(row[5] or 0.1),
-                "stability": float(row[6] or 0.0),
-                "valence": float(row[7] or 0.0),
-                "relevance": 0.5,  # default; could be enhanced with embedding similarity
-                "origin_citizen": "",
+                "content": row[4] or row[3] or row[2] or n_id,
+                "energy": max(float(row[5] or 0.0), float(row[11] or 0.0)),
+                "weight": float(row[6] or 0.1),
+                "stability": float(row[7] or 0.0),
+                "valence": float(row[8] or 0.0),
+                "relevance": 1.0 if float(row[11] or 0.0) > 0 else 0.5,
+                "partner_relevance": 1.0 if float(row[11] or 0.0) > 0 else 0.0,
+                "origin_citizen": row[13] or "",
+                "origin_date": float(row[12] or 0.0),
             }
 
         if not neighbor_ids:

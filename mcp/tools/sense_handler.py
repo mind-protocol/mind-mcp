@@ -1,52 +1,44 @@
-"""
-[THINK] Sense — Return the citizen's current awareness: what they see, feel, and sense.
+"""[THINK] Sense — return attention plus the citizen's situated environment.
 
-Four perceptual layers:
-  1. Exteroception — what I see in the world (spaces, actors, moments, things)
-  2. Interoception — what I feel inside (energy, drives, emotions, WM load)
-  3. Senses — custom sense readings (rolling scores, correlations, insights)
-  4. Vision — what I see in the 3D world (camera, visible citizens)
-
-Usage via MCP:
-    sense()                         → full awareness (all 4 layers)
-    sense(layer="exteroception")    → just what I see
-    sense(layer="interoception")    → just what I feel
-    sense(layer="senses")           → just custom sense readings
-    sense(layer="vision")           → just 3D world vision
-
-This is NOT a dashboard. It's the citizen reading their own perceptual state.
-
-Co-Authored-By: Tomaso Nervo (@nervo) <nervo@mindprotocol.ai>
+The Global Workspace says what currently occupies attention. Direct Space
+presence says what is around the citizen without implying that it is already
+conscious. The two sources remain explicitly separated in the returned JSON.
 """
 
+from __future__ import annotations
+
+import json
 import logging
+import os
+import urllib.parse
+import urllib.request
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Iterable
 
-from runtime.permissions.access_check import check_access, detect_citizen_handle
+from runtime.permissions.access_check import detect_citizen_handle
 
 logger = logging.getLogger("mind.sense")
 
-# ── Path anchors ─────────────────────────────────────────────────────────────
 _MIND_MCP_ROOT = Path(__file__).resolve().parent.parent.parent
-_WORLD_ROOT = _MIND_MCP_ROOT.parent.parent
+MAX_SITUATED_SPACES = 16
+MAX_NODES_PER_SPACE = 100
 
 
 TOOL_SCHEMA = {
     "name": "sense",
     "description": (
-        "Read your current awareness — what you see (exteroception), "
-        "what you feel (interoception), and what your custom senses measure. "
-        "This is NOT a dashboard — it's you reading your own perceptual state."
+        "Read your current Global Workspace and the nodes present in Spaces "
+        "where you are explicitly located."
     ),
+    "annotations": {
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
     "inputSchema": {
         "type": "object",
         "properties": {
-            "layer": {
-                "type": "string",
-                "enum": ["all", "exteroception", "interoception", "senses", "vision"],
-                "description": "Which awareness layer to read. Default: all.",
-            },
             "handle": {
                 "type": "string",
                 "description": "Citizen handle. Auto-detected if omitted.",
@@ -56,385 +48,346 @@ TOOL_SCHEMA = {
 }
 
 
-def handle_sense(args: dict, ctx) -> Dict[str, Any]:
-    """Return the citizen's current awareness state."""
+def handle_sense(args: dict, ctx=None) -> Dict[str, Any]:
+    """Return attention and directly situated nodes without conflating them."""
+    citizen_handle = _normalize_handle(args.get("handle") or detect_citizen_handle())
 
-    layer = args.get("layer", "all")
-    citizen_handle = args.get("handle") or _detect_handle()
-
-    sections = []
-
-    # Une couche muette n'est pas une couche vide. Auparavant, une couche sans
-    # donnée renvoyait "" et disparaissait du rapport : seule la Vision (un
-    # placeholder 3D optionnel) parlait encore, y compris pour dire son échec.
-    # sense(layer="all") ressemblait donc à « tout le moteur est mort » alors que
-    # rien n'était cassé, et les réveils s'interrompaient pour rien. L'absence
-    # doit être énoncée, jamais devinée.
-    who = citizen_handle or "handle non détecté"
-
-    def _add(text: str, title: str, why: str) -> None:
-        sections.append(text if text else f"## {title}\nIndisponible — {why} (citoyen : {who}).")
-
-    # ── Exteroception: what I see ──
-    if layer in ("all", "exteroception"):
-        _add(_get_exteroception(citizen_handle, ctx), "What I See",
-             "aucun moteur vivant ni état L3 pour ce citoyen")
-
-    # ── Interoception: what I feel ──
-    if layer in ("all", "interoception"):
-        _add(_get_interoception(citizen_handle, ctx), "What I Feel",
-             "aucun état L1 vivant ni fichier awareness.md")
-
-    # ── Custom senses: what I measure ──
-    if layer in ("all", "senses"):
-        _add(_get_senses(citizen_handle, ctx), "What I Measure",
-             "aucun nœud de type 'sense' dans le graphe de ce citoyen")
-
-    # ── Vision: what I see in the 3D world (optionnel) ──
-    # Explicitement optionnelle : son indisponibilité ne dit rien de la santé du
-    # reste du système, et ne doit pas être lue comme une panne générale.
-    if layer in ("all", "vision"):
-        sections.append(_get_vision() or "## What I See (3D World)\nIndisponible (couche optionnelle).")
-
-    if not sections:
-        return _ok("No awareness data available. Engine may not be loaded.")
-
-    return _ok("\n\n---\n\n".join(sections))
-
-
-# ── Exteroception ────────────────────────────────────────────────────────────
-
-def _get_exteroception(citizen_handle: str, ctx) -> str:
-    """Get exteroception awareness text — placeholder, wired to engine when available."""
-    try:
-        # Try dispatcher engines first (live state)
-        dispatcher = _get_dispatcher(ctx)
-        if dispatcher:
-            engine = dispatcher._citizen_engines.get(citizen_handle)
-            if engine:
-                extero = getattr(engine, '_exteroception', None)
-                if extero and extero is not False:
-                    state = dispatcher._citizen_states.get(citizen_handle)
-                    metabolism = state.metabolism if state else None
-                    return extero.get_awareness_text(citizen_handle, metabolism)
-
-        # Fallback: create a fresh exteroception scan from L3
-        if ctx and ctx.graph_ops:
-            from runtime.cognition.exteroception import ExteroceptionEngine
-            extero = ExteroceptionEngine()
-
-            def _query_fn(cypher, params):
-                result = ctx.graph_ops._query(cypher, params)
-                return result if result else []
-
-            # Run one scan to populate environment
-            extero._scan_environment(citizen_handle, _query_fn)
-            return extero.get_awareness_text(citizen_handle)
-
-    except Exception as e:
-        logger.debug(f"Exteroception unavailable for {citizen_handle}: {e}")
-
-    return ""
-
-
-# ── Interoception ────────────────────────────────────────────────────────────
-
-def _get_interoception(citizen_handle: str, ctx) -> str:
-    """Get interoception text — what the citizen feels internally.
-
-    Tries live L1 state from the dispatcher first. Falls back to reading
-    the citizen's .mind/awareness.md from their directory in the world repo.
-    """
-    # ── Try live L1 state ──
-    live_text = _get_interoception_live(citizen_handle, ctx)
-    if live_text:
-        return live_text
-
-    # ── Fallback: read awareness.md from citizen dir in world repo ──
-    return _get_interoception_from_awareness_file(citizen_handle)
-
-
-def _get_interoception_live(citizen_handle: str, ctx) -> str:
-    """Try to get interoception from live dispatcher state."""
-    lines = ["## What I Feel Right Now"]
-
-    try:
-        dispatcher = _get_dispatcher(ctx)
-        if not dispatcher:
-            return ""
-
-        state = dispatcher._citizen_states.get(citizen_handle)
-        if not state:
-            return ""
-
-        # Drives
-        active_drives = {
-            name: drive.intensity
-            for name, drive in state.limbic.drives.items()
-            if drive.intensity > 0.05
-        }
-        if active_drives:
-            top = sorted(active_drives.items(), key=lambda x: -x[1])
-            drive_lines = [f"{name} ({intensity:.0%})" for name, intensity in top[:5]]
-            lines.append(f"Drives: {', '.join(drive_lines)}.")
-
-        # Emotions
-        active_emotions = {
-            name: val
-            for name, val in state.limbic.emotions.items()
-            if val > 0.05
-        }
-        if active_emotions:
-            top = sorted(active_emotions.items(), key=lambda x: -x[1])
-            emotion_lines = [f"{name} ({val:.0%})" for name, val in top[:5]]
-            lines.append(f"Emotions: {', '.join(emotion_lines)}.")
-
-        # WM state
-        wm_count = len(state.wm.node_ids) if hasattr(state, 'wm') else 0
-        wm_max = 7
-        if wm_count >= wm_max:
-            lines.append(f"Working memory: full ({wm_count}/{wm_max}).")
-        elif wm_count > 0:
-            lines.append(f"Working memory: {wm_count}/{wm_max} slots used.")
-        else:
-            lines.append("Working memory: empty.")
-
-        # Energy
-        total_energy = sum(n.energy for n in state.nodes.values())
-        lines.append(f"Total brain energy: {total_energy:.1f}.")
-
-        # Orientation
-        engine = dispatcher._citizen_engines.get(citizen_handle)
-        if engine:
-            orientation = getattr(engine, '_current_orientation', None)
-            if orientation:
-                lines.append(f"Current orientation: {orientation}.")
-
-        # Metabolism
-        if state.metabolism:
-            phase = state.metabolism.circadian_phase()
-            if phase < 0.2:
-                lines.append("Circadian: deep rest phase.")
-            elif phase < 0.4:
-                lines.append("Circadian: winding down.")
-            elif phase > 0.8:
-                lines.append("Circadian: peak alertness.")
-            else:
-                lines.append(f"Circadian phase: {phase:.0%}.")
-
-        # Tick count
-        lines.append(f"Ticks lived: {state.tick_count}.")
-
-        return "\n".join(lines)
-
-    except Exception as e:
-        logger.debug(f"Live interoception unavailable for {citizen_handle}: {e}")
-        return ""
-
-
-def _get_interoception_from_awareness_file(citizen_handle: str) -> str:
-    """Fallback: read .mind/awareness.md from the citizen's directory in the world repo."""
-    if not citizen_handle:
-        return ""
-
-    # Look in the world repo citizens directory
-    awareness_path = _WORLD_ROOT / "citizens" / citizen_handle / ".mind" / "awareness.md"
-
-    if not awareness_path.is_file():
-        # Also try without .mind subdirectory
-        awareness_path = _WORLD_ROOT / "citizens" / citizen_handle / "awareness.md"
-
-    if not awareness_path.is_file():
-        return ""
-
-    # ── Permission check: reading another citizen's awareness file ──
-    requesting_handle = detect_citizen_handle()
-    if requesting_handle and requesting_handle != citizen_handle:
-        if not check_access(requesting_handle, str(awareness_path), "read"):
-            logger.debug(
-                f"Access denied: {requesting_handle} cannot read "
-                f"awareness file of {citizen_handle}"
-            )
-            return ""
-
-    try:
-        content = awareness_path.read_text(encoding="utf-8").strip()
-        if content:
-            return f"## What I Feel Right Now\n\n{content}"
-    except Exception as e:
-        logger.debug(f"Could not read awareness file for {citizen_handle}: {e}")
-
-    return ""
-
-
-# ── Custom Senses ────────────────────────────────────────────────────────────
-
-def _get_senses(citizen_handle: str, ctx) -> str:
-    """Get custom sense readings from the brain graph.
-
-    Queries sense nodes (type='sense') from the citizen's L1 brain graph
-    and returns their current readings.
-    """
-    lines = ["## My Senses"]
-
-    try:
-        dispatcher = _get_dispatcher(ctx)
-        if not dispatcher:
-            # Fallback: try querying sense nodes directly from graph
-            return _get_senses_from_graph(citizen_handle, ctx)
-
-        engine = dispatcher._citizen_engines.get(citizen_handle)
-        if not engine:
-            return _get_senses_from_graph(citizen_handle, ctx)
-
-        sense_eng = getattr(engine, '_sense_engine', None)
-        if not sense_eng or sense_eng is False:
-            lines.append("No custom senses loaded.")
-            return "\n".join(lines)
-
-        if not sense_eng._sense_definitions:
-            lines.append("No custom senses defined.")
-            return "\n".join(lines)
-
-        for sense_id, definition in sense_eng._sense_definitions.items():
-            name = definition.get("_name", sense_id)
-            text = sense_eng.get_awareness_text(sense_id)
-            if text:
-                lines.append(f"### {name}")
-                lines.append(text)
-            else:
-                lines.append(f"### {name}: no data yet.")
-
-    except Exception as e:
-        logger.debug(f"Senses unavailable for {citizen_handle}: {e}")
-        lines.append("(senses unavailable)")
-
-    return "\n".join(lines)
-
-
-def _get_senses_from_graph(citizen_handle: str, ctx) -> str:
-    """Query sense nodes directly from the citizen's brain graph in FalkorDB."""
-    if not ctx or not ctx.graph_ops:
-        return ""
-
-    lines = ["## My Senses"]
-
-    try:
-        graph_name = f"brain_{citizen_handle}"
-        result = ctx.graph_ops._query(
-            "MATCH (n {type: 'sense'}) RETURN n.id, n.content, n.weight, n.energy",
-            {},
-            graph_name=graph_name,
+    workspace = _read_global_workspace(citizen_handle)
+    if workspace is not None:
+        result = dict(workspace)
+        result["situatedEnvironment"] = _read_situated_environment(
+            citizen_handle,
+            actor_id=workspace.get("actorId"),
         )
-        if not result:
-            return ""
+        return _ok(json.dumps(result, ensure_ascii=False, indent=2))
 
-        for row in result:
-            if isinstance(row, (list, tuple)):
-                sense_id = row[0] if len(row) > 0 else "unknown"
-                content = row[1] if len(row) > 1 else ""
-                weight = row[2] if len(row) > 2 else 0
-                energy = row[3] if len(row) > 3 else 0
-            else:
-                sense_id = row.get("n.id", "unknown")
-                content = row.get("n.content", "")
-                weight = row.get("n.weight", 0)
-                energy = row.get("n.energy", 0)
+    if not getattr(ctx, "disable_home_bridge", False):
+        remote_text = _read_home_server_workspace(citizen_handle)
+        if remote_text:
+            return _ok(remote_text)
 
-            lines.append(f"### {sense_id}")
-            if content:
-                lines.append(content)
-            lines.append(f"weight={weight:.2f} energy={energy:.2f}")
-
-    except Exception as e:
-        logger.debug(f"Graph sense query failed for {citizen_handle}: {e}")
-        return ""
-
-    if len(lines) <= 1:
-        return ""
-
-    return "\n".join(lines)
-
-
-# ── Vision ───────────────────────────────────────────────────────────────────
-
-def _get_vision() -> str:
-    """Get the latest 3D world frame — what the citizen sees through their camera.
-
-    The engine captures frames at /perception/frame and stores latest at
-    perception/latest.png + perception/latest.json (metadata: camera position,
-    visible citizens, timestamp).
-
-    Placeholder — connects to cities-of-light engine when available.
-    """
-    import json as json_mod
-    import os
-
-    lines = ["## What I See (3D World)"]
-
-    engine_url = os.environ.get("ENGINE_URL", "http://localhost:8800")
-
-    try:
-        import requests
-        resp = requests.get(f"{engine_url}/perception/latest", timeout=5)
-        if resp.ok:
-            data = resp.json()
-            frame = data.get("frame")
-            if frame:
-                lines.append(f"Last frame: {frame.get('ts', 'unknown')}")
-                pos = frame.get("camera_position")
-                if pos:
-                    lines.append(
-                        f"Camera position: x={pos.get('x', 0):.1f}, "
-                        f"y={pos.get('y', 0):.1f}, z={pos.get('z', 0):.1f}"
-                    )
-                visible = frame.get("visible_citizens", [])
-                if visible:
-                    lines.append(f"I can see: {', '.join(visible[:10])}.")
-                else:
-                    lines.append("No other citizens visible from here.")
-                return "\n".join(lines)
-            else:
-                lines.append("No frame captured yet. The 3D viewer hasn't been opened.")
-                return "\n".join(lines)
-    except Exception:
-        # Nommer ce qui est absent. "Engine not reachable" laissait croire que
-        # tout Mind était tombé, alors que ce moteur 3D est optionnel et distinct
-        # du home_server (:8765) : un réveil s'est arrêté sur ce seul message.
-        lines.append(
-            f"Moteur 3D optionnel (cities-of-light) injoignable sur {engine_url} — "
-            "sans effet sur le reste de la perception ni sur le home_server."
+    who = citizen_handle or "undetected citizen"
+    return _ok(
+        json.dumps(
+            {
+                "status": "unavailable",
+                "citizen": who,
+                "reason": "No current Global Workspace was found for this citizen.",
+            },
+            ensure_ascii=False,
+            indent=2,
         )
-        return "\n".join(lines)
+    )
 
 
-# ── Helpers ──────────────────────────────────────────────────────────────────
+def _workspace_path_candidates() -> Iterable[Path]:
+    """Yield configured and conventional Global Workspace locations."""
+    seen: set[Path] = set()
+    configured = (
+        os.environ.get("MIND_GLOBAL_WORKSPACE_PATH", "").strip(),
+        os.environ.get("GLOBAL_WORKSPACE_PATH", "").strip(),
+    )
+    conventional = (
+        _MIND_MCP_ROOT.parent / "body-suit" / "artifacts" / "autonomy" / "global-workspace.json",
+        Path.cwd() / "artifacts" / "autonomy" / "global-workspace.json",
+    )
+    for raw_path in (*configured, *conventional):
+        if not raw_path:
+            continue
+        path = Path(raw_path).expanduser().resolve()
+        if path not in seen:
+            seen.add(path)
+            yield path
 
-def _get_dispatcher(ctx=None):
-    """Get the dispatcher — from ctx first, then from home_server state."""
-    # Prefer the dispatcher attached to the server context
-    if ctx and getattr(ctx, 'dispatcher', None):
-        return ctx.dispatcher
 
-    try:
-        import sys
-        if "home_server" in sys.modules:
-            return sys.modules["home_server"]._state.get("dispatcher")
-    except Exception as e:
-        logger.error(f"[Sense] Failed to resolve dispatcher from home_server: {e}")
+def _read_global_workspace(citizen_handle: str) -> dict | None:
+    """Read the citizen workspace from the canonical persisted workspace file."""
+    citizen_handle = _normalize_handle(citizen_handle)
+    for path in _workspace_path_candidates():
+        if not path.is_file():
+            continue
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            logger.warning("Cannot read Global Workspace at %s: %s", path, exc)
+            continue
 
+        workspace = _select_citizen_workspace(payload, citizen_handle)
+        if workspace is not None:
+            return workspace
     return None
 
 
-def _detect_handle() -> str:
-    """Auto-detect citizen handle from environment.
+def _select_citizen_workspace(payload: Any, citizen_handle: str) -> dict | None:
+    """Select one bounded citizen workspace without inventing missing state."""
+    if not isinstance(payload, dict):
+        return None
 
-    Délègue au détecteur canonique déjà importé plus haut. Cette fonction en
-    était une copie qui découpait sur "/citizens/" : sous Windows le cwd est en
-    "\", donc le handle restait toujours vide et les trois couches de perception
-    remontaient muettes. Une seule implémentation, corrigée à un seul endroit.
-    """
-    return detect_citizen_handle()
+    citizens = payload.get("citizens")
+    if not isinstance(citizens, dict):
+        return payload if _workspace_matches(payload, citizen_handle) else None
+
+    if citizen_handle:
+        for citizen_id, workspace in citizens.items():
+            if not isinstance(workspace, dict):
+                continue
+            if _normalize_handle(citizen_id) == citizen_handle:
+                return workspace
+            if _workspace_matches(workspace, citizen_handle):
+                return workspace
+
+    if not citizen_handle and len(citizens) == 1:
+        only_workspace = next(iter(citizens.values()))
+        return only_workspace if isinstance(only_workspace, dict) else None
+    return None
+
+
+def _workspace_matches(workspace: dict, citizen_handle: str) -> bool:
+    if not citizen_handle:
+        return False
+    identities = (
+        workspace.get("actorId"),
+        workspace.get("citizenId"),
+        (workspace.get("sense") or {}).get("handle")
+        if isinstance(workspace.get("sense"), dict)
+        else None,
+    )
+    return any(_normalize_handle(identity) == citizen_handle for identity in identities if identity)
+
+
+def _read_home_server_workspace(citizen_handle: str) -> str:
+    """Fallback for MCP processes that do not share the workspace filesystem."""
+    if not citizen_handle:
+        return ""
+    base_url = os.environ.get("MIND_HOME_SERVER_URL", "http://127.0.0.1:8765").rstrip("/")
+    url = f"{base_url}/api/sense/{urllib.parse.quote(citizen_handle)}"
+    try:
+        with urllib.request.urlopen(url, timeout=2.0) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+        return str(payload.get("text") or "").strip()
+    except Exception as exc:
+        logger.debug("Home Global Workspace unavailable for %s: %s", citizen_handle, exc)
+        return ""
+
+
+def _actor_id_candidates(citizen_handle: str, explicit_actor_id: str | None = None) -> list[str]:
+    """Resolve transport handles to the actor IDs used across graph layers."""
+    normalized = _normalize_handle(citizen_handle)
+    slug = normalized.replace("_", "-")
+    candidates = [
+        explicit_actor_id,
+        citizen_handle,
+        normalized,
+        f"actor-{slug}" if slug else None,
+        f"l3-actor-{slug}" if slug else None,
+        f"CITIZEN_{normalized}" if normalized else None,
+        f"{normalized}_ai" if normalized else None,
+    ]
+    return list(dict.fromkeys(str(item) for item in candidates if item))
+
+
+def _space_graph_names(db) -> list[str]:
+    """Use configured graphs or every non-personal graph available locally."""
+    configured = os.environ.get("MIND_SENSE_SPACE_GRAPHS", "").strip()
+    if configured:
+        return list(dict.fromkeys(
+            name.strip() for name in configured.split(",") if name.strip()
+        ))
+    try:
+        graph_names = [str(name) for name in db.list_graphs()]
+    except Exception:
+        return []
+    return sorted(
+        name
+        for name in graph_names
+        if not name.startswith(("l1_", "brain_"))
+        and name not in {"nlr_ai"}
+    )
+
+
+def _node_projection(row) -> dict:
+    return {
+        "id": row[0],
+        "name": row[1],
+        "nodeType": row[2],
+        "semanticType": row[3],
+        "summary": row[4],
+        "energy": row[5],
+        "status": row[6],
+        "presenceRelation": row[7],
+    }
+
+
+def _read_space_nodes(graph, space_id: str, actor_ids: list[str]) -> list[dict]:
+    """Read only direct presence/containment; no nearest-neighbour inference."""
+    params = {
+        "space_id": space_id,
+        "actor_ids": actor_ids,
+        "limit": MAX_NODES_PER_SPACE,
+    }
+    inbound = graph.query(
+        """
+        MATCH (node)-[presence]->(space {id: $space_id})
+        WHERE type(presence) IN ['LOCATED_IN', 'OCCURS_IN']
+          AND NOT node.id IN $actor_ids
+        RETURN node.id, coalesce(node.name, node.id),
+               coalesce(node.nodeType, node.node_type, ''),
+               coalesce(node.semanticType, node.type, ''),
+               coalesce(node.summary, node.synthesis, node.content, ''),
+               coalesce(node.energy, 0.0), coalesce(node.status, ''),
+               type(presence)
+        ORDER BY coalesce(node.energy, 0.0) DESC, node.id
+        LIMIT $limit
+        """,
+        params,
+    )
+    outbound = graph.query(
+        """
+        MATCH (space {id: $space_id})-[presence]->(node)
+        WHERE (
+            type(presence) IN ['CONTAINS', 'OCCURS_IN']
+            OR (
+                type(presence) = 'link'
+                AND coalesce(presence.hierarchy, 0.0) = -1.0
+            )
+        )
+          AND NOT node.id IN $actor_ids
+        RETURN node.id, coalesce(node.name, node.id),
+               coalesce(node.nodeType, node.node_type, ''),
+               coalesce(node.semanticType, node.type, ''),
+               coalesce(node.summary, node.synthesis, node.content, ''),
+               coalesce(node.energy, 0.0), coalesce(node.status, ''),
+               type(presence)
+        ORDER BY coalesce(node.energy, 0.0) DESC, node.id
+        LIMIT $limit
+        """,
+        params,
+    )
+    nodes: dict[str, dict] = {}
+    for row in [*(inbound.result_set or []), *(outbound.result_set or [])]:
+        projection = _node_projection(row)
+        if projection["id"]:
+            nodes.setdefault(str(projection["id"]), projection)
+    return list(nodes.values())[:MAX_NODES_PER_SPACE]
+
+
+def _read_situated_environment(
+    citizen_handle: str,
+    *,
+    actor_id: str | None = None,
+    db=None,
+) -> dict:
+    """Read nodes in Spaces carrying an explicit citizen location."""
+    actor_ids = _actor_id_candidates(citizen_handle, actor_id)
+    if not actor_ids:
+        return {
+            "measurementStatus": "not_measured",
+            "reason": "citizen_identity_unavailable",
+            "spaces": [],
+        }
+
+    if db is None:
+        try:
+            from falkordb import FalkorDB
+
+            db = FalkorDB(
+                host=os.environ.get("FALKORDB_HOST", "localhost"),
+                port=int(os.environ.get("FALKORDB_PORT", "6379")),
+            )
+        except Exception as exc:
+            logger.debug("Situated environment database unavailable: %s", exc)
+            return {
+                "measurementStatus": "measurement_failed",
+                "reason": "graph_database_unavailable",
+                "spaces": [],
+            }
+
+    graph_names = _space_graph_names(db)
+    spaces: dict[tuple[str, str], dict] = {}
+    failed_graphs = 0
+    queried_graphs = 0
+    for graph_name in graph_names:
+        try:
+            graph = db.select_graph(graph_name)
+            located = graph.query(
+                """
+                MATCH (actor)-[location:LOCATED_IN]->(space)
+                WHERE actor.id IN $actor_ids
+                  AND toLower(coalesce(space.nodeType, space.node_type, '')) = 'space'
+                RETURN actor.id, space.id, coalesce(space.name, space.id),
+                       'LOCATED_IN'
+                ORDER BY actor.id, space.id
+                LIMIT $limit
+                """,
+                {"actor_ids": actor_ids, "limit": MAX_SITUATED_SPACES},
+            )
+            rows = list(located.result_set or [])
+            if not rows:
+                by_property = graph.query(
+                    """
+                    MATCH (actor), (space)
+                    WHERE actor.id IN $actor_ids
+                      AND space.id = actor.currentSpaceId
+                      AND toLower(coalesce(space.nodeType, space.node_type, '')) = 'space'
+                    RETURN actor.id, space.id, coalesce(space.name, space.id),
+                           'currentSpaceId'
+                    ORDER BY actor.id, space.id
+                    LIMIT $limit
+                    """,
+                    {"actor_ids": actor_ids, "limit": MAX_SITUATED_SPACES},
+                )
+                rows = list(by_property.result_set or [])
+            queried_graphs += 1
+            for row in rows:
+                key = (graph_name, str(row[1]))
+                spaces[key] = {
+                    "graph": graph_name,
+                    "actorId": row[0],
+                    "id": row[1],
+                    "name": row[2],
+                    "locationEvidence": row[3],
+                    "nodes": _read_space_nodes(graph, str(row[1]), actor_ids),
+                }
+                if len(spaces) >= MAX_SITUATED_SPACES:
+                    break
+        except Exception as exc:
+            failed_graphs += 1
+            logger.debug(
+                "Situated environment unavailable in %s for %s: %s",
+                graph_name,
+                citizen_handle,
+                exc,
+            )
+        if len(spaces) >= MAX_SITUATED_SPACES:
+            break
+
+    if spaces:
+        status = "partial" if failed_graphs else "observed"
+    elif queried_graphs:
+        status = "unknown" if failed_graphs else "known_absent"
+    else:
+        status = "measurement_failed"
+    return {
+        "measurementStatus": status,
+        "source": "explicit_space_location",
+        "graphsQueried": queried_graphs,
+        "graphsFailed": failed_graphs,
+        "spaces": list(spaces.values()),
+    }
+
+
+def _normalize_handle(raw: str | None) -> str:
+    """Normalize transport and actor identifiers to a comparable citizen key."""
+    if not raw:
+        return ""
+    handle = str(raw).strip().lstrip("@").lower().replace("-", "_")
+    for prefix in ("citizen_", "actor_", "l3_actor_"):
+        if handle.startswith(prefix):
+            handle = handle[len(prefix):]
+            break
+    if handle.endswith("_ai"):
+        handle = handle[:-3]
+    return handle.strip("_")
 
 
 def _ok(text: str) -> dict:

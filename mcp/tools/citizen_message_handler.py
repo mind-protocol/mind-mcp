@@ -1,20 +1,24 @@
 """Citizen-to-citizen messaging, including deliberate self-stimulation.
 
 ``talk`` and ``think`` are two intention-revealing views over the same
-delivery mechanism:
+cognitive ingress and delivery mechanism:
 
 * talk(target, message) sends a thought to any citizen;
 * think(message) sends it back to the current citizen.
 
-Both invoke the target citizen through ``quick_call``. Keeping one delivery
-path makes self-talk obey the same identity, persistence, and wake behaviour
-as every other citizen-to-citizen message.
+Both first persist a stimulus Moment and run the target's awareness and
+thought ticks through the Home Server, then invoke the target through
+``quick_call``. The Home Server remains the only tick owner.
 """
 
 import logging
-import os
-from pathlib import Path
 from typing import Any, Dict
+
+from mcp.tools.cognitive_stimulus import (
+    CognitiveStimulusError,
+    detect_citizen,
+    trigger_cognitive_ticks,
+)
 
 logger = logging.getLogger("mind.citizen_message")
 
@@ -23,6 +27,8 @@ TALK_SCHEMA = {
     "name": "talk",
     "description": (
         "[SPEAK] Send a message to any citizen and receive their response. "
+        "The message is first persisted as a stimulus and triggers the target's "
+        "awareness and thought ticks. "
         "Use this for citizen-to-citizen dialogue. The target may also be your "
         "own citizen handle; use think when the intention is explicitly self-directed."
     ),
@@ -48,6 +54,7 @@ THINK_SCHEMA = {
     "description": (
         "[THINK] Send a message to yourself using the same citizen messaging "
         "mechanism as talk. This deliberately self-stimulates your cognition: "
+        "it persists a Moment and triggers awareness then thought ticks. "
         "use it to bring a subject back under attention, think more about it, "
         "or continue an internal line of inquiry."
     ),
@@ -77,7 +84,7 @@ def handle_talk(args: Dict[str, Any]) -> Dict[str, Any]:
 
 def handle_self_think(args: Dict[str, Any]) -> Dict[str, Any]:
     """Address the current citizen to create a deliberate self-stimulus."""
-    return _deliver(_detect_citizen(), args.get("message"), intent="think")
+    return _deliver(detect_citizen(), args.get("message"), intent="think")
 
 
 def _deliver(target: str, raw_message: Any, *, intent: str) -> Dict[str, Any]:
@@ -86,37 +93,39 @@ def _deliver(target: str, raw_message: Any, *, intent: str) -> Dict[str, Any]:
     if not message:
         return _err("'message' is required and cannot be empty.")
 
-    caller = _detect_citizen()
+    caller = detect_citizen()
     logger.info("%s @%s -> @%s: %s", intent, caller, target, message[:60])
 
     try:
+        tick_report = trigger_cognitive_ticks(
+            target=target,
+            content=message,
+            source=f"mcp:{intent}",
+            caller=caller,
+            metadata={"intent": intent},
+        )
         from runtime.orchestrator.claude_invoker import quick_call
 
         response = quick_call(target, message, caller_handle=caller)
+        tick_text = (
+            f"Stimulus {tick_report['moment_id']} processed by "
+            "awareness + thought ticks."
+        )
         if intent == "think":
-            return _ok(f"Self-stimulus sent to @{target}.\n\n@{target} reflects:\n\n{response}")
-        return _ok(f"@{target} responds:\n\n{response}")
+            return _ok(
+                f"Self-stimulus sent to @{target}. {tick_text}"
+                f"\n\n@{target} reflects:\n\n{response}"
+            )
+        return _ok(f"{tick_text}\n\n@{target} responds:\n\n{response}")
+    except CognitiveStimulusError as exc:
+        logger.error("%s stimulus for @%s failed: %s", intent, target, exc)
+        return _err(
+            f"{intent.capitalize()} with @{target} was not delivered because "
+            f"its cognitive ticks did not run: {exc}"
+        )
     except Exception as exc:
         logger.exception("%s delivery to @%s failed", intent, target)
         return _err(f"{intent.capitalize()} with @{target} failed: {exc}")
-
-
-def _detect_citizen() -> str:
-    """Resolve the current citizen from explicit runtime identity signals."""
-    handle = _normalize_handle(os.getenv("CITIZEN_HANDLE"))
-    if handle:
-        return handle
-
-    parts = Path.cwd().parts
-    for index, part in enumerate(parts):
-        if part.lower() == "citizens" and index + 1 < len(parts):
-            return _normalize_handle(parts[index + 1])
-
-    actor_id = _normalize_handle(os.getenv("ACTOR_ID"))
-    for prefix in ("citizen_", "agent_", "actor_"):
-        if actor_id.lower().startswith(prefix):
-            return actor_id[len(prefix):]
-    return actor_id or "mind"
 
 
 def _normalize_handle(value: Any) -> str:

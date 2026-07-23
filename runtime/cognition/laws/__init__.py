@@ -10,8 +10,6 @@ from .law_01_energy_injection import (
     reset_self_stimulus_state,
 )
 
-from runtime.cognition.models import Stimulus
-
 from .law_17_impulse import (
     ImpulseResult,
     accumulate_impulses,

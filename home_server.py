@@ -55,6 +55,27 @@ _state = {
 }
 
 
+def _configured_citizen_handles() -> list[str]:
+    """Return explicit local citizens that must have a live engine."""
+    raw_values = [
+        os.environ.get("MIND_HTTP_CITIZEN", ""),
+        os.environ.get("MIND_CITIZEN_HANDLE", ""),
+        os.environ.get("MIND_CITIZEN_HANDLES", ""),
+    ]
+    handles = []
+    for raw in raw_values:
+        for value in raw.split(","):
+            handle = value.strip().lstrip("@").lower().replace("-", "_")
+            for prefix in ("citizen_", "actor_", "l3_actor_"):
+                if handle.startswith(prefix):
+                    handle = handle[len(prefix):]
+                    break
+            handle = handle.strip("_")
+            if handle and handle not in handles:
+                handles.append(handle)
+    return handles
+
+
 def _check_graph_connection() -> bool:
     """Test FalkorDB/Neo4j connectivity with an actual query."""
     try:
@@ -164,6 +185,7 @@ async def lifespan(app: FastAPI):
             # Check if citizen_seed behavior is enabled (default: true)
             citizen_seed_enabled = cfg.get("behaviors", {}).get("citizen_seed", True)
 
+            results = {}
             if citizen_seed_enabled:
                 seed_fn_path = cfg.get("seed", {}).get(
                     "script", "runtime.l4.citizen_l1_ensure.bulk_ensure_citizens"
@@ -183,12 +205,20 @@ async def lifespan(app: FastAPI):
                         results.update(universe_results)
                         logger.info(f"L1 boot: +{len(universe_results)} from {universe_dir.parent.name} (canonical)")
 
-                # 3. Load all engines
-                if results:
-                    _dispatcher.bulk_load_citizen_engines(list(results.keys()))
-                    logger.info(f"L1 boot: {len(results)} total engines loaded")
             else:
                 logger.info("L1 boot: citizen_seed disabled in database_config.yaml")
+
+            # Explicitly hosted citizens may exist only in FalkorDB, without a
+            # filesystem profile. They still need an in-memory cognitive engine.
+            configured_handles = _configured_citizen_handles()
+            engine_handles = list(dict.fromkeys([*results.keys(), *configured_handles]))
+            if engine_handles:
+                _dispatcher.bulk_load_citizen_engines(engine_handles)
+                logger.info(
+                    "L1 boot: %s total engines loaded (%s explicitly configured)",
+                    len(engine_handles),
+                    len(configured_handles),
+                )
         except Exception as e:
             logger.warning(f"Citizen L1 boot failed: {e}")
 
@@ -465,6 +495,100 @@ async def ping_citizen(handle: str):
             "wallet": has_wallet,
             "rsa": has_rsa,
         },
+    }
+
+
+@app.get("/api/sense/{handle}")
+async def citizen_sense(handle: str):
+    """Expose the citizen's read-only Global Workspace to remote MCP clients."""
+    from types import SimpleNamespace
+    from mcp.tools.sense_handler import handle_sense
+
+    result = handle_sense(
+        {"handle": handle},
+        SimpleNamespace(disable_home_bridge=True),
+    )
+    content = result.get("content", [])
+    text = content[0].get("text", "") if content else ""
+    return {"handle": handle, "text": text}
+
+
+@app.post("/api/cognition/stimulus")
+async def cognitive_stimulus(request: Request):
+    """Persist one MCP stimulus and run the live citizen's two cognitive ticks."""
+    client_host = request.client.host if request.client else ""
+    if client_host not in {"127.0.0.1", "::1", "localhost", "testclient"}:
+        raise HTTPException(status_code=403, detail="Cognitive ingress is local-only")
+
+    payload = await request.json()
+    target = str(payload.get("target_handle") or "").strip().lstrip("@").lower()
+    caller = str(payload.get("caller_handle") or "unknown").strip().lstrip("@").lower()
+    content = str(payload.get("content") or "").strip()
+    source = str(payload.get("source") or "mcp").strip()
+    metadata = payload.get("metadata") if isinstance(payload.get("metadata"), dict) else {}
+    if not target or not content:
+        raise HTTPException(
+            status_code=422, detail="target_handle and content are required"
+        )
+
+    dispatcher = _state.get("dispatcher")
+    if dispatcher is None:
+        raise HTTPException(status_code=503, detail="Cognitive dispatcher unavailable")
+
+    from runtime.cognition.graph_reader_for_awareness_tick import citizen_actor_ids
+
+    graph = dispatcher._get_shared_graph()
+    if graph is None:
+        raise HTTPException(status_code=503, detail="Shared L3 graph unavailable")
+
+    moment_id = f"moment:mcp_stimulus:{uuid.uuid4().hex}"
+    now = time.time()
+    result = graph.query(
+        """
+        MATCH (a)
+        WHERE a.id IN $actor_ids
+        WITH a LIMIT 1
+        MERGE (m:Moment {id: $moment_id})
+        SET m.node_type = 'moment',
+            m.type = 'cognitive_stimulus',
+            m.content = $content,
+            m.synthesis = $content,
+            m.energy = 1.0,
+            m.weight = 0.8,
+            m.stability = 0.0,
+            m.timestamp = $timestamp,
+            m.source = $source,
+            m.author_handle = $caller,
+            m.metadata_json = $metadata_json
+        MERGE (m)-[r:LINK]->(a)
+        SET r.computed_type = 'stimulus_for',
+            r.relation_kind = 'stimulus_for',
+            r.weight = 0.9,
+            r.energy = 1.0,
+            r.perception_energy = 1.0
+        RETURN a.id, m.id
+        """,
+        {
+            "actor_ids": citizen_actor_ids(target),
+            "moment_id": moment_id,
+            "content": content,
+            "timestamp": now,
+            "source": source,
+            "caller": caller,
+            "metadata_json": json.dumps(metadata, ensure_ascii=False),
+        },
+    )
+    if not result.result_set:
+        raise HTTPException(
+            status_code=404, detail=f"No L3 Actor found for citizen @{target}"
+        )
+
+    ticks = dispatcher.process_stimulus(target, source=source)
+    return {
+        "status": "processed",
+        "target_handle": target,
+        "moment_id": moment_id,
+        "ticks": ticks,
     }
 
 

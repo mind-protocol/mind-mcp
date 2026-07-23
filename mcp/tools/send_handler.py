@@ -46,12 +46,60 @@ NICOLAS_CHAT_ID = "1864364329"
 MAX_MESSAGE_LEN = 4000
 
 
+def _repair_utf8_mojibake(text: str) -> str:
+    """Repair UTF-8 bytes accidentally decoded as Windows-1252.
+
+    Some Windows stdio/MCP paths can turn ``déployé`` into ``dÃ©ployÃ©`` before
+    the message reaches this handler. Only attempt a reversible repair when
+    characteristic mojibake markers are present, and keep it only when those
+    markers decrease.
+    """
+    markers = ("Ã", "Â", "â€", "ðŸ", "ï¿½")
+
+    def marker_score(value: str) -> int:
+        return sum(value.count(marker) for marker in markers)
+
+    repaired = text
+    for _ in range(2):
+        current_score = marker_score(repaired)
+        if current_score == 0:
+            break
+        try:
+            candidate = repaired.encode("cp1252").decode("utf-8")
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            break
+        if marker_score(candidate) >= current_score:
+            break
+        repaired = candidate
+    return repaired
+
+
 def _resolve_partner(handle: str) -> dict:
     """Resolve a citizen's human partner and their contact channels.
 
     Returns {"partner_handle": str, "tg_id": str, "discord_dm": str} or empty dict.
     """
-    import json
+    # L4 is the canonical identity registry. Profiles are retained only as a
+    # compatibility fallback for citizens not migrated to the registry yet.
+    try:
+        from runtime.l4.citizen_registry import get_citizen
+
+        citizen = get_citizen(handle)
+        partner_handle = (citizen or {}).get("human_partner", "")
+        if partner_handle:
+            partner = get_citizen(partner_handle) or {}
+            return {
+                "partner_handle": partner_handle,
+                "tg_id": str(
+                    partner.get("tg_chat_id")
+                    or partner.get("tg_user_id")
+                    or ""
+                ),
+            }
+    except Exception as exc:
+        # A registry outage must not erase a still-valid legacy profile.
+        logger.warning("L4 partner resolution failed for @%s: %s", handle, exc)
+
     profile_path = CITIZENS_DIR / handle / "profile.json"
     if not profile_path.exists():
         return {}
@@ -153,12 +201,16 @@ def handle_send(args: Dict[str, Any]) -> Dict[str, Any]:
       @find query    → subcall discovery, route to best match
     """
     platform = args.get("platform", "").lower()
-    message = (args.get("message") or "").strip()
+    message = _repair_utf8_mojibake(
+        (args.get("message") or "").strip()
+    )
 
     if not message:
         return _err("'message' is required and cannot be empty.")
     if not platform:
         return _err("'platform' is required.")
+    if message != args.get("message"):
+        args = dict(args, message=message)
 
     # ── Smart routing: detect @patterns in message ──
     if platform in ("telegram", "discord") and not args.get("chat_id"):
@@ -352,18 +404,36 @@ def _send_partner(args: Dict[str, Any]) -> Dict[str, Any]:
 
     partner = _resolve_partner(handle)
     if not partner.get("partner_handle"):
+        # @mind is the protocol service identity, not a bonded citizen. Its
+        # historical notification destination is Nicolas; keeping this narrow
+        # fallback makes `send(platform="partner")` usable from system wakes
+        # without inventing a bilateral bond for arbitrary citizens.
+        if handle == "mind":
+            fallback_args = dict(
+                args,
+                chat_id=os.environ.get(
+                    "MIND_DEFAULT_HUMAN_CHAT_ID",
+                    NICOLAS_CHAT_ID,
+                ),
+                platform="telegram",
+            )
+            return _send_telegram(fallback_args)
         return _err(f"@{handle} has no human partner configured. Set relationships.human_partner in profile.json.")
 
     # Route to partner's preferred channel (TG first, then fallback)
     if partner.get("tg_id"):
-        args["chat_id"] = partner["tg_id"]
-        args["platform"] = "telegram"
-        return _send_telegram(args)
+        return _send_telegram(dict(
+            args,
+            chat_id=partner["tg_id"],
+            platform="telegram",
+        ))
 
     # Fallback: try Nicolas's chat ID (the default human)
-    args["chat_id"] = NICOLAS_CHAT_ID
-    args["platform"] = "telegram"
-    return _send_telegram(args)
+    return _send_telegram(dict(
+        args,
+        chat_id=NICOLAS_CHAT_ID,
+        platform="telegram",
+    ))
 
 
 # ── Telegram ────────────────────────────────────────────────────────────────

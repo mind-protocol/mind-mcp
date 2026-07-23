@@ -85,13 +85,52 @@ class AlarmWatcher:
 
     def _scan_citizen(self, handle: str, now: datetime):
         """Fire one citizen's due wakes. Never lets one wake break the others."""
+        # Close the previous subjective-time interval and materialize any newly
+        # predicted temporal-desire alarms before reading the due queue. Failure
+        # here must never suppress ordinary user-created wakes.
+        try:
+            from runtime.orchestrator.graph_temporal_desires import (
+                process_temporal_desires,
+            )
+            process_temporal_desires(handle, now)
+        except Exception as e:
+            logger.warning(f"Temporal desire planning skipped for @{handle}: {e}")
+
         for wake in graph_alarms.due_wakes(handle, now):
             wake_id = wake.get("id", "unknown")
             if wake_id in self._fired_ids:
                 continue
 
+            temporal_measurement = {}
             try:
-                self._fire_alarm(handle, self._as_alarm(wake))
+                from runtime.orchestrator.graph_temporal_desires import (
+                    is_temporal_desire_alarm,
+                    validate_due_alarm,
+                )
+                if is_temporal_desire_alarm(wake):
+                    valid, temporal_measurement = validate_due_alarm(handle, wake, now)
+                    if not valid:
+                        graph_alarms.mark_fired(handle, wake_id, now)
+                        self._fired_ids.add(wake_id)
+                        logger.info(
+                            "Obsolete temporal alarm consumed silently for @%s: %s (%s)",
+                            handle,
+                            wake_id,
+                            temporal_measurement.get("reason", "validation_failed"),
+                        )
+                        continue
+            except Exception as e:
+                # A temporal alarm that cannot be validated remains dormant for
+                # retry. It must not become a possibly false interoceptive signal.
+                logger.warning(
+                    f"Temporal alarm validation deferred for @{handle}: {wake_id}: {e}"
+                )
+                continue
+
+            try:
+                alarm = self._as_alarm(wake)
+                alarm["temporal_measurement"] = temporal_measurement
+                self._fire_alarm(handle, alarm)
             except Exception as e:
                 # Delivery failed: the wake stays dormant so the next scan retries it,
                 # and the remaining wakes still get their chance.
@@ -106,15 +145,24 @@ class AlarmWatcher:
                 graph_alarms.reschedule(handle, wake_id, self._next_trigger(scheduled, repeat))
             else:
                 graph_alarms.mark_fired(handle, wake_id, now)
+                try:
+                    from runtime.orchestrator.graph_temporal_desires import (
+                        mark_temporal_alarm_delivered,
+                    )
+                    mark_temporal_alarm_delivered(handle, wake, now)
+                except Exception as e:
+                    logger.warning(
+                        f"Temporal refractory state failed for @{handle}: {wake_id}: {e}"
+                    )
 
     @staticmethod
     def _as_alarm(wake: dict) -> dict:
         """Present a wake Moment in the shape _fire_alarm expects."""
-        return {
-            "id": wake.get("id", "unknown"),
-            "prompt": wake.get("prompt") or wake.get("name", "Scheduled wake"),
-            "place": wake.get("place") or None,
-        }
+        alarm = dict(wake)
+        alarm["id"] = wake.get("id", "unknown")
+        alarm["prompt"] = wake.get("prompt") or wake.get("name", "Scheduled wake")
+        alarm["place"] = wake.get("place") or None
+        return alarm
 
     def _fire_alarm(self, handle: str, alarm: dict):
         """Enqueue a wake message for a citizen whose alarm has fired.
@@ -128,6 +176,7 @@ class AlarmWatcher:
         prompt = alarm.get("prompt") or alarm.get("reason", "Scheduled wake")
         place = alarm.get("place")
         alarm_id = alarm.get("id", "unknown")
+        temporal_measurement = alarm.get("temporal_measurement") or {}
 
         # Check citizen's supervision tier before firing
         try:
@@ -170,6 +219,7 @@ class AlarmWatcher:
                     "alarm_reason": prompt,
                     "wake_prompt": prompt,
                     "place": place,
+                    **temporal_measurement,
                 },
             })
 

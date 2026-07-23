@@ -670,6 +670,16 @@ def process_update(update: dict) -> bool:
             _handle_help(chat_id)
             return True
 
+        if cmd in ("/create", "/creer"):
+            _handle_create_citizen(
+                chat_id,
+                sender_name,
+                user_id,
+                username,
+                text,
+            )
+            return True
+
         if cmd == "/chrome":
             _handle_chrome_link(chat_id, user_id, sender_name)
             return True
@@ -771,22 +781,6 @@ def process_update(update: dict) -> bool:
 
         # ── L3 graph enrichment ──
         # Create Moment + mention links so l3_tick.py can wake citizens.
-        try:
-            from scripts.graph_enricher import on_message as enrich_message
-            chat_title = chat.get("title", f"dm_{chat_id}")
-            enrich_message(
-                platform="telegram",
-                channel_id=chat_id,
-                channel_name=chat_title,
-                author_name=sender_name,
-                author_handle=username.lower() if username else _sanitize_tg_handle(sender_name),
-                content=text,
-                mentioned_handles=all_mentioned,
-                direction="in",
-            )
-        except Exception as e:
-            logger.warning(f"Graph enrichment failed: {e}")
-
         # Resolve target: mentioned citizen > bonded partner > default
         if mentioned_handle:
             target_handle = mentioned_handle
@@ -806,6 +800,38 @@ def process_update(update: dict) -> bool:
         }
         if target_handle:
             metadata["citizen_handle"] = target_handle
+
+        # Record first, then trigger L1 perception. Telegram's stable event
+        # identity makes polling retries idempotent.
+        try:
+            from scripts.graph_enricher import on_message as enrich_message
+            chat_title = chat.get("title", f"dm_{chat_id}")
+            telegram_event_id = f"{update.get('update_id', '')}:{message.get('message_id', '')}"
+            moment_id = enrich_message(
+                platform="telegram",
+                channel_id=chat_id,
+                channel_name=chat_title,
+                author_name=sender_name,
+                author_handle=username.lower() if username else _sanitize_tg_handle(sender_name),
+                content=text,
+                mentioned_handles=all_mentioned,
+                recipient_handles=[target_handle] if target_handle else [],
+                direction="in",
+                event_id=telegram_event_id,
+                platform_user_id=user_id,
+            )
+            if target_handle and moment_id:
+                from scripts.citizen_wake import _inject_l1_stimulus
+                perceived = _inject_l1_stimulus(
+                    target_handle,
+                    text,
+                    origin=username or user_id,
+                    source="telegram",
+                )
+                metadata["l1_perceived"] = bool(perceived)
+                metadata["l1_moment_id"] = moment_id
+        except Exception as e:
+            logger.warning(f"Telegram perception failed: {e}")
 
         # ── Filesystem write (L2 mirror) ──
         # Write incoming message to citizen messages/ directory
@@ -987,6 +1013,7 @@ def _handle_help(chat_id: str):
         "Just send a message and a citizen will respond.\n\n"
         "*Commands:*\n"
         "/help — This help\n"
+        "/create Nom | caractère, valeurs et rôle — Créer ton citoyen IA\n"
         "/list — List AI citizens\n"
         "/talk @handle message — Message a specific citizen\n"
         "/call @handle — Start a voice call with a citizen\n"
@@ -997,6 +1024,69 @@ def _handle_help(chat_id: str):
         "/chrome — Connect your Chrome extension\n"
     )
     send_message(help_text, chat_id)
+
+
+def _handle_create_citizen(
+    chat_id: str,
+    sender_name: str,
+    user_id: str,
+    username: str,
+    text: str,
+):
+    """Create and bond one personal citizen from an explicit Telegram command."""
+    parts = text.split(maxsplit=1)
+    payload = parts[1].strip() if len(parts) > 1 else ""
+    if "|" not in payload:
+        send_message(
+            "Usage : /create Nom | caractère, valeurs et rôle du citoyen\n"
+            "Exemple : /create Nervo | Curieux, rigoureux, bienveillant, "
+            "il m'aide à comprendre et à agir.",
+            chat_id,
+            parse_mode="",
+        )
+        return
+
+    name, intent = (part.strip() for part in payload.split("|", 1))
+    try:
+        from runtime.onboarding.telegram_citizen_birth import create_bonded_citizen
+
+        dispatcher = getattr(_enqueue_fn, "__self__", None)
+        if dispatcher is not None and not hasattr(dispatcher, "bulk_load_citizen_engines"):
+            dispatcher = None
+        result = create_bonded_citizen(
+            name=name,
+            intent=intent,
+            sender_name=sender_name,
+            user_id=user_id,
+            username=username,
+            chat_id=chat_id,
+            dispatcher=dispatcher,
+        )
+        if result.created:
+            send_message(
+                f"{result.name} (@{result.handle}) est né.\n\n"
+                "Votre lien un-humain ↔ un-citoyen est actif. "
+                "Ton prochain message deviendra une perception traçable dans son L1.",
+                chat_id,
+                parse_mode="",
+            )
+        else:
+            send_message(
+                f"{result.message}\n"
+                "Envoie simplement un message pour lui parler.",
+                chat_id,
+                parse_mode="",
+            )
+    except ValueError as exc:
+        send_message(str(exc), chat_id, parse_mode="")
+    except Exception as exc:
+        logger.exception("Telegram citizen creation failed")
+        send_message(
+            "La naissance n'a pas pu être finalisée. Rien n'a été annoncé comme créé. "
+            f"Détail : {exc}",
+            chat_id,
+            parse_mode="",
+        )
 
 
 def _handle_voice_call(chat_id: str, sender_name: str, user_id: str, text: str):

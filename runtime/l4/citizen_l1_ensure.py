@@ -137,14 +137,14 @@ def _get_base_brain_version() -> str:
     return "none"
 
 
-def upsert_l1(handle, citizen_data=None, citizens_dir=None):
+def upsert_l1(handle, citizen_data=None, citizens_dir=None, graph_name=None):
     """Upsert citizen's L1 graph — always runs, uses MERGE for idempotency.
 
     Called at every deploy. Compares seed hash to detect changes.
     If nothing changed, skips. If source data changed, re-merges.
     """
     try:
-        graph = _get_graph()
+        graph = _get_graph(graph_name)
     except Exception as e:
         logger.warning(f"Cannot upsert L1 for {handle}: {e}")
         return "error"
@@ -264,13 +264,18 @@ def ensure_keypair(handle):
         return None
 
 
-def ensure_citizen_l1(handle, citizen_data=None, citizens_dir=None):
+def ensure_citizen_l1(handle, citizen_data=None, citizens_dir=None, graph_name=None):
     """Full ensure: upsert L1 graph (hash-based change detection) + generate keypair.
 
     Returns public key PEM string or None.
     """
     # 1. Upsert L1 (always runs, skips if hash unchanged)
-    upsert_l1(handle, citizen_data=citizen_data, citizens_dir=citizens_dir)
+    upsert_l1(
+        handle,
+        citizen_data=citizen_data,
+        citizens_dir=citizens_dir,
+        graph_name=graph_name,
+    )
 
     # 2. Ensure keypair
     pubkey = ensure_keypair(handle)

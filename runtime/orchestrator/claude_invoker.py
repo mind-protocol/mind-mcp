@@ -9,6 +9,7 @@ Invokes Claude Code subprocess for citizen sessions.
 
 import os
 import select
+import shutil
 import signal
 import subprocess
 import sys
@@ -41,6 +42,91 @@ from runtime.l4.citizen_registry import (
 )
 
 logger = logging.getLogger("orchestrator.invoker")
+
+
+def _cli_executable(name: str) -> str:
+    """Resolve an explicit CLI path or an npm shim on Windows."""
+    configured = os.environ.get(f"{name.upper()}_CLI_PATH", "").strip()
+    if configured and Path(configured).exists():
+        return configured
+    return shutil.which(name) or name
+
+
+_SENSE_PROMPT_FIELDS = (
+    "id",
+    "version",
+    "observedAt",
+    "actorId",
+    "graphId",
+    "mode",
+    "name",
+    "text",
+    "goalIds",
+    "activeNodeIds",
+    "activeTask",
+    "activeAssignment",
+    "queue",
+    "cortexState",
+    "affectVector",
+    "innerOuterFocus",
+    "consciousState",
+    "voice",
+)
+
+
+def _sense_snapshot_for_wake(citizen_handle: str) -> str:
+    """Call sense() before a citizen wake and return a bounded prompt snapshot."""
+    try:
+        from mcp.tools.sense_handler import handle_sense
+
+        result = handle_sense({"handle": citizen_handle})
+        content = result.get("content") or []
+        raw = content[0].get("text", "") if content else ""
+        payload = json.loads(raw)
+        if not isinstance(payload, dict):
+            raise ValueError("sense() did not return a JSON object")
+    except Exception as exc:
+        logger.warning("Mandatory sense() call failed for @%s: %s", citizen_handle, exc)
+        payload = {
+            "status": "unavailable",
+            "citizen": citizen_handle,
+            "reason": f"sense_call_failed: {type(exc).__name__}",
+        }
+
+    snapshot = {
+        field: payload[field]
+        for field in _SENSE_PROMPT_FIELDS
+        if field in payload
+    }
+    if payload.get("status") == "unavailable":
+        snapshot.update({
+            "status": "unavailable",
+            "citizen": payload.get("citizen", citizen_handle),
+            "reason": payload.get("reason", "unknown"),
+        })
+
+    situated = payload.get("situatedEnvironment")
+    if isinstance(situated, dict):
+        snapshot["situatedEnvironment"] = {
+            "measurementStatus": situated.get("measurementStatus"),
+            "source": situated.get("source"),
+            "graphsQueried": situated.get("graphsQueried"),
+            "graphsFailed": situated.get("graphsFailed"),
+            "spaces": [
+                {
+                    "graph": space.get("graph"),
+                    "id": space.get("id"),
+                    "name": space.get("name"),
+                    "locationEvidence": space.get("locationEvidence"),
+                    "nodes": (space.get("nodes") or [])[:20],
+                }
+                for space in (situated.get("spaces") or [])[:8]
+                if isinstance(space, dict)
+            ],
+        }
+
+    return json.dumps(snapshot, ensure_ascii=False, indent=2)
+
 
 # ── Constants ───────────────────────────────────────────────────────────────
 
@@ -425,11 +511,11 @@ def quick_call(
     use_gemini = healthy_account_count() == 0 and os.environ.get("ENABLE_GEMINI_CLI", "1") == "1"
 
     if use_gemini:
-        cmd = ["gemini", "-m", os.environ.get("GEMINI_CLI_MODEL", "gemini-2.5-pro"), "--yolo", "-o", "text"]
+        cmd = [_cli_executable("gemini"), "-m", os.environ.get("GEMINI_CLI_MODEL", "gemini-2.5-pro"), "--yolo", "-o", "text"]
         logger.info(f"quick_call using Gemini (all Claude accounts expired)")
     else:
         cmd = [
-            "claude", "--print",
+            _cli_executable("claude"), "--print",
             "--output-format", "stream-json",
             "--verbose", "--include-partial-messages",
             "--dangerously-skip-permissions",
@@ -466,7 +552,7 @@ def quick_call(
         text=True,
         cwd=citizen_dir,
         env=balanced_env,
-        preexec_fn=_set_resource_limits,
+        preexec_fn=_set_resource_limits if os.name != "nt" else None,
     )
 
     # Prepare moment persistence
@@ -582,7 +668,7 @@ def invoke_claude(
 
     # Build command — stream-json for moment persistence during thinking
     cmd = [
-        "claude", "--print",
+        _cli_executable("claude"), "--print",
         "--output-format", "stream-json",
         "--verbose",
         "--include-partial-messages",
@@ -650,7 +736,7 @@ def invoke_claude(
         text=True,
         cwd=working_dir,
         env=balanced_env,
-        preexec_fn=_set_resource_limits,
+        preexec_fn=_set_resource_limits if os.name != "nt" else None,
     )
 
     # Execute with streaming moment persistence + early subconscious response.
@@ -844,7 +930,7 @@ def _attempt_failover(
 
     failover_uuid = str(uuid.uuid4())
     failover_cmd = [
-        "claude", "--print", "--output-format", "stream-json",
+        _cli_executable("claude"), "--print", "--output-format", "stream-json",
         "--verbose", "--include-partial-messages",
         "--dangerously-skip-permissions",
         "--session-id", failover_uuid,
@@ -867,7 +953,7 @@ def _attempt_failover(
         failover_cmd,
         stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         text=True, cwd=working_dir, env=failover_env,
-        preexec_fn=_set_resource_limits,
+        preexec_fn=_set_resource_limits if os.name != "nt" else None,
     )
 
     # Send stdin in background thread
@@ -952,8 +1038,23 @@ def _build_prompt(
     if is_citizen_session and citizen_data:
         citizen_mode = metadata.get("citizen_mode", mode)
         cognitive_context = metadata.get("cognitive_context", "")
+        sense_snapshot = _sense_snapshot_for_wake(citizen_data["handle"])
+        grounded_task = f"""## Wake grounding
+
+The orchestrator called `sense()` for this wake before invoking you. Orient
+from the snapshot below before answering or acting. Treat unavailable, stale,
+or unknown fields honestly. If an active task is present, execute or address it
+instead of offering to call `sense()` later.
+
+```json
+{sense_snapshot}
+```
+
+## Current stimulus
+
+{voice_text or "(autonomous wake)"}"""
         return build_citizen_prompt(
-            citizen_data, voice_text or "(autonomous wake)",
+            citizen_data, grounded_task,
             session_id, citizen_mode,
             cognitive_context=cognitive_context,
         )
@@ -1055,7 +1156,7 @@ def invoke_gemini(
 
     # Build Gemini CLI command
     cmd = [
-        "gemini",
+        _cli_executable("gemini"),
         "-m", GEMINI_MODEL,
         "--yolo",
         "-o", "text",
@@ -1086,7 +1187,7 @@ def invoke_gemini(
         text=True,
         cwd=working_dir,
         env=clean_env,
-        preexec_fn=_set_resource_limits,
+        preexec_fn=_set_resource_limits if os.name != "nt" else None,
     )
 
     try:
@@ -1148,6 +1249,85 @@ def invoke_gemini(
 
 
 # ── Degraded fallback ──────────────────────────────────────────────────────
+
+def invoke_codex(
+    request: dict,
+    session_id: str,
+    resume_claude_session: Optional[str] = None,
+    pin_account_id: Optional[str] = None,
+) -> tuple[str, Optional[str]]:
+    """Invoke Codex CLI as an ephemeral, read-only citizen response engine."""
+    mode = request.get("mode", "partner")
+    voice_text = request.get("voice_text", "")
+    source = request.get("source", "")
+    metadata = request.get("metadata", {})
+    sender = request.get("sender", "user")
+
+    citizen_handle = normalize_handle(metadata.get("citizen_handle"))
+    citizen_data = registry_citizen_data(citizen_handle) if citizen_handle else None
+    is_citizen_session = bool(citizen_data)
+    is_task = source == "task" or metadata.get("task_type") == "implementation"
+    task_cwd = metadata.get("cwd") if is_task else None
+
+    prompt = _build_prompt(
+        request, session_id, mode, voice_text, sender,
+        is_citizen_session, citizen_data,
+        is_task, task_cwd, metadata,
+    )
+    prompt += (
+        "\n\nFor this response, do not call tools and do not write files. "
+        "Return only the message to send to the human."
+    )
+
+    if is_citizen_session and citizen_handle:
+        working_dir = citizen_workspace(citizen_handle)
+    elif task_cwd and Path(task_cwd).exists():
+        working_dir = Path(task_cwd)
+    else:
+        working_dir = PROJECT_ROOT
+
+    cmd = [
+        _cli_executable("codex"),
+        "exec",
+        "--ephemeral",
+        "--skip-git-repo-check",
+        "--sandbox", "read-only",
+        "--color", "never",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "-",
+    ]
+    clean_env = citizen_env(citizen_handle, os.environ.copy()) if citizen_handle else os.environ.copy()
+    start_time = time.time()
+    process = subprocess.Popen(
+        cmd,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8",
+        cwd=working_dir,
+        env=clean_env,
+        preexec_fn=_set_resource_limits if os.name != "nt" else None,
+    )
+    try:
+        stdout, stderr = process.communicate(input=prompt, timeout=SESSION_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        stdout, stderr = process.communicate()
+        logger.warning(f"Codex session {session_id} timed out after {SESSION_TIMEOUT}s")
+
+    response = (stdout or "").strip()
+    elapsed = time.time() - start_time
+    if process.returncode != 0 or not response:
+        logger.warning(
+            f"Codex session {session_id} failed: exit={process.returncode}, "
+            f"elapsed={elapsed:.1f}s, stderr={stderr[:500] if stderr else ''}"
+        )
+    else:
+        logger.info(f"Codex session {session_id} done in {elapsed:.0f}s - {len(response)} chars")
+    return (response, None)
+
 
 def invoke_degraded(request: dict, session_id: str) -> tuple[str, Optional[str]]:
     """Fallback invocation via direct API when Claude Code is unavailable.

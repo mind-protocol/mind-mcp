@@ -35,8 +35,13 @@ L1_GRAPH_RE = re.compile(r"^l1_(?P<handle>.+)_graph$")
 
 REPEATS = {"once", "hourly", "daily", "weekly"}
 
-# Wakes are Moments; this is the single place that spelling is decided.
-WAKE_MATCH = "MATCH (m:L1Node) WHERE m.nodeType = 'Moment' AND m.semanticType = 'task'"
+# Manual wakes keep the historical ``task`` semantic type. Alarms produced by
+# temporal-desire physics use the explicit ``Alarm`` semantic type. Both pass
+# through the same temporal membrane and no parallel calendar exists.
+WAKE_MATCH = (
+    "MATCH (m:L1Node) WHERE m.nodeType = 'Moment' "
+    "AND m.semanticType IN ['task', 'Alarm']"
+)
 
 
 def graph_name_for(handle: str) -> str:

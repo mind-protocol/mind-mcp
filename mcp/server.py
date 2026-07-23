@@ -67,6 +67,7 @@ Usage:
 import os
 import sys
 import json
+import importlib
 import logging
 from pathlib import Path
 from typing import Any, Dict, Optional
@@ -119,12 +120,15 @@ from mcp.tools.place_handler import TOOL_SCHEMA as PLACE_SCHEMA, handle_place
 from mcp.tools.move_handler import TOOL_SCHEMA as MOVE_SCHEMA, handle_move
 from mcp.tools.call_file_watcher import TOOL_SCHEMA as CALL_SCHEMA, handle_call_file_watcher as handle_call
 from mcp.tools.subcall_handler import TOOL_SCHEMA as SUBCALL_SCHEMA, handle_subcall
+from mcp.tools.recall_handler import TOOL_SCHEMA as RECALL_SCHEMA, handle_recall
 from mcp.tools.profile_handler import TOOL_SCHEMA as PROFILE_SCHEMA, handle_profile
 from mcp.tools.spawn_handler import TOOL_SCHEMA as SPAWN_SCHEMA, handle_spawn
 from mcp.tools.debug_handler import TOOL_SCHEMA as DEBUG_SCHEMA, handle_debug
 from mcp.tools.bond_handler import TOOL_SCHEMA as BOND_SCHEMA, handle_bond
 from mcp.tools.anamnesis_handler import TOOL_SCHEMA as ANAMNESIS_SCHEMA, handle as handle_anamnesis
-from mcp.tools.sense_handler import TOOL_SCHEMA as SENSE_SCHEMA, handle_sense
+from mcp.tools import sense_handler as sense_handler_module
+
+SENSE_SCHEMA = sense_handler_module.TOOL_SCHEMA
 from mcp.tools.inject_cluster_handler import TOOL_SCHEMA as INJECT_CLUSTER_SCHEMA, handle_inject_cluster
 
 logging.basicConfig(
@@ -133,6 +137,13 @@ logging.basicConfig(
     stream=sys.stderr,
 )
 logger = logging.getLogger("mind")
+
+
+def handle_sense_live(arguments: Dict[str, Any], ctx: Any) -> Dict[str, Any]:
+    """Reload sense at call time so a long-lived MCP serves current cognition."""
+    importlib.invalidate_caches()
+    current_module = importlib.reload(sense_handler_module)
+    return current_module.handle_sense(arguments, ctx)
 
 # All tool schemas in presentation order
 TOOL_SCHEMAS = [
@@ -169,6 +180,7 @@ TOOL_SCHEMAS = [
     MOVE_SCHEMA,
     CALL_SCHEMA,
     SUBCALL_SCHEMA,
+    RECALL_SCHEMA,
     # ACT (identity)
     PROFILE_SCHEMA,
     SPAWN_SCHEMA,
@@ -216,12 +228,13 @@ TOOL_DISPATCH = {
     "move":        (handle_move,        True),
     "call":        (handle_call,        True),
     "subcall":     (handle_subcall,     True),
+    "recall":      (handle_recall,      True),
     "profile":     (handle_profile,     True),
     "spawn":       (handle_spawn,       True),
     "debug":       (handle_debug,       True),
     "bond":        (handle_bond,        True),
     "anamnesis":   (handle_anamnesis,   True),
-    "sense":       (handle_sense,       True),
+    "sense":       (handle_sense_live,  True),
     "inject_cluster": (handle_inject_cluster, False),
 }
 

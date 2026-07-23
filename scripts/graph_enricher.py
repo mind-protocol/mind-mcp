@@ -71,6 +71,12 @@ def _moment_id(content: str, author: str, ts: float) -> str:
     return "moment_" + hashlib.sha256(raw.encode()).hexdigest()[:12]
 
 
+def _platform_moment_id(platform: str, channel_id: str, event_id: str) -> str:
+    """Stable message identity for idempotent bridge retries."""
+    raw = f"{platform}:{channel_id}:{event_id}"
+    return "moment_" + hashlib.sha256(raw.encode()).hexdigest()[:12]
+
+
 def _sanitize_handle(name: str) -> str:
     """Turn a display name into a safe graph ID."""
     clean = re.sub(r"[^\w\s]", "", name).strip()
@@ -187,9 +193,12 @@ def on_message(
     author_handle: str,
     content: str,
     mentioned_handles: Optional[list[str]] = None,
+    recipient_handles: Optional[list[str]] = None,
     direction: str = "in",
     is_pinned: bool = False,
-):
+    event_id: str = "",
+    platform_user_id: str = "",
+) -> Optional[str]:
     """Record a message event in the L3 graph.
 
     Args:
@@ -205,12 +214,15 @@ def on_message(
     """
     g = _get_graph()
     if g is None:
-        return
+        return None
 
     ts = time.time()
     space_id = f"space:{platform}:{channel_id}"
     actor_id = author_handle or _sanitize_handle(author_name)
-    moment_id = _moment_id(content, actor_id, ts)
+    moment_id = (
+        _platform_moment_id(platform, channel_id, str(event_id))
+        if event_id else _moment_id(content, actor_id, ts)
+    )
     snippet = content[:300].replace("'", "\\'").replace('"', '\\"')
 
     try:
@@ -247,16 +259,18 @@ def on_message(
         # Weight, energy, trust are computed by the physics engine, not declared.
         g.query(
             """
-            MERGE (m:Moment {
-                id: $moment_id,
-                content: $content,
-                synthesis: $synthesis,
-                permanence: $permanence,
-                pinned: $pinned,
-                timestamp: $ts,
-                platform: $platform,
-                direction: $direction
-            })
+            MERGE (m:Moment {id: $moment_id})
+            ON CREATE SET m.timestamp = $ts
+            SET m.node_type = 'moment',
+                m.content = $content,
+                m.synthesis = $synthesis,
+                m.permanence = $permanence,
+                m.pinned = $pinned,
+                m.platform = $platform,
+                m.platform_event_id = $event_id,
+                m.channel_id = $channel_id,
+                m.author_handle = $actor_id,
+                m.direction = $direction
             """,
             {
                 "moment_id": moment_id,
@@ -266,6 +280,9 @@ def on_message(
                 "pinned": is_pinned,
                 "ts": ts,
                 "platform": platform,
+                "event_id": str(event_id),
+                "channel_id": str(channel_id),
+                "actor_id": actor_id,
                 "direction": direction,
             },
         )
@@ -277,7 +294,7 @@ def on_message(
         )
         g.query(
             """
-            MATCH (a:Actor {id: $actor_id}), (s:Space {id: $space_id})
+            MATCH (a:Actor {id: $actor_id}), (s:Thing {id: $space_id})
             MERGE (a)-[r:LINK]->(s)
             SET r.affinity = CASE WHEN r.affinity IS NULL THEN 0.3 ELSE r.affinity END,
                 r.recency = $ts,
@@ -297,13 +314,11 @@ def on_message(
         )
         g.query(
             """
-            MATCH (m:Moment {id: $moment_id}), (s:Space {id: $space_id})
-            CREATE (m)-[:LINK {
-                hierarchy: 1.0,
-                polarity: 1.0,
-                permanence: $permanence,
-                computed_type: $ct
-            }]->(s)
+            MATCH (m:Moment {id: $moment_id}), (s:Thing {id: $space_id})
+            MERGE (m)-[r:LINK {computed_type: $ct}]->(s)
+            SET r.hierarchy = 1.0,
+                r.polarity = 1.0,
+                r.permanence = $permanence
             """,
             {"moment_id": moment_id, "space_id": space_id,
              "permanence": _perm, "ct": _ct_occurred},
@@ -317,12 +332,10 @@ def on_message(
         g.query(
             """
             MATCH (a:Actor {id: $actor_id}), (m:Moment {id: $moment_id})
-            CREATE (a)-[:LINK {
-                hierarchy: -1.0,
-                permanence: 0.8,
-                polarity: 1.0,
-                computed_type: $ct
-            }]->(m)
+            MERGE (a)-[r:LINK {computed_type: $ct}]->(m)
+            SET r.hierarchy = -1.0,
+                r.permanence = 0.8,
+                r.polarity = 1.0
             """,
             {"actor_id": actor_id, "moment_id": moment_id, "ct": _ct_created},
         )
@@ -348,10 +361,33 @@ def on_message(
             )
 
         # 7b. Tier 1 enrichment: extract URLs and $tokens → create Thing nodes + links
+        for handle in dict.fromkeys(recipient_handles or []):
+            g.query(
+                """
+                MATCH (m:Moment {id: $moment_id})
+                MERGE (target:Actor {id: $handle})
+                ON CREATE SET target.name = $handle, target.type = 'ai'
+                MERGE (m)-[r:LINK {computed_type: 'received_by'}]->(target)
+                SET r.polarity = 1.0,
+                    r.recency = $ts,
+                    r.weight = 0.8,
+                    r.perception_energy = 1.2,
+                    r.platform = $platform,
+                    r.event_id = $event_id
+                """,
+                {
+                    "moment_id": moment_id,
+                    "handle": handle,
+                    "ts": ts,
+                    "platform": platform,
+                    "event_id": str(event_id),
+                },
+            )
+
         _enrich_things(g, moment_id, content, ts)
 
         # 7c. Store platform handle on Actor for cross-platform matching
-        _update_actor_platform(g, actor_id, platform, channel_id)
+        _update_actor_platform(g, actor_id, platform, platform_user_id)
 
         # 7d. Extract platform IDs from content (email, phone, linkedin)
         # and store on the AUTHOR's Actor node
@@ -370,7 +406,7 @@ def on_message(
         #    via citizen_wake.mention_citizen() (called by discord_bridge).
         _stimulate_space_citizens(
             space_id, channel_name, author_name, content, actor_id,
-            exclude_handles=set(mentioned_handles or []),
+            exclude_handles=set(mentioned_handles or []) | set(recipient_handles or []),
             platform=platform,
         )
 
@@ -386,8 +422,10 @@ def on_message(
 
         logger.debug(f"Graph enriched: {actor_id} → #{channel_name} ({len(mentioned_handles or [])} mentions)")
 
+        return moment_id
     except Exception as e:
         logger.warning(f"Graph enrichment failed: {e}")
+        return None
 
 
 def _stimulate_space_citizens(

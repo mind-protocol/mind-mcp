@@ -28,7 +28,12 @@ from runtime.orchestrator.account_balancer import (
     status_line as accounts_status,
     proactive_refresh as refresh_accounts,
 )
-from runtime.orchestrator.claude_invoker import invoke_claude, invoke_degraded, invoke_gemini
+from runtime.orchestrator.claude_invoker import (
+    invoke_claude,
+    invoke_codex,
+    invoke_degraded,
+    invoke_gemini,
+)
 from runtime.orchestrator import activation_pressure
 from runtime.orchestrator.session_tracker import (
     write_neuron_profile,
@@ -59,6 +64,7 @@ try:
     from runtime.cognition.models import CitizenCognitiveState
     from runtime.cognition.graph_reader_for_awareness_tick import create_graph_read_fn
     from runtime.cognition.action_seed import ensure_action_nodes
+    from runtime.cognition.interoception_snapshot import publish_interoception_snapshot
     TWO_TICK_AVAILABLE = True
 except ImportError:
     TWO_TICK_AVAILABLE = False
@@ -84,6 +90,10 @@ ACCOUNT_REFRESH_INTERVAL = 900   # seconds — proactive token refresh (15 min, 
 AWARENESS_INTERVAL = int(os.environ.get("MIND_AWARENESS_INTERVAL", "60"))
 THOUGHT_INTERVAL = int(os.environ.get("MIND_THOUGHT_INTERVAL", "300"))
 BASE_LOOP_INTERVAL = int(os.environ.get("MIND_BASE_LOOP_INTERVAL", "5"))
+INTEROCEPTION_SNAPSHOT_INTERVAL = max(
+    1.0,
+    float(os.environ.get("MIND_INTEROCEPTION_SNAPSHOT_INTERVAL", "10")),
+)
 FIRST_BOOT_CHECK_INTERVAL = 30   # seconds — scan for new citizen .first_boot.json
 SELFIE_INTERVAL = int(os.environ.get("MIND_SELFIE_INTERVAL", "3600"))  # hourly video selfie trigger
 
@@ -95,6 +105,27 @@ SUPPRESS_PATTERNS = [
     "529 overloaded",
     "could not connect to the api",
 ]
+
+
+def _telegram_typing_heartbeat(
+    chat_id: str,
+    stop_event: threading.Event,
+    *,
+    interval: float = 4.0,
+    send_typing_fn=None,
+) -> None:
+    """Keep Telegram's typing indicator visible until the session completes."""
+    if send_typing_fn is None:
+        from runtime.bridges.telegram_bridge import send_typing
+        send_typing_fn = send_typing
+
+    while not stop_event.is_set():
+        try:
+            send_typing_fn(chat_id)
+        except Exception as exc:
+            logger.debug("Telegram typing heartbeat failed for %s: %s", chat_id, exc)
+        if stop_event.wait(interval):
+            break
 
 
 class Dispatcher:
@@ -111,6 +142,10 @@ class Dispatcher:
         self.executor_human = ThreadPoolExecutor(max_workers=human_workers)
         self.executor = ThreadPoolExecutor(max_workers=autonomous_workers)
         self.active_futures: dict[Future, tuple[str, dict]] = {}
+        self._telegram_typing_sessions: dict[
+            str,
+            tuple[threading.Event, threading.Thread],
+        ] = {}
         logger.info(f"Thread pools: {human_workers} human + {autonomous_workers} autonomous")
 
         self._running = False
@@ -124,6 +159,8 @@ class Dispatcher:
         # Per-citizen tick timestamps
         self._last_awareness_tick: dict[str, float] = {}
         self._last_thought_tick: dict[str, float] = {}
+        self._last_interoception_snapshot: dict[str, float] = {}
+        self._citizen_tick_locks: dict[str, threading.RLock] = {}
 
         # Per-citizen active action guard — prevents 5s check from flooding executor
         self._citizen_action_active: dict[str, bool] = {}
@@ -194,6 +231,8 @@ class Dispatcher:
     def stop(self):
         """Stop the dispatch loop."""
         self._running = False
+        for session_id in list(self._telegram_typing_sessions):
+            self._stop_telegram_typing(session_id)
         if self._thread:
             self._thread.join(timeout=10)
         self.executor.shutdown(wait=False)
@@ -436,6 +475,13 @@ class Dispatcher:
                     self._check_action_readiness(handle)
                     # (action_count incremented inside _check_action_readiness)
 
+                # Publish live state for read-only MCP processes on an
+                # independent, short freshness cadence.
+                last_snapshot = self._last_interoception_snapshot.get(handle, 0.0)
+                if now - last_snapshot >= INTEROCEPTION_SNAPSHOT_INTERVAL:
+                    self._last_interoception_snapshot[handle] = now
+                    self._publish_interoception_snapshot(handle, now)
+
             except Exception as e:
                 logger.exception(f"Tick error for {handle}: {e}")
 
@@ -455,17 +501,45 @@ class Dispatcher:
                 f"{tick_duration:.2f}s)"
             )
 
-    def _awareness_tick(self, handle: str) -> None:
+    def _tick_lock(self, handle: str) -> threading.RLock:
+        """Return the lock shared by periodic and event-driven citizen ticks."""
+        return self._citizen_tick_locks.setdefault(handle, threading.RLock())
+
+    def _awareness_tick(self, handle: str):
         """Run awareness tick for a citizen — scan external graph, import nodes."""
         engine = self._citizen_engines.get(handle)
         if not engine:
             return
 
         try:
-            if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
-                engine.awareness_tick()
+            with self._tick_lock(handle):
+                if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
+                    return engine.awareness_tick()
         except Exception as e:
             logger.warning(f"Awareness tick failed for {handle}: {e}")
+
+    def _publish_interoception_snapshot(self, handle: str, observed_at: float) -> None:
+        """Write one atomic, versioned L1 snapshot from the live engine."""
+        state = self._citizen_states.get(handle)
+        engine = self._citizen_engines.get(handle)
+        if not state or not engine:
+            return
+
+        tick = max(
+            int(getattr(state, "tick_count", 0)),
+            int(getattr(engine, "_thought_tick_counter", 0)),
+            int(getattr(engine, "_awareness_tick_counter", 0)),
+        )
+        try:
+            publish_interoception_snapshot(
+                state,
+                tick=tick,
+                orientation=getattr(engine, "_current_orientation", None),
+                engine_instance_id=f"{os.getpid()}:{id(engine)}",
+                observed_at=observed_at,
+            )
+        except Exception as e:
+            logger.warning("Interoception snapshot failed for %s: %s", handle, e)
 
     def _resolve_and_write_pose(self, handle: str) -> None:
         """Resolve idle pose from drives and write to citizen directory.
@@ -542,13 +616,14 @@ class Dispatcher:
             return False, False, None
 
         try:
-            if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
-                result = engine.thought_tick()
-                return (
-                    getattr(result, 'wm_changed', False),
-                    getattr(result, 'action_fired', False),
-                    getattr(result, 'action_node_id', None),
-                )
+            with self._tick_lock(handle):
+                if TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine):
+                    result = engine.thought_tick()
+                    return (
+                        getattr(result, 'wm_changed', False),
+                        getattr(result, 'action_fired', False),
+                        getattr(result, 'action_node_id', None),
+                    )
             return False, False, None
         except Exception as e:
             logger.warning(f"Thought tick failed for {handle}: {e}")
@@ -726,6 +801,9 @@ class Dispatcher:
         claude_alive = healthy_account_count() > 0
         if degradation.is_degraded():
             invoke_fn = invoke_degraded
+        elif not claude_alive and os.environ.get("ENABLE_CODEX_CLI", "1") == "1":
+            invoke_fn = invoke_codex
+            logger.warning("All Claude accounts expired - routing to Codex")
         elif not claude_alive and os.environ.get("ENABLE_GEMINI_CLI", "1") == "1":
             invoke_fn = invoke_gemini
             logger.warning("All Claude accounts expired — routing to Gemini")
@@ -759,7 +837,33 @@ class Dispatcher:
             self.active_futures[future] = (session_id, request)
             update_neuron_status(session_id, "busy")
 
+        self._start_telegram_typing(session_id, request)
         logger.debug(f"Dispatched {session_id} ({mode}/{source}): {voice_text}")
+
+    def _start_telegram_typing(self, session_id: str, request: dict) -> None:
+        """Start one typing heartbeat for a Telegram-backed agent session."""
+        if request.get("source") != "telegram":
+            return
+        chat_id = str((request.get("metadata") or {}).get("chat_id") or "")
+        if not chat_id:
+            return
+
+        self._stop_telegram_typing(session_id)
+        stop_event = threading.Event()
+        thread = threading.Thread(
+            target=_telegram_typing_heartbeat,
+            args=(chat_id, stop_event),
+            daemon=True,
+            name=f"telegram-typing-{session_id[:8]}",
+        )
+        self._telegram_typing_sessions[session_id] = (stop_event, thread)
+        thread.start()
+
+    def _stop_telegram_typing(self, session_id: str) -> None:
+        """Stop and forget a Telegram typing heartbeat without blocking reply."""
+        heartbeat = self._telegram_typing_sessions.pop(session_id, None)
+        if heartbeat:
+            heartbeat[0].set()
 
     def _get_citizen_wm_context(self, citizen_handle: str) -> str:
         """Get WM prompt context for a citizen's next LLM session."""
@@ -936,6 +1040,7 @@ class Dispatcher:
         done_futures = [f for f in self.active_futures if f.done()]
         for future in done_futures:
             session_id, request = self.active_futures.pop(future)
+            self._stop_telegram_typing(session_id)
             _future_start = getattr(future, '_battle_log_start', None)
             metadata = request.get("metadata") or {}
             citizen_handle = metadata.get("citizen_handle", "")
@@ -1085,31 +1190,70 @@ class Dispatcher:
         except Exception as e:
             logger.debug(f"L3 graph not available: {e}")
 
-    def inject_stimulus(self, citizen_handle: str, content: str,
-                        source: str = "external", is_social: bool = False,
-                        is_failure: bool = False, is_progress: bool = False):
-        """Inject a stimulus into a citizen's two-tick engine.
-
-        Called by bridges when external events arrive (messages, mentions, etc.).
-        Injects energy into the citizen's L1 graph via Law 1 (energy injection),
-        then triggers an immediate awareness tick to process the stimulus.
-
-        TODO(task#1): Wire actual Law 1 energy injection for two-tick engine.
-        Currently logs and triggers awareness tick only.
-        """
+    def perceive_external_event(self, citizen_handle: str, source: str = "external"):
+        """Immediately scan an already-recorded external event into citizen L1."""
         self._ensure_citizen_engine(citizen_handle)
 
         if TWO_TICK_AVAILABLE:
             engine = self._citizen_engines.get(citizen_handle)
             if engine and isinstance(engine, TwoTickEngine):
-                logger.info(f"Stimulus for {citizen_handle} from {source}: {content[:80]}")
-                # Trigger immediate awareness tick to pick up the stimulus
-                try:
-                    engine.awareness_tick()
-                except Exception as e:
-                    logger.warning(f"Stimulus awareness tick failed for {citizen_handle}: {e}")
+                logger.info(f"Immediate perception for {citizen_handle} from {source}")
+                return self._awareness_tick(citizen_handle)
         else:
-            logger.warning(f"No engine available for stimulus injection to {citizen_handle}")
+            logger.warning(f"No engine available for perception by {citizen_handle}")
+        return None
+
+    def process_stimulus(self, citizen_handle: str, source: str = "external") -> dict:
+        """Run awareness then thought on the citizen's single live engine."""
+        self._ensure_citizen_engine(citizen_handle)
+        engine = self._citizen_engines.get(citizen_handle)
+        if not (TWO_TICK_AVAILABLE and isinstance(engine, TwoTickEngine)):
+            raise RuntimeError(f"No two-tick engine available for {citizen_handle}")
+
+        now = time.time()
+        with self._tick_lock(citizen_handle):
+            awareness = self._awareness_tick(citizen_handle)
+            wm_changed, action_fired, action_node_id = self._thought_tick(
+                citizen_handle
+            )
+            self._last_awareness_tick[citizen_handle] = now
+            self._last_thought_tick[citizen_handle] = now
+            self._last_interoception_snapshot[citizen_handle] = now
+
+            if wm_changed:
+                state = self._citizen_states.get(citizen_handle)
+                if state:
+                    write_awareness_file(
+                        state,
+                        getattr(engine, "_thought_tick_counter", 0),
+                        getattr(engine, "_current_orientation", None),
+                    )
+            self._publish_interoception_snapshot(citizen_handle, now)
+            if action_fired:
+                self._fire_conscious_action(citizen_handle, action_node_id)
+
+        logger.info(
+            "Stimulus cycle for %s from %s: awareness=%s thought=%s action=%s",
+            citizen_handle,
+            source,
+            getattr(engine, "_awareness_tick_counter", 0),
+            getattr(engine, "_thought_tick_counter", 0),
+            action_fired,
+        )
+        return {
+            "awareness_tick": int(getattr(engine, "_awareness_tick_counter", 0)),
+            "thought_tick": int(getattr(engine, "_thought_tick_counter", 0)),
+            "imported_nodes": int(getattr(awareness, "nodes_imported", 0)),
+            "wm_changed": bool(wm_changed),
+            "action_fired": bool(action_fired),
+            "action_node_id": action_node_id,
+        }
+
+    def inject_stimulus(self, citizen_handle: str, content: str,
+                        source: str = "external", is_social: bool = False,
+                        is_failure: bool = False, is_progress: bool = False):
+        """Compatibility alias for the full awareness + thought stimulus cycle."""
+        return self.process_stimulus(citizen_handle, source=source)
 
     def bulk_load_citizen_engines(self, citizen_handles: list[str]):
         """Pre-load engines at boot for all citizens.

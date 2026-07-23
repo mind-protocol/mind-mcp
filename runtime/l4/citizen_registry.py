@@ -238,6 +238,14 @@ def citizen_for_human(user_id: Optional[str] = None,
     startup: the graph already holds the answer.
     """
     human = normalize_handle(username)
+    if human:
+        # Telegram usernames and citizen handles can collide (NLR's Telegram
+        # username is `nlr_ai`, which is also his Citizen AI handle). A username
+        # is admissible as the human endpoint only when L4 says that actor is
+        # human. Otherwise fall back to Telegram's stable numeric identity.
+        candidate = get_citizen(human)
+        if not candidate or candidate.get("type") != "human":
+            human = None
     if not human and user_id:
         try:
             result = _graph().query(
@@ -302,6 +310,82 @@ def upsert_citizen(handle: str, **fields) -> str:
     invalidate(normalized)
     _cache.clear()  # list_citizens/tg indexes are now stale too
     return normalized
+
+
+def upsert_human(
+    handle: str,
+    *,
+    name: str = "",
+    tg_user_id: Optional[str] = None,
+    tg_chat_id: Optional[str] = None,
+) -> str:
+    """Create or update a human identity used for one-to-one citizen bonds."""
+    normalized = normalize_handle(handle)
+    if not normalized:
+        raise ValueError("upsert_human requires a non-empty handle")
+
+    now = int(time.time())
+    _graph().query(
+        "MERGE (h:Actor {id: $id}) "
+        "SET h.handle = $handle, h.name = $name, h.type = 'human', "
+        "h.node_type = 'Actor', h.tg_user_id = $tg_user_id, "
+        "h.tg_chat_id = $tg_chat_id, h.updated_at_s = $now",
+        {
+            "id": f"human_{normalized}",
+            "handle": normalized,
+            "name": name or normalized,
+            "tg_user_id": str(tg_user_id or ""),
+            "tg_chat_id": str(tg_chat_id or tg_user_id or ""),
+            "now": now,
+        },
+    )
+    _cache.clear()
+    return normalized
+
+
+def activate_bilateral_bond(human_handle: str, citizen_handle: str) -> str:
+    """Activate a one-human/one-citizen bond, refusing conflicting bonds."""
+    human = normalize_handle(human_handle)
+    citizen = normalize_handle(citizen_handle)
+    if not human or not citizen:
+        raise ValueError("Both human_handle and citizen_handle are required")
+
+    graph = _graph()
+    conflicts = graph.query(
+        "MATCH (a:Actor)-[l:LINK {type: 'bilateral_bond', status: 'active'}]-(b:Actor) "
+        "WHERE a.handle IN [$human, $citizen] OR b.handle IN [$human, $citizen] "
+        "RETURN a.handle, b.handle",
+        {"human": human, "citizen": citizen},
+    )
+    for left, right in conflicts.result_set:
+        pair = {normalize_handle(left), normalize_handle(right)}
+        if pair != {human, citizen}:
+            raise ValueError(
+                f"One-to-one bond conflict: @{left} is already bonded to @{right}"
+            )
+
+    bond_id = f"bond:{human}:{citizen}"
+    result = graph.query(
+        "MATCH (h:Actor {handle: $human, type: 'human'}), "
+        "      (c:Actor {handle: $citizen}) "
+        "WHERE c.type <> 'human' "
+        "MERGE (h)-[l:LINK {type: 'bilateral_bond'}]->(c) "
+        "SET l.status = 'active', l.bond_id = $bond_id, l.weight = 1.0, "
+        "l.trust = 0.7, l.permanence = 0.8, l.valence = 0.9, "
+        "l.activated_at_s = $now "
+        "RETURN l.bond_id",
+        {
+            "human": human,
+            "citizen": citizen,
+            "bond_id": bond_id,
+            "now": int(time.time()),
+        },
+    )
+    if not result.result_set:
+        raise ValueError("Cannot create bond: human or citizen identity is missing")
+
+    _cache.clear()
+    return bond_id
 
 
 def citizen_data(handle: str) -> Optional[dict]:

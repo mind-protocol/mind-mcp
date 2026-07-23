@@ -23,31 +23,69 @@ def test_talk_and_think_expose_distinct_intentions():
 def test_talk_delivers_to_requested_citizen(monkeypatch):
     monkeypatch.setenv("CITIZEN_HANDLE", "nlr")
 
+    tick_report = {"moment_id": "moment:mcp_stimulus:talk"}
     with patch(
         "runtime.orchestrator.claude_invoker.quick_call",
         return_value="Voici mon avis.",
-    ) as quick_call:
+    ) as quick_call, patch(
+        "mcp.tools.citizen_message_handler.trigger_cognitive_ticks",
+        return_value=tick_report,
+    ) as trigger_ticks:
         result = handle_talk({"target": "@forge", "message": "Regarde ceci."})
 
+    trigger_ticks.assert_called_once_with(
+        target="forge",
+        content="Regarde ceci.",
+        source="mcp:talk",
+        caller="nlr",
+        metadata={"intent": "talk"},
+    )
     quick_call.assert_called_once_with(
         "forge", "Regarde ceci.", caller_handle="nlr"
     )
+    assert "awareness + thought ticks" in _text(result)
     assert "@forge responds" in _text(result)
 
 
 def test_think_uses_same_delivery_path_with_self_as_target(monkeypatch):
     monkeypatch.setenv("CITIZEN_HANDLE", "@nlr")
 
+    tick_report = {"moment_id": "moment:mcp_stimulus:think"}
     with patch(
         "runtime.orchestrator.claude_invoker.quick_call",
         return_value="Je poursuis cette idée.",
-    ) as quick_call:
+    ) as quick_call, patch(
+        "mcp.tools.citizen_message_handler.trigger_cognitive_ticks",
+        return_value=tick_report,
+    ) as trigger_ticks:
         result = handle_self_think({"message": "Pense davantage à ce sujet."})
 
+    trigger_ticks.assert_called_once_with(
+        target="nlr",
+        content="Pense davantage à ce sujet.",
+        source="mcp:think",
+        caller="nlr",
+        metadata={"intent": "think"},
+    )
     quick_call.assert_called_once_with(
         "nlr", "Pense davantage à ce sujet.", caller_handle="nlr"
     )
     assert "Self-stimulus sent to @nlr" in _text(result)
+
+
+def test_message_fails_closed_when_ticks_do_not_run(monkeypatch):
+    from mcp.tools.cognitive_stimulus import CognitiveStimulusError
+
+    monkeypatch.setenv("CITIZEN_HANDLE", "nlr")
+    with patch(
+        "mcp.tools.citizen_message_handler.trigger_cognitive_ticks",
+        side_effect=CognitiveStimulusError("orchestrator unavailable"),
+    ), patch("runtime.orchestrator.claude_invoker.quick_call") as quick_call:
+        result = handle_self_think({"message": "Un sujet important."})
+
+    assert result["isError"] is True
+    assert "cognitive ticks did not run" in _text(result)
+    quick_call.assert_not_called()
 
 
 def test_messages_must_not_be_empty(monkeypatch):

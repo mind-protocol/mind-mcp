@@ -215,6 +215,8 @@ def awareness_tick(
                 weight=float(ext_node.get("weight", 0.1)),
                 stability=float(ext_node.get("stability", 0.0)),
                 origin_citizen=ext_node.get("origin_citizen", ""),
+                origin_date=float(ext_node.get("origin_date", 0.0)) or None,
+                partner_relevance=float(ext_node.get("partner_relevance", 0.0)),
             )
             new_node.last_activated_at = time.time()
             new_node.activation_count = 1

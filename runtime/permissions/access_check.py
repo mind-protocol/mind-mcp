@@ -244,11 +244,29 @@ def detect_citizen_handle() -> str:
 
     Priority:
       1. MIND_HANDLE env var
-      2. CWD inside citizens/{handle}/
+      2. Canonical process identity variables used by HTTP/stdio transports
+      3. MIND_ACTOR actor ID
+      4. CWD inside citizens/{handle}/
     """
-    handle = os.environ.get("MIND_HANDLE", "")
-    if handle:
-        return handle
+    for env_name in (
+        "MIND_HANDLE",
+        "MIND_CITIZEN_ID",
+        "CITIZEN_HANDLE",
+        "MIND_CITIZEN",
+        "MIND_CITIZEN_HANDLE",
+        "MIND_ACTOR",
+    ):
+        raw = os.environ.get(env_name, "")
+        if not raw:
+            continue
+        handle = raw.strip().lstrip("@").lower().replace("-", "_")
+        for prefix in ("citizen_", "actor_"):
+            if handle.startswith(prefix):
+                handle = handle[len(prefix):]
+                break
+        if handle:
+            return handle
+
     cwd = os.getcwd()
     segment = _extract_citizens_segment(cwd)
     if segment:

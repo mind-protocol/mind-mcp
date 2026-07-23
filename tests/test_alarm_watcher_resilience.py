@@ -48,6 +48,16 @@ def sovereign():
         yield
 
 
+@pytest.fixture(autouse=True)
+def isolate_temporal_planner():
+    """Unit watcher tests must not mutate a developer's live FalkorDB graphs."""
+    with patch(
+        "runtime.orchestrator.graph_temporal_desires.process_temporal_desires",
+        return_value={},
+    ):
+        yield
+
+
 def test_wakes_are_read_from_the_citizen_l1_graph(sovereign):
     fired = []
     watcher = AlarmWatcher(enqueue_fn=fired.append)
@@ -145,6 +155,63 @@ def test_a_wake_never_fires_twice_in_one_session(sovereign):
         watcher._scan_alarms()  # the store failed to update — the watcher must still hold
 
     assert len(fired) == 1
+
+
+def test_obsolete_temporal_alarm_is_consumed_without_a_stimulus(sovereign):
+    watcher = AlarmWatcher(enqueue_fn=lambda item: pytest.fail("must stay silent"))
+    wake = _wake("temporal-old", "Temporal")
+    wake.update({
+        "semanticType": "Alarm",
+        "reason": "temporal_desire_threshold",
+        "sourceNarrativeId": "wish:test",
+        "realizationNarrativeId": "objective:test",
+        "relationGeneration": 1,
+    })
+
+    with patch.object(graph_alarms, "list_citizen_handles", return_value=["nlr"]), \
+         patch.object(graph_alarms, "due_wakes", return_value=[wake]), \
+         patch.object(graph_alarms, "mark_fired", return_value=True) as mark, \
+         patch(
+             "runtime.orchestrator.graph_temporal_desires.validate_due_alarm",
+             return_value=(False, {"reason": "stale_generation"}),
+         ):
+        watcher._scan_alarms()
+
+    mark.assert_called_once()
+
+
+def test_valid_temporal_alarm_carries_structured_interoception(sovereign):
+    fired = []
+    watcher = AlarmWatcher(enqueue_fn=fired.append)
+    wake = _wake("temporal-current", "Temporal")
+    wake.update({
+        "semanticType": "Alarm",
+        "reason": "temporal_desire_threshold",
+        "sourceNarrativeId": "wish:test",
+        "realizationNarrativeId": "objective:test",
+        "relationGeneration": 2,
+    })
+    measurement = {
+        "channel": "interoception.temporal_desire",
+        "pressure": 0.7,
+        "threshold": 0.65,
+    }
+
+    with patch.object(graph_alarms, "list_citizen_handles", return_value=["nlr"]), \
+         patch.object(graph_alarms, "due_wakes", return_value=[wake]), \
+         patch.object(graph_alarms, "mark_fired", return_value=True), \
+         patch(
+             "runtime.orchestrator.graph_temporal_desires.validate_due_alarm",
+             return_value=(True, measurement),
+         ), \
+         patch(
+             "runtime.orchestrator.graph_temporal_desires.mark_temporal_alarm_delivered"
+         ) as delivered:
+        watcher._scan_alarms()
+
+    assert fired[0]["metadata"]["channel"] == "interoception.temporal_desire"
+    assert fired[0]["metadata"]["pressure"] == 0.7
+    delivered.assert_called_once()
 
 
 if __name__ == "__main__":

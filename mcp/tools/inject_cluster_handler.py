@@ -28,6 +28,12 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from mcp.tools.cognitive_stimulus import (
+    CognitiveStimulusError,
+    detect_citizen,
+    trigger_cognitive_ticks,
+)
+
 logger = logging.getLogger("mind.inject_cluster")
 
 # ─── Schema Constants ─────────────────────────────────────────────────────────
@@ -573,6 +579,8 @@ TOOL_SCHEMA = {
         "[ACT] Inject nodes and links into the L3 WorkspaceStore from YAML. "
         "Validates types, IDs, endpoints. Deduplicates via ID/name/embedding. "
         "Auto-generates synthesis and embeddings. Applies physics defaults. "
+        "Every completed ingestion becomes a stimulus for the current citizen "
+        "and triggers awareness then thought ticks. "
         "Commits PARTIALLY on ontology violations: invalid nodes/links and any node "
         "that would be left orphaned (no path to the existing graph) are rejected with "
         "actionable 'FIX:' messages; valid, connected nodes are still saved."
@@ -868,4 +876,45 @@ def handle_inject_cluster(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
         for e in errors:
             result_lines.append(f"  {e}")
 
-    return {"content": [{"type": "text", "text": "\n".join(result_lines)}]}
+    mutation_count = (
+        stats["new"] + stats["id_merge"] + stats["lex_merge"]
+        + stats["vec_merge"] + link_stats["added"]
+    )
+    stimulus_content = (
+        "L3 cluster ingestion completed: "
+        f"{stats['new']} new nodes, "
+        f"{stats['id_merge'] + stats['lex_merge'] + stats['vec_merge']} merged nodes, "
+        f"{link_stats['added']} added links, {stats['rejected']} rejected nodes. "
+        f"Committed cluster node IDs: {', '.join(sorted(new_node_ids)[:25]) or 'none'}."
+    )
+    try:
+        tick_report = trigger_cognitive_ticks(
+            target=detect_citizen(),
+            content=stimulus_content,
+            source="mcp:inject_cluster",
+            metadata={
+                "intent": "inject_cluster",
+                "mutation_count": mutation_count,
+                "new_node_ids": sorted(new_node_ids),
+            },
+        )
+        result_lines.append(
+            "\nCognitive stimulus: "
+            f"{tick_report['moment_id']} processed by awareness + thought ticks."
+        )
+        return {
+            "content": [{"type": "text", "text": "\n".join(result_lines)}],
+            "structuredContent": {
+                "stimulus": tick_report,
+                "mutation_count": mutation_count,
+            },
+        }
+    except CognitiveStimulusError as exc:
+        result_lines.append(
+            "\nERROR: Cluster changes were persisted, but their mandatory "
+            f"cognitive ticks failed: {exc}"
+        )
+        return {
+            "content": [{"type": "text", "text": "\n".join(result_lines)}],
+            "isError": True,
+        }
