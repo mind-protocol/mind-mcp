@@ -20,7 +20,9 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
+
+from mcp.tools.suggest import suggestion_block
 
 logger = logging.getLogger("mind.send")
 
@@ -171,6 +173,35 @@ def handle_send(args: Dict[str, Any]) -> Dict[str, Any]:
     return handler(args)
 
 
+def _mention_candidates() -> List[Dict[str, Any]]:
+    """Collect resolvable @handles (citizens + narratives) for suggestions.
+
+    Best-effort: each source is guarded so a missing dir or graph never breaks
+    the suggestion path.
+    """
+    cands: List[Dict[str, Any]] = []
+    try:
+        if CITIZENS_DIR.exists():
+            for d in CITIZENS_DIR.iterdir():
+                if (d / "profile.json").exists():
+                    cands.append({"id": d.name})
+    except Exception as e:
+        logger.debug(f"citizen candidate scan failed: {e}")
+    try:
+        from falkordb import FalkorDB
+        g = FalkorDB(
+            host=os.environ.get("FALKORDB_HOST", "localhost"),
+            port=int(os.environ.get("FALKORDB_PORT", "6379")),
+        ).select_graph(os.environ.get("L3_GRAPH", "lumina_prime"))
+        r = g.query("MATCH (n:Narrative) RETURN n.id, n.name LIMIT 2000")
+        for row in (r.result_set or []):
+            if row and row[0]:
+                cands.append({"id": row[0], "name": row[1] if len(row) > 1 else None})
+    except Exception as e:
+        logger.debug(f"narrative candidate scan failed: {e}")
+    return cands
+
+
 def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Detect @patterns in message and route accordingly.
 
@@ -187,6 +218,7 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
 
     citizens_dir = PROJECT_ROOT / "citizens"
     results = []
+    unresolved: List[str] = []
 
     for mention in mentions:
         mention_lower = mention.lower()
@@ -325,9 +357,32 @@ def _smart_route(args: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         except Exception as e:
             logger.debug(f"Group resolution failed for {mention_lower}: {e}")
 
+        # Reached only if none of the three resolvers matched this mention.
+        unresolved.append(mention)
+
     if results:
-        return _ok(f"Smart-routed to {len(results)} recipient(s).")
-    return None  # Fall through to normal send
+        msg = f"Smart-routed to {len(results)} recipient(s)."
+        if unresolved:
+            cands = _mention_candidates()
+            blocks = "".join(suggestion_block(m, "handle", cands) for m in unresolved)
+            msg += (
+                "\n\nUnresolved: " + ", ".join(f"@{m}" for m in unresolved) + blocks
+            )
+        return _ok(msg)
+
+    if unresolved:
+        # telegram/discord with no chat_id — an unresolved @mention has nowhere
+        # to go, so a chat_id-less fall-through would just fail. Surface the
+        # closest-resembling handles instead.
+        cands = _mention_candidates()
+        blocks = "".join(suggestion_block(m, "handle", cands) for m in unresolved)
+        return _err(
+            "Could not resolve "
+            + ", ".join(f"@{m}" for m in unresolved)
+            + " to any citizen or narrative." + blocks
+        )
+
+    return None  # No routable mentions — fall through to normal send
 
 
 # ── Partner (shortcut) ──────────────────────────────────────────────────────
