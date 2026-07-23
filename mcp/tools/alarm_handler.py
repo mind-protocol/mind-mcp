@@ -181,6 +181,7 @@ def _cancel_alarm(handle: str, args: Dict) -> Dict:
     # Rewrite file with alarm deactivated
     updated = []
     found = False
+    existing = []
     for line in alarms_file.read_text().strip().split("\n"):
         if line.strip():
             try:
@@ -188,12 +189,16 @@ def _cancel_alarm(handle: str, args: Dict) -> Dict:
                 if alarm.get("id") == alarm_id:
                     alarm["active"] = False
                     found = True
+                elif alarm.get("active", True) and alarm.get("id"):
+                    existing.append({"id": alarm.get("id"), "name": alarm.get("reason")})
                 updated.append(json.dumps(alarm))
             except json.JSONDecodeError:
                 updated.append(line)
 
     if not found:
-        return {"content": [{"type": "text", "text": f"Alarm {alarm_id} not found"}]}
+        from mcp.tools.suggest import suggestion_block
+        hint = suggestion_block(alarm_id, "alarm", existing)
+        return {"content": [{"type": "text", "text": f"Alarm {alarm_id} not found{hint}"}]}
 
     alarms_file.write_text("\n".join(updated) + "\n")
     logger.info(f"Alarm cancelled for @{handle}: {alarm_id}")

@@ -25,6 +25,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
+from mcp.tools.suggest import suggestion_block
+
 logger = logging.getLogger("mind.inject_cluster")
 
 # ─── Schema Constants ─────────────────────────────────────────────────────────
@@ -333,9 +335,11 @@ class GraphValidator:
             return False, "REJECTED link: missing 'target_id'. Use source_id/target_id"
 
         if src not in node_ids:
-            return False, f"REJECTED link: source_id '{src}' does not exist. Invariant V1 violated."
+            hint = suggestion_block(src, "node id", [{"id": nid} for nid in node_ids], cutoff=50.0)
+            return False, f"REJECTED link: source_id '{src}' does not exist. Invariant V1 violated.{hint}"
         if tgt not in node_ids:
-            return False, f"REJECTED link: target_id '{tgt}' does not exist. Invariant V1 violated."
+            hint = suggestion_block(tgt, "node id", [{"id": nid} for nid in node_ids], cutoff=50.0)
+            return False, f"REJECTED link: target_id '{tgt}' does not exist. Invariant V1 violated.{hint}"
 
         # relation_kind must be null at L3
         rk = link.get("relation_kind")

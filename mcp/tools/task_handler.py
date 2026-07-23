@@ -84,6 +84,15 @@ def _normalize_actor(actor_id, ctx):
     return normalize_agent_id(actor_id, graph_ops=ctx.graph_ops)
 
 
+def _task_suggestions(task_id, ctx) -> str:
+    """A 'Did you mean…?' block of the closest-resembling task ids, or ''."""
+    from mcp.tools.suggest import graph_candidates, suggestion_block
+    return suggestion_block(
+        task_id, "task",
+        graph_candidates(ctx.graph_ops, label="Narrative", where="n.type = 'task'"),
+    )
+
+
 def _task_list(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
     """List available tasks with linked problems."""
     module_filter = args.get("module")
@@ -163,7 +172,7 @@ def _task_claim(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             {"id": task_id, "actor": actor_id, "ts": timestamp}
         )
         if not result or not result[0]:
-            return _err("Task not found or already claimed.")
+            return _err(f"Task not found or already claimed.{_task_suggestions(task_id, ctx)}")
 
         ctx.graph_ops._query(
             "MATCH (t {id: $task_id}) MATCH (a {id: $actor_id}) "
@@ -199,7 +208,7 @@ def _task_complete(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             {"id": task_id, "ts": timestamp, "actor": actor_id}
         )
         if not result or not result[0]:
-            return _err("Task not found or not active.")
+            return _err(f"Task not found or not active.{_task_suggestions(task_id, ctx)}")
 
         from runtime.capability_integration import get_throttler
         throttler = get_throttler()
@@ -235,7 +244,7 @@ def _task_fail(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             {"id": task_id, "ts": timestamp, "reason": reason, "actor": actor_id}
         )
         if not result or not result[0]:
-            return _err("Task not found or already completed.")
+            return _err(f"Task not found or already completed.{_task_suggestions(task_id, ctx)}")
 
         from runtime.capability_integration import get_throttler
         throttler = get_throttler()

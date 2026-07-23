@@ -16,6 +16,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from mcp.tools.suggest import suggestion_block
+
 logger = logging.getLogger("mind.graph_query")
 
 WORKSPACE_PATH = Path.home() / ".mind-desktop" / "workspace.json"
@@ -200,6 +202,19 @@ def handle_graph_query(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
 
         output_lines.append(f"## Query {i}: {query}")
         output_lines.append(f"Found {len(scored)} matches (showing top {len(top)})\n")
+
+        # Resilience: no exact/substring hit — offer the closest-resembling
+        # nodes so a typo'd id/name still lands somewhere useful.
+        if not scored:
+            candidates = nodes
+            if node_types:
+                candidates = [n for n in nodes if n.get("node_type") in node_types]
+            if scope_filter:
+                candidates = [n for n in candidates if scope_filter in (n.get("id") or "")]
+            hint = suggestion_block(query, "node", candidates, cutoff=50.0)
+            if hint:
+                output_lines.append(hint.lstrip("\n"))
+            output_lines.append("")
 
         matched_ids = set()
         for score, node in top:

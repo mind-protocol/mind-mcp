@@ -2059,9 +2059,14 @@ def handle_subcall(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
         # ── Single target mode: @handle ──
         target_actor_id = _find_target_actor_id(target_handle, ctx.graph_ops)
         if not target_actor_id:
+            from mcp.tools.suggest import graph_candidates, suggestion_block
+            hint = suggestion_block(
+                target_handle, "actor",
+                graph_candidates(ctx.graph_ops, label="Actor"),
+            )
             return _err(
                 f"@{target_handle} not found in graph. "
-                f"They need to exist as an Actor node first."
+                f"They need to exist as an Actor node first.{hint}"
             )
 
         # 2. Compute embedding for the query

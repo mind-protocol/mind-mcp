@@ -467,7 +467,12 @@ def _place_join(args: Dict[str, Any], ctx: ServerContext) -> Dict[str, Any]:
             {"id": place_id},
         )
         if not result:
-            return _err(f"Place '{place_id}' not found.")
+            from mcp.tools.suggest import graph_candidates, suggestion_block
+            hint = suggestion_block(
+                place_id, "place",
+                graph_candidates(ctx.graph_ops, label="Space"),
+            )
+            return _err(f"Place '{place_id}' not found.{hint}")
 
         place_name = result[0][1] if len(result[0]) > 1 else place_id
 
