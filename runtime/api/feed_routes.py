@@ -21,6 +21,7 @@ from fastapi import APIRouter, Request, HTTPException
 
 from runtime.api.rate_limiter import check_rate_limit
 from runtime.api import jwt_utils
+from runtime.api.auth_mode import require_auth as _mode_require_auth
 
 logger = logging.getLogger("home.feed")
 
@@ -33,15 +34,12 @@ FEED_DIR = PROJECT_ROOT / "shrine" / "state" / "feed"
 # ── Auth helper ───────────────────────────────────────────────────────────
 
 def _require_auth(request: Request) -> dict:
-    """Extract and verify JWT from Authorization header. Returns payload or raises 401."""
-    auth_header = request.headers.get("Authorization", "")
-    if not auth_header.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization header with Bearer token required")
-    token = auth_header[7:].strip()
-    payload = jwt_utils.verify_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return payload
+    """Authenticate the request per AUTH_MODE (none / token / oauth).
+
+    Delegates to runtime.api.auth_mode — flip AUTH_MODE there (or via env) to
+    switch between open access, JWT tokens, and OAuth.
+    """
+    return _mode_require_auth(request)
 
 
 def _get_client_ip(request: Request) -> str:
