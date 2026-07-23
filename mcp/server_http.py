@@ -15,6 +15,7 @@ Then point Claude.ai custom connector to:
 import json
 import logging
 import sys
+import uuid
 from pathlib import Path
 
 # Add project root
@@ -38,14 +39,29 @@ logger.info(f"MindServer loaded ({len(TOOL_SCHEMAS)} tools)")
 
 @app.route("/mcp", methods=["POST"])
 def mcp_endpoint():
-    """Handle MCP JSON-RPC requests over HTTP."""
+    """Handle MCP JSON-RPC requests over the Streamable HTTP transport."""
     try:
         req = request.get_json(force=True)
     except Exception as e:
         return json.dumps({"jsonrpc": "2.0", "id": None, "error": {"code": -32700, "message": f"Parse error: {e}"}}), 400
 
     response = server.handle_request(req)
-    return Response(json.dumps(response), mimetype="application/json")
+
+    # Notifications (e.g. notifications/initialized) produce no body.
+    # Streamable HTTP expects 202 Accepted with an empty payload — strict
+    # clients (ChatGPT) break if a notification gets a JSON-RPC reply.
+    if response is None:
+        return Response(status=202)
+
+    resp = Response(json.dumps(response), mimetype="application/json")
+
+    # On initialize, hand the client a session id. Streamable HTTP clients
+    # echo it back in the Mcp-Session-Id header on subsequent calls; we accept
+    # any value (stateless), but emitting one keeps strict clients happy.
+    if isinstance(req, dict) and req.get("method") == "initialize":
+        resp.headers["Mcp-Session-Id"] = uuid.uuid4().hex
+
+    return resp
 
 
 @app.route("/sse", methods=["GET"])

@@ -244,11 +244,20 @@ class MindServer:
 
         return True
 
-    def handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
-        """Handle a JSON-RPC request."""
+    def handle_request(self, request: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Handle a JSON-RPC request.
+
+        Returns the JSON-RPC response dict, or ``None`` for notifications
+        (requests without an ``id``, e.g. ``notifications/initialized``).
+        Notifications MUST NOT receive a response per the JSON-RPC spec —
+        strict clients (ChatGPT developer-mode MCP) break the handshake if
+        they get one. Callers must skip emitting anything when this is None.
+        """
         method = request.get("method", "")
         params = request.get("params", {})
         request_id = request.get("id")
+        # JSON-RPC notifications carry no "id" and must be answered with silence.
+        is_notification = "id" not in request
 
         try:
             if method == "initialize":
@@ -258,16 +267,26 @@ class MindServer:
             elif method == "tools/call":
                 result = self._handle_call_tool(params)
             else:
+                if is_notification:
+                    return None  # e.g. notifications/initialized — swallow silently
                 return self._error_response(request_id, -32601, f"Method not found: {method}")
 
+            if is_notification:
+                return None
             return self._success_response(request_id, result)
         except Exception as e:
             logger.exception(f"Error handling {method}")
+            if is_notification:
+                return None
             return self._error_response(request_id, -32000, str(e))
 
     def _handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
+        # Echo the protocol version the client negotiated when present, so
+        # clients that speak a newer revision (ChatGPT: 2025-03-26 / 2025-06-18)
+        # don't see a downgrade. Fall back to the version we implement.
+        client_version = params.get("protocolVersion")
         return {
-            "protocolVersion": "2024-11-05",
+            "protocolVersion": client_version or "2024-11-05",
             "capabilities": {"tools": {}},
             "serverInfo": {"name": "mind", "version": "0.3.0"},
         }
@@ -379,7 +398,8 @@ def main():
         try:
             request = json.loads(line)
             response = server.handle_request(request)
-            print(json.dumps(response), flush=True)
+            if response is not None:  # notifications produce no response
+                print(json.dumps(response), flush=True)
         except json.JSONDecodeError as e:
             error_response = {
                 "jsonrpc": "2.0",
