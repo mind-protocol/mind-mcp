@@ -113,16 +113,28 @@ Fichiers locaux (human-friendly):
 
 ## 8) Checks de sante
 
+Le serveur MCP (Flask, `mcp/server_http.py`) expose `GET /health` et
+`POST /mcp` — **sans** prefixe `/api/mcp`. L'endpoint a configurer cote
+client (ChatGPT, connecteur Claude.ai, Citizen) est donc `.../mcp`.
+
 Local:
 
 ```bash
-curl -i http://127.0.0.1:3005/api/mcp/health
+curl -i http://127.0.0.1:3005/health
 ```
 
 Remote:
 
 ```bash
-curl -i https://trusted-magpie-social.ngrok-free.app/api/mcp/health
+curl -i https://trusted-magpie-social.ngrok-free.app/health
+```
+
+Test JSON-RPC complet (doit lister les tools, pas un 404):
+
+```bash
+curl -s -X POST https://trusted-magpie-social.ngrok-free.app/mcp \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
 
 ## 9) Depannage
