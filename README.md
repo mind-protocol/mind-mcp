@@ -61,7 +61,9 @@ Add to your MCP config (`.mcp.json`, Claude Desktop, etc.):
 | `code_context` | Before a code edit, find Thing nodes with the same path across FalkorDB graphs and return their local neighborhood. |
 | `graph_write` | Create nodes (narratives, moments, things) and links. MERGE semantics. |
 | `procedure` | Structured dialogues for documentation, investigation, workflow. |
-| `think` | Consult Gemini for reasoning, vision analysis, structured output. |
+| `talk` | Send a message to any citizen and receive their response. |
+| `think` | Send a thought to yourself to self-stimulate and keep thinking about a subject. |
+| `consult` | Consult Gemini for reasoning, vision analysis, structured output. |
 
 Enable pre-edit graph augmentation in the MCP server environment:
 

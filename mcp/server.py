@@ -18,7 +18,9 @@ THINK — Knowledge & Reasoning:
                MERGE semantics — safe to call multiple times.
   procedure    Structured dialogues for documentation, investigation,
                and workflow. List/start/continue/abort sessions.
-  think        Consult Gemini for reasoning, vision analysis, or
+  think        Send a thought back to yourself to deliberately
+               self-stimulate and continue an internal line of inquiry.
+  consult      Consult Gemini for reasoning, vision analysis, or
                structured output. Maintains conversation sessions.
 
 ACT — Work & Coordination:
@@ -43,6 +45,7 @@ ACT — Work & Coordination:
                emit structured logs for analysis.
 
 SPEAK — Outward Communication:
+  talk         Send a message to any citizen and receive their response.
   send         Send message to any platform: Telegram, Discord,
                WhatsApp, Twitter/X, email, SMS. Unified API.
   read         Read messages/mentions from any platform. History,
@@ -102,7 +105,10 @@ from mcp.tools.graph_diff_handler import TOOL_SCHEMA as GRAPH_DIFF_SCHEMA, handl
 from mcp.tools.graph_write_handler import TOOL_SCHEMA as GRAPH_WRITE_SCHEMA, handle_graph_write
 from mcp.tools.procedure_handler import TOOL_SCHEMA as PROCEDURE_SCHEMA, handle_procedure
 from mcp.tools.task_handler import TOOL_SCHEMA as TASK_SCHEMA, handle_task
-from mcp.tools.think_handler import TOOL_SCHEMA as THINK_SCHEMA, handle_think
+from mcp.tools.think_handler import TOOL_SCHEMA as CONSULT_SCHEMA, handle_consult
+from mcp.tools.citizen_message_handler import (
+    TALK_SCHEMA, THINK_SCHEMA, handle_talk, handle_self_think,
+)
 from mcp.tools.send_handler import TOOL_SCHEMA as SEND_SCHEMA, handle_send
 from mcp.tools.broadcast_handler import TOOL_SCHEMA as BROADCAST_SCHEMA, handle_broadcast
 from mcp.tools.read_handler import TOOL_SCHEMA as READ_SCHEMA, handle_read
@@ -142,6 +148,7 @@ TOOL_SCHEMAS = [
     GRAPH_WRITE_SCHEMA,
     PROCEDURE_SCHEMA,
     THINK_SCHEMA,
+    CONSULT_SCHEMA,
     # ACT
     TASK_SCHEMA,
     NEXT_L1_TASK_WAKE_SCHEMA,
@@ -149,6 +156,7 @@ TOOL_SCHEMAS = [
     SYNC_L1_BLUEPRINT_SCHEMA,
     L4_STATE_SCHEMA,
     # SPEAK
+    TALK_SCHEMA,
     BROADCAST_SCHEMA,
     SEND_SCHEMA,
     READ_SCHEMA,
@@ -177,7 +185,7 @@ TOOL_SCHEMAS = [
 ]
 
 # Tool name → (handler_fn, needs_ctx)
-# handlers that need ServerContext get it; stateless ones (think, send) don't
+# handlers that need ServerContext get it; stateless ones (think, talk, consult, send) don't
 TOOL_DISPATCH = {
     "change_context": (handle_change_context, True),
     "impact": (handle_impact, True),
@@ -195,7 +203,9 @@ TOOL_DISPATCH = {
     "graph_write": (handle_graph_write, True),
     "procedure":   (handle_procedure,   True),
     "task":        (handle_task,        True),
-    "think":       (handle_think,       False),
+    "think":       (handle_self_think,  False),
+    "consult":     (handle_consult,     False),
+    "talk":        (handle_talk,        False),
     "broadcast":   (handle_broadcast,   False),
     "send":        (handle_send,        False),
     "read":        (handle_read,        False),

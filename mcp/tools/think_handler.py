@@ -1,15 +1,15 @@
 """
-[ACT] Think — Consult another LLM (Gemini) for reasoning, image analysis, or structured output.
+[ACT] Consult — Ask another LLM (Gemini) for reasoning, image analysis, or structured output.
 
 Supports system prompts, multi-turn sessions, image/file attachments,
 and configurable generation parameters.
 
 Usage via MCP:
-    think(message="Analyse this text...")
-    think(message="Continue.", session_id="abc123")
-    think(message="Describe this image.", images=["/path/to/image.png"])
-    think(list_sessions=true)
-    think(end_session="abc123")
+    consult(message="Analyse this text...")
+    consult(message="Continue.", session_id="abc123")
+    consult(message="Describe this image.", images=["/path/to/image.png"])
+    consult(list_sessions=true)
+    consult(end_session="abc123")
 """
 
 import base64
@@ -22,7 +22,7 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-logger = logging.getLogger("mind.think")
+logger = logging.getLogger("mind.consult")
 
 # In-memory session store: session_id -> {"history": [...], "config": {...}, "created": float}
 _sessions: Dict[str, Dict[str, Any]] = {}
@@ -35,9 +35,9 @@ DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 TOOL_SCHEMA = {
-    "name": "think",
+    "name": "consult",
     "description": (
-        "[ACT] Consult Google Gemini for reasoning, image analysis, or structured output. "
+        "[ACT] Consult Google Gemini as an external model for reasoning, image analysis, or structured output. "
         "Supports system prompts, multi-turn sessions, image/file attachments, "
         "and JSON mode. Use session_id to continue a conversation."
     ),
@@ -148,8 +148,8 @@ def _build_contents(message: str, images: Optional[List[str]] = None) -> list:
     return parts
 
 
-def handle_think(args: Dict[str, Any]) -> Dict[str, Any]:
-    """Main handler for the think tool (Gemini chat)."""
+def handle_consult(args: Dict[str, Any]) -> Dict[str, Any]:
+    """Main handler for the consult tool (Gemini chat)."""
     from google.genai import types
 
     # ── List sessions ──
@@ -278,7 +278,7 @@ def handle_think(args: Dict[str, Any]) -> Dict[str, Any]:
         return _ok_meta(response_text, session_id=new_session_id, model=model, new_session=True)
 
     except Exception as e:
-        logger.exception("Think (Gemini) failed")
+        logger.exception("Consult (Gemini) failed")
         return _err(f"Gemini error: {e}")
 
 
