@@ -2,7 +2,7 @@
 
 ```
 STATUS: CANONICAL
-UPDATED: 2025-12-21
+UPDATED: 2026-07-23
 ```
 
 ## MATURITY
@@ -14,7 +14,11 @@ What's canonical (v1):
 - Debug and gameplay SSE streams are established with separate queues.
 
 What's still being designed:
-- Auth, rate limiting, and API gateway decisions.
+- Rate limiting and API gateway decisions.
+- OAuth (the `oauth` value of `AUTH_MODE` is a 501 placeholder, not yet implemented).
+
+Auth now has a first switch: a single `AUTH_MODE` env flag (`none` / `token` / `oauth`)
+drives both the JWT routes and the MCP HTTP server (see RECENT CHANGES below).
 
 ## CURRENT STATE
 
@@ -23,6 +27,19 @@ What's still being designed:
 The API module hosts the FastAPI application, including playthrough endpoints, moment APIs, and debug streaming.
 
 ## RECENT CHANGES
+
+### 2026-07-23: AUTH_MODE switch for API + MCP HTTP auth
+
+- **What:** Added `runtime/api/auth_mode.py`, a single `AUTH_MODE` env flag (`none` /
+  `token` / `oauth`) that decides how requests authenticate. The three duplicated
+  `_require_auth` helpers in `dm_routes.py`, `feed_routes.py`, and `house_routes.py` now
+  delegate to it. The MCP HTTP server (`mcp/server_http.py`) reads the same flag locally
+  (no FastAPI coupling) to gate `/mcp` and `/tools`.
+- **Why:** Let us flip quickly between open access (dev), the JWT/`MIND_MCP_TOKEN` bearer
+  (default), and a future OAuth mode — without commenting code out per route.
+- **Impact:** `AUTH_MODE=none` → open, no token, server starts without `MIND_MCP_TOKEN`;
+  `token` (default) → unchanged behavior (401 without a valid token); `oauth` → 501
+  placeholder. ⚠️ `none` behind ngrok exposes citizen cognition tools publicly — dev only.
 
 ### 2025-12-21: Guard SSE delivery and schema validation with tests
 

@@ -27,22 +27,38 @@ python -m venv .venv
 .venv\Scripts\pip install -r requirements.txt
 ```
 
-### 2. Jeton d'accès (`.env`)
+### 2. Mode d'authentification + jeton d'accès (`.env`)
 
-Le serveur HTTP **refuse de démarrer sans jeton** (≥ 16 car.). Crée `.env` (ignoré par git) :
+Un seul flag, `AUTH_MODE`, pilote l'authentification des **deux** surfaces (API JWT
+locale *et* serveur MCP HTTP). Il est lu par `runtime/api/auth_mode.py` (côté API) et
+localement par `mcp/server_http.py` (côté MCP), via la même variable :
+
+| `AUTH_MODE` | Effet sur `/mcp` et `/tools` |
+|---|---|
+| `none`  | **ouvert** — aucun jeton requis, le serveur démarre même sans `MIND_MCP_TOKEN` |
+| `token` | **défaut** — jeton porteur `MIND_MCP_TOKEN` (≥ 16 car.) obligatoire ; le serveur **refuse de démarrer** sans lui |
+| `oauth` | placeholder — renvoie `501 Not Implemented` (pas encore codé) |
+
+Crée `.env` (ignoré par git) :
 
 ```ini
+# none (ouvert) | token (défaut) | oauth (à venir)
+AUTH_MODE=token
 MIND_MCP_HTTP_HOST=0.0.0.0
 MIND_MCP_HTTP_PORT=3005
 MIND_MCP_TOKEN=<jeton>
 MIND_HTTP_CITIZEN=aurore
 ```
 
-Génère le jeton :
+Génère le jeton (utile en mode `token`) :
 
 ```powershell
 .venv\Scripts\python -c "import secrets; print(secrets.token_hex(24))"
 ```
+
+> ⚠️ `AUTH_MODE=none` derrière ngrok expose la cognition des citoyens (`graph_write`,
+> `send`, `spawn`…) à quiconque connaît l'URL. À réserver au dev local ; repasse en
+> `token` avant toute exposition publique.
 
 ### 2 bis. Identité du pair (`MIND_HTTP_CITIZEN`)
 
@@ -109,8 +125,9 @@ curl -X POST https://trusted-magpie-social.ngrok-free.app/mcp `
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"graph_query","arguments":{"queries":["tick engine"]}}}'
 ```
 
-Attendu : `/health` → `{"status":"ok","tools":26}` ; `POST /mcp` sans jeton → **401** ;
-avec jeton → résultats du graphe.
+Attendu (en `AUTH_MODE=token`) : `/health` → `{"status":"ok",...}` ; `POST /mcp` sans
+jeton → **401** ; avec jeton → résultats du graphe. En `AUTH_MODE=none`, `POST /mcp`
+répond directement (pas de 401) même sans en-tête `Authorization`.
 
 L'identité se vérifie par un outil qui en dépend — `profile` doit renvoyer le bon pair,
 pas « Cannot determine citizen identity » :
@@ -144,8 +161,11 @@ distant → URL ci-dessus → en-tête `Authorization: Bearer <jeton>`.
 
 ## Sécurité
 
-- **Jeton obligatoire** : `server_http.py` s'arrête si `MIND_MCP_TOKEN` est absent/court ;
-  `/mcp` et `/tools` renvoient 401 sans jeton valide (comparaison à temps constant).
+- **Mode d'auth** : contrôlé par `AUTH_MODE` (`none` / `token` / `oauth`). En `token`
+  (défaut), `/mcp` et `/tools` renvoient 401 sans jeton valide. En `none`, ces routes
+  sont **ouvertes** — n'expose alors jamais le serveur via ngrok en production.
+- **Jeton obligatoire (mode `token`)** : `server_http.py` s'arrête si `MIND_MCP_TOKEN`
+  est absent/court ; le jeton est comparé à temps constant.
 - Le jeton donne accès à des outils **mutants** (`graph_write`, `send`, `spawn`…) :
   diffusion restreinte, rotation si fuite suspectée (change `.env`, relance le serveur).
 - `/health` est public (aucune capacité). La route `/telegram-webhook` a son propre
