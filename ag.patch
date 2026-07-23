@@ -1,0 +1,44 @@
+diff --git a/runtime/citizens/autonomy_gate.py b/runtime/citizens/autonomy_gate.py
+index 270782a..cd6f2f0 100644
+--- a/runtime/citizens/autonomy_gate.py
++++ b/runtime/citizens/autonomy_gate.py
+@@ -170,7 +170,7 @@ def _log_audit(
+     }
+     try:
+         _AUDIT_LOG.parent.mkdir(parents=True, exist_ok=True)
+-        with open(_AUDIT_LOG, "a") as f:
++        with open(_AUDIT_LOG, "a", encoding="utf-8") as f:
+             f.write(json.dumps(entry) + "\n")
+     except OSError as e:
+         logger.warning(f"Audit log write failed: {e}")
+@@ -253,8 +253,8 @@ def _get_citizen_tier_and_level(handle: str) -> tuple[Tier, int]:
+         if cwd_profile.exists():
+             try:
+                 import json
+-                profile = json.loads(cwd_profile.read_text())
+-            except (OSError, json.JSONDecodeError):
++                profile = json.loads(cwd_profile.read_text(encoding="utf-8"))
++            except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+                 pass
+ 
+     # 3. Fallback: search other universe repos
+@@ -271,7 +271,18 @@ def _get_citizen_tier_and_level(handle: str) -> tuple[Tier, int]:
+ 
+     if profile:
+         caps = profile.get("capabilities", {})
+-        autonomy_level = max(caps.get("autonomy_level", min_level), min_level)
++        # autonomy_level is a number (0-10). Older profiles wrote words ("full").
++        # A non-numeric value must not crash the gate for every tool call — it
++        # falls back to the floor, which is the conservative direction.
++        raw_level = caps.get("autonomy_level", min_level)
++        try:
++            autonomy_level = max(int(raw_level), min_level)
++        except (TypeError, ValueError):
++            logger.warning(
++                f"@{handle}: autonomy_level={raw_level!r} n'est pas un nombre 0-10 — "
++                f"niveau ramené à {min_level}."
++            )
++            autonomy_level = min_level
+ 
+         if handle not in TIER_OVERRIDES:
+             profile_tier = caps.get("supervision_tier")
