@@ -9,6 +9,9 @@ INVARIANTS:
   - IDs: {type}:{scope}:{slug}
   - relation_kind = null at L3 (always)
   - Endpoints must exist (Invariant V1)
+  - No orphans: every new node must reach the existing graph (directly or via the
+    cluster). Ontology violations commit PARTIALLY — invalid or orphaned nodes are
+    rejected/rolled back with actionable messages, valid connected ones are kept.
   - synthesis auto-generated from name + content (never in YAML)
   - Embedding via FastEmbed (local, CPU, privacy-first) — mock fallback
 
@@ -284,24 +287,41 @@ class GraphValidator:
 
         # 1. node_type must be in valid set (from graph or fallback)
         if node_type not in self.valid_types:
-            return False, f"REJECTED node '{nid}': node_type '{node_type}' not in {self.valid_types}"
+            allowed = ", ".join(sorted(self.valid_types))
+            got = f"'{node_type}'" if node_type else "empty/missing"
+            return False, (
+                f"REJECTED node '{nid}': node_type is {got}. "
+                f"FIX: set node_type to one of [{allowed}]."
+            )
 
         # 2. ID format
         if self.id_regex:
             if not self.id_regex.match(nid):
-                return False, f"REJECTED node '{nid}': ID does not match graph regex {self.id_regex.pattern}"
+                return False, (
+                    f"REJECTED node '{nid}': ID does not match required pattern {self.id_regex.pattern}. "
+                    f"FIX: rewrite the id as {{type}}:{{scope}}:{{slug}} (e.g. '{node_type or 'actor'}:project:my-slug')."
+                )
         else:
             parts = nid.split(":")
             if len(parts) < 3:
-                return False, f"REJECTED node '{nid}': ID must be {{type}}:{{scope}}:{{slug}}, got {len(parts)} segments"
+                return False, (
+                    f"REJECTED node '{nid}': ID has {len(parts)} segment(s), needs 3. "
+                    f"FIX: use {{type}}:{{scope}}:{{slug}} (e.g. '{node_type or 'actor'}:project:my-slug')."
+                )
 
         # 3. name required
         if not node.get("name"):
-            return False, f"REJECTED node '{nid}': missing 'name'"
+            return False, (
+                f"REJECTED node '{nid}': missing 'name'. "
+                f"FIX: add a human-readable 'name' field to this node."
+            )
 
         # 4. type field required (schema v1.8.1)
         if "subtype" in node and "type" not in node:
-            return False, f"REJECTED node '{nid}': 'type' field required (schema v1.8.1). 'subtype' alone not enough."
+            return False, (
+                f"REJECTED node '{nid}': has 'subtype' but no 'type' (schema v1.8.1). "
+                f"FIX: add a 'type' field (the semantic subtype); 'subtype' alone is not enough."
+            )
 
         # 5. Physics field constraints from graph
         for field_name, rules in self.field_constraints.items():
@@ -316,9 +336,15 @@ class GraphValidator:
                 fmin = rules.get("min")
                 fmax = rules.get("max")
                 if fmin is not None and val < fmin:
-                    return False, f"REJECTED node '{nid}': {field_name}={val} below min {fmin} (graph rule)"
+                    return False, (
+                        f"REJECTED node '{nid}': {field_name}={val} is below the minimum {fmin}. "
+                        f"FIX: set {field_name} to a value >= {fmin}."
+                    )
                 if fmax is not None and val > fmax:
-                    return False, f"REJECTED node '{nid}': {field_name}={val} above max {fmax} (graph rule)"
+                    return False, (
+                        f"REJECTED node '{nid}': {field_name}={val} is above the maximum {fmax}. "
+                        f"FIX: set {field_name} to a value <= {fmax}."
+                    )
 
         return True, ""
 
@@ -328,19 +354,34 @@ class GraphValidator:
         tgt = link.get("target_id", "")
 
         if not src:
-            return False, "REJECTED link: missing 'source_id'. Use source_id/target_id"
+            return False, (
+                "REJECTED link: missing 'source_id'. "
+                "FIX: add source_id (and target_id) naming the two endpoint node IDs."
+            )
         if not tgt:
-            return False, "REJECTED link: missing 'target_id'. Use source_id/target_id"
+            return False, (
+                f"REJECTED link from '{src}': missing 'target_id'. "
+                "FIX: add target_id naming the destination node ID."
+            )
 
         if src not in node_ids:
-            return False, f"REJECTED link: source_id '{src}' does not exist. Invariant V1 violated."
+            return False, (
+                f"REJECTED link {src} → {tgt}: source node '{src}' does not exist (Invariant V1). "
+                f"FIX: either add a node with id '{src}' to this cluster, or point source_id at an existing node ID."
+            )
         if tgt not in node_ids:
-            return False, f"REJECTED link: target_id '{tgt}' does not exist. Invariant V1 violated."
+            return False, (
+                f"REJECTED link {src} → {tgt}: target node '{tgt}' does not exist (Invariant V1). "
+                f"FIX: either add a node with id '{tgt}' to this cluster, or point target_id at an existing node ID."
+            )
 
         # relation_kind must be null at L3
         rk = link.get("relation_kind")
         if rk is not None:
-            return False, f"REJECTED link {src} → {tgt}: relation_kind must be null at L3, got '{rk}'"
+            return False, (
+                f"REJECTED link {src} → {tgt}: relation_kind is '{rk}' but must be null at L3. "
+                f"FIX: remove the relation_kind field; the semantic meaning lives in the link synthesis, not a typed kind."
+            )
 
         # Polarity: graph-driven or hardcoded
         pol = link.get("polarity")
@@ -531,7 +572,10 @@ TOOL_SCHEMA = {
     "description": (
         "[ACT] Inject nodes and links into the L3 WorkspaceStore from YAML. "
         "Validates types, IDs, endpoints. Deduplicates via ID/name/embedding. "
-        "Auto-generates synthesis and embeddings. Applies physics defaults."
+        "Auto-generates synthesis and embeddings. Applies physics defaults. "
+        "Commits PARTIALLY on ontology violations: invalid nodes/links and any node "
+        "that would be left orphaned (no path to the existing graph) are rejected with "
+        "actionable 'FIX:' messages; valid, connected nodes are still saved."
     ),
     "inputSchema": {
         "type": "object",
@@ -579,6 +623,12 @@ def handle_inject_cluster(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
     errors = []
     now = int(time.time())
 
+    # IDs that existed BEFORE this injection — the anchors an orphan must reach.
+    pre_existing_ids = {n["id"] for n in ws["nodes"]}
+    # IDs of genuinely-new nodes created this batch (merges attach to existing anchors,
+    # so they can never be orphans and are excluded from orphan analysis).
+    new_node_ids: set = set()
+
     # Surface embedding init error if any
     if _embed_error:
         errors.append(f"⚠ EMBEDDING UNAVAILABLE: {_embed_error}. All nodes inserted WITHOUT vectors. Sim_vec dedup DISABLED. Run: pip install fastembed")
@@ -625,6 +675,7 @@ def handle_inject_cluster(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
             ws["nodes"].append(node)
             new_idx = len(ws["nodes"]) - 1
             dedup.register(node, new_idx)
+            new_node_ids.add(node["id"])
             stats["new"] += 1
         elif action == "id_match":
             ws["nodes"][idx] = merge_node(ws["nodes"][idx], node)
@@ -675,84 +726,113 @@ def handle_inject_cluster(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
         existing_pairs.add(pair)
         link_stats["added"] += 1
 
-    # ── Orphan detection + auto-linking ──
-    # Collect IDs of nodes just inserted in this cluster
-    inserted_ids = set()
-    for raw_node in incoming_nodes:
-        nid = raw_node.get("id", "")
-        if nid in {n["id"] for n in ws["nodes"]}:
-            inserted_ids.add(nid)
+    # ── Orphan resolution: reject, never fabricate ──
+    # Doctrine: a cluster addition is committed PARTIALLY. Any genuinely-new node that
+    # cannot reach the pre-existing graph — a lone orphan node OR a whole orphan cluster —
+    # is rolled back with an actionable message. We never patch it with a fabricated
+    # semantic link (that would pollute the graph with edges the author never asserted).
+    orphan_rejections = []  # list of (node_id, message)
 
-    # Check which inserted nodes have NO link to any pre-existing node
-    pre_existing_ids = {n["id"] for n in ws["nodes"]} - inserted_ids
-    orphan_ids = []
-    auto_links_created = []
-
-    for nid in inserted_ids:
-        connected = False
+    if new_node_ids:
+        # Undirected adjacency over every committed link (existing + just-added).
+        adjacency: Dict[str, set] = {}
         for l in ws["links"]:
             s = l.get("source_id", l.get("source", ""))
             t = l.get("target_id", l.get("target", ""))
-            if (s == nid and t in pre_existing_ids) or \
-               (t == nid and s in pre_existing_ids):
-                connected = True
-                break
-        if not connected:
-            orphan_ids.append(nid)
-
-    # Auto-link orphans by embedding proximity to existing nodes
-    if orphan_ids:
-        for orphan_id in orphan_ids:
-            orphan_node = next((n for n in ws["nodes"] if n["id"] == orphan_id), None)
-            if not orphan_node or not orphan_node.get("embedding"):
+            if not s or not t:
                 continue
+            adjacency.setdefault(s, set()).add(t)
+            adjacency.setdefault(t, set()).add(s)
 
-            # Find closest pre-existing node by embedding
-            best_sim = 0.0
-            best_target = None
-            for n in ws["nodes"]:
-                if n["id"] in inserted_ids or not n.get("embedding"):
-                    continue
-                sim = cosine_similarity(orphan_node["embedding"], n["embedding"])
-                if sim > best_sim:
-                    best_sim = sim
-                    best_target = n["id"]
+        bootstrap = len(pre_existing_ids) == 0
 
-            if best_target and best_sim > 0.3:
-                auto_link = {
-                    "source_id": orphan_id,
-                    "target_id": best_target,
-                    "weight": round(best_sim * 0.5, 3),  # proportional to similarity
-                    "energy": 0.1,
-                    "stability": 0.0,
-                    "recency": 1.0,
-                    "hierarchy": 0.0,
-                    "permanence": 0.3,  # auto-generated = speculative
-                    "trust": 0.0,
-                    "friction": 0.0,
-                    "affinity": round(best_sim * 0.3, 3),
-                    "aversion": 0.0,
-                    "polarity": [0.5, 0.5],
-                    "valence": 0.0,
-                    "ambivalence": 0.0,
-                    "created_at_s": now,
-                    "updated_at_s": now,
-                }
-                ws["links"].append(auto_link)
-                auto_links_created.append({
-                    "orphan": orphan_id,
-                    "linked_to": best_target,
-                    "similarity": round(best_sim, 3),
-                })
+        if bootstrap:
+            # No anchors exist yet: the batch itself is the seed. The only orphan we can
+            # detect is a node with zero links — reject those, keep the connected seed.
+            connected_new = {nid for nid in new_node_ids if adjacency.get(nid)}
+        else:
+            # BFS from every pre-existing (anchor) node. A new node survives only if it is
+            # reachable from the established graph. Transitive, so cascade is free: a node
+            # reachable ONLY through another orphan is itself unreachable → rejected too.
+            reachable = set(pre_existing_ids)
+            frontier = [a for a in pre_existing_ids]
+            while frontier:
+                cur = frontier.pop()
+                for nb in adjacency.get(cur, ()):
+                    if nb not in reachable:
+                        reachable.add(nb)
+                        frontier.append(nb)
+            connected_new = {nid for nid in new_node_ids if nid in reachable}
 
-    # ── Connectivity ratio ──
-    if inserted_ids:
+        orphan_new = new_node_ids - connected_new
+
+        if orphan_new:
+            node_by_id = {n["id"]: n for n in ws["nodes"]}
+            is_cluster = len(orphan_new) > 1
+            for oid in sorted(orphan_new):
+                if bootstrap:
+                    msg = (
+                        f"REJECTED node '{oid}' (orphan): it has no links to any other node. "
+                        f"FIX: add at least one link connecting it into the cluster."
+                    )
+                else:
+                    # Suggest the closest pre-existing anchor by embedding proximity — a
+                    # concrete node to link to, not a link we silently create.
+                    suggestion = ""
+                    onode = node_by_id.get(oid)
+                    if onode and onode.get("embedding"):
+                        best_sim, best_target = 0.0, None
+                        for n in ws["nodes"]:
+                            if n["id"] not in pre_existing_ids or not n.get("embedding"):
+                                continue
+                            sim = cosine_similarity(onode["embedding"], n["embedding"])
+                            if sim > best_sim:
+                                best_sim, best_target = sim, n["id"]
+                        if best_target:
+                            suggestion = (
+                                f" Closest existing node: '{best_target}' (sim={best_sim:.2f}) — "
+                                f"e.g. add link {{source_id: {oid}, target_id: {best_target}}}."
+                            )
+                    scope = "orphan cluster" if is_cluster else "orphan"
+                    msg = (
+                        f"REJECTED node '{oid}' ({scope}): not connected to the existing graph, "
+                        f"directly or through the rest of this cluster. "
+                        f"FIX: add a link between '{oid}' and an existing node.{suggestion}"
+                    )
+                orphan_rejections.append((oid, msg))
+                logger.error(msg)
+
+            # Roll back orphaned nodes and every link that touches them, so nothing
+            # orphaned is persisted. Such links are always batch-added (a pre-existing
+            # link cannot reference a brand-new id), so move them out of "added".
+            orphan_set = set(orphan_new)
+            dropped_links = [
+                l for l in ws["links"]
+                if l.get("source_id", l.get("source", "")) in orphan_set
+                or l.get("target_id", l.get("target", "")) in orphan_set
+            ]
+            ws["nodes"] = [n for n in ws["nodes"] if n["id"] not in orphan_set]
+            ws["links"] = [
+                l for l in ws["links"]
+                if l.get("source_id", l.get("source", "")) not in orphan_set
+                and l.get("target_id", l.get("target", "")) not in orphan_set
+            ]
+            stats["new"] -= len(orphan_set)
+            stats["rejected"] += len(orphan_set)
+            link_stats["added"] = max(0, link_stats["added"] - len(dropped_links))
+            link_stats["rejected"] += len(dropped_links)
+
+        # Committed new nodes for connectivity reporting = survivors only.
+        new_node_ids = connected_new
+
+    # ── Connectivity ratio (over committed new nodes) ──
+    if new_node_ids:
         links_touching_cluster = sum(
             1 for l in ws["links"]
-            if l.get("source_id", l.get("source", "")) in inserted_ids
-            or l.get("target_id", l.get("target", "")) in inserted_ids
+            if l.get("source_id", l.get("source", "")) in new_node_ids
+            or l.get("target_id", l.get("target", "")) in new_node_ids
         )
-        connectivity_ratio = links_touching_cluster / len(inserted_ids)
+        connectivity_ratio = links_touching_cluster / len(new_node_ids)
     else:
         connectivity_ratio = 0.0
 
@@ -760,36 +840,29 @@ def handle_inject_cluster(args: Dict[str, Any], ctx=None) -> Dict[str, Any]:
     save_workspace(ws)
 
     # ── Build structured result ──
+    partial = bool(errors) or bool(orphan_rejections)
+    header = "Ingestion complete (partial — see rejections below):" if partial else "Ingestion complete:"
     result_lines = [
-        f"Ingestion complete:",
+        header,
         f"  Nodes: {stats['new']} new, {stats['id_merge']} ID-merged, "
         f"{stats['lex_merge']} lex-merged, {stats['vec_merge']} vec-merged, "
         f"{stats['rejected']} rejected",
         f"  Links: {link_stats['added']} added, {link_stats['duplicate']} duplicate, "
         f"{link_stats['rejected']} rejected",
-        f"  Auto-links: {len(auto_links_created)} created by embedding proximity",
         f"  Connectivity: {connectivity_ratio:.2f} links/node "
         f"{'✓' if connectivity_ratio >= 0.5 else '⚠ below 0.5 — add more links'}",
         f"  Total: {len(ws['nodes'])} nodes, {len(ws['links'])} links",
     ]
 
-    # Orphan warning with suggestions
-    remaining_orphans = [oid for oid in orphan_ids
-                         if oid not in {al["orphan"] for al in auto_links_created}]
-    if remaining_orphans:
-        result_lines.append(f"\n⚠ Orphan nodes (no link to existing graph):")
-        for oid in remaining_orphans:
-            result_lines.append(f"  {oid} — link it to an existing node")
+    # Orphan rejections (rolled back, not saved) with actionable fixes
+    if orphan_rejections:
+        result_lines.append(
+            f"\n⚠ Orphan rejections ({len(orphan_rejections)}) — rolled back, nothing orphaned was saved:"
+        )
+        for _oid, msg in orphan_rejections:
+            result_lines.append(f"  {msg}")
 
-    # Auto-link report
-    if auto_links_created:
-        result_lines.append(f"\nAuto-linked by embedding proximity:")
-        for al in auto_links_created:
-            result_lines.append(
-                f"  {al['orphan']} → {al['linked_to']} (sim={al['similarity']})"
-            )
-
-    # Per-node/per-link rejection details
+    # Per-node/per-link validation rejection details
     if errors:
         result_lines.append(f"\nRejected ({len(errors)}):")
         for e in errors:
